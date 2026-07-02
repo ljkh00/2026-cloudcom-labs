@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lab 9.1 · Application Logging · CloudEats Academy</title>
-<meta name="description" content="Add production-grade structured logging to CloudEats with Winston and Morgan. Create JSON logs with timestamps, severity levels, and business event tracking. Diploma level, three pace tracks.">
+<title>Week 9 · Monitoring, Logging and Optimization · CloudEats Academy</title>
+<meta name="description" content="Learn structured logging with Winston, application metrics with prom-client, performance optimisation strategies, cost awareness, and cloud migration planning for the CloudEats app.">
 <meta name="author" content="CloudEats Academy">
-<meta property="og:title" content="Lab 9.1 · Application Logging · CloudEats Academy">
-<meta property="og:description" content="Replace console.log() with structured Winston logging — timestamps, log levels, JSON format, and Morgan HTTP request logging piped into the same destination.">
+<meta property="og:title" content="Week 9 · Monitoring, Logging and Optimization · CloudEats Academy">
+<meta property="og:description" content="Add visibility to your CloudEats stack — structured logs, live metrics, caching, and scaling strategies. The observability skills every cloud developer needs.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#07090f">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
@@ -19,77 +19,60 @@
   --red:#ff5e7a;--purple:#b46ef5;
   --text:#e8edf5;--muted:#6b7fa0;
   --beginner:#00e5a0;--average:#00c8ff;--advanced:#b46ef5;
-  --lab-color:#00e5a0;--radius:10px;--code-bg:#0b1120;
+  --week-color:#00e5a0;--radius:10px;--code-bg:#0b1120;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
 body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;}
-.site-header{background:linear-gradient(135deg,#050d1c,#091628);border-bottom:1px solid var(--border);padding:0 1.5rem;position:sticky;top:0;z-index:100;}
-.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;gap:1rem;}
-.lab-badge{background:var(--lab-color);color:#000;font-size:.62rem;font-weight:700;letter-spacing:.1em;padding:.2rem .55rem;border-radius:4px;text-transform:uppercase;}
-.header-title{font-size:.88rem;font-weight:600;}
-.pace-switcher{display:flex;gap:.3rem;background:var(--bg3);padding:.22rem;border-radius:8px;border:1px solid var(--border);}
-.pace-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.25rem .65rem;border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--muted);transition:all .18s;}
-.pace-btn.active[data-pace="beginner"]{background:rgba(0,229,160,.18);color:var(--beginner);}
-.pace-btn.active[data-pace="average"]{background:rgba(0,200,255,.18);color:var(--average);}
-.pace-btn.active[data-pace="advanced"]{background:rgba(180,110,245,.18);color:var(--advanced);}
-.lab-hero{background:linear-gradient(160deg,#060f20,#07111e);border-bottom:1px solid var(--border);padding:2rem 1.5rem 1.75rem;position:relative;overflow:hidden;}
-.lab-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:350px;height:350px;background:radial-gradient(ellipse,rgba(0,229,160,.06),transparent 70%);pointer-events:none;}
-.hero-inner{max-width:1200px;margin:0 auto;}
-.hero-crumb{font-size:.7rem;color:var(--muted);margin-bottom:.4rem;}
-.hero-crumb a{color:var(--green);text-decoration:none;}
-.lab-hero h1{font-size:clamp(1.25rem,2.5vw,1.75rem);font-weight:800;background:linear-gradient(135deg,#e8edf5 40%,var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.35rem;}
-.hero-sub{color:var(--muted);font-size:.84rem;margin-bottom:.85rem;}
-.hero-meta{display:flex;flex-wrap:wrap;gap:.55rem;}
-.meta-chip{display:flex;align-items:center;gap:.35rem;font-size:.74rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.22rem .6rem;color:var(--muted);}
+.site-header{background:linear-gradient(135deg,#050d1c,#091628);border-bottom:1px solid var(--border);padding:0 2rem;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:58px;gap:1rem;}
+.header-left{display:flex;align-items:center;gap:.75rem;}
+.week-badge{background:var(--week-color);color:#000;font-size:.65rem;font-weight:700;letter-spacing:.1em;padding:.2rem .55rem;border-radius:4px;text-transform:uppercase;}
+.header-title{font-size:.9rem;font-weight:600;}
+.week-nav{display:flex;gap:.4rem;align-items:center;}
+.week-nav a{font-size:.68rem;font-weight:600;padding:.2rem .55rem;border:1px solid var(--border);border-radius:4px;color:var(--muted);text-decoration:none;transition:all .15s;}
+.week-nav a:hover{color:var(--accent);border-color:var(--accent);}
+.week-nav a.current{background:rgba(0,229,160,.1);color:var(--green);border-color:rgba(0,229,160,.3);}
+.page-hero{background:linear-gradient(160deg,#0a0e18,#0f1620);border-bottom:1px solid var(--border);padding:2.5rem 2rem 2rem;position:relative;overflow:hidden;}
+.page-hero::before{content:'';position:absolute;top:-80px;right:-80px;width:420px;height:420px;background:radial-gradient(ellipse,rgba(0,229,160,.07),transparent 70%);pointer-events:none;}
+.hero-inner{max-width:1100px;margin:0 auto;}
+.hero-crumb{font-size:.72rem;color:var(--muted);margin-bottom:.5rem;}
+.hero-crumb span{color:var(--green);}
+.page-hero h1{font-size:clamp(1.5rem,3vw,2.1rem);font-weight:800;background:linear-gradient(135deg,#e8edf5 40%,var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.5rem;}
+.hero-sub{color:var(--muted);font-size:.88rem;margin-top:.3rem;}
+.hero-meta{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1rem;}
+.meta-chip{display:flex;align-items:center;gap:.4rem;font-size:.78rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.28rem .7rem;color:var(--muted);}
 .meta-chip strong{color:var(--text);}
-.pace-guide{max-width:1200px;margin:0 auto;padding:1rem 1.5rem 0;}
-.pace-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.65rem;margin-bottom:.5rem;}
-.pace-card{border-radius:8px;padding:.75rem;font-size:.78rem;line-height:1.5;}
-.pace-card.b{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);}
-.pace-card.a{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);}
-.pace-card.adv{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);}
-.pc-label{font-size:.65rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.3rem;}
-.b .pc-label{color:var(--beginner);}.a .pc-label{color:var(--average);}.adv .pc-label{color:var(--advanced);}
-.pc-scope{color:var(--muted);font-size:.76rem;}
-.page-body{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 200px);}
-.sidebar{position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;padding:1.25rem .85rem 2rem;border-right:1px solid var(--border);background:var(--bg2);}
-.sb-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.85rem;}
-.progress-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:.65rem;margin-bottom:1rem;}
-.prog-track{background:var(--bg2);border-radius:3px;height:5px;margin:.4rem 0;}
-.prog-fill{height:5px;border-radius:3px;background:linear-gradient(90deg,var(--green),var(--accent));transition:width .35s;width:0%;}
-.prog-text{font-size:.69rem;color:var(--muted);}
-.prog-text span{color:var(--green);font-weight:600;}
-.sb-nav{list-style:none;}
-.sb-nav li a{display:block;font-size:.73rem;padding:.32rem .6rem;border-radius:5px;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all .13s;margin-bottom:.08rem;}
-.sb-nav li a:hover{background:var(--surface);color:var(--text);}
-.sb-nav li a.active{background:rgba(0,229,160,.08);color:var(--green);border-color:rgba(0,229,160,.18);}
-.sb-section{font-size:.61rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(107,127,160,.45);padding:.6rem .6rem .18rem;list-style:none;}
-.lab-content{padding:1.75rem 1.75rem 4rem;min-width:0;}
-.part-head{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;border-radius:8px;margin-bottom:1.1rem;}
-.ph-green{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.22);border-left:4px solid var(--green);}
-.ph-blue{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.22);border-left:4px solid var(--accent);}
-.ph-amber{background:rgba(255,183,64,.04);border:1px solid rgba(255,183,64,.22);border-left:4px solid var(--amber);}
-.ph-purple{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.22);border-left:4px solid var(--purple);}
-.ph-red{background:rgba(255,94,122,.04);border:1px solid rgba(255,94,122,.22);border-left:4px solid var(--red);}
-.part-pill{font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.16rem .5rem;border-radius:4px;white-space:nowrap;}
-.pp-green{background:rgba(0,229,160,.15);color:var(--green);}
-.pp-blue{background:rgba(0,200,255,.15);color:var(--accent);}
-.pp-amber{background:rgba(255,183,64,.15);color:var(--amber);}
-.pp-purple{background:rgba(180,110,245,.15);color:var(--purple);}
-.pp-red{background:rgba(255,94,122,.15);color:var(--red);}
-.part-title{font-size:.98rem;font-weight:700;}
-.part-time{font-size:.71rem;color:var(--muted);margin-left:auto;white-space:nowrap;}
-.step{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:.85rem;overflow:hidden;}
-.step-header{display:flex;align-items:center;gap:.75rem;padding:.85rem 1rem;cursor:pointer;user-select:none;transition:background .13s;}
-.step-header:hover{background:var(--surface2);}
-.step-num{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;color:var(--muted);}
-.step.open .step-num{border-color:var(--green);color:var(--green);}
-.step-title{font-size:.86rem;font-weight:600;}
-.step-body{display:none;padding:1rem 1rem 1.1rem;border-top:1px solid var(--border);}
-.step.open .step-body{display:block;}
-.step:not(.open) .step-header::after{content:'click to expand';font-size:.62rem;color:var(--muted);opacity:.5;margin-left:auto;letter-spacing:.04em;pointer-events:none;}
-.step.open .step-header::after{content:'';}
+.pace-bar{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.25rem;align-items:center;}
+.pace-bar span{font-size:.73rem;color:var(--muted);margin-right:.25rem;}
+.pace-btn{font-family:'Sora',sans-serif;font-size:.75rem;font-weight:700;padding:.3rem .85rem;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);cursor:pointer;transition:all .18s;}
+.pace-btn.active[data-pace="beginner"]{background:rgba(0,229,160,.12);color:var(--beginner);border-color:rgba(0,229,160,.4);}
+.pace-btn.active[data-pace="average"]{background:rgba(0,200,255,.12);color:var(--average);border-color:rgba(0,200,255,.4);}
+.pace-btn.active[data-pace="advanced"]{background:rgba(180,110,245,.12);color:var(--advanced);border-color:rgba(180,110,245,.4);}
+.tab-nav{max-width:1100px;margin:0 auto;padding:1.5rem 2rem 0;display:flex;gap:.4rem;flex-wrap:wrap;}
+.tab-btn{font-family:'Sora',sans-serif;font-size:.78rem;font-weight:600;padding:.5rem 1rem;border:1px solid var(--border);border-radius:8px 8px 0 0;background:var(--bg3);color:var(--muted);cursor:pointer;transition:all .15s;border-bottom:none;}
+.tab-btn:hover{color:var(--text);background:var(--surface);}
+.tab-btn.active{background:var(--surface);color:var(--green);border-color:var(--border);border-bottom:1px solid var(--surface);position:relative;z-index:1;}
+.tab-content{max-width:1100px;margin:0 auto;padding:0 2rem 4rem;}
+.tab-panel{display:none;background:var(--surface);border:1px solid var(--border);border-radius:0 var(--radius) var(--radius) var(--radius);padding:2rem;margin-top:-1px;}
+.tab-panel.active{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+.sec-header{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;padding-bottom:.6rem;border-bottom:1px solid var(--border);}
+.sec-pill{font-size:.67rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.18rem .55rem;border-radius:20px;white-space:nowrap;}
+.sec-pill.green{background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.2);}
+.sec-pill.amber{background:rgba(255,183,64,.1);color:var(--amber);border:1px solid rgba(255,183,64,.2);}
+.sec-pill.blue{background:rgba(0,200,255,.1);color:var(--accent);border:1px solid rgba(0,200,255,.2);}
+.sec-pill.purple{background:rgba(180,110,245,.1);color:var(--purple);border:1px solid rgba(180,110,245,.2);}
+.sec-pill.red{background:rgba(255,94,122,.1);color:var(--red);border:1px solid rgba(255,94,122,.2);}
+.sec-title{font-size:1.1rem;font-weight:700;}
+.sec-time{font-size:.73rem;color:var(--muted);margin-left:auto;}
+.section-divider{border:none;border-top:1px solid var(--border);margin:2rem 0;}
+p{margin-bottom:.75rem;font-size:.86rem;line-height:1.7;}
+p:last-child{margin-bottom:0;}
+strong{color:var(--text);font-weight:600;}
+a{color:var(--accent);}a:hover{text-decoration:underline;}
+ul,ol{padding-left:1.4rem;margin-bottom:.75rem;font-size:.85rem;line-height:1.75;}
+li{margin-bottom:.2rem;}
 code{font-family:'Fira Code',monospace;font-size:.84em;background:var(--code-bg);padding:.08rem .35rem;border-radius:3px;color:var(--green);}
 .code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;margin:.75rem 0;overflow:hidden;}
 .code-header{display:flex;align-items:center;justify-content:space-between;padding:.45rem .9rem;background:rgba(0,0,0,.3);border-bottom:1px solid var(--border);}
@@ -104,618 +87,706 @@ pre{font-family:'Fira Code',monospace;font-size:.79rem;line-height:1.65;padding:
 .callout.green{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);color:#8ee8c4;}
 .callout.amber{background:rgba(255,183,64,.06);border:1px solid rgba(255,183,64,.2);color:#d9c07a;}
 .callout.red{background:rgba(255,94,122,.05);border:1px solid rgba(255,94,122,.2);color:#f0a0b0;}
+.callout.purple{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);color:#c5a8f5;}
 .callout-icon{font-size:1rem;flex-shrink:0;line-height:1.4;}
-.expected-output{background:#060d18;border:1px solid rgba(0,229,160,.2);border-left:3px solid var(--green);border-radius:6px;padding:.65rem .9rem;margin:.65rem 0;}
-.eo-label{font-size:.62rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:.35rem;}
-.eo-body{font-family:'Fira Code',monospace;font-size:.77rem;color:#8ee8c4;line-height:1.6;white-space:pre-wrap;}
-.trouble{background:rgba(255,94,122,.03);border:1px solid rgba(255,94,122,.2);border-radius:8px;margin:.75rem 0;overflow:hidden;}
-.trouble-header{display:flex;align-items:center;gap:.6rem;padding:.6rem .9rem;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--red);}
-.trouble-body{display:none;padding:.75rem .9rem;border-top:1px solid rgba(255,94,122,.15);font-size:.8rem;line-height:1.6;}
-.trouble.open .trouble-body{display:block;}
 .why-box{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.2);border-left:3px solid var(--accent);border-radius:6px;padding:.7rem 1rem;margin:.75rem 0;font-size:.81rem;color:#a0d8f0;}
 .why-box strong{color:var(--accent);}
-.checkpoint{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.25);border-radius:8px;padding:.85rem 1rem;margin:1.25rem 0;}
-.checkpoint-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:.4rem;}
-.level-block{border-radius:8px;padding:.65rem .9rem;margin:.55rem 0;font-size:.8rem;line-height:1.55;}
+.level-block{border-radius:8px;padding:.75rem 1rem;margin:.6rem 0;font-size:.82rem;line-height:1.55;}
 .level-block.beginner{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.18);border-left:3px solid var(--beginner);}
 .level-block.average{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.18);border-left:3px solid var(--average);}
 .level-block.advanced{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.18);border-left:3px solid var(--advanced);}
-.level-block-label{font-size:.63rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.25rem;}
+.level-block-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem;}
 .level-block.beginner .level-block-label{color:var(--beginner);}
 .level-block.average .level-block-label{color:var(--average);}
 .level-block.advanced .level-block-label{color:var(--advanced);}
-.ctrl-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;padding:.4rem 0;}
-.ctrl-bar span{font-size:.75rem;color:var(--muted);}
-.ctrl-btns{display:flex;gap:.5rem;}
-.ctrl-btn{font-family:'Sora',sans-serif;font-size:.7rem;font-weight:600;padding:.25rem .75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all .15s;}
-.ctrl-btn:hover{color:var(--accent);border-color:var(--accent);}
-.summary-table{width:100%;border-collapse:collapse;font-size:.8rem;margin:.85rem 0;}
-.summary-table th{background:var(--bg3);padding:.5rem .75rem;text-align:left;font-size:.72rem;font-weight:700;color:var(--muted);border-bottom:2px solid var(--border);}
-.summary-table td{padding:.5rem .75rem;border-bottom:1px solid var(--border);vertical-align:top;}
-.summary-table tr:last-child td{border-bottom:none;}
-.challenge-box{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.25);border-radius:8px;padding:1rem 1.1rem;margin-top:1.5rem;}
-.challenge-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-bottom:.5rem;}
-p{font-size:.85rem;line-height:1.7;margin-bottom:.7rem;}
-p:last-child{margin-bottom:0;}
-ul,ol{padding-left:1.4rem;font-size:.84rem;line-height:1.75;margin-bottom:.6rem;}
-strong{color:var(--text);}
-@media(max-width:700px){.page-body{grid-template-columns:1fr;}.sidebar{display:none;}}
+.card-grid{display:grid;gap:.85rem;margin:.85rem 0;}
+.card-grid.cols2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));}
+.card-grid.cols3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));}
+.concept-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem;}
+.concept-card.hl-green{border-color:rgba(0,229,160,.35);background:rgba(0,229,160,.04);}
+.concept-card.hl-blue{border-color:rgba(0,200,255,.35);background:rgba(0,200,255,.04);}
+.concept-card.hl-amber{border-color:rgba(255,183,64,.35);background:rgba(255,183,64,.04);}
+.concept-card.hl-red{border-color:rgba(255,94,122,.35);background:rgba(255,94,122,.04);}
+.concept-card.hl-purple{border-color:rgba(180,110,245,.35);background:rgba(180,110,245,.04);}
+.card-icon{font-size:1.4rem;margin-bottom:.4rem;}
+.card-title{font-size:.82rem;font-weight:700;margin-bottom:.3rem;}
+.card-body{font-size:.78rem;color:var(--muted);line-height:1.55;}
+.data-table{width:100%;border-collapse:collapse;font-size:.8rem;margin:.85rem 0;}
+.data-table th{background:var(--bg3);padding:.55rem .75rem;text-align:left;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:2px solid var(--border);}
+.data-table td{padding:.5rem .75rem;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:rgba(255,255,255,.02);}
+.badge{display:inline-block;font-size:.68rem;font-weight:700;padding:.14rem .45rem;border-radius:4px;}
+.badge.green{background:rgba(0,229,160,.15);color:var(--green);}
+.badge.amber{background:rgba(255,183,64,.15);color:var(--amber);}
+.badge.red{background:rgba(255,94,122,.15);color:var(--red);}
+.analogy-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin:.85rem 0;font-size:.82rem;}
+.analogy-label{font-size:.63rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--amber);margin-bottom:.3rem;}
+.compare-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin:.85rem 0;}
+.compare-col{border-radius:8px;padding:1rem;}
+.compare-col.bad{background:rgba(255,94,122,.04);border:1px solid rgba(255,94,122,.2);}
+.compare-col.good{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.2);}
+.compare-col-label{font-size:.65rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.55rem;}
+.compare-col.bad .compare-col-label{color:var(--red);}
+.compare-col.good .compare-col-label{color:var(--green);}
+.pace-guide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.75rem;margin:.85rem 0;}
+.pace-guide-card{border-radius:8px;padding:.85rem 1rem;font-size:.8rem;line-height:1.55;}
+.pgc-b{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.2);}
+.pgc-a{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.2);}
+.pgc-adv{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.2);}
+.pgc-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.35rem;}
+.pgc-b .pgc-label{color:var(--beginner);}
+.pgc-a .pgc-label{color:var(--average);}
+.pgc-adv .pgc-label{color:var(--advanced);}
+.log-level-bar{display:flex;gap:.35rem;flex-wrap:wrap;align-items:center;margin:.75rem 0;}
+.ll-chip{font-family:'Fira Code',monospace;font-size:.73rem;font-weight:700;padding:.25rem .6rem;border-radius:5px;}
+.ll-error{background:rgba(255,94,122,.15);color:var(--red);border:1px solid rgba(255,94,122,.3);}
+.ll-warn{background:rgba(255,183,64,.15);color:var(--amber);border:1px solid rgba(255,183,64,.3);}
+.ll-info{background:rgba(0,229,160,.15);color:var(--green);border:1px solid rgba(0,229,160,.3);}
+.ll-http{background:rgba(180,110,245,.15);color:var(--purple);border:1px solid rgba(180,110,245,.3);}
+.ll-debug{background:rgba(107,127,160,.15);color:var(--muted);border:1px solid rgba(107,127,160,.3);}
+.ll-arrow{color:var(--border);font-size:.9rem;}
+.lab-link-row{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1.5rem;}
+.lab-link{display:inline-flex;align-items:center;gap:.45rem;font-size:.8rem;font-weight:600;padding:.45rem 1rem;border-radius:7px;text-decoration:none;transition:all .18s;}
+.lab-link.primary{background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.3);color:var(--green);}
+.lab-link.primary:hover{background:rgba(0,229,160,.2);border-color:var(--green);}
+.lab-link.secondary{background:rgba(0,200,255,.1);border:1px solid rgba(0,200,255,.3);color:var(--accent);}
+.lab-link.secondary:hover{background:rgba(0,200,255,.2);border-color:var(--accent);}
+@media(max-width:680px){.compare-split{grid-template-columns:1fr;}}
 </style>
 </head>
-<body class="pace-beginner">
+<body>
 
 <header class="site-header">
   <div class="header-inner">
-    <div style="display:flex;align-items:center;gap:.75rem;">
-      <span class="lab-badge">Lab 9.1</span>
-      <span class="header-title">Application Logging</span>
+    <div class="header-left">
+      <span class="week-badge">Week 9</span>
+      <span class="header-title">Monitoring, Logging &amp; Optimization</span>
     </div>
-    <div style="display:flex;align-items:center;gap:.75rem;">
-      <div class="pace-switcher">
-        <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner')">🌱</button>
-        <button class="pace-btn" data-pace="average" onclick="setPace('average')">⚡</button>
-        <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced')">🚀</button>
-      </div>
-    </div>
+    <nav class="week-nav">
+      <a href="week08_Cloud_Security_and_Access_Control.html">← W8</a>
+      <a href="week09_Monitoring_Logging_and_Optimization.html" class="current">W9</a>
+      <a href="week10_Emerging_Trends_and_Course_Wrap.html">W10 →</a>
+    </nav>
   </div>
 </header>
 
-<section class="lab-hero">
+<section class="page-hero">
   <div class="hero-inner">
-    <div class="hero-crumb"><a href="../week09/index.html">Week 9 Notes</a> › Lab 9.1</div>
-    <h1>📝 Lab 9.1 — Application Logging with Winston</h1>
-    <p class="hero-sub">Replace scattered <code>console.log()</code> calls with structured JSON logs — timestamps, severity levels, and searchable business events that survive container restarts.</p>
+    <div class="hero-crumb">CloudEats Academy &rsaquo; <span>Week 9</span></div>
+    <h1>📊 Monitoring, Logging &amp; Optimization</h1>
+    <p class="hero-sub">Give your CloudEats app a dashboard — structured logs, live metrics, caching, and scaling. The observability layer that separates amateur apps from production-grade ones.</p>
     <div class="hero-meta">
-      <div class="meta-chip">⏱ <strong>60 min</strong></div>
-      <div class="meta-chip">🧑‍🤝‍🧑 <strong>Pairs</strong></div>
-      <div class="meta-chip">📦 <strong>Prereq:</strong>&nbsp;Labs 8.1 &amp; 8.2 complete</div>
-      <div class="meta-chip">🛠 <strong>Packages:</strong>&nbsp;winston · morgan</div>
+      <div class="meta-chip">⏱ <strong>4 hours</strong>&nbsp;contact</div>
+      <div class="meta-chip">🧪 <strong>2 labs</strong>&nbsp;this week</div>
+      <div class="meta-chip">⚙️ <strong>Prereq:</strong>&nbsp;Week 8 complete</div>
+      <div class="meta-chip">🛠 <strong>Stack:</strong>&nbsp;Winston · Morgan · prom-client · Redis</div>
+      <div class="meta-chip">📝 <strong>Assessment:</strong>&nbsp;Presentations begin</div>
+    </div>
+    <div class="pace-bar">
+      <span>Your pace:</span>
+      <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner')">🌱 Beginner</button>
+      <button class="pace-btn" data-pace="average" onclick="setPace('average')">⚡ Average</button>
+      <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced')">🚀 Advanced</button>
     </div>
   </div>
 </section>
 
-<div class="pace-guide">
-  <div class="pace-cards">
-    <div class="pace-card b">
-      <div class="pc-label">🌱 Beginner — aim for</div>
-      <div class="pc-scope">Parts 1–3. Winston installed, logger.js created, at least one business event logged (login or registration). Log file readable. Can explain what a log level is.</div>
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('h1')">Hour 1 · Logging</button>
+  <button class="tab-btn" onclick="showTab('h3')">Hour 3 · Metrics &amp; Performance</button>
+  <button class="tab-btn" onclick="showTab('labs')">Labs 9.1 &amp; 9.2</button>
+  <button class="tab-btn" onclick="showTab('summary')">Summary &amp; Exam Tips</button>
+</nav>
+
+<div class="tab-content">
+
+<!-- ══════════════════════════════════════
+     HOUR 1 — LOGGING
+     ══════════════════════════════════════ -->
+<div id="tab-h1" class="tab-panel active">
+
+  <div class="sec-header">
+    <span class="sec-pill green">1.1</span>
+    <span class="sec-title">The Invisible System Problem</span>
+    <span class="sec-time">⏱ 15 min</span>
+  </div>
+
+  <div class="analogy-box">
+    <div class="analogy-label">🚗 Analogy</div>
+    An application without monitoring is like driving a car with the entire dashboard covered. It might be running fine — or the engine might be about to fail. You won't know until it stops.
+  </div>
+
+  <div class="compare-split">
+    <div class="compare-col bad">
+      <div class="compare-col-label">😰 Without monitoring</div>
+      <ol style="font-size:.8rem;line-height:1.75;color:var(--muted);">
+        <li>Customer reports the app is broken</li>
+        <li>Developer SSHs into the server</li>
+        <li>Reads console output <em>if</em> the container is still running</li>
+        <li>Guesses what went wrong</li>
+        <li>Cannot reproduce it — the state is gone</li>
+        <li>Resolution time: hours or days</li>
+      </ol>
     </div>
-    <div class="pace-card a">
-      <div class="pc-label">⚡ Average — aim for</div>
-      <div class="pc-scope">Full lab. Failed login → warn entry in JSON. Morgan piped to Winston. logs/ in .gitignore. Can explain why JSON logs are better than plain text.</div>
-    </div>
-    <div class="pace-card adv">
-      <div class="pc-label">🚀 Advanced — aim for</div>
-      <div class="pc-scope">Full lab + challenge: log level from environment variable. Can describe how Winston stdout transport maps to AWS CloudWatch Logs. Error rate alerting via log analysis.</div>
+    <div class="compare-col good">
+      <div class="compare-col-label">✅ With structured logging + metrics</div>
+      <ol style="font-size:.8rem;line-height:1.75;color:var(--muted);">
+        <li>Alert fires automatically when error rates spike</li>
+        <li>Developer opens the log dashboard</li>
+        <li>Finds 47 "JWT verification failed" errors in last hour</li>
+        <li>Correlates with a deploy 2 hours ago that changed JWT_SECRET</li>
+        <li>Rolls back — problem resolved</li>
+        <li>Resolution time: 10 minutes</li>
+      </ol>
     </div>
   </div>
-</div>
 
-<div style="max-width:1200px;margin:0 auto;padding:1rem 1.5rem 0;">
   <div class="callout blue">
-    <span class="callout-icon">📋</span>
-    <div><strong>Before you start:</strong> Labs 8.1 and 8.2 must be complete. Run <code>docker compose ps</code> and confirm all services show <code>Up</code>. You need at least one registered user in MySQL to test login logging.</div>
+    <span class="callout-icon">☁️</span>
+    <div><strong>Cloud production reality:</strong> You cannot SSH into a running container and look at console output. Containers are ephemeral — they start, stop, and are replaced automatically. All observability comes from logs shipped to a central service and metrics collected by an agent. This is why logging and metrics are a <strong>fundamental cloud skill</strong>, not an optional extra.</div>
   </div>
-</div>
 
-<div class="page-body">
-  <aside class="sidebar">
-    <div class="sb-title">Lab Progress</div>
-    <div class="progress-wrap">
-      <div class="prog-text">Completed: <span id="prog-count">0</span> / 14 steps</div>
-      <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+  <hr class="section-divider">
+
+  <div class="sec-header">
+    <span class="sec-pill green">1.2</span>
+    <span class="sec-title">Logging — What, Why, and How</span>
+    <span class="sec-time">⏱ 25 min</span>
+  </div>
+
+  <p>A log is a record that something happened. Logs answer: <strong>"What did the application do, and when?"</strong></p>
+
+  <div class="compare-split">
+    <div class="compare-col bad">
+      <div class="compare-col-label">❌ console.log() — not production logging</div>
+      <ul style="font-size:.8rem;line-height:1.75;color:var(--muted);">
+        <li>No timestamp — when did this happen?</li>
+        <li>No severity level — is this an error or info?</li>
+        <li>No structure — impossible to query or search</li>
+        <li>No routing — errors and debug go to the same stream</li>
+        <li>No persistence — lost when the container restarts</li>
+      </ul>
     </div>
-    <ul class="sb-nav">
-      <li class="sb-section">Part 1</li>
-      <li><a href="#p1">The Problem</a></li>
-      <li class="sb-section">Part 2</li>
-      <li><a href="#p2">Install &amp; logger.js</a></li>
-      <li class="sb-section">Part 3</li>
-      <li><a href="#p3">Morgan HTTP logs</a></li>
-      <li class="sb-section">Part 4</li>
-      <li><a href="#p4">Business Events</a></li>
-      <li class="sb-section">Part 5</li>
-      <li><a href="#p5">Test &amp; Verify</a></li>
-      <li class="sb-section">Links</li>
-      <li><a href="../week09/lab2_performance_monitoring.html">Lab 9.2 →</a></li>
-    </ul>
-  </aside>
+    <div class="compare-col good">
+      <div class="compare-col-label">✅ Winston — production logging</div>
+      <ul style="font-size:.8rem;line-height:1.75;color:var(--muted);">
+        <li>Automatic timestamps on every entry</li>
+        <li>Five severity levels with different destinations</li>
+        <li>JSON format — queryable and searchable</li>
+        <li>Multiple transports (console, file, cloud service)</li>
+        <li>Persists to files; survives container restarts</li>
+      </ul>
+    </div>
+  </div>
 
-  <main class="lab-content">
+  <h3 style="font-size:.92rem;font-weight:700;margin:1.25rem 0 .6rem;">Log Levels — High to Low Severity</h3>
 
-    <!-- PART 1 -->
-    <section id="p1">
-      <div class="part-head ph-red">
-        <span class="part-pill pp-red">Part 1</span>
-        <span class="part-title">The Logging Problem</span>
-        <span class="part-time">⏱ 5 min</span>
+  <div class="log-level-bar">
+    <span class="ll-chip ll-error">error</span>
+    <span class="ll-arrow">›</span>
+    <span class="ll-chip ll-warn">warn</span>
+    <span class="ll-arrow">›</span>
+    <span class="ll-chip ll-info">info</span>
+    <span class="ll-arrow">›</span>
+    <span class="ll-chip ll-http">http</span>
+    <span class="ll-arrow">›</span>
+    <span class="ll-chip ll-debug">debug</span>
+  </div>
+
+  <table class="data-table">
+    <thead><tr><th>Level</th><th>When to use</th><th>CloudEats example</th><th>In production?</th></tr></thead>
+    <tbody>
+      <tr><td><span class="ll-chip ll-error" style="font-size:.7rem;">error</span></td><td>Something broke — requires immediate attention</td><td>Database connection lost, JWT_SECRET missing</td><td><span class="badge green">Yes</span></td></tr>
+      <tr><td><span class="ll-chip ll-warn" style="font-size:.7rem;">warn</span></td><td>Unexpected but not fatal — may become a problem</td><td>Failed login attempt, duplicate registration</td><td><span class="badge green">Yes</span></td></tr>
+      <tr><td><span class="ll-chip ll-info" style="font-size:.7rem;">info</span></td><td>Normal operations worth recording</td><td>User registered, order placed, service started</td><td><span class="badge green">Yes</span></td></tr>
+      <tr><td><span class="ll-chip ll-http" style="font-size:.7rem;">http</span></td><td>Every incoming HTTP request (logged by Morgan)</td><td>GET /api/menu 200 45ms, POST /api/auth/login 401</td><td><span class="badge green">Yes</span></td></tr>
+      <tr><td><span class="ll-chip ll-debug" style="font-size:.7rem;">debug</span></td><td>Detailed developer info for debugging</td><td>Variable values, function call traces</td><td><span class="badge red">No</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="why-box">
+    <strong>Why silence debug in production?</strong> In development, set <code>LOG_LEVEL=debug</code> to see everything. In production, set <code>LOG_LEVEL=info</code> — debug messages are silenced with no code changes. Just change the environment variable. This pattern keeps logs clean and reduces storage costs.
+  </div>
+
+  <h3 style="font-size:.92rem;font-weight:700;margin:1.25rem 0 .6rem;">What to Log — and What Never to Log</h3>
+
+  <div class="card-grid cols2">
+    <div class="concept-card hl-green">
+      <div class="card-icon">✅</div>
+      <div class="card-title">DO log these</div>
+      <div class="card-body">
+        <ul style="margin:0;padding-left:1.2rem;">
+          <li>Every login attempt (success and failure)</li>
+          <li>Every user registration</li>
+          <li>Every order placement</li>
+          <li>Every 4xx and 5xx HTTP response</li>
+          <li>Admin actions (delete user, change role)</li>
+          <li>Database connection events</li>
+          <li>Application startup and shutdown</li>
+        </ul>
       </div>
-
-      <div class="ctrl-bar">
-        <span><strong style="color:var(--text)">14 steps</strong> across 5 parts</span>
-        <div class="ctrl-btns">
-          <button class="ctrl-btn" onclick="expandAll()">↓ Expand All</button>
-          <button class="ctrl-btn" onclick="collapseAll()">↑ Collapse All</button>
-        </div>
+    </div>
+    <div class="concept-card hl-red">
+      <div class="card-icon">❌</div>
+      <div class="card-title">NEVER log these</div>
+      <div class="card-body">
+        <ul style="margin:0;padding-left:1.2rem;">
+          <li><strong>Passwords</strong> — even hashed ones</li>
+          <li><strong>JWT tokens</strong> — if logged, can be stolen from log files</li>
+          <li>Credit card numbers</li>
+          <li>Personal ID numbers</li>
+          <li>Full request bodies (may contain sensitive fields)</li>
+        </ul>
       </div>
+    </div>
+  </div>
 
-      <div class="step open" id="step-p1-1">
-        <div class="step-header" onclick="toggleStep('step-p1-1')">
-          <div class="step-num">1</div>
-          <div class="step-title">See what logging looks like right now</div>
-        </div>
-        <div class="step-body">
-          <p>Check the current console output from your user-service. It shows <code>console.log()</code> output with no timestamps, no levels, and nothing survives a restart:</p>
-          <div class="code-block">
-            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-            <pre>docker logs cloudeats-user-service --tail 20</pre>
-          </div>
-          <div class="expected-output">
-            <div class="eo-label">🔍 What you see now — no structure</div>
-            <div class="eo-body">User logged in
-Error: something went wrong
-Server running on port 3001</div>
-          </div>
-          <p style="margin-top:.6rem;">By the end of this lab, the same events will look like:</p>
-          <div class="expected-output">
-            <div class="eo-label">✅ What you will see after this lab</div>
-            <div class="eo-body">{"level":"info","message":"User login successful","service":"user-service","userId":1,"email":"ali@example.com","timestamp":"2026-06-26 10:23:45:123"}
-{"level":"warn","message":"Login failed - invalid password","service":"user-service","email":"hacker@bad.com","ip":"192.168.1.10","timestamp":"2026-06-26 10:23:51:456"}</div>
-          </div>
-          <div class="why-box">
-            <strong>Why does JSON matter?</strong> The structured version is machine-readable. You can query: <em>"show all warn-level entries from user-service in the last hour where email contains @bad.com"</em>. You cannot do that with plain text.
-          </div>
-        </div>
+  <h3 style="font-size:.92rem;font-weight:700;margin:1.25rem 0 .6rem;">Structured JSON Log Entry vs Plain Text</h3>
+
+  <div class="compare-split">
+    <div class="compare-col bad">
+      <div class="compare-col-label">❌ Unstructured — hard to search</div>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">console.log</span></div>
+        <pre>User ali@example.com logged in at 10:23:45</pre>
       </div>
-    </section>
-
-    <!-- PART 2 -->
-    <section id="p2">
-      <div class="part-head ph-green">
-        <span class="part-pill pp-green">Part 2</span>
-        <span class="part-title">Install Winston and Create logger.js</span>
-        <span class="part-time">⏱ 18 min</span>
+      <p style="font-size:.78rem;color:var(--muted);">How do you find all failed logins from the last hour? grep is slow and brittle.</p>
+    </div>
+    <div class="compare-col good">
+      <div class="compare-col-label">✅ Structured JSON — queryable</div>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">Winston JSON log</span></div>
+        <pre>{
+  "level": "warn",
+  "message": "Login failed",
+  "service": "user-service",
+  "timestamp": "2026-06-26 10:23:45:123",
+  "email": "ali@example.com",
+  "ip": "192.168.1.10"
+}</pre>
       </div>
+      <p style="font-size:.78rem;color:var(--muted);">Query: <code>level="warn" AND message="Login failed"</code> — instant results.</p>
+    </div>
+  </div>
 
-      <div class="step open" id="step-p2-1">
-        <div class="step-header" onclick="toggleStep('step-p2-1')">
-          <div class="step-num">2</div>
-          <div class="step-title">Navigate to user-service and install packages</div>
-        </div>
-        <div class="step-body">
-          <div class="code-block">
-            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-            <pre>cd ~/cloudeats-app/services/user-service
-pwd
-npm install winston morgan</pre>
-          </div>
-          <div class="expected-output">
-            <div class="eo-label">✅ Expected</div>
-            <div class="eo-body">added 2 packages ... found 0 vulnerabilities</div>
-          </div>
-        </div>
-      </div>
+  <hr class="section-divider">
 
-      <div class="step open" id="step-p2-2">
-        <div class="step-header" onclick="toggleStep('step-p2-2')">
-          <div class="step-num">3</div>
-          <div class="step-title">Create the logs directory and add it to .gitignore</div>
-        </div>
-        <div class="step-body">
-          <p>Winston needs the <code>logs/</code> folder to exist before it can write to it. Log files must never be committed to Git — they can be large and may contain sensitive data.</p>
-          <div class="code-block">
-            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-            <pre>mkdir -p logs
-echo "logs/" >> .gitignore
-echo ".env" >> .gitignore
-cat .gitignore</pre>
-          </div>
-          <div class="expected-output">
-            <div class="eo-label">✅ .gitignore should contain</div>
-            <div class="eo-body">node_modules/
-.env
-logs/</div>
-          </div>
-          <div class="trouble">
-            <div class="trouble-header" onclick="toggleTrouble(this.closest('.trouble'),event)">⚠️ Trouble: ENOENT: logs directory not found (after rebuild)</div>
-            <div class="trouble-body">The logs/ folder is created on the host but the Docker container has its own filesystem. Make sure your Dockerfile has <code>RUN mkdir -p logs</code> or create the folder in the container entrypoint. Alternatively, add a volume mount in docker-compose.yml: <code>- ./services/user-service/logs:/app/logs</code></div>
-          </div>
-        </div>
-      </div>
+  <div class="sec-header">
+    <span class="sec-pill blue">1.3</span>
+    <span class="sec-title">Morgan — HTTP Request Logging Middleware</span>
+    <span class="sec-time">⏱ 10 min</span>
+  </div>
 
-      <div class="step open" id="step-p2-3">
-        <div class="step-header" onclick="toggleStep('step-p2-3')">
-          <div class="step-num">4</div>
-          <div class="step-title">Create config/logger.js — the Winston configuration</div>
-        </div>
-        <div class="step-body">
-          <p>Create the <code>config/</code> directory and the logger file. This is the single source of truth for all logging configuration in the user-service:</p>
-          <div class="code-block">
-            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-            <pre>mkdir -p config
-nano config/logger.js</pre>
-          </div>
-          <p>Copy the complete logger configuration below:</p>
-          <div class="code-block">
-            <div class="code-header"><span class="file-chip">config/logger.js</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-            <pre>const winston = require('winston');
+  <p>Morgan is an Express middleware that logs every incoming HTTP request automatically. You wire it to write through Winston so all logs go to the same destination:</p>
 
-// Log level from environment variable — debug in dev, info in production
-const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
+  <div class="code-block">
+    <div class="code-header"><span class="file-chip">config/morganLogger.js</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+    <pre>const morgan = require('morgan');
+const logger = require('./logger');
 
-// Custom level definitions (error=0 is most severe; debug=4 is least)
-const levels = { error: 0, warn: 1, info: 2, http: 3, debug: 4 };
-
-// Colour map for console output
-const colors = { error: 'red', warn: 'yellow', info: 'green', http: 'magenta', debug: 'white' };
-winston.addColors(colors);
-
-// Console format: coloured, human-readable
-const consoleFormat = winston.format.combine(
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
-  winston.format.colorize({ all: true }),
-  winston.format.printf(({ timestamp, level, message }) => `${timestamp} ${level}: ${message}`)
-);
-
-// File format: uncoloured JSON — searchable, machine-readable
-const fileFormat = winston.format.combine(
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
-  winston.format.uncolorize(),
-  winston.format.json()
-);
-
-const logger = winston.createLogger({
-  level: LOG_LEVEL,
-  levels,
-  transports: [
-    // Console: coloured output for development
-    new winston.transports.Console({ format: consoleFormat }),
-
-    // error.log: only error-level entries
-    new winston.transports.File({
-      filename: 'logs/error.log',
-      level: 'error',
-      format: fileFormat
-    }),
-
-    // combined.log: everything at or above LOG_LEVEL
-    new winston.transports.File({
-      filename: 'logs/combined.log',
-      format: fileFormat
-    }),
-  ],
-});
-
-// Add a service label to every log entry
-logger.defaultMeta = { service: 'user-service' };
-
-module.exports = logger;</pre>
-          </div>
-          <div class="level-block beginner">
-            <div class="level-block-label">🌱 Beginner — what are transports?</div>
-            A transport is a destination for log entries. We have three: Console (you see it while the container is running), <code>error.log</code> (errors only — for quick incident response), and <code>combined.log</code> (everything — for searching through history). The same event can go to multiple transports at once.
-          </div>
-          <div class="level-block advanced">
-            <div class="level-block-label">🚀 Advanced — cloud transport</div>
-            In a cloud deployment, replace the File transports with a single Console transport writing to stdout. The container orchestrator (ECS, GKE, AKS) captures stdout from all containers and ships it to CloudWatch Logs, Google Cloud Logging, or Azure Monitor. Add <code>winston-cloudwatch</code> or similar npm packages for direct integration. The same <code>logger.info()</code> calls in your code work unchanged.
-          </div>
-        </div>
-      </div>
-
-      <div class="step open" id="step-p2-4">
-        <div class="step-header" onclick="toggleStep('step-p2-4')">
-          <div class="step-num">5</div>
-          <div class="step-title">Create config/morganLogger.js — HTTP request logging</div>
-        </div>
-        <div class="step-body">
-          <div class="code-block">
-            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-            <pre>nano config/morganLogger.js</pre>
-          </div>
-          <div class="code-block">
-            <div class="code-header"><span class="file-chip">config/morganLogger.js</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-            <pre>const morgan  = require('morgan');
-const logger  = require('./logger');
-
-// Route Morgan's output into Winston's http level
+// Route Morgan's output stream into Winston's http level
 const stream = {
   write: (message) => logger.http(message.trim())
 };
 
-// Format: METHOD URL STATUS size - responseTimeMs
 const morganMiddleware = morgan(
   ':method :url :status :res[content-length] - :response-time ms',
   { stream }
 );
 
 module.exports = morganMiddleware;</pre>
-          </div>
-        </div>
-      </div>
+  </div>
 
-    </section>
+  <table class="data-table">
+    <thead><tr><th>Morgan format</th><th>Output detail</th><th>Use case</th></tr></thead>
+    <tbody>
+      <tr><td><code>'combined'</code></td><td>IP, user, method, URL, status, size, referrer, user-agent</td><td>Production — full audit trail</td></tr>
+      <tr><td><code>'short'</code></td><td>Method, URL, status, response time</td><td>Balanced — most useful fields</td></tr>
+      <tr><td><code>'dev'</code></td><td>Coloured condensed output</td><td>Development only — visual readability</td></tr>
+    </tbody>
+  </table>
 
-    <!-- PART 3 -->
-    <section id="p3">
-      <div class="part-head ph-blue">
-        <span class="part-pill pp-blue">Part 3</span>
-        <span class="part-title">Wire Logger into server.js</span>
-        <span class="part-time">⏱ 10 min</span>
-      </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">🚀 Advanced — cloud logging pipeline</div>
+    In a cloud deployment, Winston would write to <strong>stdout</strong> (not a file). The container platform (ECS, Cloud Run, AKS) collects stdout from all containers and forwards it to the cloud logging service — CloudWatch Logs, Google Cloud Logging, or Azure Monitor. The same Winston code works — only the transport destination changes. You never need to SSH into a container to read logs.
+  </div>
 
-      <div class="step open" id="step-p3-1">
-        <div class="step-header" onclick="toggleStep('step-p3-1')">
-          <div class="step-num">6</div>
-          <div class="step-title">Add logger imports to the top of server.js</div>
-        </div>
-        <div class="step-body">
-          <p>Open <code>server.js</code> and add these two lines after your existing <code>require()</code> statements:</p>
-          <div class="code-block">
-            <div class="code-header"><span class="file-chip">server.js — add after existing requires</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-            <pre>// ── ADD THESE TWO LINES after existing requires ──
-const logger         = require('./config/logger');
-const morganMiddleware = require('./config/morganLogger');</pre>
-          </div>
-        </div>
-      </div>
+</div><!-- /tab-h1 -->
 
-      <div class="step open" id="step-p3-2">
-        <div class="step-header" onclick="toggleStep('step-p3-2')">
-          <div class="step-num">7</div>
-          <div class="step-title">Add Morgan middleware and startup log</div>
-        </div>
-        <div class="step-body">
-          <p>Find the <code>app.use(cors())</code> line and add Morgan right below it. Also update the server startup line:</p>
-          <div class="code-block">
-            <div class="code-header"><span class="file-chip">server.js — middleware section</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-            <pre">app.use(cors());
-app.use(express.json());
-app.use(morganMiddleware);   // ← ADD THIS — logs every HTTP request
+<!-- ══════════════════════════════════════
+     HOUR 3 — METRICS & PERFORMANCE
+     ══════════════════════════════════════ -->
+<div id="tab-h3" class="tab-panel">
 
-// ... rest of your middleware and routes ...
+  <div class="sec-header">
+    <span class="sec-pill blue">3.1</span>
+    <span class="sec-title">Metrics — The Dashboard of Your Application</span>
+    <span class="sec-time">⏱ 20 min</span>
+  </div>
 
-// Update the app.listen line at the bottom:
-app.listen(PORT, () => {
-  logger.info(`User service started on port ${PORT}`);   // ← replace console.log
+  <div class="analogy-box">
+    <div class="analogy-label">📊 Logs vs Metrics</div>
+    <strong>Logs</strong> answer: "What happened?" — a flight recorder of individual events.<br>
+    <strong>Metrics</strong> answer: "How is the system performing <em>right now</em>?" — a live instrument panel.
+  </div>
+
+  <div class="card-grid cols2">
+    <div class="concept-card hl-green">
+      <div class="card-icon">📋</div>
+      <div class="card-title">Logs</div>
+      <div class="card-body">Individual events with full context. High volume. Used for debugging, security audit, incident investigation. Example: "User ID 5 placed order #142 at 10:23:45."</div>
+    </div>
+    <div class="concept-card hl-blue">
+      <div class="card-icon">📈</div>
+      <div class="card-title">Metrics</div>
+      <div class="card-body">Aggregated numbers sampled over time. Low volume. Used for dashboards, alerts, capacity planning. Example: "The /api/orders endpoint processed 45 requests in the last minute with a 98% success rate."</div>
+    </div>
+  </div>
+
+  <h3 style="font-size:.92rem;font-weight:700;margin:1.25rem 0 .6rem;">Key Metric Types (prom-client)</h3>
+
+  <table class="data-table">
+    <thead><tr><th>Type</th><th>Behaviour</th><th>CloudEats example</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Counter</strong></td><td>Only ever increases; never goes down</td><td>Total requests, total user registrations, total logins</td></tr>
+      <tr><td><strong>Gauge</strong></td><td>Can go up or down; a current snapshot</td><td>Active HTTP requests right now, memory usage MB</td></tr>
+      <tr><td><strong>Histogram</strong></td><td>Samples values into configurable buckets; calculates percentiles</td><td>Response time — bucket counts at 10ms, 50ms, 100ms, 300ms, 500ms, 1s</td></tr>
+    </tbody>
+  </table>
+
+  <div class="level-block beginner">
+    <div class="level-block-label">🌱 Beginner — why percentiles?</div>
+    An average response time of 50ms sounds fine. But if 5% of requests take 2,000ms, those slow requests represent real users having a terrible experience. <strong>P95</strong> (95th percentile) means "95% of requests finish faster than this." It exposes the slow tail that averages hide.
+  </div>
+
+  <div class="level-block average">
+    <div class="level-block-label">⚡ Average — the Prometheus format</div>
+    <code>prom-client</code> exports metrics in Prometheus text format at a <code>/metrics</code> endpoint. Each line is: <code>metric_name&#123;label="value"&#125; number</code>. Prometheus (an open-source monitoring server) scrapes this endpoint every 15 seconds. We use prom-client without a full Prometheus server — we collect and read the metrics directly. The format is the industry standard.
+  </div>
+
+  <div class="level-block advanced">
+    <div class="level-block-label">🚀 Advanced — RED method</div>
+    A structured way to define what to monitor for any service: <strong>R</strong>ate (requests per second), <strong>E</strong>rrors (requests that fail), <strong>D</strong>uration (how long requests take). These three metrics — all collectable with prom-client — give a complete picture of service health. Google's SRE book expands this into "four golden signals": latency, traffic, errors, saturation.
+  </div>
+
+  <hr class="section-divider">
+
+  <div class="sec-header">
+    <span class="sec-pill amber">3.2</span>
+    <span class="sec-title">Performance Optimisation Strategies</span>
+    <span class="sec-time">⏱ 20 min</span>
+  </div>
+
+  <p>When metrics reveal a problem (slow responses, high CPU), these are the four primary tools:</p>
+
+  <div class="card-grid cols2">
+    <div class="concept-card hl-green">
+      <div class="card-icon">⚡</div>
+      <div class="card-title">Strategy 1 — Caching (Redis)</div>
+      <div class="card-body">Store the result of an expensive operation and reuse it. The CloudEats menu rarely changes — querying MySQL on every request is wasted work. Cache the result in Redis for 5 minutes.</div>
+    </div>
+    <div class="concept-card hl-blue">
+      <div class="card-icon">↕️</div>
+      <div class="card-title">Strategy 2 — Vertical Scaling</div>
+      <div class="card-body">Give the existing VM more CPU and RAM. Simple but has a ceiling — you cannot add hardware beyond the largest available instance. In Proxmox: increase VM resource allocation. In cloud: upgrade instance type.</div>
+    </div>
+    <div class="concept-card hl-purple">
+      <div class="card-icon">↔️</div>
+      <div class="card-title">Strategy 3 — Horizontal Scaling</div>
+      <div class="card-body">Run more copies of the same container behind a load balancer. No ceiling — add as many as needed. CloudEats microservices are stateless (state is in databases) — they scale horizontally with no code changes.</div>
+    </div>
+    <div class="concept-card hl-amber">
+      <div class="card-icon">🗄️</div>
+      <div class="card-title">Strategy 4 — Database Query Optimisation</div>
+      <div class="card-body">Slow queries are the most common bottleneck. Add an INDEX on columns used in WHERE clauses. Use <code>EXPLAIN SELECT ...</code> to see if MySQL is using the index or doing a full table scan.</div>
+    </div>
+  </div>
+
+  <h3 style="font-size:.92rem;font-weight:700;margin:1.25rem 0 .6rem;">Caching Example — Menu Route with Redis</h3>
+
+  <div class="code-block">
+    <div class="code-header"><span class="file-chip">menu-service/server.js</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+    <pre>app.get('/api/menu', async (req, res) => {
+  // Step 1: Check the Redis cache first (fast path)
+  const cached = await redis.get('menu:all');
+  if (cached) {
+    logger.debug('Cache hit: menu:all');
+    return res.json(JSON.parse(cached));   // 1ms response
+  }
+
+  // Step 2: Cache miss — query the database
+  logger.debug('Cache miss: menu:all — querying MySQL');
+  const results = await db.query('SELECT * FROM menu_items');
+
+  // Step 3: Store in Redis for 5 minutes (300 seconds)
+  await redis.setex('menu:all', 300, JSON.stringify(results));
+
+  res.json(results);  // first request: ~50ms; all subsequent: ~1ms
 });</pre>
-          </div>
-        </div>
-      </div>
+  </div>
 
-    </section>
+  <div class="level-block average">
+    <div class="level-block-label">⚡ Average — checkpoint question</div>
+    The menu was cached at 10:00. A restaurant owner adds a new item at 10:02. A customer requests the menu at 10:03. What do they see? (Answer: the old cached menu — the new item appears at 10:05 when the 5-minute TTL expires. This is the cache invalidation trade-off: freshness vs performance.)
+  </div>
 
-    <!-- PART 4 -->
-    <section id="p4">
-      <div class="part-head ph-amber">
-        <span class="part-pill pp-amber">Part 4</span>
-        <span class="part-title">Add Business Event Logging</span>
-        <span class="part-time">⏱ 15 min</span>
-      </div>
+  <hr class="section-divider">
 
-      <div class="step open" id="step-p4-1">
-        <div class="step-header" onclick="toggleStep('step-p4-1')">
-          <div class="step-num">8</div>
-          <div class="step-title">Log successful and failed logins</div>
-        </div>
-        <div class="step-body">
-          <p>Find your login endpoint (<code>POST /api/auth/login</code>) and add logger calls at the key decision points:</p>
-          <div class="code-block">
-            <div class="code-header"><span class="file-chip">server.js — login endpoint</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-            <pre>// Inside the login endpoint, after bcrypt.compare():
+  <div class="sec-header">
+    <span class="sec-pill red">3.3</span>
+    <span class="sec-title">Cost Optimisation</span>
+    <span class="sec-time">⏱ 10 min</span>
+  </div>
 
-// Failed password:
-if (!isValidPassword) {
-  logger.warn('Login failed - invalid password', {
-    email: email,
-    ip: req.ip
-  });
-  return res.status(401).json({ error: 'Invalid email or password' });
-}
+  <table class="data-table">
+    <thead><tr><th>Pricing model</th><th>Commitment</th><th>Cost</th><th>Best for</th></tr></thead>
+    <tbody>
+      <tr><td><strong>On-demand</strong></td><td>None</td><td>Highest</td><td>Unpredictable workloads, short-term projects</td></tr>
+      <tr><td><strong>Reserved</strong></td><td>1–3 years</td><td>Up to 75% cheaper</td><td>Stable, predictable production workloads</td></tr>
+      <tr><td><strong>Spot / Preemptible</strong></td><td>None — can be terminated 2 min notice</td><td>Up to 90% cheaper</td><td>Batch jobs, non-critical background processing</td></tr>
+    </tbody>
+  </table>
 
-// Successful login (just before returning the token):
-logger.info('User login successful', {
-  userId: user.id,
-  email: user.email
-});
-return res.json({ token: token, user: { ... } });</pre>
-          </div>
-          <div class="level-block beginner">
-            <div class="level-block-label">🌱 Beginner — why log the IP on failure?</div>
-            If the same IP address has 50 failed login attempts in one minute, that's a brute-force attack. Logging the IP lets you identify and block attackers. We log the IP only on failure — on success, we log the userId instead.
-          </div>
-          <div class="callout red">
-            <span class="callout-icon">⚠️</span>
-            <div><strong>Never pass the password into the logger.</strong> Not the plain text, not the hash. If you log <code>{ password: req.body.password }</code>, it is stored permanently in the log file where anyone who can read the file can see it.</div>
-          </div>
-        </div>
-      </div>
+  <div class="callout amber">
+    <span class="callout-icon">💡</span>
+    <div><strong>Common cost waste:</strong> Overprovisioned instances running at 5% CPU. Dev/test environments running 24/7 when used 8 hours/day. Database volumes from deleted instances still being billed. Data transfer charges between regions. <strong>Set a budget alert</strong> before you deploy anything — many students get surprise bills from forgetting to stop a cloud VM.</div>
+  </div>
 
-      <div class="step open" id="step-p4-2">
-        <div class="step-header" onclick="toggleStep('step-p4-2')">
-          <div class="step-num">9</div>
-          <div class="step-title">Log user registration</div>
-        </div>
-        <div class="step-body">
-          <p>Find your registration endpoint and add a log on success:</p>
-          <div class="code-block">
-            <div class="code-header"><span class="file-chip">server.js — registration endpoint</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-            <pre>// After INSERT succeeds and you have the new userId:
-logger.info('New user registered', {
-  userId: result.insertId,
-  email: email
-  // do NOT log: name, password, phone
-});</pre>
-          </div>
-        </div>
-      </div>
+  <div class="level-block beginner">
+    <div class="level-block-label">🌱 Beginner — CloudEats cost estimate</div>
+    A small CloudEats deployment on AWS (3 app containers + 3 managed databases) would cost roughly USD 100–150/month on-demand, or USD 60–80/month with reserved instances. This is far cheaper than a physical server in a data centre — and you only pay for what you actually use.
+  </div>
 
-      <div class="step open" id="step-p4-3">
-        <div class="step-header" onclick="toggleStep('step-p4-3')">
-          <div class="step-num">10</div>
-          <div class="step-title">Log database errors</div>
-        </div>
-        <div class="step-body">
-          <p>Find any database error handlers and replace <code>console.error()</code>:</p>
-          <div class="code-block">
-            <div class="code-header"><span class="file-chip">server.js — database error handlers</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-            <pre">// Replace:
-// console.error('Database error:', err);
+  <hr class="section-divider">
 
-// With:
-logger.error('Database query failed', {
-  error: err.message,
-  code: err.code,
-  endpoint: req.path
-});</pre>
-          </div>
-          <div class="level-block average">
-            <div class="level-block-label">⚡ Average — admin action logging</div>
-            If your admin routes from Lab 8.2 delete users or change roles, add an audit log there too: <code>logger.warn('Admin action: role changed', { adminId: req.user.userId, targetUserId: id, newRole: role })</code>. In regulated industries, admin audit logs are a compliance requirement.
-          </div>
-        </div>
-      </div>
+  <div class="sec-header">
+    <span class="sec-pill purple">3.4</span>
+    <span class="sec-title">Introduction to Cloud Migration Planning</span>
+    <span class="sec-time">⏱ 10 min</span>
+  </div>
 
-      <div class="step open" id="step-p4-4">
-        <div class="step-header" onclick="toggleStep('step-p4-4')">
-          <div class="step-num">11</div>
-          <div class="step-title">Rebuild and restart</div>
-        </div>
-        <div class="step-body">
-          <div class="code-block">
-            <div class="code-header"><span class="code-lang">Terminal — from ~/cloudeats-app</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-            <pre>cd ~/cloudeats-app
-docker compose build user-service
-docker compose up -d user-service</pre>
-          </div>
-          <div class="expected-output">
-            <div class="eo-label">✅ Startup log entry should appear in docker logs</div>
-            <div class="eo-body">2026-06-26 10:00:00:000 info: User service started on port 3001</div>
-          </div>
-          <div class="trouble">
-            <div class="trouble-header" onclick="toggleTrouble(this.closest('.trouble'),event)">⚠️ Trouble: Cannot find module './config/logger'</div>
-            <div class="trouble-body">The config/ directory and logger.js must be inside the user-service folder (same level as server.js). Check: <code>ls services/user-service/config/</code> — you should see logger.js and morganLogger.js. If missing, recreate them.</div>
-          </div>
-        </div>
-      </div>
+  <p>By the end of Week 9 you have a complete, production-quality application running on Proxmox. Moving it to a real cloud requires a plan — not just a <code>docker compose up</code> on a different server.</p>
 
-    </section>
+  <p>A cloud migration plan must answer five questions:</p>
 
-    <!-- PART 5 -->
-    <section id="p5">
-      <div class="part-head ph-green">
-        <span class="part-pill pp-green">Part 5</span>
-        <span class="part-title">Test and Verify — Key Checkpoint</span>
-        <span class="part-time">⏱ 12 min</span>
-      </div>
+  <div class="card-grid cols2">
+    <div class="concept-card">
+      <div class="card-title">1. What are we migrating?</div>
+      <div class="card-body">Inventory every service, database, volume, and network component. For CloudEats: user-service, menu-service, order-service, MySQL, MongoDB, Redis, API Gateway.</div>
+    </div>
+    <div class="concept-card">
+      <div class="card-title">2. What replaces each component?</div>
+      <div class="card-body">Map each local component to a cloud equivalent. MySQL → AWS RDS. Redis → ElastiCache. Docker container → ECS task. .env secrets → AWS Secrets Manager.</div>
+    </div>
+    <div class="concept-card">
+      <div class="card-title">3. What must change in the code?</div>
+      <div class="card-body">Identify blockers: hardcoded IP addresses, local file paths, missing health checks, secrets not using environment variables. These must be fixed before migration.</div>
+    </div>
+    <div class="concept-card">
+      <div class="card-title">4. In what order do we migrate?</div>
+      <div class="card-body">Phase approach: databases first (preserve data), then services, then DNS switchover. Never attempt a big-bang migration of everything at once.</div>
+    </div>
+    <div class="concept-card">
+      <div class="card-title">5. How do we verify it worked?</div>
+      <div class="card-body">Success criteria: all health checks pass, smoke tests succeed, metrics show normal error rates, no data loss. Define these before starting — not after.</div>
+    </div>
+  </div>
 
-      <div class="step open" id="step-p5-1">
-        <div class="step-header" onclick="toggleStep('step-p5-1')">
-          <div class="step-num">12</div>
-          <div class="step-title">Trigger a failed login to generate a warn entry</div>
-        </div>
-        <div class="step-body">
-          <div class="code-block">
-            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-            <pre">curl -s -X POST http://localhost:8000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"notauser@test.com","password":"wrongpassword"}'</pre>
-          </div>
-        </div>
-      </div>
+  <div class="callout green">
+    <span class="callout-icon">→</span>
+    <div>You will answer all five questions in <strong>Lab 10.1</strong> next week, using a structured migration planning worksheet. The Winston and prom-client tools from this week map directly to the cloud monitoring services section of that worksheet.</div>
+  </div>
 
-      <div class="step open" id="step-p5-2">
-        <div class="step-header" onclick="toggleStep('step-p5-2')">
-          <div class="step-num">13</div>
-          <div class="step-title">Read the log file and verify the JSON entry</div>
-        </div>
-        <div class="step-body">
-          <div class="code-block">
-            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-            <pre">docker exec cloudeats-user-service cat logs/combined.log | tail -5</pre>
-          </div>
-          <div class="expected-output">
-            <div class="eo-label">✅ Expected — JSON warn entry</div>
-            <div class="eo-body">{"level":"warn","message":"Login failed - invalid password","service":"user-service","email":"notauser@test.com","ip":"172.18.0.1","timestamp":"2026-06-26 10:05:12:345"}</div>
-          </div>
-          <div class="callout green">
-            <span class="callout-icon">🎯</span>
-            <div>If you see a JSON entry with <code>level: "warn"</code> containing the email and timestamp, your structured logging is working correctly.</div>
-          </div>
-        </div>
-      </div>
+</div><!-- /tab-h3 -->
 
-      <div class="step open" id="step-p5-3">
-        <div class="step-header" onclick="toggleStep('step-p5-3')">
-          <div class="step-num">14</div>
-          <div class="step-title">Watch logs in real time with tail -f</div>
-        </div>
-        <div class="step-body">
-          <p>In a second terminal, stream the log file while making requests in your first terminal:</p>
-          <div class="code-block">
-            <div class="code-header"><span class="code-lang">Terminal 2 — live log stream</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-            <pre">docker exec cloudeats-user-service tail -f logs/combined.log</pre>
-          </div>
-          <p style="margin-top:.5rem;">Now make a successful login in Terminal 1 and watch the info entry appear in real time. Press <strong>Ctrl+C</strong> to stop tailing.</p>
-          <div class="level-block advanced">
-            <div class="level-block-label">🚀 Advanced — grep log analysis</div>
-            You can search logs like a database query using grep: <code>docker exec cloudeats-user-service grep '"level":"warn"' logs/combined.log | wc -l</code> — counts all warn entries. Or: <code>grep 'Login failed' logs/combined.log</code> to list all failed attempts. This is the basic version of what Kibana or CloudWatch Logs Insights do.
-          </div>
-        </div>
-      </div>
+<!-- ══════════════════════════════════════
+     LABS
+     ══════════════════════════════════════ -->
+<div id="tab-labs" class="tab-panel">
 
-      <div class="checkpoint">
-        <div class="checkpoint-label">🎯 Lab 9.1 Key Checkpoint — all must be true</div>
-        <ul>
-          <li>✅ <code>logs/combined.log</code> exists and contains JSON entries</li>
-          <li>✅ A failed login produces a <code>level: "warn"</code> entry with email and timestamp</li>
-          <li>✅ HTTP requests produce <code>level: "http"</code> entries (from Morgan)</li>
-          <li>✅ <code>logs/</code> is listed in <code>.gitignore</code></li>
-        </ul>
-      </div>
+  <div class="sec-header">
+    <span class="sec-pill green">Labs</span>
+    <span class="sec-title">Hours 2 &amp; 4: Hands-on Observability</span>
+  </div>
 
-    </section>
+  <div class="callout amber">
+    <span class="callout-icon">📝</span>
+    <div><strong>Assessment note:</strong> Presentations begin this week. If your slot is during this session, compress Hours 3–4 and complete Lab 9.2 as homework or in the next available slot.</div>
+  </div>
 
-    <section style="margin-top:1.5rem;">
-      <div class="challenge-box">
-        <div class="challenge-label">🚀 Advanced Challenge Extension</div>
-        <p>Make the log level configurable without rebuilding the container. Add <code>LOG_LEVEL=debug</code> to your <code>.env</code> file, load it in logger.js with <code>process.env.LOG_LEVEL || 'info'</code>, then restart (not rebuild) the container with <code>docker compose restart user-service</code>.</p>
-        <p style="margin-top:.5rem;">Verify: add a <code>logger.debug('Test debug message')</code> anywhere in server.js and confirm it appears in the log at debug level but disappears when you change the env var back to <code>info</code>.</p>
-      </div>
-    </section>
+  <div class="callout blue">
+    <span class="callout-icon">📋</span>
+    <div><strong>Prerequisite state:</strong> Labs 8.1 and 8.2 complete. JWT authentication and RBAC working. All seven CloudEats services running via <code>docker compose ps</code>.</div>
+  </div>
 
-    <section style="margin-top:1.75rem;">
-      <div class="part-head ph-green" style="margin-bottom:1rem;">
-        <span class="part-pill pp-green">Summary</span>
-        <span class="part-title">What You Built</span>
-      </div>
-      <table class="summary-table">
-        <thead><tr><th>Before</th><th>After</th></tr></thead>
-        <tbody>
-          <tr><td><code>console.log('User logged in')</code> — no timestamp, no context, lost on restart</td><td><code>logger.info('User login successful', {userId, email})</code> — JSON, timestamped, searchable, persistent</td></tr>
-          <tr><td>No HTTP request records</td><td>Morgan logs every request with method, URL, status, response time through Winston</td></tr>
-          <tr><td>Errors mixed with info in one stream</td><td>Errors isolated in <code>error.log</code>; everything in <code>combined.log</code>; different levels for different urgency</td></tr>
-          <tr><td>Hardcoded log verbosity</td><td>Log level controlled by <code>LOG_LEVEL</code> environment variable — debug locally, info in production</td></tr>
-        </tbody>
-      </table>
-      <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.25rem;">
-        <a href="../week09/index.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;background:rgba(255,183,64,.08);border:1px solid rgba(255,183,64,.25);color:var(--amber);padding:.4rem .9rem;border-radius:7px;text-decoration:none;">← Week 9 Notes</a>
-        <a href="../week09/lab2_performance_monitoring.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;background:rgba(0,200,255,.1);border:1px solid rgba(0,200,255,.3);color:var(--accent);padding:.4rem .9rem;border-radius:7px;text-decoration:none;">Lab 9.2: Metrics →</a>
-      </div>
-    </section>
+  <div class="pace-guide-grid">
+    <div class="pace-guide-card pgc-b">
+      <div class="pgc-label">🌱 Beginner — target</div>
+      <strong>Lab 9.1:</strong> Winston installed, logger.js created, at least one business event logged (login or registration). Log file readable with <code>cat</code>.<br><br>
+      <strong>Lab 9.2:</strong> prom-client installed, <code>/metrics</code> endpoint returning data. Dashboard page loads.
+    </div>
+    <div class="pace-guide-card pgc-a">
+      <div class="pgc-label">⚡ Average — target</div>
+      <strong>Lab 9.1:</strong> Full lab. Failed login → warn entry in JSON. Morgan piped to Winston. Can explain why the log entry is JSON not plain text.<br><br>
+      <strong>Lab 9.2:</strong> Full lab. Counter and histogram metrics visible. Can explain the difference between a counter and a gauge.
+    </div>
+    <div class="pace-guide-card pgc-adv">
+      <div class="pgc-label">🚀 Advanced — target</div>
+      Both labs + challenge extensions. Error rate alerting implemented. Can describe how Winston stdout transport maps to AWS CloudWatch.
+    </div>
+  </div>
 
-  </main>
-</div>
+  <div class="card-grid cols2" style="margin-top:1.25rem;">
+    <div class="concept-card hl-green">
+      <div class="card-icon">📝</div>
+      <div class="card-title">Lab 9.1 — Application Logging</div>
+      <div class="card-body" style="margin-bottom:.85rem;">Install Winston + Morgan. Create <code>config/logger.js</code> with multiple transports. Replace all <code>console.log()</code> with structured logger calls. Add business event logging.</div>
+      <strong>Key checkpoint:</strong> Trigger a failed login → <code>level: "warn"</code> JSON entry visible in <code>logs/combined.log</code>.
+    </div>
+    <div class="concept-card hl-blue">
+      <div class="card-icon">📊</div>
+      <div class="card-title">Lab 9.2 — Performance Monitoring</div>
+      <div class="card-body" style="margin-bottom:.85rem;">Install prom-client. Create <code>config/metrics.js</code> with counters, gauges, and histograms. Add <code>metricsMiddleware</code>. Expose <code>GET /metrics</code> and <code>GET /metrics/json</code>. Build Chart.js dashboard.</div>
+      <strong>Key checkpoint:</strong> Make 20 requests, visit <code>/metrics</code> — counters must match request count.
+    </div>
+  </div>
+
+  <h3 style="font-size:.9rem;font-weight:700;margin:1.5rem 0 .75rem;">Common Issues &amp; Fixes</h3>
+  <table class="data-table">
+    <thead><tr><th>Problem</th><th>Likely cause</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr><td>ENOENT: logs directory not found</td><td>The <code>logs/</code> folder doesn't exist when Winston starts</td><td><code>mkdir -p logs</code> inside user-service, then rebuild container</td></tr>
+      <tr><td>Log files empty after events</td><td>logger not imported at top of server.js, or not called at event points</td><td>Check <code>const logger = require('./config/logger')</code> is at top; add <code>logger.info(...)</code> calls at login/register</td></tr>
+      <tr><td><code>/metrics</code> returns empty</td><td>metricsMiddleware not added before route definitions</td><td>Add <code>app.use(metricsMiddleware)</code> early in server.js, before any route</td></tr>
+      <tr><td>Logs not JSON — plain text in file</td><td>Missing <code>winston.format.json()</code> in File transport config</td><td>Add <code>winston.format.uncolorize()</code> and <code>winston.format.json()</code> to the File transport format chain</td></tr>
+    </tbody>
+  </table>
+
+  <div class="lab-link-row">
+    <a href="week09_lab1_application_logging.html" class="lab-link primary">📝 Open Lab 9.1 — Application Logging →</a>
+    <a href="week09_lab2_performance_monitoring.html" class="lab-link secondary">📊 Open Lab 9.2 — Performance Monitoring →</a>
+  </div>
+
+</div><!-- /tab-labs -->
+
+<!-- ══════════════════════════════════════
+     SUMMARY
+     ══════════════════════════════════════ -->
+<div id="tab-summary" class="tab-panel">
+
+  <div class="sec-header">
+    <span class="sec-pill green">Summary</span>
+    <span class="sec-title">Week 9 at a Glance</span>
+  </div>
+
+  <table class="data-table">
+    <thead><tr><th>Topic</th><th>Key takeaway</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Why monitoring matters</strong></td><td>Invisible system = unknown failures; monitoring = visibility into running containers you cannot SSH into</td></tr>
+      <tr><td><strong>Winston log levels</strong></td><td>error &gt; warn &gt; info &gt; http &gt; debug; set by LOG_LEVEL environment variable — no code change</td></tr>
+      <tr><td><strong>Structured logging</strong></td><td>JSON format; timestamp, level, service, message; searchable; <strong>never log passwords or JWT tokens</strong></td></tr>
+      <tr><td><strong>Morgan</strong></td><td>HTTP request logging middleware; stream output through Winston so all logs go to the same destination</td></tr>
+      <tr><td><strong>Metrics vs logs</strong></td><td>Logs = what happened (individual events); metrics = how is it performing right now (aggregated numbers)</td></tr>
+      <tr><td><strong>prom-client</strong></td><td>Counter / Gauge / Histogram; exports Prometheus format at <code>/metrics</code>; industry standard</td></tr>
+      <tr><td><strong>KPIs</strong></td><td>Response time p95, error rate %, uptime %, orders per hour, active users</td></tr>
+      <tr><td><strong>Caching</strong></td><td>Redis for expensive DB queries; menu cache: first request 50ms → next 1000 requests 1ms</td></tr>
+      <tr><td><strong>Horizontal scaling</strong></td><td>More containers behind load balancer; stateless microservices scale horizontally with no code changes</td></tr>
+      <tr><td><strong>Cost optimisation</strong></td><td>Right-size instances; schedule dev environments; set budget alerts; reserved &gt; on-demand for stable workloads</td></tr>
+      <tr><td><strong>Migration planning</strong></td><td>Inventory → mapping → blockers → phases → verification; five questions to answer before touching any cloud console</td></tr>
+    </tbody>
+  </table>
+
+  <hr class="section-divider">
+
+  <div class="sec-header">
+    <span class="sec-pill amber">Exam</span>
+    <span class="sec-title">Likely Assessment Questions</span>
+  </div>
+
+  <div class="card-grid cols2">
+    <div class="concept-card hl-amber">
+      <div class="card-title">Logs vs metrics</div>
+      <div class="card-body">Give a CloudEats example of something you would log and something you would measure as a metric. (Log: "User ID 5 placed order #142". Metric: "200 orders placed in the last hour".)</div>
+    </div>
+    <div class="concept-card hl-amber">
+      <div class="card-title">What NOT to log</div>
+      <div class="card-body">Name two things that should be logged and one thing that must never be logged. (Log: failed logins, order placements. Never log: passwords, JWT tokens.)</div>
+    </div>
+    <div class="concept-card hl-amber">
+      <div class="card-title">Slow /api/menu — fix it</div>
+      <div class="card-body">Suggest two optimisation strategies for a slow GET /api/menu endpoint. (1) Redis caching — return cached result for 5 minutes. (2) Add a database INDEX on frequently queried columns.)</div>
+    </div>
+    <div class="concept-card hl-amber">
+      <div class="card-title">Horizontal scaling</div>
+      <div class="card-body">Describe horizontal scaling in your own words and explain why CloudEats microservices support it. (Running more container copies behind a load balancer. Supported because services are stateless — state lives in the databases, not in the container.)</div>
+    </div>
+    <div class="concept-card hl-amber">
+      <div class="card-title">On-demand vs reserved pricing</div>
+      <div class="card-body">On-demand: pay per hour, no commitment, highest price. Reserved: commit 1–3 years, up to 75% cheaper. Use reserved for stable production workloads; on-demand for unknown or short-term needs.</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+
+  <div class="sec-header">
+    <span class="sec-pill purple">Connections</span>
+    <span class="sec-title">How Week 9 Links to Other Weeks</span>
+  </div>
+
+  <div class="card-grid cols2">
+    <div class="concept-card">
+      <div class="card-title">← Week 4: Cloud-Native / Redis</div>
+      <div class="card-body">The Redis container you added in Lab 4.2 for the cart is the same container we use for caching in Week 9. Same service, new use case — caching the menu query result.</div>
+    </div>
+    <div class="concept-card">
+      <div class="card-title">← Week 8: Security</div>
+      <div class="card-body">Failed auth events (401/403 responses) from Labs 8.1 and 8.2 are now the security events to monitor. A spike in <code>warn</code>-level "Login failed" entries is a brute-force attack in progress.</div>
+    </div>
+    <div class="concept-card">
+      <div class="card-title">← Week 2: Core Services</div>
+      <div class="card-body">Horizontal scaling with a load balancer connects directly back to the load balancer concept in Week 2's architecture diagrams. The concept is the same — the scale is different.</div>
+    </div>
+    <div class="concept-card">
+      <div class="card-title">→ Week 10: Cloud Migration</div>
+      <div class="card-body">Winston and prom-client map to cloud services in the migration worksheet: Winston stdout → CloudWatch Logs; prom-client /metrics → CloudWatch Metrics or Azure Monitor. Cost optimisation feeds directly into Lab 10.1.</div>
+    </div>
+  </div>
+
+  <div class="callout green" style="margin-top:1.25rem;">
+    <span class="callout-icon">🎓</span>
+    <div><strong>Where you are in the course:</strong> Week 9 completes the observability layer of CloudEats. The application now has authentication, access control, structured logs, and live metrics. Week 10 wraps up by planning how to move this entire stack to a real cloud provider.</div>
+  </div>
+
+  <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.25rem;">
+    <a href="week08_Cloud_Security_and_Access_Control.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;background:rgba(255,183,64,.08);border:1px solid rgba(255,183,64,.25);color:var(--amber);padding:.4rem .9rem;border-radius:7px;text-decoration:none;">← Week 8: Security</a>
+    <a href="week10_Emerging_Trends_and_Course_Wrap.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.25);color:var(--green);padding:.4rem .9rem;border-radius:7px;text-decoration:none;">Week 10: Migration →</a>
+  </div>
+
+</div><!-- /tab-summary -->
+</div><!-- /tab-content -->
 
 <script>
-let completedSteps=0;const TOTAL=14;
-function toggleStep(id,event){if(event&&!event.target.closest('.step-header'))return;const el=document.getElementById(id);if(!el)return;const wasOpen=el.classList.contains('open');el.classList.toggle('open');if(!wasOpen){completedSteps=Math.min(completedSteps+1,TOTAL);updateProgress();}}
-function toggleTrouble(el,event){if(event&&!event.target.closest('.trouble-header'))return;el.classList.toggle('open');}
-function copyCode(btn,event){if(event)event.stopPropagation();const pre=btn.closest('.code-block').querySelector('pre');navigator.clipboard.writeText(pre.innerText).then(()=>{btn.textContent='Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2000);});}
-function expandAll(){document.querySelectorAll('.step').forEach(s=>s.classList.add('open'));completedSteps=TOTAL;updateProgress();}
-function collapseAll(){document.querySelectorAll('.step').forEach(s=>s.classList.remove('open'));}
-function updateProgress(){const pct=Math.round((completedSteps/TOTAL)*100);document.getElementById('prog-fill').style.width=pct+'%';document.getElementById('prog-count').textContent=completedSteps;}
-function setPace(pace){document.body.className='pace-'+pace;document.querySelectorAll('.pace-btn').forEach(b=>b.classList.remove('active'));document.querySelector(`[data-pace="${pace}"]`).classList.add('active');if(pace==='beginner')expandAll();}
-document.addEventListener('DOMContentLoaded',()=>{expandAll();setPace('beginner');});
+function showTab(id){
+  const ids=['h1','h3','labs','summary'];
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',ids[i]===id));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+}
+function setPace(pace){
+  document.body.className='pace-'+pace;
+  document.querySelectorAll('.pace-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`[data-pace="${pace}"]`).classList.add('active');
+}
+function copyCode(btn,event){
+  if(event)event.stopPropagation();
+  const pre=btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    btn.textContent='Copied!';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2000);
+  });
+}
+document.addEventListener('DOMContentLoaded',()=>setPace('beginner'));
 </script>
 </body>
 </html>
