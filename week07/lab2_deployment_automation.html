@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 7.2 · Deployment Automation · CloudEats Academy</title>
+<meta name="description" content="Generate SSH keys, store them in GitHub Secrets, and extend a GitHub Actions workflow to auto-deploy CloudEats on every passing push — zero manual steps.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Lab 7.2 · Deployment Automation · CloudEats Academy">
+<meta property="og:description" content="Build a complete CI/CD pipeline: SSH key auth, GitHub Secrets, GitHub Actions deploy job, and zero-downtime rolling update — all from a single git push.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090f;--bg2:#0d1117;--bg3:#141b27;
+  --surface:#1a2235;--surface2:#1f2c42;--border:#2a3d5a;
+  --accent:#00c8ff;--green:#00e5a0;--amber:#ffb740;
+  --red:#ff5e7a;--purple:#b46ef5;
+  --text:#e8edf5;--muted:#6b7fa0;
+  --beginner:#00e5a0;--average:#00c8ff;--advanced:#b46ef5;
+  --lab-color:#00c8ff;--radius:10px;--code-bg:#0b1120;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;}
+
+.site-header{background:linear-gradient(135deg,#050d1c,#091628);border-bottom:1px solid var(--border);padding:0 1.5rem;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;gap:1rem;}
+.lab-badge{background:var(--lab-color);color:#000;font-size:.62rem;font-weight:700;letter-spacing:.1em;padding:.2rem .55rem;border-radius:4px;text-transform:uppercase;}
+.header-title{font-size:.88rem;font-weight:600;}
+.ghp-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.67rem;font-weight:700;padding:.18rem .55rem;background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.25);color:var(--accent);border-radius:20px;}
+.pace-switcher{display:flex;gap:.3rem;background:var(--bg3);padding:.22rem;border-radius:8px;border:1px solid var(--border);}
+.pace-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.25rem .65rem;border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--muted);transition:all .18s;}
+.pace-btn.active[data-pace="beginner"]{background:rgba(0,229,160,.18);color:var(--beginner);}
+.pace-btn.active[data-pace="average"]{background:rgba(0,200,255,.18);color:var(--average);}
+.pace-btn.active[data-pace="advanced"]{background:rgba(180,110,245,.18);color:var(--advanced);}
+
+.lab-hero{background:linear-gradient(160deg,#060f20,#07111e);border-bottom:1px solid var(--border);padding:2rem 1.5rem 1.75rem;position:relative;overflow:hidden;}
+.lab-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:350px;height:350px;background:radial-gradient(ellipse,rgba(0,200,255,.06),transparent 70%);pointer-events:none;}
+.hero-inner{max-width:1200px;margin:0 auto;}
+.hero-crumb{font-size:.7rem;color:var(--muted);margin-bottom:.4rem;}
+.hero-crumb a{color:var(--amber);text-decoration:none;}
+.lab-hero h1{font-size:clamp(1.25rem,2.5vw,1.75rem);font-weight:800;background:linear-gradient(135deg,#e8edf5 40%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.35rem;}
+.hero-sub{color:var(--muted);font-size:.84rem;margin-bottom:.85rem;}
+.hero-meta{display:flex;flex-wrap:wrap;gap:.55rem;}
+.meta-chip{display:flex;align-items:center;gap:.35rem;font-size:.74rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.22rem .6rem;color:var(--muted);}
+.meta-chip strong{color:var(--text);}
+.meta-chip.blue{background:rgba(0,200,255,.06);border-color:rgba(0,200,255,.2);color:var(--accent);}
+
+.pace-guide{max-width:1200px;margin:0 auto;padding:1rem 1.5rem 0;}
+.pace-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin-bottom:.5rem;}
+.pace-card{border-radius:8px;padding:.75rem;font-size:.78rem;line-height:1.5;}
+.pace-card.b{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);}
+.pace-card.a{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);}
+.pace-card.adv{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);}
+.pc-label{font-size:.65rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.3rem;}
+.b .pc-label{color:var(--beginner);}.a .pc-label{color:var(--average);}.adv .pc-label{color:var(--advanced);}
+.pc-scope{color:var(--muted);font-size:.76rem;}
+
+.page-body{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 200px);}
+.sidebar{position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;padding:1.25rem .85rem 2rem;border-right:1px solid var(--border);background:var(--bg2);}
+.sb-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.85rem;}
+.progress-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:.65rem;margin-bottom:1rem;}
+.prog-track{background:var(--bg2);border-radius:3px;height:5px;margin:.4rem 0;}
+.prog-fill{height:5px;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--purple));transition:width .35s;width:0%;}
+.prog-text{font-size:.69rem;color:var(--muted);}
+.prog-text span{color:var(--accent);font-weight:600;}
+.sb-nav{list-style:none;}
+.sb-nav li a{display:block;font-size:.73rem;padding:.32rem .6rem;border-radius:5px;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all .13s;margin-bottom:.08rem;}
+.sb-nav li a:hover{background:var(--surface);color:var(--text);}
+.sb-nav li a.active{background:rgba(0,200,255,.08);color:var(--accent);border-color:rgba(0,200,255,.18);}
+.sb-section{font-size:.61rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(107,127,160,.45);padding:.6rem .6rem .18rem;list-style:none;}
+
+.lab-content{padding:1.75rem 1.75rem 4rem;min-width:0;}
+
+.part-head{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;border-radius:8px;margin-bottom:1.1rem;}
+.ph-amber{background:rgba(255,183,64,.04);border:1px solid rgba(255,183,64,.22);border-left:4px solid var(--amber);}
+.ph-green{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.22);border-left:4px solid var(--green);}
+.ph-blue{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.22);border-left:4px solid var(--accent);}
+.ph-purple{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.22);border-left:4px solid var(--purple);}
+.ph-red{background:rgba(255,94,122,.04);border:1px solid rgba(255,94,122,.22);border-left:4px solid var(--red);}
+.part-pill{font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.16rem .5rem;border-radius:4px;white-space:nowrap;}
+.pp-amber{background:rgba(255,183,64,.15);color:var(--amber);}
+.pp-green{background:rgba(0,229,160,.15);color:var(--green);}
+.pp-blue{background:rgba(0,200,255,.15);color:var(--accent);}
+.pp-purple{background:rgba(180,110,245,.15);color:var(--purple);}
+.pp-red{background:rgba(255,94,122,.15);color:var(--red);}
+.part-title{font-size:.98rem;font-weight:700;}
+.part-time{font-size:.7rem;color:var(--muted);margin-left:auto;white-space:nowrap;}
+
+.step{background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:.6rem;overflow:hidden;}
+.step-hd{display:flex;align-items:center;gap:.7rem;padding:.7rem .95rem;cursor:pointer;user-select:none;transition:background .13s;}
+.step-hd:hover{background:var(--surface2);}
+.step-num{width:27px;height:27px;border-radius:50%;border:2px solid rgba(0,200,255,.3);background:rgba(0,200,255,.07);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:var(--accent);flex-shrink:0;}
+.step-label{font-size:.84rem;font-weight:600;flex:1;}
+.step-arrow{font-size:.75rem;color:var(--muted);transition:transform .18s;flex-shrink:0;}
+.step.open .step-arrow{transform:rotate(90deg);}
+.step-body{display:none;padding:.85rem .95rem 1rem;border-top:1px solid var(--border);}
+.step.open .step-body{display:block;}
+.step:not(.open) .step-hd::after{content:'click to expand';font-size:.6rem;color:var(--muted);opacity:.45;margin-left:auto;padding-right:.25rem;letter-spacing:.04em;pointer-events:none;}
+.step.open .step-hd::after{content:'';}
+
+code{font-family:'Fira Code',monospace;font-size:.83em;background:var(--code-bg);padding:.07rem .32rem;border-radius:3px;color:var(--green);}
+.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;margin:.65rem 0;overflow:hidden;}
+.code-hd{display:flex;align-items:center;justify-content:space-between;padding:.4rem .85rem;background:rgba(0,0,0,.3);border-bottom:1px solid var(--border);}
+.code-fname{font-size:.7rem;font-weight:700;color:var(--accent);}
+.code-lang{font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.copy-btn{font-family:'Sora',sans-serif;font-size:.66rem;font-weight:600;padding:.16rem .5rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;transition:all .13s;}
+.copy-btn:hover{background:var(--accent);color:#000;border-color:var(--accent);}
+.copy-btn.copied{background:var(--green);color:#000;}
+pre{font-family:'Fira Code',monospace;font-size:.77rem;line-height:1.65;padding:.85rem;overflow-x:auto;color:#c5d5ef;}
+.ck{color:var(--accent);}.cv{color:var(--green);}.cm{color:var(--muted);font-style:italic;}.cp{color:var(--purple);}.ca{color:var(--amber);}
+
+.out-label{font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:.6rem 0 .28rem;}
+.exp-out{font-family:'Fira Code',monospace;font-size:.76rem;background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.15);border-radius:6px;padding:.6rem .85rem;color:#8ee8c4;line-height:1.6;margin-bottom:.5rem;white-space:pre;}
+
+.callout{border-radius:8px;padding:.7rem .95rem;margin:.65rem 0;display:flex;gap:.55rem;align-items:flex-start;font-size:.81rem;line-height:1.55;}
+.callout.blue{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);color:#a0d8f0;}
+.callout.green{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);color:#8ee8c4;}
+.callout.amber{background:rgba(255,183,64,.06);border:1px solid rgba(255,183,64,.2);color:#d9c07a;}
+.callout.purple{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);color:#c5a8f5;}
+.callout.red{background:rgba(255,94,122,.05);border:1px solid rgba(255,94,122,.2);color:#f0a0b0;}
+
+.pb{border-radius:7px;padding:.6rem .85rem;margin:.5rem 0;font-size:.8rem;line-height:1.55;}
+.pb.b{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.15);border-left:3px solid var(--beginner);}
+.pb.a{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.15);border-left:3px solid var(--average);}
+.pb.adv{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.15);border-left:3px solid var(--advanced);}
+.pb-label{font-size:.63rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.25rem;}
+.pb.b .pb-label{color:var(--beginner);}.pb.a .pb-label{color:var(--average);}.pb.adv .pb-label{color:var(--advanced);}
+
+.checkpoint{background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.22);border-radius:8px;padding:.8rem .95rem;margin:1.1rem 0;display:flex;gap:.7rem;align-items:flex-start;font-size:.81rem;color:#8ee8c4;line-height:1.5;}
+
+.trouble{background:rgba(255,94,122,.03);border:1px solid rgba(255,94,122,.15);border-radius:7px;margin:.6rem 0;overflow:hidden;}
+.trouble-hd{display:flex;align-items:center;gap:.5rem;padding:.55rem .8rem;font-size:.79rem;font-weight:600;color:var(--red);cursor:pointer;user-select:none;}
+.trouble-arrow{font-size:.7rem;color:var(--muted);margin-left:auto;transition:transform .18s;}
+.trouble.open .trouble-arrow{transform:rotate(90deg);}
+.trouble-body{display:none;padding:0 .8rem .7rem;font-size:.78rem;color:var(--muted);line-height:1.55;}
+.trouble.open .trouble-body{display:block;}
+
+.why-box{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.2);border-left:3px solid var(--accent);border-radius:6px;padding:.65rem .9rem;margin:.6rem 0;font-size:.8rem;color:#a0d8f0;}
+.why-box strong{color:var(--accent);}
+.adv-only{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.2);border-radius:8px;padding:.9rem;margin:.65rem 0;}
+.adv-only-label{font-size:.63rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--purple);margin-bottom:.45rem;}
+
+.env-table{width:100%;border-collapse:collapse;font-size:.81rem;margin:.75rem 0;}
+.env-table th{padding:.4rem .75rem;background:var(--bg3);color:var(--muted);font-size:.67rem;letter-spacing:.07em;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border);}
+.env-table td{padding:.4rem .75rem;border-bottom:1px solid rgba(42,61,90,.3);font-family:'Fira Code',monospace;font-size:.78rem;}
+.env-table tr:last-child td{border-bottom:none;}
+.tag-fill{font-size:.67rem;font-weight:700;padding:.1rem .42rem;border-radius:3px;background:rgba(255,183,64,.12);color:var(--amber);border:1px solid rgba(255,183,64,.25);font-family:'Sora',sans-serif;}
+
+.ctrl-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;padding:.4rem 0;}
+.ctrl-bar-info{font-size:.73rem;color:var(--muted);}
+.ctrl-bar-info strong{color:var(--text);}
+.ctrl-btns{display:flex;gap:.5rem;}
+.ctrl-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.22rem .7rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all .15s;}
+.ctrl-btn:hover{color:var(--accent);border-color:var(--accent);}
+
+.prev-next{display:flex;justify-content:space-between;align-items:center;margin-top:2rem;padding-top:1.25rem;border-top:1px solid var(--border);}
+.nav-link{display:flex;flex-direction:column;gap:.2rem;text-decoration:none;}
+.nav-link .nav-dir{font-size:.67rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;}
+.nav-link .nav-title{font-size:.86rem;font-weight:600;color:var(--amber);}
+
+a{color:var(--accent);}a:hover{text-decoration:underline;}
+strong{color:var(--text);font-weight:600;}
+p{margin-bottom:.65rem;font-size:.84rem;line-height:1.68;}
+p:last-child{margin-bottom:0;}
+section{margin-bottom:2.25rem;}
+.section-divider{border:none;border-top:1px solid var(--border);margin:1.75rem 0;}
+
+@media(max-width:860px){
+  .page-body{grid-template-columns:1fr;}
+  .sidebar{display:none;}
+  .pace-cards{grid-template-columns:1fr;}
+  .header-title{display:none;}
+}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="header-inner">
+    <div style="display:flex;align-items:center;gap:.65rem">
+      <span class="lab-badge">Lab 7.2</span>
+      <span class="header-title">Deployment Automation &middot; CloudEats</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:.85rem">
+      <div class="pace-switcher">
+        <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner',this)">&#127807; Beginner</button>
+        <button class="pace-btn" data-pace="average" onclick="setPace('average',this)">&#9889; Average</button>
+        <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced',this)">&#128640; Advanced</button>
+      </div>
+      <span class="ghp-badge">&#127758; GitHub Pages Ready</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<div class="lab-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb"><a href="week07_lab1_infrastructure_as_code.html">&larr; Lab 7.1</a> &rsaquo; Lab 7.2</div>
+    <h1>Deployment Automation &mdash; CI/CD Pipeline</h1>
+    <p class="hero-sub">Generate an SSH key pair, store credentials in GitHub Secrets, and wire GitHub Actions to deploy CloudEats automatically every time a push passes its tests.</p>
+    <div class="hero-meta">
+      <div class="meta-chip">&#9200; <strong>60 min</strong></div>
+      <div class="meta-chip">&#128279; <strong>Prereq:</strong>&nbsp;Lab 7.1 complete &middot; Lab 6.2 CI workflow working</div>
+      <div class="meta-chip">&#128300; <strong>GitHub Actions</strong>&nbsp;+ SSH + Docker Compose</div>
+      <div class="meta-chip">&#128336; <strong>Next:</strong>&nbsp;Week 8 Cloud Security</div>
+      <div class="meta-chip blue">&#128640; <strong>Advanced:</strong>&nbsp;Zero-downtime rolling update</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PACE GUIDE ── -->
+<div class="pace-guide">
+  <div class="pace-cards">
+    <div class="pace-card b">
+      <div class="pc-label">&#127807; Beginner &mdash; Parts 0&ndash;5</div>
+      <div class="pc-scope">All steps expand automatically. Every SSH command is shown in full with exact expected output. SSH setup (Part 2) is the hardest step — follow it <em>exactly</em> and test manually before continuing. Allow <strong>75 min</strong>.</div>
+    </div>
+    <div class="pace-card a">
+      <div class="pc-label">&#9889; Average &mdash; Parts 0&ndash;5</div>
+      <div class="pc-scope">Steps collapsed by default. Why-boxes explain security decisions. Checkpoint question after SSH setup before moving to GitHub Actions. Allow <strong>60 min</strong>.</div>
+    </div>
+    <div class="pace-card adv">
+      <div class="pc-label">&#128640; Advanced &mdash; Parts 0&ndash;6</div>
+      <div class="pc-scope">Skip familiar steps. Challenge: modify the workflow to deploy only changed services (not the full stack) using <code>git diff --name-only</code> to detect which service directories changed. Allow <strong>60 min</strong>.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── BODY ── -->
+<div class="page-body">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="progress-wrap">
+    <div class="sb-title" style="margin-bottom:.45rem">Lab Progress</div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+    <div class="prog-text">Part <span id="prog-cur">0</span> of <span id="prog-max">6</span></div>
+  </div>
+  <div class="sb-title">Contents</div>
+  <ul class="sb-nav">
+    <li class="sb-section">Setup</li>
+    <li><a href="#p0">Part 0 &middot; Prereq Check</a></li>
+    <li><a href="#p1">Part 1 &middot; Why CD?</a></li>
+    <li class="sb-section">Authentication</li>
+    <li><a href="#p2">Part 2 &middot; SSH Keys</a></li>
+    <li><a href="#p3">Part 3 &middot; GitHub Secrets</a></li>
+    <li class="sb-section">Pipeline</li>
+    <li><a href="#p4">Part 4 &middot; Deploy Job</a></li>
+    <li><a href="#p5">Part 5 &middot; First Auto-Deploy</a></li>
+    <li class="sb-section">Advanced</li>
+    <li><a href="#p6">&#128640; Part 6 &middot; Challenge</a></li>
+  </ul>
+</aside>
+
+<!-- MAIN -->
+<main class="lab-content">
+
+<div class="callout blue">
+  <span>&#127919;</span>
+  <div><strong>What you will build:</strong> A full CI/CD pipeline where every <code>git push</code> automatically tests and deploys CloudEats. By end of this lab, your workflow is: write code → commit → push → ☕ come back to a deployed update. Zero manual deployment steps.</div>
+</div>
+
+<div class="ctrl-bar">
+  <span class="ctrl-bar-info"><strong>15 steps</strong> across 6 parts</span>
+  <div class="ctrl-btns">
+    <button class="ctrl-btn" onclick="expandAll()">&#8595; Expand All</button>
+    <button class="ctrl-btn" onclick="collapseAll()">&#8593; Collapse All</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PART 0 · PREREQUISITES
+════════════════════════════════════════ -->
+<section id="p0">
+<div class="part-head ph-amber">
+  <span class="part-pill pp-amber">Part 0</span>
+  <span class="part-title">Prerequisites Check</span>
+  <span class="part-time">5 min</span>
+</div>
+
+<div class="step open" id="step-p0-1">
+  <div class="step-hd" onclick="toggleStep('step-p0-1')">
+    <div class="step-num">0</div>
+    <span class="step-label">Fill in your deployment target details</span>
+    <span class="step-arrow">&#9654;</span>
+  </div>
+  <div class="step-body">
+    <p>Look up these four values before starting. Every command in this lab uses them — know them before you need them.</p>
+    <table class="env-table">
+      <thead><tr><th>Variable</th><th>How to find it</th><th>Your value</th></tr></thead>
+      <tbody>
+        <tr><td><code>DEPLOY_HOST</code></td><td>Run <code>hostname -I</code> on your VM</td><td><span class="tag-fill">fill in</span></td></tr>
+        <tr><td><code>DEPLOY_USER</code></td><td>Run <code>whoami</code> on your VM</td><td><span class="tag-fill">fill in</span></td></tr>
+        <tr><td><code>DEPLOY_PORT</code></td><td>Default is <code>22</code> unless told otherwise</td><td><code>22</code></td></tr>
+        <tr><td><code>APP_DIR</code></td><td>Where you cloned the repo on the VM</td><td><code>~/cloudeats-app</code></td></tr>
+      </tbody>
+    </table>
+    <div class="code-block">
+      <div class="code-hd"><span class="code-fname">Terminal — on your VM</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+      <pre><span class="cm"># Find your VM IP</span>
+hostname -I
+<span class="cm"># Note the first IP shown (e.g. 192.168.56.10)</span>
+
+<span class="cm"># Find your username</span>
+whoami
+<span class="cm"># e.g. student</span>
+
+<span class="cm"># Confirm Lab 7.1 stack is running</span>
+cd ~/cloudeats-app
+docker compose ps</pre>
+    </div>
+    <div class="out-label">Expected from docker compose ps:</div>
+    <div class="exp-out">NAME                        STATUS          PORTS
+cloudeats-mysql             Up (healthy)    ...
+cloudeats-redis             Up (healthy)    ...
+cloudeats-api-gateway       Up              0.0.0.0:8000->8000/tcp</div>
+    <div class="callout amber">
+      <span>&#9888;</span>
+      <div><strong>Lab 7.1 must be complete before continuing.</strong> If <code>docker compose ps</code> shows any service as "Exit" or "Restarting", fix it in Lab 7.1 first.</div>
+    </div>
+  </div>
+</div>
+
+<div class="step open" id="step-p0-2">
+  <div class="step-hd" onclick="toggleStep('step-p0-2')">
+    <div class="step-num">1</div>
+    <span class="step-label">Confirm your Lab 6.2 CI workflow is still working</span>
+    <span class="step-arrow">&#9654;</span>
+  </div>
+  <div class="step-body">
+    <p>Lab 7.2 adds a <code>deploy</code> job to the workflow you built in Lab 6.2. That workflow must exist and be passing before you modify it.</p>
+    <div class="code-block">
+      <div class="code-hd"><span class="code-fname">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+      <pre>cd ~/cloudeats-app
+cat .github/workflows/ci.yml
+<span class="cm"># You should see a workflow with: on: push, jobs: test</span></pre>
+    </div>
+    <div class="pb b">
+      <div class="pb-label">&#127807; Beginner — cannot find the file?</div>
+      <p>The file should be at <code>.github/workflows/ci.yml</code>. If it does not exist, you need to complete Lab 6.2 first. The <code>.github</code> folder starts with a dot — on Linux, run <code>ls -la</code> to see it (dotfiles are hidden by default).</p>
+    </div>
+  </div>
+</div>
+
+<div class="checkpoint">&#9989;&nbsp;<strong>Part 0 complete:</strong> Your VM IP and username are noted. Lab 7.1 stack is healthy. Lab 6.2 CI workflow file exists.</div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     CI / CD BOUNDARY CALLOUT
+     ═══════════════════════════════════════════ -->
+<div style="margin:1.5rem 0;padding:1.1rem 1.4rem;background:rgba(0,229,160,0.05);border:1px solid rgba(0,229,160,0.25);border-left:4px solid var(--green);border-radius:10px;display:flex;gap:1rem;align-items:flex-start;">
+  <div style="font-size:1.3rem;flex-shrink:0;line-height:1;">🔗</div>
+  <div>
+    <p style="font-weight:700;color:var(--green);margin-bottom:0.35rem;font-size:0.88rem;">Lab 7.2 continues directly from Lab 6.2 — same workflow file, new job</p>
+    <p style="font-size:0.8rem;color:var(--muted);line-height:1.6;margin-bottom:0.5rem;">
+      <strong style="color:var(--text);">Lab 6.2 built CI (Continuous Integration):</strong>
+      a <code>test</code> job in <code>.github/workflows/ci.yml</code> that runs your Jest unit tests
+      on every push and blocks failing pull requests from merging.
+    </p>
+    <p style="font-size:0.8rem;color:var(--muted);line-height:1.6;margin-bottom:0.5rem;">
+      <strong style="color:var(--text);">This lab adds CD (Continuous Deployment):</strong>
+      a second <code>deploy</code> job in the <em>same</em> <code>ci.yml</code> file.
+      The deploy job has <code>needs: test</code> — it only starts if the test job passes.
+      When it runs, it SSHs into your server, pulls the latest code, and restarts the
+      CloudEats stack automatically. You do not touch the server manually again.
+    </p>
+    <p style="font-size:0.78rem;color:var(--muted);line-height:1.5;">
+      <strong style="color:var(--text);">Prerequisite check:</strong> your
+      <code>.github/workflows/ci.yml</code> must exist and show a green run in the
+      GitHub Actions tab before you start Part 2. The Part 0 step above verifies this.
+      If it is missing, complete <a href="week06_lab2_automated_testing.html" style="color:var(--accent);border-bottom:1px solid rgba(0,200,255,0.3);">Lab 6.2</a> first.
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PART 1 · WHY CD?
+════════════════════════════════════════ -->
+<section id="p1">
+<div class="part-head ph-green">
+  <span class="part-pill pp-green">Part 1</span>
+  <span class="part-title">Why Continuous Deployment?</span>
+  <span class="part-time">5 min</span>
+</div>
+
+<div class="step open" id="step-p1-1">
+  <div class="step-hd" onclick="toggleStep('step-p1-1')">
+    <div class="step-num">2</div>
+    <span class="step-label">Trace what happens today vs. what will happen after this lab</span>
+    <span class="step-arrow">&#9654;</span>
+  </div>
+  <div class="step-body">
+    <div class="code-block">
+      <div class="code-hd"><span class="code-lang">text — Current workflow (before Lab 7.2)</span></div>
+      <pre>You:
+  1. Write code on your laptop
+  2. git commit && git push
+  3. GitHub Actions runs tests ✅
+
+Then manually:
+  4. SSH into your VM
+  5. cd ~/cloudeats-app && git pull
+  6. docker compose build user-service
+  7. docker compose up -d --no-deps user-service
+  8. Check if it worked
+  9. If broken, figure out how to roll back
+
+Time:  5–10 minutes per deployment
+Risk:  High — easy to miss a step at step 6 or 8</pre>
+    </div>
+    <div class="code-block">
+      <div class="code-hd"><span class="code-lang">text — After Lab 7.2</span></div>
+      <pre>You:
+  1. Write code on your laptop
+  2. git commit && git push
+  3. Go get coffee ☕
+
+GitHub Actions automatically:
+  4. Runs tests
+  5. If tests pass → SSHs into VM
+  6. Pulls latest code
+  7. Builds &amp; deploys updated service
+  8. Verifies health endpoint responds
+  9. Reports ✅ Deployment complete
+
+Time:  2–3 minutes, fully automated
+Risk:  Low — identical steps every time, tested first</pre>
+    </div>
+    <div class="why-box">
+      <strong>CI vs CD:</strong> Continuous Integration (Lab 6.2) = automatically test on every push. Continuous Deployment (this lab) = automatically deploy when tests pass. Together: <strong>CI/CD</strong> = the complete pipeline from code to production with no manual steps.
+    </div>
+  </div>
+</div>
+
+<div class="checkpoint">&#9989;&nbsp;<strong>Part 1 complete:</strong> You understand what CI/CD achieves. Now let's build it.</div>
+</section>
+
+<!-- ══════════════════════════════════════
+     PART 2 · SSH KEYS
+════════════════════════════════════════ -->
+<section id="p2">
+<div class="part-head ph-blue">
+  <span class="part-pill pp-blue">Part 2</span>
+  <span class="part-title">SSH Key Setup — Passwordless Authentication</span>
+  <span class="part-time">15 min</span>
+</div>
+
+<div class="callout amber">
+  <span>&#9888;</span>
+  <div><strong>This is the most critical part of the lab.</strong> Take your time. Test each step before moving on. If the SSH connection does not work manually, it will not work in GitHub Actions either — and the error will be harder to debug there.</div>
+</div>
+
+<div class="step open" id="step-p2-1">
+  <div class="step-hd" onclick="toggleStep('step-p2-1')">
+    <div class="step-num">3</div>
+    <span class="step-label">Understand SSH key authentication</span>
+    <span class="step-arrow">&#9654;</span>
+  </div>
+  <div class="step-body">
+    <p>SSH key authentication works with a <strong>key pair</strong>: two mathematically linked files. You never need to type a password — the keys prove identity instead.</p>
+    <div class="code-block">
+      <div class="code-hd"><span class="code-lang">text — How the authentication flow works</span></div>
+      <pre>Private key (id_deploy)          Public key (id_deploy.pub)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Lives in GitHub Secrets          Lives on the VM in
+(encrypted, never in logs)       ~/.ssh/authorized_keys
+
+When GitHub Actions connects:
+  GitHub presents private key ──→ VM checks against authorized_keys
+                                  Match found → Access granted ✅
+                                  No match    → Access denied ❌</pre>
+    </div>
+    <div class="pb b">
+      <div class="pb-label">&#127807; Beginner analogy</div>
+      <p>Think of the public key as a <strong>padlock</strong> that you put on your door. The private key is the only key that opens it. You can hand out as many padlocks as you want — but only the one matching private key can open them. The private key never leaves the key holder (GitHub, in our case).</p>
+    </div>
+  </div>
+</div>
+
+<div class="step open" id="step-p2-2">
+  <div class="step-hd" onclick="toggleStep('step-p2-2')">
+    <div class="step-num">4</div>
+    <span class="step-label">Generate the SSH deployment key pair on your VM</span>
+    <span class="step-arrow">&#9654;</span>
+  </div>
+  <div class="step-body">
+    <p>Run this command on your VM (not your laptop). It creates two files: the private key and the public key.</p>
+    <div class="code-block">
+      <div class="code-hd"><span class="code-fname">Terminal — on your VM</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+      <pre>ssh-keygen -t ed25519 -C "github-actions-cloudeats" -f ~/.ssh/deploy_key -N ""
+<span class="cm"># -t ed25519   : key type (modern, secure, small)</span>
+<span class="cm"># -C "..."     : comment label to identify this key</span>
+<span class="cm"># -f ~/.ssh/deploy_key : filename for the key pair</span>
+<span class="cm"># -N ""        : no passphrase (REQUIRED for automation)</span></pre>
+    </div>
+    <div class="out-label">Expected output:</div>
+    <div class="exp-out">Generating public/private ed25519 key pair.
+Your identification has been saved in /home/student/.ssh/deploy_key
+Your public key has been saved in /home/student/.ssh/deploy_key.pub
+The key fingerprint is:
+SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx github-actions-cloudeats</div>
+    <div class="code-block">
+      <div class="code-hd"><span class="code-fname">Terminal — confirm both files were created</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+      <pre>ls -la ~/.ssh/
+<span class="cm"># You should see: deploy_key (private) and deploy_key.pub (public)</span></pre>
+    </div>
+    <div class="trouble">
+      <div class="trouble-hd" onclick="toggleTrouble(this.closest('.trouble'))">&#9888; ~/.ssh directory does not exist <span class="trouble-arrow">&#9654;</span></div>
+      <div class="trouble-body">
+        <p>Create it first: <code>mkdir -p ~/.ssh && chmod 700 ~/.ssh</code> then re-run the <code>ssh-keygen</code> command above.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step open" id="step-p2-3">
+  <div class="step-hd" onclick="toggleStep('step-p2-3')">
+    <div class="step-num">5</div>
+    <span class="step-label">Authorize the public key on the VM</span>
+    <span class="step-arrow">&#9654;</span>
+  </div>
+  <div class="step-body">
+    <p>Add the public key to the VM's <code>authorized_keys</code> file. This is what tells the VM to trust connections made with the matching private key.</p>
+    <div class="code-block">
+      <div class="code-hd"><span class="code-fname">Terminal — on your VM</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+      <pre><span class="cm"># Append the public key to authorized_keys</span>
+cat ~/.ssh/deploy_key.pub >> ~/.ssh/authorized_keys
+
+<span class="cm"># Set correct permissions (SSH refuses to work if these are wrong)</span>
+chmod 600 ~/.ssh/authorized_keys
+chmod 700 ~/.ssh
+
+<span class="cm"># Verify the key was added</span>
+cat ~/.ssh/authorized_keys</pre>
+    </div>
+    <div class="out-label">Expected — last line of authorized_keys:</div>
+    <div class="exp-out">ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA... github-actions-cloudeats</div>
+    <div class="pb b">
+      <div class="pb-label">&#127807; Beginner — why are the permissions important?</div>
+      <p>SSH has a security rule: if the <code>authorized_keys</code> file is readable by anyone other than the owner, SSH ignores it entirely. The <code>chmod 600</code> command sets the file to "readable and writable by owner only". If you skip this step, SSH will silently fail with a confusing "Permission denied" error.</p>
+    </div>
+  </div>
+</div>
+
+<div class="step open" id="step-p2-4">
+  <div class="step-hd" onclick="toggleStep('step-p2-4')">
+    <div class="step-num">6</div>
+    <span class="step-label">Test the SSH connection manually before trusting GitHub Actions</span>
+    <span class="step-arrow">&#9654;</span>
+  </div>
+  <div class="step-body">
+    <p>Always test SSH key authentication manually before adding it to a workflow. If it fails here, it will fail in GitHub Actions with a much harder-to-read error message.</p>
+    <div class="code-block">
+      <div class="code-hd"><span class="code-fname">Terminal — from your VM to itself (loopback test)</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+      <pre><span class="cm"># Test connection using the deploy key</span>
+<span class="cm"># Replace DEPLOY_USER and DEPLOY_HOST with your actual values</span>
+ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no DEPLOY_USER@DEPLOY_HOST "echo 'SSH works!'"</pre>
+    </div>
+    <div class="out-label">Expected output (no password prompt):</div>
+    <div class="exp-out">SSH works!</div>
+    <div class="trouble">
+      <div class="trouble-hd" onclick="toggleTrouble(this.closest('.trouble'))">&#9888; Permission denied (publickey) <span class="trouble-arrow">&#9654;</span></div>
+      <div class="trouble-body">
+        <p>Work through this checklist in order:<br>
+        1. <code>ls -la ~/.ssh/authorized_keys</code> — permissions must show <code>-rw-------</code><br>
+        2. <code>cat ~/.ssh/authorized_keys</code> — the key must be on a single line (no line breaks in the middle)<br>
+        3. <code>sudo systemctl status sshd</code> — SSH server must be running<br>
+        4. <code>sudo nano /etc/ssh/sshd_config</code> — confirm <code>PubkeyAuthentication yes</code> is set<br>
+        5. If you changed sshd_config: <code>sudo systemctl restart sshd</code></p>
+      </div>
+    </div>
+    <div class="trouble">
+      <div class="trouble-hd" onclick="toggleTrouble(this.closest('.trouble'))">&#9888; Connection refused / timeout <span class="trouble-arrow">&#9654;</span></div>
+      <div class="trouble-body">
+        <p>Check SSH service status: <code>sudo systemctl status sshd</code>. If not running: <code>sudo systemctl start sshd && sudo systemctl enable sshd</code>. Also check firewall: <code>sudo ufw status</code> — if active, run <code>sudo ufw allow 22</code>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="checkpoint">&#9989;&nbsp;<strong>Part 2 complete:</strong> SSH key pair generated. Public key is in <code>authorized_keys</code>. Manual test connection succeeds without a password prompt.</div>
+</section>
+
+<!-- ══════════════════════════════════════
+     PART 3 · GITHUB SECRETS
+════════════════════════════════════════ -->
+<section id="p3">
+<div class="part-head ph-purple">
+  <span class="part-pill pp-purple">Part 3</span>
+  <span class="part-title">Add Secrets to GitHub</span>
+  <span class="part-time">10 min</span>
+</div>
+
+<div class="step open" id="step-p3-1">
+  <div class="step-hd" onclick="toggleStep('step-p3-1')">
+    <div class="step-num">7</div>
+    <span class="step-label">Copy the private key content from your VM</span>
+    <span class="step-arrow">&#9654;</span>
+  </div>
+  <div class="step-body">
+    <p>You need to copy the <em>entire private key file</em> — including the header and footer lines — into GitHub Secrets.</p>
+    <div class="code-block">
+      <div class="code-hd"><span class="code-fname">Terminal — on your VM</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+      <pre><span class="cm"># Print the private key — copy EVERYTHING including the BEGIN/END lines</span>
+cat ~/.ssh/deploy_key</pre>
+    </div>
+    <div class="out-label">It starts and ends like this (your key content will differ):</div>
+    <div class="exp-out">-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAABbm9uZQAAAARub25lAAAAGAAAABBzc2gtZWQyNTUxOQAA
+... (many lines of base64 text) ...
+-----END OPENSSH PRIVATE KEY-----</div>
+    <div class="callout red">
+      <span>&#128274;</span>
+      <div><strong>Never share or post this key anywhere.</strong> It gives whoever has it the ability to SSH into your VM as your user. The only place it goes is GitHub Secrets — which encrypts it immediately.</div>
+    </div>
+  </div>
+</div>
+
+<div class="step open" id="step-p3-2">
+  <div class="step-hd" onclick="toggleStep('step-p3-2')">
+    <div class="step-num">8</div>
+    <span class="step-label">Add all three secrets to GitHub Repository Settings</span>
+    <span class="step-arrow">&#9654;</span>
+  </div>
+  <div class="step-body">
+    <p>Open your browser and navigate to your GitHub repository.</p>
+    <ol style="font-size:.83rem;color:var(--muted);padding-left:1.2rem;line-height:2;">
+      <li>Click <strong>Settings</strong> (top tab of the repo, not your account settings).</li>
+      <li>In the left sidebar: <strong>Secrets and variables → Actions</strong>.</li>
+      <li>Click <strong>"New repository secret"</strong>.</li>
+    </ol>
+    <p>Add these three secrets — one at a time:</p>
+    <table class="env-table">
+      <thead><tr><th>Secret name</th><th>Value to paste</th></tr></thead>
+      <tbody>
+        <tr><td><code>DEPLOY_KEY</code></td><td>The entire private key content from Step 7 (including BEGIN/END lines)</td></tr>
+        <tr><td><code>VM_HOST</code></td><td>Your VM IP address (e.g. <code>192.168.56.10</code>)</td></tr>
+        <tr><td><code>VM_USER</code></td><td>Your VM username (e.g. <code>student</code>)</td></tr>
+      </tbody>
+    </table>
+    <div class="pb b">
+      <div class="pb-label">&#127807; Beginner — once added, secrets cannot be viewed again</div>
+      <p>After saving a secret, GitHub shows only its name — not its value. If you pasted the wrong value, delete the secret and create a new one with the correct value. This is intentional security design.</p>
+    </div>
+    <div class="why-box">
+      <strong>Why not hardcode the IP and username in the workflow file?</strong> Workflow files (<code>.github/workflows/</code>) are committed to Git and visible in the repository. If your repo is public (or becomes public later), hardcoded server IPs and usernames are exposed. Secrets keep this information encrypted and separate from the code.
+    </div>
+  </div>
+</div>
+
+<div class="checkpoint">&#9989;&nbsp;<strong>Part 3 complete:</strong> Three secrets added to GitHub: <code>DEPLOY_KEY</code>, <code>VM_HOST</code>, <code>VM_USER</code>.</div>
+</section>
+
+<!-- ══════════════════════════════════════
+     PART 4 · DEPLOY JOB
+════════════════════════════════════════ -->
+<section id="p4">
+<div class="part-head ph-blue">
+  <span class="part-pill pp-blue">Part 4</span>
+  <span class="part-title">Add the Deploy Job to the Workflow</span>
+  <span class="part-time">10 min</span>
+</div>
+
+<div class="step open" id="step-p4-1">
+  <div class="step-hd" onclick="toggleStep('step-p4-1')">
+    <div class="step-num">9</div>
+    <span class="step-label">Open and review the existing CI workflow</span>
+    <span class="step-arrow">&#9654;</span>
+  </div>
+  <div class="step-body">
+    <div class="code-block">
+      <div class="code-hd"><span class="code-fname">Terminal — on your VM</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+      <pre>cd ~/cloudeats-app
+cat .github/workflows/ci.yml</pre>
+    </div>
+    <p style="margin-top:.6rem">You should see a <code>test</code> job. You will add a <code>deploy</code> job after it. The <code>deploy</code> job will have <code>needs: test</code> — meaning it only runs if the test job passes.</p>
+    <div class="pb a">
+      <div class="pb-label">&#9889; Average — why needs: test matters</div>
+      <p>Without <code>needs: test</code>, the deploy job would run in parallel with the test job — which means broken code could deploy before tests even finish. The <code>needs</code> key enforces sequential execution AND short-circuits the pipeline: if tests fail, deployment never starts.</p>
+    </div>
+  </div>
+</div>
+
+<div class="step open" id="step-p4-2">
+  <div class="step-hd" onclick="toggleStep('step-p4-2')">
+    <div class="step-num">10</div>
+    <span class="step-label">Add the deploy job to ci.yml</span>
+    <span class="step-arrow">&#9654;</span>
+  </div>
+  <div class="step-body">
+    <p>Open the workflow file and add the <code>deploy</code> job at the end. Keep all existing content — do not replace it.</p>
+    <div class="code-block">
+      <div class="code-hd"><span class="code-fname">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+      <pre>nano .github/workflows/ci.yml</pre>
+    </div>
+    <p style="margin-top:.5rem">Add this block at the end of the file (after your existing <code>test</code> job):</p>
+    <div class="code-block">
+      <div class="code-hd"><span class="code-fname">.github/workflows/ci.yml — append this deploy job</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+      <pre>  <span class="ck">deploy</span>:
+    <span class="ck">name</span>: <span class="cv">Deploy to VM</span>
+    <span class="ck">runs-on</span>: <span class="cv">ubuntu-latest</span>
+    <span class="ck">needs</span>: <span class="cv">test</span>                  <span class="cm"># only run if test job passes</span>
+    <span class="ck">if</span>: <span class="cv">github.ref == 'refs/heads/main'</span>  <span class="cm"># only deploy from main branch</span>
+
+    <span class="ck">steps</span>:
+      - <span class="ck">name</span>: <span class="cv">Deploy CloudEats to VM</span>
+        <span class="ck">uses</span>: <span class="cv">appleboy/ssh-action@v1.0.0</span>
+        <span class="ck">with</span>:
+          <span class="ck">host</span>:     <span class="cv">${{ secrets.VM_HOST }}</span>
+          <span class="ck">username</span>: <span class="cv">${{ secrets.VM_USER }}</span>
+          <span class="ck">key</span>:      <span class="cv">${{ secrets.DEPLOY_KEY }}</span>
+          <span class="ck">port</span>:     <span class="cv">22</span>
+          <span class="ck">script</span>: <span class="cv">|</span>
+            <span class="cm">cd ~/cloudeats-app</span>
+
+            <span class="cm">echo "=== Pulling latest code ==="</span>
+            <span class="cm">git pull origin main</span>
+
+            <span class="cm">echo "=== Building updated services ==="</span>
+            <span class="cm">docker compose build user-service menu-service order-service api-gateway</span>
+
+            <span class="cm">echo "=== Deploying with zero downtime ==="</span>
+            <span class="cm">docker compose up -d --no-deps user-service</span>
+            <span class="cm">docker compose up -d --no-deps menu-service</span>
+            <span class="cm">docker compose up -d --no-deps order-service</span>
+            <span class="cm">docker compose up -d --no-deps api-gateway</span>
+
+            <span class="cm">echo "=== Health check ==="</span>
+            <span class="cm">sleep 10</span>
+            <span class="cm">curl -f http://localhost:8000/api/menu/health || exit 1</span>
+
+            <span class="cm">echo "=== Deployment complete ✅ ==="</span>
+            <span class="cm">docker compose ps</span></pre>
+    </div>
+    <div class="pb b">
+      <div class="pb-label">&#127807; Beginner — what does --no-deps do?</div>
+      <p><code>--no-deps</code> (no dependencies) tells Docker Compose to update only the named service, without also recreating the databases it depends on. This is critical: without it, <code>docker compose up api-gateway</code> would also restart MySQL, Redis, and MongoDB — causing real downtime while databases reinitialise.</p>
+    </div>
+    <div class="adv-only">
+      <div class="adv-only-label">&#128640; Advanced — why curl -f exits 1 on failure</div>
+      <p style="font-size:.8rem;color:var(--muted)">The <code>-f</code> (fail) flag tells curl to exit with a non-zero status code if the HTTP response is an error (4xx or 5xx). In a shell script, <code>exit 1</code> signals failure to the parent process — in this case, GitHub Actions. This transforms a silent bad deployment into a visible pipeline failure. Without <code>-f</code>, curl succeeds even if the app returns a 500 error, and the pipeline would show green when the app is broken.</p>
+    </div>
+  </div>
+</div>
+
+<div class="step open" id="step-p4-3">
+  <div class="step-hd" onclick="toggleStep('step-p4-3')">
+    <div class="step-num">11</div>
+    <span class="step-label">Commit and push the updated workflow</span>
+    <span class="step-arrow">&#9654;</span>
+  </div>
+  <div class="step-body">
+    <div class="code-block">
+      <div class="code-hd"><span class="code-fname">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+      <pre>cd ~/cloudeats-app
+git add .github/workflows/ci.yml
+git commit -m "ci: add CD deploy job with SSH and zero-downtime update"
+git push origin main</pre>
+    </div>
+    <div class="callout blue">
+      <span>&#128269;</span>
+      <div>This push <em>itself</em> will trigger the pipeline you just defined. Open your GitHub repository in the browser, click the <strong>Actions</strong> tab, and watch the workflow run in real time.</div>
+    </div>
+  </div>
+</div>
+
+<div class="checkpoint">&#9989;&nbsp;<strong>Part 4 complete:</strong> Deploy job added to workflow. The pipeline now has two stages: <code>test</code> then <code>deploy</code> (only on main, only when tests pass).</div>
+</section>
+
+<!-- ══════════════════════════════════════
+     PART 5 · FIRST AUTO-DEPLOY
+════════════════════════════════════════ -->
+<section id="p5">
+<div class="part-head ph-green">
+  <span class="part-pill pp-green">Part 5</span>
+  <span class="part-title">Watch the First Automated Deployment</span>
+  <span class="part-time">10 min</span>
+</div>
+
+<div class="step open" id="step-p5-1">
+  <div class="step-hd" onclick="toggleStep('step-p5-1')">
+    <div class="step-num">12</div>
+    <span class="step-label">Watch the pipeline run on GitHub Actions</span>
+    <span class="step-arrow">&#9654;</span>
+  </div>
+  <div class="step-body">
+    <p>Open your repository on github.com and click the <strong>Actions</strong> tab. You should see the workflow triggered by your last push.</p>
+    <div class="callout green">
+      <span>&#9989;</span>
+      <div>A green checkmark on both the <code>test</code> and <code>deploy</code> jobs means your pipeline is complete. Every future push to <code>main</code> that passes tests will now deploy automatically.</div>
+    </div>
+    <div class="trouble">
+      <div class="trouble-hd" onclick="toggleTrouble(this.closest('.trouble'))">&#9888; Deploy job fails: "Host key verification failed" <span class="trouble-arrow">&#9654;</span></div>
+      <div class="trouble-body">
+        <p>This is why the workflow uses <code>appleboy/ssh-action</code> with <code>StrictHostKeyChecking</code> handled automatically. If you see this, check that the <code>VM_HOST</code> secret exactly matches the IP address returned by <code>hostname -I</code> on your VM — including no trailing spaces.</p>
+      </div>
+    </div>
+    <div class="trouble">
+      <div class="trouble-hd" onclick="toggleTrouble(this.closest('.trouble'))">&#9888; Deploy job fails: "DEPLOY_KEY secret is empty or invalid" <span class="trouble-arrow">&#9654;</span></div>
+      <div class="trouble-body">
+        <p>Go back to GitHub Settings → Secrets → DEPLOY_KEY. Delete it and re-add it. When copying from <code>cat ~/.ssh/deploy_key</code>, make sure you copy the <em>entire output</em> including both <code>-----BEGIN OPENSSH PRIVATE KEY-----</code> and <code>-----END OPENSSH PRIVATE KEY-----</code> lines. There must be no trailing newline or space.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step open" id="step-p5-2">
+  <div class="step-hd" onclick="toggleStep('step-p5-2')">
+    <div class="step-num">13</div>
+    <span class="step-label">Prove the pipeline works — make a visible code change</span>
+    <span class="step-arrow">&#9654;</span>
+  </div>
+  <div class="step-body">
+    <p>Make a small visible change, push it, and verify it appears on the VM without any manual SSH.</p>
+    <div class="code-block">
+      <div class="code-hd"><span class="code-fname">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+      <pre>cd ~/cloudeats-app
+
+<span class="cm"># Add a version indicator to the API gateway health response</span>
+<span class="cm"># (edit whatever health check route your gateway exposes)</span>
+echo "# Pipeline test $(date)" >> README.md
+
+git add README.md
+git commit -m "test: verify CI/CD pipeline with a visible change"
+git push origin main</pre>
+    </div>
+    <div class="out-label">In the GitHub Actions tab, you should see the pipeline progress through:</div>
+    <div class="exp-out">✅ test    (install → test → pass)
+✅ deploy  (SSH → pull → build → up → health check → ✅)</div>
+    <div class="callout green">
+      <span>&#127881;</span>
+      <div><strong>Congratulations — you now have a production-grade CI/CD pipeline.</strong> Your workflow is: write code, commit, push, wait 2–3 minutes. No SSH. No manual steps. No 2am deployments. This is how every professional cloud team ships software.</div>
+    </div>
+    <div class="pb a">
+      <div class="pb-label">&#9889; Average — checkpoint question</div>
+      <p>What happens if you push a commit to a <strong>feature branch</strong> instead of <code>main</code>? Does the deploy job run? Look at the <code>if: github.ref == 'refs/heads/main'</code> condition in the workflow and explain your answer.</p>
+    </div>
+  </div>
+</div>
+
+<div class="step open" id="step-p5-3">
+  <div class="step-hd" onclick="toggleStep('step-p5-3')">
+    <div class="step-num">14</div>
+    <span class="step-label">Verify directly on the VM that the deployment worked</span>
+    <span class="step-arrow">&#9654;</span>
+  </div>
+  <div class="step-body">
+    <div class="code-block">
+      <div class="code-hd"><span class="code-fname">Terminal — on your VM</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+      <pre>cd ~/cloudeats-app
+
+<span class="cm"># Confirm the git pull happened (latest commit should match GitHub)</span>
+git log --oneline -3
+
+<span class="cm"># Confirm all services are still healthy after the rolling update</span>
+docker compose ps
+
+<span class="cm"># Check the API gateway is responding</span>
+curl http://localhost:8000/api/menu/health</pre>
+    </div>
+    <div class="out-label">Expected git log output includes your latest commit:</div>
+    <div class="exp-out">a1b2c3d (HEAD -> main, origin/main) test: verify CI/CD pipeline with a visible change
+...</div>
+  </div>
+</div>
+
+<div class="checkpoint">&#9989;&nbsp;<strong>Part 5 complete:</strong> First automated deployment successful. Code change deployed without any manual SSH. Pipeline is end-to-end: <code>git push → test → deploy → healthy app</code>.</div>
+</section>
+
+<!-- ══════════════════════════════════════
+     PART 6 · ADVANCED CHALLENGE
+════════════════════════════════════════ -->
+<section id="p6">
+<div class="part-head ph-purple">
+  <span class="part-pill pp-purple">Part 6</span>
+  <span class="part-title">&#128640; Advanced Challenge — Smart Selective Deploy</span>
+  <span class="part-time">Optional</span>
+</div>
+
+<div class="adv-only">
+  <div class="adv-only-label">&#128640; Advanced only — not required for the lab submission</div>
+
+  <div class="step open" id="step-p6-1">
+    <div class="step-hd" onclick="toggleStep('step-p6-1')">
+      <div class="step-num">15</div>
+      <span class="step-label">Deploy only the services that actually changed</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>Currently the pipeline rebuilds all four microservices on every push, even if only one file changed. This adds unnecessary build time. The challenge: use <code>git diff</code> to detect which service directories changed and rebuild only those.</p>
+      <div class="code-block">
+        <div class="code-hd"><span class="code-fname">bash — approach for selective deploy</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># In your deploy script on the VM:</span>
+CHANGED=$(git diff --name-only HEAD~1 HEAD)
+
+if echo "$CHANGED" | grep -q "services/user-service/"; then
+  echo "user-service changed — rebuilding"
+  docker compose up -d --no-deps --build user-service
+fi
+
+if echo "$CHANGED" | grep -q "services/menu-service/"; then
+  echo "menu-service changed — rebuilding"
+  docker compose up -d --no-deps --build menu-service
+fi
+<span class="cm"># ... repeat for order-service, api-gateway</span></pre>
+      </div>
+      <p style="margin-top:.65rem"><strong>Challenge questions:</strong></p>
+      <ul style="font-size:.82rem;color:var(--muted);padding-left:1.2rem;line-height:1.9;">
+        <li>What happens if <code>docker-compose.yml</code> itself changes? Should that trigger a full redeploy?</li>
+        <li>What is a risk of the <code>HEAD~1</code> approach when multiple commits are pushed at once?</li>
+        <li>How would you handle a change to a shared <code>utils/</code> library used by all services?</li>
+      </ul>
+    </div>
+  </div>
+
+</div><!-- /adv-only -->
+</section>
+
+<!-- PREV / NEXT -->
+<div class="prev-next">
+  <a href="week07_lab1_infrastructure_as_code.html" class="nav-link">
+    <span class="nav-dir">&larr; Previous</span>
+    <span class="nav-title">Lab 7.1 · Infrastructure as Code</span>
+  </a>
+  <a href="week08_Cloud_Security_and_Access_Control.html" class="nav-link" style="text-align:right">
+    <span class="nav-dir">Next week &rarr;</span>
+    <span class="nav-title">Week 8 · Cloud Security &amp; Access Control</span>
+  </a>
+</div>
+
+</main>
+</div><!-- /page-body -->
+
+<script>
+function toggleStep(id) {
+  document.getElementById(id).classList.toggle('open');
+  updateProgress();
+}
+function toggleTrouble(el) {
+  el.classList.toggle('open');
+}
+function copyCode(btn, event) {
+  if (event) event.stopPropagation();
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+function expandAll() {
+  document.querySelectorAll('.step').forEach(s => s.classList.add('open'));
+  updateProgress();
+}
+function collapseAll() {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('open'));
+  updateProgress();
+}
+function setPace(pace, btn) {
+  document.body.className = 'pace-' + pace;
+  document.querySelectorAll('.pace-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (pace === 'beginner') expandAll();
+  if (pace === 'advanced') collapseAll();
+}
+function updateProgress() {
+  const total = document.querySelectorAll('.step').length;
+  const open  = document.querySelectorAll('.step.open').length;
+  const parts = 6;
+  const cur   = Math.round((open / total) * parts);
+  document.getElementById('prog-fill').style.width = ((open / total) * 100) + '%';
+  document.getElementById('prog-cur').textContent  = cur;
+  document.getElementById('prog-max').textContent  = parts;
+}
+document.addEventListener('DOMContentLoaded', () => { expandAll(); });
+</script>
+</body>
+</html>

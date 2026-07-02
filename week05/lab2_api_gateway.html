@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 5.2 · API Gateway · CloudEats Academy</title>
+<meta name="description" content="Build an Express API Gateway that proxies requests to the three CloudEats microservices — single entry point, path-based routing, CORS handling. Week 5 Lab 2.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Lab 5.2 · API Gateway · CloudEats Academy">
+<meta property="og:description" content="Implement a Node.js API Gateway with http-proxy-middleware — one URL for the frontend, three services behind it. Three pace levels.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07090f;--bg2:#0d1117;--bg3:#141b27;
+    --surface:#1a2235;--surface2:#1f2c42;--border:#2a3d5a;
+    --accent:#00c8ff;--green:#00e5a0;--amber:#ffb740;
+    --red:#ff5e7a;--purple:#b46ef5;
+    --text:#e8edf5;--muted:#6b7fa0;
+    --beginner:#00e5a0;--average:#00c8ff;--advanced:#b46ef5;
+    --lab-color:#b46ef5;--radius:10px;--code-bg:#0b1120;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;}
+
+  /* HEADER */
+  .site-header{background:linear-gradient(135deg,#050d1c,#091628);border-bottom:1px solid var(--border);padding:0 1.5rem;position:sticky;top:0;z-index:100;}
+  .header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;gap:1rem;}
+  .lab-badge{background:var(--lab-color);color:#fff;font-size:.62rem;font-weight:700;letter-spacing:.1em;padding:.2rem .55rem;border-radius:4px;text-transform:uppercase;}
+  .adv-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.67rem;font-weight:700;padding:.18rem .55rem;background:rgba(180,110,245,.1);border:1px solid rgba(180,110,245,.3);color:var(--purple);border-radius:20px;}
+  .ghp-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.67rem;font-weight:700;padding:.18rem .55rem;background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.25);color:var(--green);border-radius:20px;}
+
+  /* HERO */
+  .lab-hero{background:linear-gradient(160deg,#060f20,#07111e);border-bottom:1px solid var(--border);padding:2rem 1.5rem 1.75rem;position:relative;overflow:hidden;}
+  .lab-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:360px;height:360px;background:radial-gradient(ellipse,rgba(180,110,245,.07),transparent 70%);pointer-events:none;}
+  .hero-inner{max-width:1200px;margin:0 auto;}
+  .hero-crumb{font-size:.7rem;color:var(--muted);margin-bottom:.4rem;}
+  .hero-crumb a{color:var(--purple);text-decoration:none;}
+  .lab-hero h1{font-size:clamp(1.25rem,2.5vw,1.75rem);font-weight:800;background:linear-gradient(135deg,#e8edf5 40%,var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.35rem;}
+  .hero-sub{color:var(--muted);font-size:.84rem;margin-bottom:.85rem;}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:.55rem;}
+  .meta-chip{display:flex;align-items:center;gap:.35rem;font-size:.74rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.22rem .6rem;color:var(--muted);}
+  .meta-chip strong{color:var(--text);}
+
+  /* PREREQ BANNER */
+  .prereq-banner{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);border-left:4px solid var(--purple);border-radius:8px;padding:.85rem 1.1rem;margin:1.25rem 1.5rem;max-width:1200px;margin-left:auto;margin-right:auto;font-size:.82rem;color:#c5a8f5;line-height:1.55;}
+  .prereq-banner strong{color:var(--purple);}
+
+  /* LAYOUT */
+  .page-body{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:196px 1fr;min-height:calc(100vh - 200px);}
+
+  /* SIDEBAR */
+  .sidebar{position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;padding:1.25rem .85rem 2rem;border-right:1px solid var(--border);background:var(--bg2);}
+  .sb-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.85rem;}
+  .progress-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:.65rem;margin-bottom:1rem;}
+  .prog-track{background:var(--bg2);border-radius:3px;height:5px;margin:.4rem 0;}
+  .prog-fill{height:5px;border-radius:3px;background:linear-gradient(90deg,var(--purple),var(--accent));transition:width .35s;width:0%;}
+  .prog-text{font-size:.69rem;color:var(--muted);}
+  .prog-text span{color:var(--purple);font-weight:600;}
+  .sb-nav{list-style:none;}
+  .sb-nav li a{display:block;font-size:.73rem;padding:.32rem .6rem;border-radius:5px;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all .13s;margin-bottom:.08rem;}
+  .sb-nav li a:hover{background:var(--surface);color:var(--text);}
+  .sb-nav li a.active{background:rgba(180,110,245,.08);color:var(--purple);border-color:rgba(180,110,245,.18);}
+  .sb-section{font-size:.61rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(107,127,160,.45);padding:.6rem .6rem .18rem;}
+
+  /* CONTENT */
+  .lab-content{padding:1.75rem 1.75rem 4rem;min-width:0;}
+  section{margin-bottom:2.25rem;}
+
+  /* PART HEADER */
+  .part-head{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;border-radius:8px;margin-bottom:1.1rem;}
+  .ph-purple{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.22);border-left:4px solid var(--purple);}
+  .ph-blue{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.22);border-left:4px solid var(--accent);}
+  .ph-green{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.22);border-left:4px solid var(--green);}
+  .ph-amber{background:rgba(255,183,64,.04);border:1px solid rgba(255,183,64,.22);border-left:4px solid var(--amber);}
+  .part-pill{font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.16rem .5rem;border-radius:4px;white-space:nowrap;}
+  .pp-purple{background:rgba(180,110,245,.15);color:var(--purple);}
+  .pp-blue{background:rgba(0,200,255,.15);color:var(--accent);}
+  .pp-green{background:rgba(0,229,160,.15);color:var(--green);}
+  .pp-amber{background:rgba(255,183,64,.15);color:var(--amber);}
+  .part-title{font-size:.98rem;font-weight:700;}
+  .part-time{font-size:.7rem;color:var(--muted);margin-left:auto;white-space:nowrap;}
+
+  /* STEPS */
+  .step{background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:.6rem;overflow:hidden;}
+  .step-hd{display:flex;align-items:center;gap:.7rem;padding:.7rem .95rem;cursor:pointer;user-select:none;transition:background .13s;}
+  .step-hd:hover{background:var(--surface2);}
+  .step-num{width:27px;height:27px;border-radius:50%;border:2px solid rgba(180,110,245,.3);background:rgba(180,110,245,.07);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:var(--purple);flex-shrink:0;}
+  .step-label{font-size:.84rem;font-weight:600;flex:1;}
+  .step-arrow{font-size:.75rem;color:var(--muted);transition:transform .18s;flex-shrink:0;}
+  .step.open .step-arrow{transform:rotate(90deg);}
+  .step-body{display:none;padding:.85rem .95rem 1rem;border-top:1px solid var(--border);}
+  .step.open .step-body{display:block;}
+
+  /* CODE */
+  code{font-family:'Fira Code',monospace;font-size:.83em;background:var(--code-bg);padding:.07rem .32rem;border-radius:3px;color:var(--green);}
+  .code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;margin:.65rem 0;overflow:hidden;}
+  .code-hd{display:flex;align-items:center;justify-content:space-between;padding:.4rem .85rem;background:rgba(0,0,0,.3);border-bottom:1px solid var(--border);}
+  .code-lang{font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+  .copy-btn{font-family:'Sora',sans-serif;font-size:.66rem;font-weight:600;padding:.16rem .5rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;transition:all .13s;}
+  .copy-btn:hover{background:var(--purple);color:#fff;border-color:var(--purple);}
+  .copy-btn.copied{background:var(--green);color:#000;}
+  pre{font-family:'Fira Code',monospace;font-size:.77rem;line-height:1.65;padding:.85rem;overflow-x:auto;color:#c5d5ef;}
+  .ck{color:var(--accent);}.cv{color:var(--green);}.cm{color:var(--muted);font-style:italic;}.cp{color:var(--purple);}.ca{color:var(--amber);}
+
+  /* CALLOUTS */
+  .callout{border-radius:8px;padding:.7rem .95rem;margin:.65rem 0;display:flex;gap:.55rem;align-items:flex-start;font-size:.81rem;line-height:1.55;}
+  .callout.blue{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);color:#a0d8f0;}
+  .callout.green{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);color:#8ee8c4;}
+  .callout.amber{background:rgba(255,183,64,.06);border:1px solid rgba(255,183,64,.2);color:#d9c07a;}
+  .callout.purple{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);color:#c5a8f5;}
+  .callout.red{background:rgba(255,94,122,.05);border:1px solid rgba(255,94,122,.2);color:#f0a0b0;}
+
+  /* OUTPUT */
+  .out-label{font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:.6rem 0 .28rem;}
+  .exp-out{font-family:'Fira Code',monospace;font-size:.76rem;background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.15);border-radius:6px;padding:.6rem .85rem;color:#c5a8f5;line-height:1.6;margin-bottom:.5rem;}
+
+  /* PACE BLOCKS */
+  .pb{border-radius:7px;padding:.6rem .85rem;margin:.5rem 0;font-size:.8rem;line-height:1.55;}
+  .pb.a{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.15);border-left:3px solid var(--average);}
+  .pb.adv{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.15);border-left:3px solid var(--advanced);}
+  .pb-label{font-size:.63rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.25rem;}
+  .pb.a .pb-label{color:var(--average);} .pb.adv .pb-label{color:var(--advanced);}
+
+  /* IMAGE PLACEHOLDER */
+  .img-ph{border:2px dashed rgba(180,110,245,.2);border-radius:8px;background:rgba(180,110,245,.02);padding:.75rem 1rem;margin:.75rem 0;display:flex;gap:.7rem;align-items:flex-start;}
+  .img-ph-icon{font-size:1.1rem;flex-shrink:0;line-height:1.2;}
+  .img-ph-label{font-size:.64rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--purple);margin-bottom:.15rem;}
+  .img-ph-desc{font-size:.77rem;color:var(--muted);line-height:1.5;}
+
+  /* CHECKPOINT */
+  .checkpoint{background:rgba(180,110,245,.06);border:1px solid rgba(180,110,245,.22);border-radius:8px;padding:.8rem .95rem;margin:1.1rem 0;display:flex;gap:.7rem;align-items:flex-start;font-size:.81rem;color:#c5a8f5;line-height:1.5;}
+
+  /* TROUBLE */
+  .trouble{background:rgba(255,94,122,.03);border:1px solid rgba(255,94,122,.15);border-radius:7px;margin:.6rem 0;cursor:pointer;}
+  .trouble-hd{display:flex;align-items:center;gap:.5rem;padding:.55rem .8rem;font-size:.79rem;font-weight:600;color:var(--red);}
+  .trouble-arrow{font-size:.7rem;color:var(--muted);margin-left:auto;transition:transform .18s;}
+  .trouble.open .trouble-arrow{transform:rotate(90deg);}
+  .trouble-body{display:none;padding:0 .8rem .7rem;font-size:.78rem;color:var(--muted);line-height:1.55;}
+  .trouble.open .trouble-body{display:block;}
+
+  /* WH */
+  .wh{border-radius:6px;padding:.6rem .8rem;margin:.55rem 0;font-size:.79rem;line-height:1.55;}
+  .wh.p{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.13);color:#c5a8f5;}
+  .wh.b{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.13);color:#a0d8f0;}
+  .wh.g{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.13);color:#8ee8c4;}
+  .wh-label{font-size:.63rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.28rem;}
+  .wh.p .wh-label{color:var(--purple);} .wh.b .wh-label{color:var(--accent);} .wh.g .wh-label{color:var(--green);}
+
+  /* COMPARE */
+  .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin:.75rem 0;}
+  .cmp{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:.9rem;}
+  .cmp.bad{border-top:3px solid var(--red);}
+  .cmp.good{border-top:3px solid var(--purple);}
+  .cmp-label{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.55rem;}
+  .cmp.bad .cmp-label{color:var(--red);} .cmp.good .cmp-label{color:var(--purple);}
+  .cmp li{font-size:.79rem;color:var(--muted);padding:.22rem 0;list-style:none;display:flex;gap:.45rem;align-items:flex-start;}
+  .cmp.bad li::before{content:'✗';color:var(--red);flex-shrink:0;font-weight:700;}
+  .cmp.good li::before{content:'✓';color:var(--purple);flex-shrink:0;font-weight:700;}
+
+  /* ROUTE TABLE */
+  .route-table{width:100%;border-collapse:collapse;font-size:.8rem;margin:.75rem 0;}
+  .route-table th{padding:.45rem .75rem;background:var(--bg3);color:var(--muted);font-size:.66rem;letter-spacing:.07em;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border);}
+  .route-table td{padding:.45rem .75rem;border-bottom:1px solid rgba(42,61,90,.25);vertical-align:top;}
+  .route-table tr:hover td{background:rgba(255,255,255,.018);}
+  .route-method{font-family:'Fira Code',monospace;font-size:.76rem;font-weight:500;padding:.08rem .32rem;border-radius:3px;}
+  .get{background:rgba(0,200,255,.1);color:var(--accent);}
+  .post{background:rgba(0,229,160,.1);color:var(--green);}
+  .delete{background:rgba(255,94,122,.1);color:var(--red);}
+
+  /* GH PAGES */
+  .ghp-section{background:linear-gradient(135deg,rgba(180,110,245,.04),rgba(0,229,160,.03));border:1px solid rgba(180,110,245,.2);border-radius:10px;padding:1.25rem;margin:1.5rem 0;}
+  .ghp-section-title{font-size:.9rem;font-weight:700;margin-bottom:.65rem;display:flex;align-items:center;gap:.5rem;}
+
+  .section-divider{border:none;border-top:1px solid var(--border);margin:1.75rem 0;}
+  a{color:var(--accent);}a:hover{text-decoration:underline;}
+  strong{color:var(--text);font-weight:600;}
+  p{margin-bottom:.65rem;font-size:.84rem;line-height:1.68;}p:last-child{margin-bottom:0;}
+  ::-webkit-scrollbar{width:5px;height:5px;}
+  ::-webkit-scrollbar-track{background:var(--bg2);}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+  @media(max-width:860px){
+    .page-body{grid-template-columns:1fr;}
+    .sidebar{display:none;}
+    .compare-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-inner">
+    <div style="display:flex;align-items:center;gap:.65rem">
+      <span class="lab-badge">Lab 5.2</span>
+      <span style="font-size:.88rem;font-weight:600">API Gateway · CloudEats</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:.7rem">
+      <span class="adv-badge">🟣 Advanced Track</span>
+      <span class="ghp-badge">🐙 GitHub Pages Ready</span>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="lab-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb">
+      <a href="../week05/index.html">← Week 5 Lecture</a> &rsaquo;
+      <a href="../week05/lab1_microservices_architecture.html">Lab 5.1</a> &rsaquo; Lab 5.2
+    </div>
+    <h1>API Gateway — Single Entry Point</h1>
+    <p class="hero-sub">Build an Express gateway that routes all client traffic to three upstream services, validates JWT tokens centrally, and gives your frontend one URL to call.</p>
+    <div class="hero-meta">
+      <div class="meta-chip">⏱ <strong>60 min</strong></div>
+      <div class="meta-chip">🟣 <strong>Advanced</strong>&nbsp;Optional</div>
+      <div class="meta-chip">🚪 <strong>Reverse Proxy</strong>&nbsp;Express</div>
+      <div class="meta-chip">🔑 <strong>JWT Auth</strong>&nbsp;Centralised</div>
+      <div class="meta-chip">🐳 <strong>Docker Compose</strong>&nbsp;4th service</div>
+    </div>
+  </div>
+</div>
+
+<!-- PREREQ -->
+<div class="prereq-banner">
+  <strong>Prerequisite:</strong> Lab 5.1 must be fully complete — all three services (<code>user-service :3001</code>, <code>menu-service :3002</code>, <code>order-service :3003</code>) passing their <code>/health</code> checks via <code>docker compose ps</code> before starting this lab.
+</div>
+
+<div class="page-body">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="progress-wrap">
+    <div class="sb-title" style="margin-bottom:.45rem">Progress</div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+    <div class="prog-text">Step <span id="prog-cur">0</span> of <span id="prog-max">12</span></div>
+  </div>
+  <div class="sb-title">Contents</div>
+  <ul class="sb-nav">
+    <li class="sb-section">Concept</li>
+    <li><a href="#p1">Part 1 · The Problem</a></li>
+    <li class="sb-section">Build</li>
+    <li><a href="#p2">Part 2 · Scaffold Gateway</a></li>
+    <li><a href="#p3">Part 3 · Route to Services</a></li>
+    <li><a href="#p4">Part 4 · JWT Middleware</a></li>
+    <li><a href="#p5">Part 5 · Docker Compose</a></li>
+    <li class="sb-section">Test</li>
+    <li><a href="#p6">Part 6 · Test All Routes</a></li>
+    <li><a href="#p7">Part 7 · Auth Test</a></li>
+    <li class="sb-section">Reflect</li>
+    <li><a href="#p8">Part 8 · Production Gateways</a></li>
+    <li><a href="#ghp">🐙 GitHub Pages</a></li>
+  </ul>
+</aside>
+
+<!-- MAIN -->
+<main class="lab-content">
+
+  <!-- INTRO CALLOUT -->
+  <div class="callout purple">
+    <span>🎯</span>
+    <div><strong>What you're building:</strong> An API Gateway is a thin Express server that sits in front of all three microservices. The frontend calls only <code>:8000</code>. The gateway reads the URL path, decides which service to forward to, validates JWT tokens, and proxies the request. No business logic lives in the gateway.</div>
+  </div>
+
+  <!-- Architecture SVG -->
+  <svg viewBox="0 0 680 175" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin:.85rem 0 1.5rem">
+    <defs>
+      <marker id="gwa" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(180,110,245,.5)"/></marker>
+      <marker id="gwb" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(107,127,160,.4)"/></marker>
+    </defs>
+    <!-- Client -->
+    <rect x="10" y="68" width="95" height="40" rx="6" fill="rgba(107,127,160,.07)" stroke="rgba(107,127,160,.25)" stroke-width="1.5"/>
+    <text x="57" y="84" font-size="8.5" font-family="Sora,sans-serif" fill="var(--text)" text-anchor="middle" font-weight="600">🌐 Browser</text>
+    <text x="57" y="99" font-size="7" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">:8000 only</text>
+    <line x1="107" y1="88" x2="143" y2="88" stroke="rgba(180,110,245,.5)" stroke-width="2" marker-end="url(#gwa)"/>
+    <text x="125" y="82" font-size="7" font-family="Sora,sans-serif" fill="rgba(180,110,245,.6)" text-anchor="middle">All traffic</text>
+    <!-- Gateway -->
+    <rect x="147" y="42" width="148" height="92" rx="7" fill="rgba(180,110,245,.06)" stroke="rgba(180,110,245,.4)" stroke-width="2"/>
+    <text x="221" y="62" font-size="9" font-family="Sora,sans-serif" fill="var(--purple)" text-anchor="middle" font-weight="700">🚪 API Gateway</text>
+    <text x="221" y="77" font-size="7" font-family="Fira Code,monospace" fill="rgba(180,110,245,.6)" text-anchor="middle">services/api-gateway/</text>
+    <text x="221" y="91" font-size="7" font-family="Fira Code,monospace" fill="rgba(180,110,245,.6)" text-anchor="middle">port 8000</text>
+    <rect x="157" y="100" width="62" height="22" rx="4" fill="rgba(255,94,122,.08)" stroke="rgba(255,94,122,.2)" stroke-width="1"/>
+    <text x="188" y="115" font-size="7" font-family="Sora,sans-serif" fill="var(--red)" text-anchor="middle">🔑 JWT check</text>
+    <rect x="225" y="100" width="62" height="22" rx="4" fill="rgba(0,200,255,.08)" stroke="rgba(0,200,255,.2)" stroke-width="1"/>
+    <text x="256" y="115" font-size="7" font-family="Sora,sans-serif" fill="var(--accent)" text-anchor="middle">📡 Routing</text>
+    <!-- Arrows to services -->
+    <line x1="297" y1="72" x2="340" y2="47" stroke="rgba(107,127,160,.35)" stroke-width="1.5" marker-end="url(#gwb)"/>
+    <line x1="297" y1="88" x2="340" y2="88" stroke="rgba(107,127,160,.35)" stroke-width="1.5" marker-end="url(#gwb)"/>
+    <line x1="297" y1="104" x2="340" y2="129" stroke="rgba(107,127,160,.35)" stroke-width="1.5" marker-end="url(#gwb)"/>
+    <!-- Arrow labels -->
+    <text x="326" y="53" font-size="6.5" font-family="Fira Code,monospace" fill="var(--muted)">/api/users/*</text>
+    <text x="318" y="84" font-size="6.5" font-family="Fira Code,monospace" fill="var(--muted)">/api/menu/*</text>
+    <text x="317" y="122" font-size="6.5" font-family="Fira Code,monospace" fill="var(--muted)">/api/orders/*</text>
+    <!-- User Service -->
+    <rect x="344" y="10" width="145" height="72" rx="6" fill="rgba(0,229,160,.05)" stroke="rgba(0,229,160,.3)" stroke-width="1.5"/>
+    <text x="416" y="30" font-size="8" font-family="Sora,sans-serif" fill="var(--green)" text-anchor="middle" font-weight="700">👤 User Service</text>
+    <text x="416" y="46" font-size="7" font-family="Fira Code,monospace" fill="rgba(0,229,160,.5)" text-anchor="middle">user-service:3001</text>
+    <text x="416" y="62" font-size="7.5" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">register · login · JWT</text>
+    <!-- Menu Service -->
+    <rect x="344" y="68" width="145" height="40" rx="6" fill="rgba(0,200,255,.05)" stroke="rgba(0,200,255,.3)" stroke-width="1.5"/>
+    <text x="416" y="86" font-size="8" font-family="Sora,sans-serif" fill="var(--accent)" text-anchor="middle" font-weight="700">🍽️ Menu Service</text>
+    <text x="416" y="100" font-size="7" font-family="Fira Code,monospace" fill="rgba(0,200,255,.5)" text-anchor="middle">menu-service:3002</text>
+    <!-- Order Service -->
+    <rect x="344" y="114" width="145" height="50" rx="6" fill="rgba(180,110,245,.05)" stroke="rgba(180,110,245,.3)" stroke-width="1.5"/>
+    <text x="416" y="132" font-size="8" font-family="Sora,sans-serif" fill="var(--purple)" text-anchor="middle" font-weight="700">📦 Order Service</text>
+    <text x="416" y="148" font-size="7" font-family="Fira Code,monospace" fill="rgba(180,110,245,.5)" text-anchor="middle">order-service:3003</text>
+    <text x="416" y="158" font-size="7" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">cart · orders</text>
+    <!-- Databases -->
+    <line x1="492" y1="46" x2="518" y2="46" stroke="rgba(107,127,160,.25)" stroke-width="1.2" marker-end="url(#gwb)"/>
+    <rect x="521" y="30" width="150" height="32" rx="5" fill="rgba(255,183,64,.04)" stroke="rgba(255,183,64,.18)" stroke-width="1"/>
+    <text x="596" y="50" font-size="7.5" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle">🗄️ MySQL (users + menu)</text>
+    <line x1="492" y1="88" x2="518" y2="88" stroke="rgba(107,127,160,.25)" stroke-width="1.2" marker-end="url(#gwb)"/>
+    <rect x="521" y="72" width="150" height="32" rx="5" fill="rgba(255,183,64,.04)" stroke="rgba(255,183,64,.18)" stroke-width="1"/>
+    <text x="596" y="92" font-size="7.5" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle">🗄️ MySQL (menu_items)</text>
+    <line x1="492" y1="139" x2="518" y2="125" stroke="rgba(107,127,160,.25)" stroke-width="1.2" marker-end="url(#gwb)"/>
+    <rect x="521" y="108" width="150" height="55" rx="5" fill="rgba(0,229,160,.04)" stroke="rgba(0,229,160,.16)" stroke-width="1"/>
+    <text x="596" y="128" font-size="7.5" font-family="Sora,sans-serif" fill="var(--green)" text-anchor="middle">📦 MongoDB (orders)</text>
+    <text x="596" y="145" font-size="7.5" font-family="Sora,sans-serif" fill="var(--red)" text-anchor="middle">⚡ Redis (cart)</text>
+  </svg>
+
+  <!-- ═══════ PART 1 ═══════ -->
+  <section id="p1">
+    <div class="part-head ph-purple">
+      <span class="part-pill pp-purple">Part 1</span>
+      <span class="part-title">🏨 The Problem — 3 URLs is 3 Problems</span>
+      <span class="part-time">10 min · Concept</span>
+    </div>
+
+    <p>After Lab 5.1 your frontend must call three different URLs to use your app. This creates real problems in development and production.</p>
+
+    <div class="compare-grid">
+      <div class="cmp bad">
+        <div class="cmp-label">❌ Without Gateway (current state)</div>
+        <ul>
+          <li>Frontend must know 3 separate service URLs and ports</li>
+          <li>CORS must be configured on every individual service</li>
+          <li>JWT token must be validated in every service separately</li>
+          <li>Moving a service to a new port breaks all frontend calls to it</li>
+          <li>Rate limiting and logging must be added to each service</li>
+          <li>HTTPS certificates needed on 3 separate services</li>
+        </ul>
+      </div>
+      <div class="cmp good">
+        <div class="cmp-label">✅ With Gateway (after this lab)</div>
+        <ul>
+          <li>Frontend calls <code>:8000</code> for everything — one URL</li>
+          <li>CORS handled in one place — gateway only</li>
+          <li>JWT validated once at the gateway — services trust it</li>
+          <li>Services can move/change ports — gateway absorbs the change</li>
+          <li>Rate limiting, logging, analytics all in one place</li>
+          <li>One HTTPS certificate on the gateway</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout purple">
+      <span>🏨</span>
+      <div><strong>The hotel reception desk:</strong> In a hotel, every guest goes through reception. Reception checks your ID, gives you a key, tells you your room number. You never wander backstage finding rooms yourself. The API Gateway is the reception desk for your microservices. Services are the rooms — guests (clients) never access them directly.</div>
+    </div>
+
+    <!-- Route mapping table -->
+    <p style="margin-top:1rem"><strong>Gateway routing plan for CloudEats:</strong></p>
+    <table class="route-table">
+      <thead><tr><th>Client Calls</th><th>Gateway Routes To</th><th>Auth Required</th></tr></thead>
+      <tbody>
+        <tr><td><code>/api/auth/register</code></td><td>user-service:3001</td><td>No</td></tr>
+        <tr><td><code>/api/auth/login</code></td><td>user-service:3001</td><td>No</td></tr>
+        <tr><td><code>/api/users/*</code></td><td>user-service:3001</td><td>Yes — JWT</td></tr>
+        <tr><td><code>/api/menu</code></td><td>menu-service:3002</td><td>No</td></tr>
+        <tr><td><code>/api/menu/*</code></td><td>menu-service:3002</td><td>No</td></tr>
+        <tr><td><code>/api/cart/*</code></td><td>order-service:3003</td><td>Yes — JWT</td></tr>
+        <tr><td><code>/api/orders</code></td><td>order-service:3003</td><td>Yes — JWT</td></tr>
+        <tr><td><code>/api/orders/*</code></td><td>order-service:3003</td><td>Yes — JWT</td></tr>
+      </tbody>
+    </table>
+
+    <div class="checkpoint">
+      <span>✅</span>
+      <div><strong>Part 1 done:</strong> You understand what the gateway does and which routes map to which services. Build starts in Part 2.</div>
+    </div>
+  </section>
+
+  <!-- ═══════ PART 2 ═══════ -->
+  <section id="p2">
+    <div class="part-head ph-purple">
+      <span class="part-pill pp-purple">Part 2</span>
+      <span class="part-title">🏗️ Scaffold the Gateway Service</span>
+      <span class="part-time">10 min</span>
+    </div>
+
+    <!-- ── EXPAND / COLLAPSE CONTROLS ── -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.85rem;padding:0.4rem 0;">
+      <span style="font-size:0.75rem;color:var(--muted)"><strong style="color:var(--text)">7 steps</strong> across 5 parts</span>
+      <div style="display:flex;gap:0.5rem">
+        <button onclick="expandAll()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--purple)';this.style.borderColor='var(--purple)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↓ Expand All</button>
+        <button onclick="collapseAll()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--muted)';this.style.borderColor='var(--muted)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↑ Collapse All</button>
+      </div>
+    </div>
+
+    <div class="step open" id="step-p2-1">
+      <div class="step-hd" onclick="toggleStep('step-p2-1')">
+        <div class="step-num">1</div>
+        <div class="step-label">Create folder structure and package.json</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">bash — project root</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre>mkdir -p services/api-gateway/src</pre>
+        </div>
+        <p style="margin-top:.65rem">Create <code>services/api-gateway/package.json</code>:</p>
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">services/api-gateway/package.json</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre>{
+  <span class="ca">"name"</span>: <span class="cv">"api-gateway"</span>,
+  <span class="ca">"version"</span>: <span class="cv">"1.0.0"</span>,
+  <span class="ca">"description"</span>: <span class="cv">"CloudEats API Gateway — single entry point"</span>,
+  <span class="ca">"main"</span>: <span class="cv">"src/server.js"</span>,
+  <span class="ca">"scripts"</span>: { <span class="ca">"start"</span>: <span class="cv">"node src/server.js"</span> },
+  <span class="ca">"dependencies"</span>: {
+    <span class="ca">"cors"</span>:          <span class="cv">"^2.8.5"</span>,
+    <span class="ca">"express"</span>:       <span class="cv">"^4.18.2"</span>,
+    <span class="ca">"http-proxy-middleware"</span>: <span class="cv">"^3.0.0"</span>,
+    <span class="ca">"jsonwebtoken"</span>:  <span class="cv">"^9.0.0"</span>
+  }
+}</pre>
+        </div>
+        <div class="wh p">
+          <div class="wh-label">🔍 http-proxy-middleware</div>
+          This npm package does the heavy lifting of forwarding HTTP requests to upstream services. It rewrites the URL, copies headers, streams the response back, and handles connection errors. We don't have to write raw HTTP proxy logic from scratch — this package is used in production by thousands of applications.
+        </div>
+      </div>
+    </div>
+
+    <div class="step open" id="step-p2-2">
+      <div class="step-hd" onclick="toggleStep('step-p2-2')">
+        <div class="step-num">2</div>
+        <div class="step-label">Create the Dockerfile for the gateway</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <p>Create <code>services/api-gateway/Dockerfile</code> — identical pattern to the other services:</p>
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">services/api-gateway/Dockerfile</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre>FROM node:<span class="cp">18</span>-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --production
+COPY src/ ./src/
+EXPOSE <span class="cp">8000</span>
+CMD [<span class="cv">"node"</span>, <span class="cv">"src/server.js"</span>]</pre>
+        </div>
+      </div>
+    </div>
+    <div class="checkpoint">
+      <span>✅</span>
+      <div><strong>Part 2 done:</strong> Gateway folder, package.json, and Dockerfile ready. Next: write the gateway logic.</div>
+    </div>
+  </section>
+
+  <!-- ═══════ PART 3 ═══════ -->
+  <section id="p3">
+    <div class="part-head ph-blue">
+      <span class="part-pill pp-blue">Part 3</span>
+      <span class="part-title">📡 Write the Routing Logic</span>
+      <span class="part-time">15 min</span>
+    </div>
+
+    <div class="step open" id="step-p3-1">
+      <div class="step-hd" onclick="toggleStep('step-p3-1')">
+        <div class="step-num">3</div>
+        <div class="step-label">Create src/server.js — the gateway core</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <p>Create <code>services/api-gateway/src/server.js</code>. This file contains the complete gateway:</p>
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">services/api-gateway/src/server.js</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre><span class="ck">const</span> express      = require(<span class="cv">'express'</span>);
+<span class="ck">const</span> cors         = require(<span class="cv">'cors'</span>);
+<span class="ck">const</span> jwt          = require(<span class="cv">'jsonwebtoken'</span>);
+<span class="ck">const</span> { createProxyMiddleware } = require(<span class="cv">'http-proxy-middleware'</span>);
+
+<span class="ck">const</span> app = express();
+app.use(cors());
+app.use(express.json());
+
+<span class="cm">// ── Service URLs (Docker Compose DNS names) ────────────</span>
+<span class="ck">const</span> SERVICES = {
+  user:  process.env.USER_SERVICE_URL  || <span class="cv">'http://user-service:3001'</span>,
+  menu:  process.env.MENU_SERVICE_URL  || <span class="cv">'http://menu-service:3002'</span>,
+  order: process.env.ORDER_SERVICE_URL || <span class="cv">'http://order-service:3003'</span>,
+};
+
+<span class="cm">// ── Health check for the gateway itself ────────────────</span>
+app.get(<span class="cv">'/health'</span>, (req, res) =>
+  res.json({ status: <span class="cv">'ok'</span>, service: <span class="cv">'api-gateway'</span>, port: <span class="cp">8000</span>, routes: SERVICES })
+);
+
+<span class="cm">// ── JWT Authentication Middleware ──────────────────────</span>
+<span class="ck">const</span> JWT_SECRET = process.env.JWT_SECRET || <span class="cv">'your_jwt_secret'</span>;
+
+<span class="ck">function</span> requireAuth(req, res, next) {
+  <span class="ck">const</span> header = req.headers[<span class="cv">'authorization'</span>];
+  <span class="ck">if</span> (!header || !header.startsWith(<span class="cv">'Bearer '</span>)) {
+    <span class="ck">return</span> res.status(<span class="cp">401</span>).json({
+      error: <span class="cv">'Missing or malformed Authorization header'</span>,
+      hint:  <span class="cv">'Send: Authorization: Bearer &lt;your_token&gt;'</span>
+    });
+  }
+  <span class="ck">const</span> token = header.slice(<span class="cp">7</span>);
+  <span class="ck">try</span> {
+    <span class="ck">const</span> decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;   <span class="cm">// downstream services can read this header</span>
+    req.headers[<span class="cv">'x-user-id'</span>]    = decoded.id;
+    req.headers[<span class="cv">'x-user-email'</span>] = decoded.email;
+    next();
+  } <span class="ck">catch</span> (err) {
+    <span class="ck">return</span> res.status(<span class="cp">401</span>).json({ error: <span class="cv">'Invalid or expired token'</span> });
+  }
+}
+
+<span class="cm">// ── Proxy factory helper ───────────────────────────────</span>
+<span class="ck">function</span> proxy(target) {
+  <span class="ck">return</span> createProxyMiddleware({
+    target,
+    changeOrigin: <span class="ck">true</span>,
+    on: {
+      error: (err, req, res) => {
+        res.status(<span class="cp">503</span>).json({
+          error: <span class="cv">'Upstream service unavailable'</span>,
+          target,
+          detail: err.message
+        });
+      }
+    }
+  });
+}
+
+<span class="cm">// ══════════════════════════════════════════════════════
+//  ROUTE TABLE
+// ══════════════════════════════════════════════════════</span>
+
+<span class="cm">// ── User Service — public routes (no auth) ─────────────</span>
+app.use(<span class="cv">'/api/auth'</span>, proxy(SERVICES.user));
+
+<span class="cm">// ── User Service — protected routes ───────────────────</span>
+app.use(<span class="cv">'/api/users'</span>, requireAuth, proxy(SERVICES.user));
+
+<span class="cm">// ── Menu Service — public (browsing doesn't need login) ─</span>
+app.use(<span class="cv">'/api/menu'</span>, proxy(SERVICES.menu));
+
+<span class="cm">// ── Order Service — protected (must be logged in) ─────</span>
+app.use(<span class="cv">'/api/cart'</span>,   requireAuth, proxy(SERVICES.order));
+app.use(<span class="cv">'/api/orders'</span>, requireAuth, proxy(SERVICES.order));
+
+<span class="cm">// ── 404 for unknown routes ─────────────────────────────</span>
+app.use((req, res) =>
+  res.status(<span class="cp">404</span>).json({
+    error:           <span class="cv">'Route not found in gateway'</span>,
+    requestedPath:   req.path,
+    availableRoutes: [<span class="cv">'/api/auth'</span>, <span class="cv">'/api/users'</span>, <span class="cv">'/api/menu'</span>, <span class="cv">'/api/cart'</span>, <span class="cv">'/api/orders'</span>]
+  })
+);
+
+<span class="ck">const</span> PORT = process.env.PORT || <span class="cp">8000</span>;
+app.listen(PORT, () => {
+  console.log(<span class="cv">`[api-gateway] Listening on :${PORT}`</span>);
+  console.log(<span class="cv">`  /api/auth    → ${SERVICES.user}`</span>);
+  console.log(<span class="cv">`  /api/menu    → ${SERVICES.menu}`</span>);
+  console.log(<span class="cv">`  /api/orders  → ${SERVICES.order}`</span>);
+});</pre>
+        </div>
+        <div class="wh p">
+          <div class="wh-label">🔍 How the routing works — line by line</div>
+          <code>app.use('/api/auth', proxy(SERVICES.user))</code> tells Express: <em>"for any request whose path starts with /api/auth, forward it to user-service:3001 and stream the response back."</em> The <code>changeOrigin: true</code> option rewrites the <code>Host</code> header so the upstream service accepts the forwarded request. The <code>requireAuth</code> middleware runs <em>before</em> the proxy — so a bad token is rejected at the gateway and never reaches the upstream service.
+        </div>
+        <div class="pb adv">
+          <div class="pb-label">🟣 Advanced — x-user-id header forwarding</div>
+          Notice how <code>requireAuth</code> sets <code>req.headers['x-user-id'] = decoded.id</code> before proxying. This means downstream services (order-service, user-service) can read the authenticated user's ID from the request header without having to re-validate the JWT themselves. This is the pattern used by Kong, AWS API Gateway, and nginx-based gateways in production.
+        </div>
+      </div>
+    </div>
+    <div class="checkpoint">
+      <span>✅</span>
+      <div><strong>Part 3 done:</strong> Gateway <code>server.js</code> written with routing rules and JWT middleware.</div>
+    </div>
+  </section>
+
+  <!-- ═══════ PART 4 ═══════ -->
+  <section id="p4">
+    <div class="part-head ph-blue">
+      <span class="part-pill pp-blue">Part 4</span>
+      <span class="part-title">🔑 Understanding JWT at the Gateway</span>
+      <span class="part-time">10 min · Concept + Verify</span>
+    </div>
+
+    <p>The <code>requireAuth</code> middleware in the gateway validates every protected request. Here is what happens at each stage:</p>
+
+    <svg viewBox="0 0 680 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin:.75rem 0 1rem">
+      <defs><marker id="ja" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(107,127,160,.4)"/></marker></defs>
+      <rect x="10" y="28" width="90" height="44" rx="5" fill="rgba(107,127,160,.06)" stroke="rgba(107,127,160,.2)" stroke-width="1.2"/>
+      <text x="55" y="47" font-size="7.5" font-family="Sora,sans-serif" fill="var(--text)" text-anchor="middle">🌐 Client</text>
+      <text x="55" y="62" font-size="6.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">Authorization:</text>
+      <text x="55" y="73" font-size="6.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">Bearer eyJ...</text>
+      <line x1="102" y1="50" x2="125" y2="50" stroke="rgba(107,127,160,.3)" stroke-width="1.2" marker-end="url(#ja)"/>
+      <rect x="128" y="20" width="130" height="60" rx="5" fill="rgba(180,110,245,.06)" stroke="rgba(180,110,245,.3)" stroke-width="1.5"/>
+      <text x="193" y="38" font-size="8" font-family="Sora,sans-serif" fill="var(--purple)" text-anchor="middle" font-weight="700">🚪 Gateway</text>
+      <text x="193" y="53" font-size="7" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">requireAuth()</text>
+      <text x="193" y="67" font-size="6.5" font-family="Fira Code,monospace" fill="rgba(180,110,245,.5)" text-anchor="middle">jwt.verify(token)</text>
+      <line x1="260" y1="37" x2="290" y2="22" stroke="rgba(255,94,122,.35)" stroke-width="1.2" marker-end="url(#ja)"/>
+      <rect x="293" y="8" width="130" height="28" rx="5" fill="rgba(255,94,122,.05)" stroke="rgba(255,94,122,.2)" stroke-width="1"/>
+      <text x="358" y="26" font-size="7.5" font-family="Sora,sans-serif" fill="var(--red)" text-anchor="middle">❌ Bad token → 401 Unauthorised</text>
+      <line x1="260" y1="63" x2="290" y2="63" stroke="rgba(0,229,160,.35)" stroke-width="1.2" marker-end="url(#ja)"/>
+      <rect x="293" y="46" width="375" height="34" rx="5" fill="rgba(0,229,160,.05)" stroke="rgba(0,229,160,.2)" stroke-width="1"/>
+      <text x="375" y="61" font-size="7.5" font-family="Sora,sans-serif" fill="var(--green)" text-anchor="middle">✅ Valid token → proxy to service + x-user-id header forwarded</text>
+    </svg>
+
+    <div class="callout blue">
+      <span>💡</span>
+      <div><strong>Key insight:</strong> Once the gateway validates the JWT, downstream services (user-service, order-service) <em>don't need to validate it again</em>. They can trust that any request reaching them from the gateway is already authenticated. They just read the <code>x-user-id</code> header. This is called <strong>trust boundary shifting</strong> — the gateway is the trust boundary.</div>
+    </div>
+
+    <div class="pb adv">
+      <div class="pb-label">🟣 Advanced — What about service-to-service calls?</div>
+      When order-service calls user-service directly (as in Part 8 of Lab 5.1), that request does NOT go through the gateway — it uses Docker's internal network directly. That call is already inside the trust boundary. This is why the internal URL is <code>http://user-service:3001</code> (internal Docker DNS), not <code>http://api-gateway:8000</code>.
+    </div>
+
+    <div class="checkpoint">
+      <span>✅</span>
+      <div><strong>Part 4 done:</strong> JWT flow understood. The gateway is the single authentication point. Downstream services trust the gateway.</div>
+    </div>
+  </section>
+
+  <!-- ═══════ PART 5 ═══════ -->
+  <section id="p5">
+    <div class="part-head ph-purple">
+      <span class="part-pill pp-purple">Part 5</span>
+      <span class="part-title">🐳 Add Gateway to Docker Compose</span>
+      <span class="part-time">10 min</span>
+    </div>
+
+    <div class="step open" id="step-p5-1">
+      <div class="step-hd" onclick="toggleStep('step-p5-1')">
+        <div class="step-num">4</div>
+        <div class="step-label">Add api-gateway service block to docker-compose.yml</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <p>Add this block inside the <code>services:</code> section of your <code>docker-compose.yml</code>:</p>
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">docker-compose.yml — add inside services:</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre>  <span class="cv">api-gateway</span>:
+    build: ./services/api-gateway
+    ports:
+      - <span class="cv">"8000:8000"</span>
+    environment:
+      - USER_SERVICE_URL=http://user-service:3001
+      - MENU_SERVICE_URL=http://menu-service:3002
+      - ORDER_SERVICE_URL=http://order-service:3003
+      - JWT_SECRET=your_jwt_secret
+      - PORT=8000
+    depends_on:
+      - user-service
+      - menu-service
+      - order-service
+    restart: unless-stopped</pre>
+        </div>
+        <div class="wh p">
+          <div class="wh-label">🔍 Why depends_on the services, not the databases?</div>
+          The gateway doesn't connect to any database — it only talks to the three services. So <code>depends_on</code> lists the services, not the databases. The services themselves already declare their own database dependencies. Docker Compose handles the full startup chain: databases first → services → gateway.
+        </div>
+      </div>
+    </div>
+
+    <div class="step open" id="step-p5-2">
+      <div class="step-hd" onclick="toggleStep('step-p5-2')">
+        <div class="step-num">5</div>
+        <div class="step-label">Rebuild and start all services including gateway</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">bash — project root</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre>docker compose down
+docker compose up --build -d
+docker compose ps</pre>
+        </div>
+        <div class="out-label">Expected — 7 containers, all Up</div>
+        <div class="exp-out">NAME                       STATUS    PORTS
+cloudeats-db               Up        3306/tcp
+cloudeats-mongo            Up        27017/tcp
+cloudeats-redis            Up        6379/tcp
+cloudeats-user-service     Up        0.0.0.0:3001->3001/tcp
+cloudeats-menu-service     Up        0.0.0.0:3002->3002/tcp
+cloudeats-order-service    Up        0.0.0.0:3003->3003/tcp
+cloudeats-api-gateway      Up        0.0.0.0:8000->8000/tcp</div>
+        <div class="trouble" onclick="toggleTrouble(this, event)">
+          <div class="trouble-hd"><span>🔴</span>&nbsp;api-gateway exits immediately<span class="trouble-arrow">▶</span></div>
+          <div class="trouble-body">Run <code>docker compose logs api-gateway</code>. Most common: "Cannot find module 'http-proxy-middleware'" — check that <code>package.json</code> in <code>services/api-gateway/</code> lists this dependency correctly. Run <code>docker compose up --build -d api-gateway</code> after fixing.</div>
+        </div>
+        <div class="img-ph">
+          <div class="img-ph-icon">📸</div>
+          <div>
+            <div class="img-ph-label">Your Screenshot — docker compose ps showing all 7 containers Up</div>
+            <div class="img-ph-desc">Terminal showing <code>docker compose ps</code> output with all 7 containers (3 databases + 3 services + api-gateway) listed with status Up. Port 8000 visible for api-gateway. Replace with your screenshot.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="checkpoint">
+      <span>✅</span>
+      <div><strong>Part 5 done:</strong> All 7 containers running. API Gateway live on port 8000.</div>
+    </div>
+  </section>
+
+  <!-- ═══════ PART 6 ═══════ -->
+  <section id="p6">
+    <div class="part-head ph-green">
+      <span class="part-pill pp-green">Part 6</span>
+      <span class="part-title">🧪 Test All Routes via the Gateway</span>
+      <span class="part-time">10 min</span>
+    </div>
+
+    <div class="step open" id="step-p6-1">
+      <div class="step-hd" onclick="toggleStep('step-p6-1')">
+        <div class="step-num">6</div>
+        <div class="step-label">Gateway health check and public route tests</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">bash — test via gateway port 8000 only</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre><span class="cm"># Gateway health</span>
+curl http://localhost:8000/health
+
+<span class="cm"># Public route — menu (no token needed)</span>
+curl http://localhost:8000/api/menu
+
+<span class="cm"># Public route — register a test user via gateway</span>
+curl -X POST http://localhost:8000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test User","email":"test@cloudeats.com","password":"Test1234"}'
+
+<span class="cm"># Login to get a JWT token</span>
+curl -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@cloudeats.com","password":"Test1234"}'</pre>
+        </div>
+        <div class="out-label">Expected gateway health response</div>
+        <div class="exp-out">{"status":"ok","service":"api-gateway","port":8000,"routes":{
+  "user":"http://user-service:3001",
+  "menu":"http://menu-service:3002",
+  "order":"http://order-service:3003"
+}}</div>
+        <div class="callout amber">
+          <span>💡</span>
+          <div><strong>Copy the token from the login response</strong> — you'll use it in Part 7 to test protected routes. The token is the long string after <code>"token":</code> in the JSON response. It starts with <code>eyJ</code>.</div>
+        </div>
+        <div class="img-ph">
+          <div class="img-ph-icon">📸</div>
+          <div>
+            <div class="img-ph-label">Your Screenshot — Login response showing JWT token from :8000</div>
+            <div class="img-ph-desc">Terminal showing the full <code>curl</code> login response with the JWT token returned by the gateway (which proxied to User Service). The URL in the command must be <code>localhost:8000</code>, not 3001. Replace with your screenshot.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="checkpoint">
+      <span>✅</span>
+      <div><strong>Part 6 done:</strong> Public routes working via gateway. JWT token received from login. Ready to test protected routes.</div>
+    </div>
+  </section>
+
+  <!-- ═══════ PART 7 ═══════ -->
+  <section id="p7">
+    <div class="part-head ph-green">
+      <span class="part-pill pp-green">Part 7</span>
+      <span class="part-title">🔐 Test Auth — Accepted vs Rejected Tokens</span>
+      <span class="part-time">5 min</span>
+    </div>
+
+    <div class="step open" id="step-p7-1">
+      <div class="step-hd" onclick="toggleStep('step-p7-1')">
+        <div class="step-num">7</div>
+        <div class="step-label">Test protected routes — valid token, no token, bad token</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">bash — replace YOUR_TOKEN with token from Part 6 login</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre><span class="cm"># Test 1 — Valid token: should reach order-service</span>
+curl http://localhost:8000/api/orders \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+<span class="cm"># Test 2 — No token: gateway should reject with 401</span>
+curl http://localhost:8000/api/orders
+
+<span class="cm"># Test 3 — Bad token: gateway should reject with 401</span>
+curl http://localhost:8000/api/orders \
+  -H "Authorization: Bearer thisisnotavalidtoken"
+
+<span class="cm"># Test 4 — Unknown route: gateway should return 404</span>
+curl http://localhost:8000/api/payments</pre>
+        </div>
+        <div class="out-label">Expected results</div>
+        <div class="exp-out">Test 1 (valid): orders array from MongoDB (or empty array)
+Test 2 (no token): {"error":"Missing or malformed Authorization header"}
+Test 3 (bad token): {"error":"Invalid or expired token"}
+Test 4 (unknown): {"error":"Route not found in gateway","availableRoutes":[...]}</div>
+        <div class="wh p">
+          <div class="wh-label">🔍 Why this matters</div>
+          Tests 2 and 3 prove the gateway acts as a security firewall. The order-service never even receives a request when the token is invalid — the gateway rejects it before proxying. This centralises security and means your services can focus on business logic, not authentication code.
+        </div>
+        <div class="img-ph">
+          <div class="img-ph-icon">📸</div>
+          <div>
+            <div class="img-ph-label">Your Screenshot — side-by-side: valid token (200) vs no token (401)</div>
+            <div class="img-ph-desc">Two terminal windows side by side: left showing Test 1 (valid token, data returned), right showing Test 2 (no token, 401 error returned). This is the key evidence that the gateway auth is working. Replace with your screenshot.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="checkpoint">
+      <span>✅</span>
+      <div><strong>Part 7 done:</strong> All 4 auth test cases pass. Gateway accepts valid tokens, rejects invalid ones, returns clear errors for unknown routes.</div>
+    </div>
+  </section>
+
+  <!-- ═══════ PART 8 ═══════ -->
+  <section id="p8">
+    <div class="part-head ph-amber">
+      <span class="part-pill pp-amber">Part 8</span>
+      <span class="part-title">🌍 Real-World Gateways — What You Built vs Production</span>
+      <span class="part-time">5 min · Reflection</span>
+    </div>
+
+    <p>You built a working API Gateway from scratch. Here's how it compares to production tools you'll encounter in industry:</p>
+
+    <table class="route-table">
+      <thead><tr><th>Gateway</th><th>Used By</th><th>What It Adds Over Your Build</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Your build</strong><br><span style="font-size:.73rem;color:var(--muted)">Express + http-proxy-middleware</span></td>
+          <td>This course</td>
+          <td>Nothing — you built the core concepts from scratch. That's the point.</td>
+        </tr>
+        <tr>
+          <td><strong>nginx</strong><br><span style="font-size:.73rem;color:var(--muted)">Reverse proxy</span></td>
+          <td>Most production web apps</td>
+          <td>SSL termination, static file serving, load balancing config, much higher performance for static routing</td>
+        </tr>
+        <tr>
+          <td><strong>Kong</strong><br><span style="font-size:.73rem;color:var(--muted)">Open source API Gateway</span></td>
+          <td>Mid-to-large companies</td>
+          <td>Plugin system (rate limiting, OAuth, analytics), GUI dashboard, declarative config via YAML</td>
+        </tr>
+        <tr>
+          <td><strong>AWS API Gateway</strong></td>
+          <td>AWS-hosted apps</td>
+          <td>Pay-per-request pricing, Lambda integrations, WAF, auto-scaling, CloudWatch metrics built in</td>
+        </tr>
+        <tr>
+          <td><strong>Traefik</strong></td>
+          <td>Docker/Kubernetes apps</td>
+          <td>Auto-discovers Docker services via labels, automatic HTTPS, designed for container environments</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout purple" style="margin-top:.85rem">
+      <span>🎓</span>
+      <div><strong>What you now understand:</strong> Every production gateway — Kong, AWS API Gateway, nginx — does exactly what you built: route requests, validate tokens, proxy to upstreams, return errors for unknown routes. The concepts are identical. The production tools just add more plugins and handle much higher traffic. Your mental model transfers directly.</div>
+    </div>
+
+    <div class="img-ph">
+      <div class="img-ph-icon">🖼️</div>
+      <div>
+        <div class="img-ph-label">Instructor Diagram — Production gateway comparison on whiteboard</div>
+        <div class="img-ph-desc">Optional: draw on the whiteboard a side-by-side: your Express gateway (this lab) vs a production equivalent (Kong or AWS API Gateway). Label the same components: routing table, auth middleware, upstream services. Upload your whiteboard photo here to replace this placeholder.</div>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <span>✅</span>
+      <div><strong>Lab 5.2 Complete!</strong> You've built a working API Gateway with JWT auth and upstream proxying. Both labs 5.1 and 5.2 are done. Week 5 architecture is complete.</div>
+    </div>
+  </section>
+
+  <!-- GH PAGES SECTION -->
+  <section id="ghp">
+    <hr style="border:none;border-top:1px solid var(--border);margin:1.5rem 0">
+    <div class="ghp-section">
+      <div class="ghp-section-title">🐙 Week 5 Complete — Push Everything to GitHub Pages</div>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem">You now have 3 new files for Week 5. Add them to your course repo and they're live instantly.</p>
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">bash — from your course HTML folder</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># Add all three Week 5 files</span>
+git add week05_Microservices_Architecture.html
+git add week05_lab1_microservices.html
+git add week05_lab2_api_gateway.html
+
+git commit -m <span class="cv">"Add Week 5: Microservices Architecture + Labs 5.1 & 5.2"</span>
+git push origin main
+
+<span class="cm"># GitHub Pages will redeploy in ~60 seconds
+# Your live URL:
+# https://YOUR_USERNAME.github.io/YOUR_REPO/week05_Microservices_Architecture.html</span></pre>
+      </div>
+      <div class="callout purple" style="margin-top:.85rem">
+        <span>💡</span>
+        <div><strong>Building your audience:</strong> Share the Week 5 lecture URL on LinkedIn with a caption like <em>"Built an open cloud computing course — Week 5 covers microservices and API gateways. Free to read, no signup."</em> Each week you publish adds to your credibility. Students who find it useful will share it. This is how online course instructors grow an audience before launching a paid product.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL COMPLETION -->
+  <div class="callout green" style="margin-top:1.5rem">
+    <span>🎉</span>
+    <div>
+      <strong>Week 5 Done!</strong> You've refactored a monolith, deployed three independent microservices, and built an API gateway with centralised JWT authentication. Next week: <a href="../week06/index.html">Week 6 — DevOps &amp; Git</a> where you'll set up CI/CD pipelines to automate deployment of each service independently.
+    </div>
+  </div>
+
+</main>
+</div><!-- /page-body -->
+
+<footer style="border-top:1px solid var(--border);padding:1.25rem 1.5rem;text-align:center;color:var(--muted);font-size:.76rem;max-width:1200px;margin:0 auto">
+  Cloud Computing · Lab 5.2 · API Gateway &nbsp;|&nbsp; CloudEats Academy &nbsp;|&nbsp;
+  <a href="../week05/lab1_microservices_architecture.html" style="color:var(--muted);text-decoration:none">← Lab 5.1</a>
+  &nbsp;|&nbsp;<span class="ghp-badge">🐙 GitHub Pages Ready</span>&nbsp;|&nbsp;
+  <a href="../week06/index.html" style="color:var(--muted);text-decoration:none">Week 6 →</a>
+</footer>
+
+<script>
+function toggleStep(id){
+  const s=document.getElementById(id);
+  s.classList.toggle('open');
+  updateProgress();
+}
+function toggleTrouble(el, event){
+  if(event && !event.target.closest('.trouble-hd')) return;
+  el.classList.toggle('open');
+}
+function expandAll(){
+  document.querySelectorAll('.step').forEach(s=>s.classList.add('open'));
+  updateProgress();
+}
+function collapseAll(){
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('open'));
+  updateProgress();
+}
+function copyCode(btn,event){
+  if(event) event.stopPropagation();
+  const pre=btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    btn.textContent='Copied!';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2000);
+  });
+}
+function updateProgress(){
+  const total=document.querySelectorAll('.step').length;
+  const open=document.querySelectorAll('.step.open').length;
+  document.getElementById('prog-fill').style.width=Math.round((open/total)*100)+'%';
+  document.getElementById('prog-cur').textContent=open;
+  document.getElementById('prog-max').textContent=total;
+}
+window.addEventListener('scroll',()=>{
+  const secs=document.querySelectorAll('section[id]');
+  const links=document.querySelectorAll('.sb-nav a');
+  let cur='';
+  secs.forEach(s=>{if(s.getBoundingClientRect().top<120) cur=s.id;});
+  links.forEach(l=>{
+    l.classList.remove('active');
+    if(l.getAttribute('href')==='#'+cur) l.classList.add('active');
+  });
+});
+updateProgress();
+/* Default — expand all steps on first load */
+document.addEventListener('DOMContentLoaded', ()=>{ expandAll(); });
+</body>
+</html>

@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 8.2 · Role-Based Access Control · CloudEats Academy</title>
+<meta name="description" content="Add user roles to CloudEats — customer, owner, admin. Build requireRole() middleware so only the right users can access admin routes. Lab 8.2, diploma level, three pace tracks.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Lab 8.2 · Role-Based Access Control · CloudEats Academy">
+<meta property="og:description" content="Implement RBAC so customers, restaurant owners, and admins each have exactly the access they need — the authorisation pattern used by every serious web application.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090f;--bg2:#0d1117;--bg3:#141b27;
+  --surface:#1a2235;--surface2:#1f2c42;--border:#2a3d5a;
+  --accent:#00c8ff;--green:#00e5a0;--amber:#ffb740;
+  --red:#ff5e7a;--purple:#b46ef5;
+  --text:#e8edf5;--muted:#6b7fa0;
+  --beginner:#00e5a0;--average:#00c8ff;--advanced:#b46ef5;
+  --lab-color:#b46ef5;--radius:10px;--code-bg:#0b1120;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;}
+.site-header{background:linear-gradient(135deg,#050d1c,#091628);border-bottom:1px solid var(--border);padding:0 1.5rem;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;gap:1rem;}
+.lab-badge{background:var(--lab-color);color:#fff;font-size:.62rem;font-weight:700;letter-spacing:.1em;padding:.2rem .55rem;border-radius:4px;text-transform:uppercase;}
+.header-title{font-size:.88rem;font-weight:600;}
+.ghp-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.67rem;font-weight:700;padding:.18rem .55rem;background:rgba(180,110,245,.08);border:1px solid rgba(180,110,245,.25);color:var(--purple);border-radius:20px;}
+.pace-switcher{display:flex;gap:.3rem;background:var(--bg3);padding:.22rem;border-radius:8px;border:1px solid var(--border);}
+.pace-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.25rem .65rem;border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--muted);transition:all .18s;}
+.pace-btn.active[data-pace="beginner"]{background:rgba(0,229,160,.18);color:var(--beginner);}
+.pace-btn.active[data-pace="average"]{background:rgba(0,200,255,.18);color:var(--average);}
+.pace-btn.active[data-pace="advanced"]{background:rgba(180,110,245,.18);color:var(--advanced);}
+.lab-hero{background:linear-gradient(160deg,#060f20,#07111e);border-bottom:1px solid var(--border);padding:2rem 1.5rem 1.75rem;position:relative;overflow:hidden;}
+.lab-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:350px;height:350px;background:radial-gradient(ellipse,rgba(180,110,245,.06),transparent 70%);pointer-events:none;}
+.hero-inner{max-width:1200px;margin:0 auto;}
+.hero-crumb{font-size:.7rem;color:var(--muted);margin-bottom:.4rem;}
+.hero-crumb a{color:var(--purple);text-decoration:none;}
+.lab-hero h1{font-size:clamp(1.25rem,2.5vw,1.75rem);font-weight:800;background:linear-gradient(135deg,#e8edf5 40%,var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.35rem;}
+.hero-sub{color:var(--muted);font-size:.84rem;margin-bottom:.85rem;}
+.hero-meta{display:flex;flex-wrap:wrap;gap:.55rem;}
+.meta-chip{display:flex;align-items:center;gap:.35rem;font-size:.74rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.22rem .6rem;color:var(--muted);}
+.meta-chip strong{color:var(--text);}
+.pace-guide{max-width:1200px;margin:0 auto;padding:1rem 1.5rem 0;}
+.pace-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.65rem;margin-bottom:.5rem;}
+.pace-card{border-radius:8px;padding:.75rem;font-size:.78rem;line-height:1.5;}
+.pace-card.b{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);}
+.pace-card.a{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);}
+.pace-card.adv{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);}
+.pc-label{font-size:.65rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.3rem;}
+.b .pc-label{color:var(--beginner);}.a .pc-label{color:var(--average);}.adv .pc-label{color:var(--advanced);}
+.pc-scope{color:var(--muted);font-size:.76rem;}
+.page-body{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 200px);}
+.sidebar{position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;padding:1.25rem .85rem 2rem;border-right:1px solid var(--border);background:var(--bg2);}
+.sb-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.85rem;}
+.progress-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:.65rem;margin-bottom:1rem;}
+.prog-track{background:var(--bg2);border-radius:3px;height:5px;margin:.4rem 0;}
+.prog-fill{height:5px;border-radius:3px;background:linear-gradient(90deg,var(--purple),var(--accent));transition:width .35s;width:0%;}
+.prog-text{font-size:.69rem;color:var(--muted);}
+.prog-text span{color:var(--purple);font-weight:600;}
+.sb-nav{list-style:none;}
+.sb-nav li a{display:block;font-size:.73rem;padding:.32rem .6rem;border-radius:5px;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all .13s;margin-bottom:.08rem;}
+.sb-nav li a:hover{background:var(--surface);color:var(--text);}
+.sb-nav li a.active{background:rgba(180,110,245,.08);color:var(--purple);border-color:rgba(180,110,245,.18);}
+.sb-section{font-size:.61rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(107,127,160,.45);padding:.6rem .6rem .18rem;list-style:none;}
+.lab-content{padding:1.75rem 1.75rem 4rem;min-width:0;}
+.part-head{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;border-radius:8px;margin-bottom:1.1rem;}
+.ph-purple{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.22);border-left:4px solid var(--purple);}
+.ph-green{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.22);border-left:4px solid var(--green);}
+.ph-blue{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.22);border-left:4px solid var(--accent);}
+.ph-amber{background:rgba(255,183,64,.04);border:1px solid rgba(255,183,64,.22);border-left:4px solid var(--amber);}
+.part-pill{font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.16rem .5rem;border-radius:4px;white-space:nowrap;}
+.pp-purple{background:rgba(180,110,245,.15);color:var(--purple);}
+.pp-green{background:rgba(0,229,160,.15);color:var(--green);}
+.pp-blue{background:rgba(0,200,255,.15);color:var(--accent);}
+.pp-amber{background:rgba(255,183,64,.15);color:var(--amber);}
+.part-title{font-size:.98rem;font-weight:700;}
+.part-time{font-size:.71rem;color:var(--muted);margin-left:auto;white-space:nowrap;}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:.85rem;overflow:hidden;}
+.step-header{display:flex;align-items:center;gap:.75rem;padding:.85rem 1rem;cursor:pointer;user-select:none;transition:background .13s;}
+.step-header:hover{background:var(--surface2);}
+.step-num{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;color:var(--muted);}
+.step.open .step-num{border-color:var(--purple);color:var(--purple);}
+.step-title{font-size:.86rem;font-weight:600;}
+.step-body{display:none;padding:1rem 1rem 1.1rem;border-top:1px solid var(--border);}
+.step.open .step-body{display:block;}
+.step:not(.open) .step-header::after{content:'click to expand';font-size:.62rem;color:var(--muted);opacity:.5;margin-left:auto;letter-spacing:.04em;pointer-events:none;}
+.step.open .step-header::after{content:'';}
+code{font-family:'Fira Code',monospace;font-size:.84em;background:var(--code-bg);padding:.08rem .35rem;border-radius:3px;color:var(--green);}
+.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;margin:.75rem 0;overflow:hidden;}
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:.45rem .9rem;background:rgba(0,0,0,.3);border-bottom:1px solid var(--border);}
+.code-lang{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.file-chip{font-size:.68rem;font-weight:600;color:var(--amber);background:rgba(255,183,64,.1);border:1px solid rgba(255,183,64,.25);padding:.1rem .4rem;border-radius:4px;}
+.copy-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.18rem .55rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;transition:all .15s;}
+.copy-btn:hover{background:var(--purple);color:#fff;border-color:var(--purple);}
+.copy-btn.copied{background:var(--green);color:#000;border-color:var(--green);}
+pre{font-family:'Fira Code',monospace;font-size:.79rem;line-height:1.65;padding:.9rem;overflow-x:auto;color:#c5d5ef;white-space:pre;}
+.callout{border-radius:8px;padding:.75rem 1rem;margin:.75rem 0;display:flex;gap:.6rem;align-items:flex-start;font-size:.82rem;line-height:1.55;}
+.callout.blue{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);color:#a0d8f0;}
+.callout.green{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);color:#8ee8c4;}
+.callout.amber{background:rgba(255,183,64,.06);border:1px solid rgba(255,183,64,.2);color:#d9c07a;}
+.callout.red{background:rgba(255,94,122,.05);border:1px solid rgba(255,94,122,.2);color:#f0a0b0;}
+.callout.purple{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);color:#c5a8f5;}
+.callout-icon{font-size:1rem;flex-shrink:0;line-height:1.4;}
+.expected-output{background:#060d18;border:1px solid rgba(0,229,160,.2);border-left:3px solid var(--green);border-radius:6px;padding:.65rem .9rem;margin:.65rem 0;}
+.eo-label{font-size:.62rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:.35rem;}
+.eo-body{font-family:'Fira Code',monospace;font-size:.77rem;color:#8ee8c4;line-height:1.6;white-space:pre-wrap;}
+.trouble{background:rgba(255,94,122,.03);border:1px solid rgba(255,94,122,.2);border-radius:8px;margin:.75rem 0;overflow:hidden;}
+.trouble-header{display:flex;align-items:center;gap:.6rem;padding:.6rem .9rem;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--red);}
+.trouble-body{display:none;padding:.75rem .9rem;border-top:1px solid rgba(255,94,122,.15);font-size:.8rem;line-height:1.6;}
+.trouble.open .trouble-body{display:block;}
+.why-box{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.2);border-left:3px solid var(--accent);border-radius:6px;padding:.7rem 1rem;margin:.75rem 0;font-size:.81rem;color:#a0d8f0;}
+.why-box strong{color:var(--accent);}
+.checkpoint{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.25);border-radius:8px;padding:.85rem 1rem;margin:1.25rem 0;}
+.checkpoint-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:.4rem;}
+.level-block{border-radius:8px;padding:.65rem .9rem;margin:.55rem 0;font-size:.8rem;line-height:1.55;}
+.level-block.beginner{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.18);border-left:3px solid var(--beginner);}
+.level-block.average{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.18);border-left:3px solid var(--average);}
+.level-block.advanced{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.18);border-left:3px solid var(--advanced);}
+.level-block-label{font-size:.63rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.25rem;}
+.level-block.beginner .level-block-label{color:var(--beginner);}
+.level-block.average .level-block-label{color:var(--average);}
+.level-block.advanced .level-block-label{color:var(--advanced);}
+.badge{display:inline-block;font-size:.68rem;font-weight:700;padding:.14rem .45rem;border-radius:4px;}
+.badge.green{background:rgba(0,229,160,.15);color:var(--green);}
+.badge.red{background:rgba(255,94,122,.15);color:var(--red);}
+.badge.amber{background:rgba(255,183,64,.15);color:var(--amber);}
+.summary-table{width:100%;border-collapse:collapse;font-size:.8rem;margin:.85rem 0;}
+.summary-table th{background:var(--bg3);padding:.5rem .75rem;text-align:left;font-size:.72rem;font-weight:700;color:var(--muted);border-bottom:2px solid var(--border);}
+.summary-table td{padding:.5rem .75rem;border-bottom:1px solid var(--border);vertical-align:top;}
+.summary-table tr:last-child td{border-bottom:none;}
+.ctrl-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;padding:.4rem 0;}
+.ctrl-bar span{font-size:.75rem;color:var(--muted);}
+.ctrl-btns{display:flex;gap:.5rem;}
+.ctrl-btn{font-family:'Sora',sans-serif;font-size:.7rem;font-weight:600;padding:.25rem .75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all .15s;}
+.ctrl-btn:hover{color:var(--accent);border-color:var(--accent);}
+.challenge-box{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.25);border-radius:8px;padding:1rem 1.1rem;margin-top:1.5rem;}
+.challenge-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-bottom:.5rem;}
+p{font-size:.85rem;line-height:1.7;margin-bottom:.7rem;}
+p:last-child{margin-bottom:0;}
+ul,ol{padding-left:1.4rem;font-size:.84rem;line-height:1.75;margin-bottom:.6rem;}
+strong{color:var(--text);}
+@media(max-width:700px){.page-body{grid-template-columns:1fr;}.sidebar{display:none;}}
+</style>
+</head>
+<body class="pace-beginner">
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="header-inner">
+    <div style="display:flex;align-items:center;gap:.75rem;">
+      <span class="lab-badge">Lab 8.2</span>
+      <span class="header-title">Role-Based Access Control</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:.75rem;">
+      <span class="ghp-badge">👥 RBAC</span>
+      <div class="pace-switcher">
+        <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner')">🌱</button>
+        <button class="pace-btn" data-pace="average" onclick="setPace('average')">⚡</button>
+        <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced')">🚀</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<section class="lab-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb"><a href="week08_Cloud_Security_and_Access_Control.html">Week 8 Notes</a> › <a href="week08_lab1_jwt_authentication.html">Lab 8.1</a> › Lab 8.2</div>
+    <h1>👥 Lab 8.2 — Role-Based Access Control</h1>
+    <p class="hero-sub">Add customer, owner, and admin roles to CloudEats. Build middleware that checks roles before granting route access — so the right people see the right things.</p>
+    <div class="hero-meta">
+      <div class="meta-chip">⏱ <strong>60 min</strong></div>
+      <div class="meta-chip">🧑‍🤝‍🧑 <strong>Pairs</strong></div>
+      <div class="meta-chip">📦 <strong>Prereq:</strong>&nbsp;Lab 8.1 complete (JWT working)</div>
+      <div class="meta-chip">🛠 <strong>Tools:</strong>&nbsp;MySQL · JWT · curl</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PACE GUIDE ── -->
+<div class="pace-guide">
+  <div class="pace-cards">
+    <div class="pace-card b">
+      <div class="pc-label">🌱 Beginner — aim for</div>
+      <div class="pc-scope">Parts 1–2: role column in DB, role included in JWT payload. Can explain what 403 means vs 401.</div>
+    </div>
+    <div class="pace-card a">
+      <div class="pc-label">⚡ Average — aim for</div>
+      <div class="pc-scope">Full lab. Customer → 403 on admin route. Admin → 200. Can explain the principle of least privilege.</div>
+    </div>
+    <div class="pace-card adv">
+      <div class="pc-label">🚀 Advanced — aim for</div>
+      <div class="pc-scope">Full lab + challenge extension. Can design an owner-level route that only shows that owner's restaurant data.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PREREQ ── -->
+<div style="max-width:1200px;margin:0 auto;padding:1rem 1.5rem 0;">
+  <div class="callout red">
+    <span class="callout-icon">⚠️</span>
+    <div><strong>Lab 8.1 must be complete before starting here.</strong> You must have: (1) JWT token returned on login, (2) <code>authenticateToken</code> middleware protecting at least one route, (3) a valid token you can paste into curl. If any of these are not working, fix Lab 8.1 first.</div>
+  </div>
+</div>
+
+<!-- ── BODY ── -->
+<div class="page-body">
+
+  <aside class="sidebar">
+    <div class="sb-title">Lab Progress</div>
+    <div class="progress-wrap">
+      <div class="prog-text">Completed: <span id="prog-count">0</span> / 13 steps</div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+    </div>
+    <ul class="sb-nav">
+      <li class="sb-section">Part 1</li>
+      <li><a href="#p1">Add role to DB</a></li>
+      <li class="sb-section">Part 2</li>
+      <li><a href="#p2">Role in JWT</a></li>
+      <li class="sb-section">Part 3</li>
+      <li><a href="#p3">requireRole()</a></li>
+      <li class="sb-section">Part 4</li>
+      <li><a href="#p4">Admin routes</a></li>
+      <li class="sb-section">Part 5</li>
+      <li><a href="#p5">Test</a></li>
+      <li class="sb-section">Links</li>
+      <li><a href="week09_Monitoring_Logging_and_Optimization.html">Week 9 →</a></li>
+    </ul>
+  </aside>
+
+  <main class="lab-content">
+
+    <!-- ══ PART 1 ══ -->
+    <section id="p1">
+      <div class="part-head ph-purple">
+        <span class="part-pill pp-purple">Part 1</span>
+        <span class="part-title">Add a Role Column to the Users Table</span>
+        <span class="part-time">⏱ 10 min</span>
+      </div>
+
+      <div class="ctrl-bar">
+        <span><strong style="color:var(--text)">13 steps</strong> across 5 parts</span>
+        <div class="ctrl-btns">
+          <button class="ctrl-btn" onclick="expandAll()">↓ Expand All</button>
+          <button class="ctrl-btn" onclick="collapseAll()">↑ Collapse All</button>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p1-1">
+        <div class="step-header" onclick="toggleStep('step-p1-1')">
+          <div class="step-num">1</div>
+          <div class="step-title">Connect to MySQL and inspect the users table</div>
+        </div>
+        <div class="step-body">
+          <div class="level-block beginner">
+            <div class="level-block-label">🌱 Beginner — what are we doing?</div>
+            We need to add a "role" column to the database so we can store whether each user is a customer, owner, or admin. We do this directly in MySQL using SQL commands.
+          </div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>docker exec -it cloudeats-mysql mysql \
+  -ucloudeats_user -pcloudeats_pass cloudeats</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ You should see the MySQL prompt</div>
+            <div class="eo-body">mysql></div>
+          </div>
+          <p style="margin-top:.6rem;">Now look at the current table structure:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">MySQL</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>DESCRIBE users;</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Current columns — no role column yet</div>
+            <div class="eo-body">+---------------+--------------+------+-----+
+| Field         | Type         | Null | Key |
++---------------+--------------+------+-----+
+| id            | int          | NO   | PRI |
+| name          | varchar(100) | YES  |     |
+| email         | varchar(255) | NO   | UNI |
+| password_hash | varchar(255) | NO   |     |
+| created_at    | timestamp    | YES  |     |
++---------------+--------------+------+-----+</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p1-2">
+        <div class="step-header" onclick="toggleStep('step-p1-2')">
+          <div class="step-num">2</div>
+          <div class="step-title">Add the role column with a default of 'customer'</div>
+        </div>
+        <div class="step-body">
+          <p>We use an <code>ENUM</code> (enumeration) column to restrict the role to a fixed set of allowed values. The <code>DEFAULT</code> means every new user automatically gets the 'customer' role unless we specify otherwise:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">MySQL</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>ALTER TABLE users 
+ADD COLUMN role ENUM('customer','owner','admin') NOT NULL DEFAULT 'customer';</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Expected</div>
+            <div class="eo-body">Query OK, 0 rows affected (0.03 sec)</div>
+          </div>
+          <div class="level-block beginner">
+            <div class="level-block-label">🌱 Beginner — what is ENUM?</div>
+            ENUM is like a multiple-choice field. The database will only accept one of the listed values: 'customer', 'owner', or 'admin'. If you try to insert 'superuser', MySQL rejects it. This prevents typos and invalid roles.
+          </div>
+          <div class="why-box">
+            <strong>Why DEFAULT 'customer'?</strong> Security principle: new accounts should have the minimum access level by default. An admin must actively promote someone to 'owner' or 'admin'. This is the principle of least privilege applied at the database level.
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p1-3">
+        <div class="step-header" onclick="toggleStep('step-p1-3')">
+          <div class="step-num">3</div>
+          <div class="step-title">Create an admin user directly in MySQL</div>
+        </div>
+        <div class="step-body">
+          <p>We need at least one admin account to test admin-only routes. We will insert it directly in MySQL and set the role to 'admin'. The password below hashes to <code>adminpass123</code> — or replace with your own bcrypt hash:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">MySQL</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>-- Insert admin user (password: adminpass123)
+-- Generate a real hash outside MySQL with: node -e "const b=require('bcrypt');b.hash('adminpass123',10).then(console.log);"
+INSERT INTO users (name, email, password_hash, role)
+VALUES (
+  'Admin User',
+  'admin@cloudeats.com',
+  '$2b$10$examplehashreplacewithreal',
+  'admin'
+);</pre>
+          </div>
+          <div class="callout amber">
+            <span class="callout-icon">ℹ️</span>
+            <div><strong>Generate a real bcrypt hash first.</strong> Open a second terminal, run <code>node -e "const b=require('bcrypt'); b.hash('adminpass123',10).then(console.log);"</code> in your user-service directory, copy the <code>$2b$10$...</code> output, and paste it into the INSERT above instead of the placeholder.</div>
+          </div>
+          <p style="margin-top:.6rem;">Verify all users and their roles:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">MySQL</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>SELECT id, name, email, role FROM users;</pre>
+          </div>
+          <p style="margin-top:.5rem;">When done, exit MySQL:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">MySQL</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>EXIT;</pre>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ══ PART 2 ══ -->
+    <section id="p2">
+      <div class="part-head ph-blue">
+        <span class="part-pill pp-blue">Part 2</span>
+        <span class="part-title">Include Role in the JWT Payload</span>
+        <span class="part-time">⏱ 8 min</span>
+      </div>
+
+      <div class="step open" id="step-p2-1">
+        <div class="step-header" onclick="toggleStep('step-p2-1')">
+          <div class="step-num">4</div>
+          <div class="step-title">Update jwt.sign() to include the role</div>
+        </div>
+        <div class="step-body">
+          <p>Open <code>server.js</code> and find the <code>jwt.sign()</code> call you added in Lab 8.1. Add <code>role: user.role</code> to the payload:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — jwt.sign() update</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>// BEFORE (Lab 8.1):
+const token = jwt.sign(
+  { userId: user.id, email: user.email, name: user.name },
+  process.env.JWT_SECRET,
+  { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+);
+
+// AFTER (Lab 8.2) — ADD role:
+const token = jwt.sign(
+  {
+    userId: user.id,
+    email:  user.email,
+    name:   user.name,
+    role:   user.role   // ← ADD THIS
+  },
+  process.env.JWT_SECRET,
+  { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+);</pre>
+          </div>
+          <div class="why-box">
+            <strong>Why put the role in the token?</strong> The middleware needs to know the user's role to make access decisions. Without the role in the JWT, the server would have to query the database on every request to look it up — eliminating the stateless benefit of JWT. Storing the role in the token keeps things fast.
+          </div>
+          <div class="callout amber">
+            <span class="callout-icon">⚠️</span>
+            <div><strong>Important:</strong> After this change, existing tokens (from Lab 8.1) will not contain a role. Users must log out and log in again to get a new token with the role included. This is normal — tokens are issued at login time with a snapshot of the user's data.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p2-2">
+        <div class="step-header" onclick="toggleStep('step-p2-2')">
+          <div class="step-num">5</div>
+          <div class="step-title">Make sure the login query fetches the role column</div>
+        </div>
+        <div class="step-body">
+          <p>Ensure your login SQL query selects all columns (or explicitly selects the new <code>role</code> column):</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — login SQL query</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>// Make sure this query fetches the role column
+// SELECT * fetches all columns including the new 'role' — this is fine here
+db.query(
+  'SELECT * FROM users WHERE email = ?',
+  [email],
+  async (err, results) => {
+    // ...
+    const user = results[0];
+    // user.role is now available from the database result
+    // ...
+  }
+);</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p2-3">
+        <div class="step-header" onclick="toggleStep('step-p2-3')">
+          <div class="step-num">6</div>
+          <div class="step-title">Rebuild and restart</div>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal — from ~/cloudeats-app</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>cd ~/cloudeats-app
+docker compose build user-service
+docker compose up -d user-service</pre>
+          </div>
+          <p style="margin-top:.6rem;">Verify the role appears in the new token by logging in again:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>curl -s -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@cloudeats.com","password":"adminpass123"}'</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Token should contain role in payload</div>
+            <div class="eo-body">{"message":"Login successful","token":"eyJ...","user":{"id":3,"email":"admin@cloudeats.com","role":"admin"}}</div>
+          </div>
+          <p style="margin-top:.5rem;">Paste the token at <a href="https://jwt.io" target="_blank" rel="noopener">jwt.io</a> to confirm the decoded payload contains <code>"role": "admin"</code>.</p>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ══ PART 3 ══ -->
+    <section id="p3">
+      <div class="part-head ph-green">
+        <span class="part-pill pp-green">Part 3</span>
+        <span class="part-title">Build the requireRole() Middleware</span>
+        <span class="part-time">⏱ 10 min</span>
+      </div>
+
+      <div class="step open" id="step-p3-1">
+        <div class="step-header" onclick="toggleStep('step-p3-1')">
+          <div class="step-num">7</div>
+          <div class="step-title">Write requireRole() — add it below authenticateToken</div>
+        </div>
+        <div class="step-body">
+          <p>Add this function in <code>server.js</code>, directly after your <code>authenticateToken</code> function from Lab 8.1:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — add after authenticateToken</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>// ── ROLE AUTHORISATION MIDDLEWARE ──
+// Usage: requireRole('admin') or requireRole('admin', 'owner')
+function requireRole(...roles) {
+  return (req, res, next) => {
+    // authenticateToken must have run first — req.user must exist
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    // Check if the user's role is in the allowed list
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        error: `Access denied. This route requires role: ${roles.join(' or ')}.`
+      });
+    }
+
+    next(); // Role is allowed — continue to the route handler
+  };
+}</pre>
+          </div>
+
+          <div class="level-block beginner">
+            <div class="level-block-label">🌱 Beginner — how does this function work?</div>
+            <p><code>requireRole('admin')</code> returns a new middleware function. That returned function checks <code>req.user.role</code> (set by <code>authenticateToken</code>) against the list of allowed roles. If the role is in the list, it calls <code>next()</code>. If not, it returns 403.</p>
+            <p>Think of it as a second security guard, standing inside the room: the first guard (authenticateToken) checked your identity badge; this guard checks whether your job title allows you into this particular room.</p>
+          </div>
+
+          <div class="level-block average">
+            <div class="level-block-label">⚡ Average — 401 vs 403</div>
+            Notice that <code>requireRole</code> returns 401 if <code>req.user</code> is missing (shouldn't happen if middlewares are chained correctly, but defensive coding), and 403 if the user is authenticated but in the wrong role. These two codes have different meanings that clients must handle differently.
+          </div>
+
+          <div class="level-block advanced">
+            <div class="level-block-label">🚀 Advanced — the factory pattern</div>
+            <code>requireRole('admin')</code> returns a function — this is the <em>factory function pattern</em> (or higher-order function). It lets you configure middleware at route definition time rather than checking arguments inside the middleware itself. This is the same pattern used by Express's own <code>express.static()</code> and <code>express.json()</code>.
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ══ PART 4 ══ -->
+    <section id="p4">
+      <div class="part-head ph-amber">
+        <span class="part-pill pp-amber">Part 4</span>
+        <span class="part-title">Create Admin-Only Routes</span>
+        <span class="part-time">⏱ 12 min</span>
+      </div>
+
+      <div class="step open" id="step-p4-1">
+        <div class="step-header" onclick="toggleStep('step-p4-1')">
+          <div class="step-num">8</div>
+          <div class="step-title">Add a GET /api/admin/users route (admin only)</div>
+        </div>
+        <div class="step-body">
+          <p>Add this new route in <code>server.js</code> — it lists all users with their roles. Only an admin token can access it:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — admin route</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>// ── ADMIN ROUTES ──
+
+/**
+ * GET /api/admin/users
+ * Returns all users with their roles.
+ * Requires: valid JWT (authenticateToken) AND role = admin (requireRole)
+ */
+app.get('/api/admin/users',
+  authenticateToken,          // step 1: must be logged in
+  requireRole('admin'),       // step 2: must be admin
+  (req, res) => {
+    db.query(
+      'SELECT id, name, email, role, created_at FROM users ORDER BY id',
+      (err, results) => {
+        if (err) return res.status(500).json({ error: 'Database error' });
+        res.json({ users: results });
+      }
+    );
+  }
+);</pre>
+          </div>
+          <div class="why-box">
+            <strong>Why chain authenticateToken AND requireRole?</strong> These two middlewares do different jobs. <code>authenticateToken</code> proves identity (who are you?). <code>requireRole</code> checks permission (can you do this?). Separating them follows the single-responsibility principle — each function does one thing. You can mix and match them on any route.
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p4-2">
+        <div class="step-header" onclick="toggleStep('step-p4-2')">
+          <div class="step-num">9</div>
+          <div class="step-title">Add a GET /api/admin/stats route</div>
+        </div>
+        <div class="step-body">
+          <p>A simple dashboard-style endpoint that only admins can see:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — stats route</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>app.get('/api/admin/stats',
+  authenticateToken,
+  requireRole('admin'),
+  (req, res) => {
+    db.query(
+      `SELECT
+        (SELECT COUNT(*) FROM users) AS total_users,
+        (SELECT COUNT(*) FROM users WHERE role = 'admin') AS admin_count,
+        (SELECT COUNT(*) FROM users WHERE role = 'customer') AS customer_count,
+        (SELECT COUNT(*) FROM orders) AS total_orders`,
+      (err, results) => {
+        if (err) return res.status(500).json({ error: 'Database error' });
+        res.json({ stats: results[0], requested_by: req.user.email });
+      }
+    );
+  }
+);</pre>
+          </div>
+          <div class="level-block advanced">
+            <div class="level-block-label">🚀 Advanced — multi-role route</div>
+            Try adding a <code>POST /api/menu</code> route that allows both admin and owner: <code>requireRole('admin', 'owner')</code>. Then query the database to check that the owner's <code>req.user.userId</code> matches the restaurant's <code>owner_id</code> before allowing the edit — otherwise any owner could edit any restaurant's menu.
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p4-3">
+        <div class="step-header" onclick="toggleStep('step-p4-3')">
+          <div class="step-num">10</div>
+          <div class="step-title">Rebuild the container</div>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal — from ~/cloudeats-app</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>docker compose build user-service
+docker compose up -d user-service</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Expected</div>
+            <div class="eo-body">[+] Running 1/1
+ ✔ Container cloudeats-user-service  Started</div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ══ PART 5 ══ -->
+    <section id="p5">
+      <div class="part-head ph-purple">
+        <span class="part-pill pp-purple">Part 5</span>
+        <span class="part-title">Test — The Key Checkpoint</span>
+        <span class="part-time">⏱ 15 min</span>
+      </div>
+
+      <div class="step open" id="step-p5-1">
+        <div class="step-header" onclick="toggleStep('step-p5-1')">
+          <div class="step-num">11</div>
+          <div class="step-title">Get a customer token and test admin route — expect 403</div>
+        </div>
+        <div class="step-body">
+          <p>Log in as a regular customer (an account you registered in Lab 3.2 — it should have role 'customer' by default):</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>CUSTOMER_TOKEN=$(curl -s -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"customer@example.com","password":"yourpassword"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")</pre>
+          </div>
+          <p style="margin-top:.5rem;">Now try to access the admin route with the customer token:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>curl -i http://localhost:8000/api/admin/users \
+  -H "Authorization: Bearer $CUSTOMER_TOKEN"</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Expected — 403 Forbidden</div>
+            <div class="eo-body">HTTP/1.1 403 Forbidden
+{"error":"Access denied. This route requires role: admin."}</div>
+          </div>
+          <div class="callout green">
+            <span class="callout-icon">🎯</span>
+            <div>403 is the correct response: the customer is authenticated (valid JWT, so not 401) but not in the admin role (so not 200 — instead 403 Forbidden).</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p5-2">
+        <div class="step-header" onclick="toggleStep('step-p5-2')">
+          <div class="step-num">12</div>
+          <div class="step-title">Get an admin token and test — expect 200</div>
+        </div>
+        <div class="step-body">
+          <p>Log in as the admin user you created in Part 1:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>ADMIN_TOKEN=$(curl -s -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@cloudeats.com","password":"adminpass123"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")</pre>
+          </div>
+          <p style="margin-top:.5rem;">Access the admin route with the admin token:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>curl -i http://localhost:8000/api/admin/users \
+  -H "Authorization: Bearer $ADMIN_TOKEN"</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Expected — 200 with user list</div>
+            <div class="eo-body">HTTP/1.1 200 OK
+{"users":[{"id":1,"name":"Test User","email":"customer@example.com","role":"customer"},{"id":3,"name":"Admin User","email":"admin@cloudeats.com","role":"admin"}]}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p5-3">
+        <div class="step-header" onclick="toggleStep('step-p5-3')">
+          <div class="step-num">13</div>
+          <div class="step-title">Also confirm: customer still accesses their own orders</div>
+        </div>
+        <div class="step-body">
+          <p>RBAC should not break things customers <em>are</em> allowed to do. Confirm the customer token still works for routes they are permitted to use:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>curl -i http://localhost:8000/api/orders/1 \
+  -H "Authorization: Bearer $CUSTOMER_TOKEN"</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Expected — 200 for their own orders</div>
+            <div class="eo-body">HTTP/1.1 200 OK
+{"orders":[...]}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Key checkpoint -->
+      <div class="checkpoint">
+        <div class="checkpoint-label">🎯 Lab 8.2 Key Checkpoint — all must pass</div>
+        <ul>
+          <li>✅ Customer token + <code>/api/admin/users</code> → <span class="badge amber">403</span> Forbidden</li>
+          <li>✅ Admin token + <code>/api/admin/users</code> → <span class="badge green">200</span> OK with user list</li>
+          <li>✅ Customer token + <code>/api/orders/1</code> (own orders) → <span class="badge green">200</span> OK</li>
+          <li>✅ No token + any route → <span class="badge red">401</span> Unauthorized</li>
+        </ul>
+        <p style="margin-top:.6rem;font-size:.81rem;">All four passing means your authentication (Lab 8.1) and authorisation (Lab 8.2) layers are both working correctly.</p>
+      </div>
+
+    </section>
+
+    <!-- ══ ADVANCED CHALLENGE ══ -->
+    <section style="margin-top:1.5rem;">
+      <div class="challenge-box">
+        <div class="challenge-label">🚀 Advanced Challenge Extension</div>
+        <p>The current setup does not check <em>which</em> restaurant an owner belongs to. An owner with role 'owner' could theoretically edit any restaurant's menu. Fix this:</p>
+        <ol>
+          <li>Add a <code>restaurant_id</code> column to the users table (nullable — customers and admins have NULL).</li>
+          <li>When an owner calls <code>PUT /api/menu/:itemId</code>, query the menu item to find its <code>restaurant_id</code>.</li>
+          <li>Compare it to <code>req.user.restaurantId</code> (you will need to include this in the JWT payload too).</li>
+          <li>If they do not match, return 403.</li>
+        </ol>
+        <p style="margin-top:.65rem;font-size:.8rem;color:var(--muted);">This is how multi-tenant SaaS products (like restaurant management platforms) enforce data isolation between tenants.</p>
+      </div>
+    </section>
+
+    <!-- ══ SUMMARY ══ -->
+    <section style="margin-top:1.75rem;">
+      <div class="part-head ph-green" style="margin-bottom:1rem;">
+        <span class="part-pill pp-green">Summary</span>
+        <span class="part-title">What Week 8 Built — Security Stack Complete</span>
+      </div>
+      <table class="summary-table">
+        <thead><tr><th>Layer</th><th>What we built</th><th>HTTP response when blocked</th></tr></thead>
+        <tbody>
+          <tr><td>No credentials</td><td>No protection (before Lab 8.1)</td><td>200 always — security hole</td></tr>
+          <tr><td>Authentication</td><td><code>authenticateToken</code> middleware (Lab 8.1)</td><td><span class="badge red">401</span> if no/invalid token</td></tr>
+          <tr><td>Authorisation</td><td><code>requireRole()</code> middleware (Lab 8.2)</td><td><span class="badge amber">403</span> if wrong role</td></tr>
+          <tr><td>Ownership</td><td><code>req.user.userId !== userId</code> check (Lab 8.1)</td><td><span class="badge amber">403</span> if accessing other user's data</td></tr>
+          <tr><td>Secret management</td><td><code>.env</code> + <code>.gitignore</code> (Lab 8.1)</td><td>Prevents credential leaks to Git</td></tr>
+          <tr><td>Input safety</td><td>Parameterised queries throughout (Week 3+)</td><td>Prevents SQL injection</td></tr>
+        </tbody>
+      </table>
+
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.25rem;">
+        <a href="week08_lab1_jwt_authentication.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;background:rgba(255,94,122,.08);border:1px solid rgba(255,94,122,.25);color:var(--red);padding:.4rem .9rem;border-radius:7px;text-decoration:none;">← Lab 8.1</a>
+        <a href="week08_Cloud_Security_and_Access_Control.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;background:rgba(255,183,64,.08);border:1px solid rgba(255,183,64,.25);color:var(--amber);padding:.4rem .9rem;border-radius:7px;text-decoration:none;">Week 8 Notes</a>
+        <a href="week09_Monitoring_Logging_and_Optimization.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.25);color:var(--green);padding:.4rem .9rem;border-radius:7px;text-decoration:none;">Week 9: Monitoring →</a>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+let completedSteps = 0;
+const TOTAL = 13;
+function toggleStep(id, event) {
+  if (event && !event.target.closest('.step-header')) return;
+  const el = document.getElementById(id);
+  if (!el) return;
+  const wasOpen = el.classList.contains('open');
+  el.classList.toggle('open');
+  if (!wasOpen) { completedSteps = Math.min(completedSteps + 1, TOTAL); updateProgress(); }
+}
+function toggleTrouble(el, event) {
+  if (event && !event.target.closest('.trouble-header')) return;
+  el.classList.toggle('open');
+}
+function copyCode(btn, event) {
+  if (event) event.stopPropagation();
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+function expandAll() {
+  document.querySelectorAll('.step').forEach(s => s.classList.add('open'));
+  completedSteps = TOTAL; updateProgress();
+}
+function collapseAll() {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('open'));
+}
+function updateProgress() {
+  const pct = Math.round((completedSteps / TOTAL) * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-count').textContent = completedSteps;
+}
+function setPace(pace) {
+  document.body.className = 'pace-' + pace;
+  document.querySelectorAll('.pace-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-pace="${pace}"]`).classList.add('active');
+  if (pace === 'beginner') expandAll();
+}
+document.addEventListener('DOMContentLoaded', () => { expandAll(); setPace('beginner'); });
+</script>
+</body>
+</html>

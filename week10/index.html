@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 10 · Emerging Trends &amp; Course Wrap-up · CloudEats Academy</title>
+<meta name="description" content="Edge computing, AI/ML cloud services, multi-cloud vs hybrid cloud, and the full CloudEats architecture retrospective. Capstone week that maps every component to its cloud equivalent.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Week 10 · Emerging Trends &amp; Course Wrap-up · CloudEats Academy">
+<meta property="og:description" content="Finish strong — understand where cloud computing is heading, map your CloudEats stack to real cloud services, and plan your learning path after this course.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090f;--bg2:#0d1117;--bg3:#141b27;
+  --surface:#1a2235;--surface2:#1f2c42;--border:#2a3d5a;
+  --accent:#00c8ff;--green:#00e5a0;--amber:#ffb740;
+  --red:#ff5e7a;--purple:#b46ef5;
+  --text:#e8edf5;--muted:#6b7fa0;
+  --beginner:#00e5a0;--average:#00c8ff;--advanced:#b46ef5;
+  --week-color:#b46ef5;--radius:10px;--code-bg:#0b1120;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;}
+.site-header{background:linear-gradient(135deg,#050d1c,#091628);border-bottom:1px solid var(--border);padding:0 2rem;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:58px;gap:1rem;}
+.header-left{display:flex;align-items:center;gap:.75rem;}
+.week-badge{background:var(--week-color);color:#fff;font-size:.65rem;font-weight:700;letter-spacing:.1em;padding:.2rem .55rem;border-radius:4px;text-transform:uppercase;}
+.header-title{font-size:.9rem;font-weight:600;}
+.week-nav{display:flex;gap:.4rem;align-items:center;}
+.week-nav a{font-size:.68rem;font-weight:600;padding:.2rem .55rem;border:1px solid var(--border);border-radius:4px;color:var(--muted);text-decoration:none;transition:all .15s;}
+.week-nav a:hover{color:var(--accent);border-color:var(--accent);}
+.week-nav a.current{background:rgba(180,110,245,.1);color:var(--purple);border-color:rgba(180,110,245,.3);}
+.page-hero{background:linear-gradient(160deg,#0a0e18,#0f1620);border-bottom:1px solid var(--border);padding:2.5rem 2rem 2rem;position:relative;overflow:hidden;}
+.page-hero::before{content:'';position:absolute;top:-80px;right:-80px;width:420px;height:420px;background:radial-gradient(ellipse,rgba(180,110,245,.07),transparent 70%);pointer-events:none;}
+.hero-inner{max-width:1100px;margin:0 auto;}
+.hero-crumb{font-size:.72rem;color:var(--muted);margin-bottom:.5rem;}
+.hero-crumb span{color:var(--purple);}
+.page-hero h1{font-size:clamp(1.5rem,3vw,2.1rem);font-weight:800;background:linear-gradient(135deg,#e8edf5 40%,var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.5rem;}
+.hero-sub{color:var(--muted);font-size:.88rem;margin-top:.3rem;}
+.hero-meta{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1rem;}
+.meta-chip{display:flex;align-items:center;gap:.4rem;font-size:.78rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.28rem .7rem;color:var(--muted);}
+.meta-chip strong{color:var(--text);}
+.pace-bar{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.25rem;align-items:center;}
+.pace-bar span{font-size:.73rem;color:var(--muted);margin-right:.25rem;}
+.pace-btn{font-family:'Sora',sans-serif;font-size:.75rem;font-weight:700;padding:.3rem .85rem;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);cursor:pointer;transition:all .18s;}
+.pace-btn.active[data-pace="beginner"]{background:rgba(0,229,160,.12);color:var(--beginner);border-color:rgba(0,229,160,.4);}
+.pace-btn.active[data-pace="average"]{background:rgba(0,200,255,.12);color:var(--average);border-color:rgba(0,200,255,.4);}
+.pace-btn.active[data-pace="advanced"]{background:rgba(180,110,245,.12);color:var(--advanced);border-color:rgba(180,110,245,.4);}
+.tab-nav{max-width:1100px;margin:0 auto;padding:1.5rem 2rem 0;display:flex;gap:.4rem;flex-wrap:wrap;}
+.tab-btn{font-family:'Sora',sans-serif;font-size:.78rem;font-weight:600;padding:.5rem 1rem;border:1px solid var(--border);border-radius:8px 8px 0 0;background:var(--bg3);color:var(--muted);cursor:pointer;transition:all .15s;border-bottom:none;}
+.tab-btn:hover{color:var(--text);background:var(--surface);}
+.tab-btn.active{background:var(--surface);color:var(--purple);border-color:var(--border);border-bottom:1px solid var(--surface);position:relative;z-index:1;}
+.tab-content{max-width:1100px;margin:0 auto;padding:0 2rem 4rem;}
+.tab-panel{display:none;background:var(--surface);border:1px solid var(--border);border-radius:0 var(--radius) var(--radius) var(--radius);padding:2rem;margin-top:-1px;}
+.tab-panel.active{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+.sec-header{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;padding-bottom:.6rem;border-bottom:1px solid var(--border);}
+.sec-pill{font-size:.67rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.18rem .55rem;border-radius:20px;white-space:nowrap;}
+.sec-pill.purple{background:rgba(180,110,245,.1);color:var(--purple);border:1px solid rgba(180,110,245,.2);}
+.sec-pill.green{background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.2);}
+.sec-pill.amber{background:rgba(255,183,64,.1);color:var(--amber);border:1px solid rgba(255,183,64,.2);}
+.sec-pill.blue{background:rgba(0,200,255,.1);color:var(--accent);border:1px solid rgba(0,200,255,.2);}
+.sec-pill.red{background:rgba(255,94,122,.1);color:var(--red);border:1px solid rgba(255,94,122,.2);}
+.sec-title{font-size:1.1rem;font-weight:700;}
+.sec-time{font-size:.73rem;color:var(--muted);margin-left:auto;}
+.section-divider{border:none;border-top:1px solid var(--border);margin:2rem 0;}
+p{margin-bottom:.75rem;font-size:.86rem;line-height:1.7;}
+p:last-child{margin-bottom:0;}
+strong{color:var(--text);font-weight:600;}
+a{color:var(--accent);}a:hover{text-decoration:underline;}
+ul,ol{padding-left:1.4rem;margin-bottom:.75rem;font-size:.85rem;line-height:1.75;}
+li{margin-bottom:.2rem;}
+h3{font-size:.92rem;font-weight:700;margin:1.25rem 0 .6rem;color:var(--text);}
+code{font-family:'Fira Code',monospace;font-size:.84em;background:var(--code-bg);padding:.08rem .35rem;border-radius:3px;color:var(--green);}
+.callout{border-radius:8px;padding:.75rem 1rem;margin:.75rem 0;display:flex;gap:.6rem;align-items:flex-start;font-size:.82rem;line-height:1.55;}
+.callout.blue{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);color:#a0d8f0;}
+.callout.green{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);color:#8ee8c4;}
+.callout.amber{background:rgba(255,183,64,.06);border:1px solid rgba(255,183,64,.2);color:#d9c07a;}
+.callout.purple{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);color:#c5a8f5;}
+.callout-icon{font-size:1rem;flex-shrink:0;line-height:1.4;}
+.why-box{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.2);border-left:3px solid var(--accent);border-radius:6px;padding:.7rem 1rem;margin:.75rem 0;font-size:.81rem;color:#a0d8f0;}
+.why-box strong{color:var(--accent);}
+.level-block{border-radius:8px;padding:.75rem 1rem;margin:.6rem 0;font-size:.82rem;line-height:1.55;}
+.level-block.beginner{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.18);border-left:3px solid var(--beginner);}
+.level-block.average{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.18);border-left:3px solid var(--average);}
+.level-block.advanced{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.18);border-left:3px solid var(--advanced);}
+.level-block-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem;}
+.level-block.beginner .level-block-label{color:var(--beginner);}
+.level-block.average .level-block-label{color:var(--average);}
+.level-block.advanced .level-block-label{color:var(--advanced);}
+.card-grid{display:grid;gap:.85rem;margin:.85rem 0;}
+.card-grid.cols2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));}
+.card-grid.cols3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));}
+.card-grid.cols4{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));}
+.concept-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem;}
+.concept-card.hl-green{border-color:rgba(0,229,160,.35);background:rgba(0,229,160,.04);}
+.concept-card.hl-blue{border-color:rgba(0,200,255,.35);background:rgba(0,200,255,.04);}
+.concept-card.hl-amber{border-color:rgba(255,183,64,.35);background:rgba(255,183,64,.04);}
+.concept-card.hl-purple{border-color:rgba(180,110,245,.35);background:rgba(180,110,245,.04);}
+.concept-card.hl-red{border-color:rgba(255,94,122,.35);background:rgba(255,94,122,.04);}
+.card-icon{font-size:1.4rem;margin-bottom:.4rem;}
+.card-title{font-size:.82rem;font-weight:700;margin-bottom:.3rem;}
+.card-body{font-size:.78rem;color:var(--muted);line-height:1.55;}
+.data-table{width:100%;border-collapse:collapse;font-size:.8rem;margin:.85rem 0;}
+.data-table th{background:var(--bg3);padding:.55rem .75rem;text-align:left;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:2px solid var(--border);}
+.data-table td{padding:.5rem .75rem;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:rgba(255,255,255,.02);}
+.badge{display:inline-block;font-size:.68rem;font-weight:700;padding:.14rem .45rem;border-radius:4px;}
+.badge.green{background:rgba(0,229,160,.15);color:var(--green);}
+.badge.amber{background:rgba(255,183,64,.15);color:var(--amber);}
+.badge.red{background:rgba(255,94,122,.15);color:var(--red);}
+.badge.purple{background:rgba(180,110,245,.15);color:var(--purple);}
+.analogy-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin:.85rem 0;font-size:.82rem;}
+.analogy-label{font-size:.63rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--amber);margin-bottom:.3rem;}
+.compare-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin:.85rem 0;}
+.compare-col{border-radius:8px;padding:1rem;}
+.compare-col.bad{background:rgba(255,94,122,.04);border:1px solid rgba(255,94,122,.2);}
+.compare-col.good{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.2);}
+.compare-col.colA{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.2);}
+.compare-col.colB{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.2);}
+.compare-col-label{font-size:.65rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.55rem;}
+.compare-col.bad .compare-col-label{color:var(--red);}
+.compare-col.good .compare-col-label{color:var(--green);}
+.compare-col.colA .compare-col-label{color:var(--accent);}
+.compare-col.colB .compare-col-label{color:var(--purple);}
+.retro-timeline{position:relative;padding-left:1.5rem;margin:.85rem 0;}
+.retro-timeline::before{content:'';position:absolute;left:.45rem;top:.5rem;bottom:.5rem;width:2px;background:linear-gradient(to bottom,var(--green),var(--purple));border-radius:2px;}
+.retro-item{position:relative;margin-bottom:1rem;}
+.retro-dot{position:absolute;left:-1.15rem;top:.35rem;width:10px;height:10px;border-radius:50%;border:2px solid var(--green);background:var(--bg);}
+.retro-week{font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--green);margin-bottom:.15rem;}
+.retro-title{font-size:.85rem;font-weight:700;margin-bottom:.15rem;}
+.retro-desc{font-size:.78rem;color:var(--muted);line-height:1.5;}
+.path-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:.85rem;}
+.path-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.4rem;}
+.path-title{font-size:.92rem;font-weight:700;margin-bottom:.35rem;}
+.path-body{font-size:.8rem;color:var(--muted);line-height:1.6;}
+.cert-row{display:flex;flex-wrap:wrap;gap:.5rem;margin:.5rem 0;}
+.cert-chip{font-size:.72rem;font-weight:600;padding:.22rem .6rem;border-radius:5px;border:1px solid var(--border);color:var(--muted);}
+.exam-grid{display:grid;gap:.65rem;margin:.85rem 0;}
+.exam-item{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:.85rem 1rem;}
+.exam-q{font-size:.82rem;font-weight:600;margin-bottom:.4rem;}
+.exam-hint{font-size:.76rem;color:var(--muted);line-height:1.5;}
+.map-arrow{text-align:center;color:var(--muted);font-size:.85rem;padding:.15rem 0;}
+.lab-link-row{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1.5rem;}
+.lab-link{display:inline-flex;align-items:center;gap:.45rem;font-size:.8rem;font-weight:600;padding:.45rem 1rem;border-radius:7px;text-decoration:none;transition:all .18s;}
+.lab-link.primary{background:rgba(180,110,245,.1);border:1px solid rgba(180,110,245,.3);color:var(--purple);}
+.lab-link.primary:hover{background:rgba(180,110,245,.2);border-color:var(--purple);}
+.lab-link.secondary{background:rgba(0,200,255,.1);border:1px solid rgba(0,200,255,.3);color:var(--accent);}
+.lab-link.secondary:hover{background:rgba(0,200,255,.2);border-color:var(--accent);}
+@media(max-width:680px){.compare-split{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <span class="week-badge">Week 10</span>
+      <span class="header-title">Emerging Trends &amp; Course Wrap-up</span>
+    </div>
+    <nav class="week-nav">
+      <a href="../week09/index.html">← W9</a>
+      <a href="../week10/index.html" class="current">W10</a>
+      <a href="../week10/lab1_cloud_migration_plan.html">Lab 10.1 →</a>
+    </nav>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb">CloudEats Academy &rsaquo; <span>Week 10 · Final Week</span></div>
+    <h1>🚀 Emerging Trends &amp; Course Wrap-up</h1>
+    <p class="hero-sub">Edge computing, AI/ML as a service, multi-cloud strategy — and the full CloudEats retrospective. See how 10 weeks of work maps to a real cloud architecture.</p>
+    <div class="hero-meta">
+      <div class="meta-chip">⏱ <strong>4 hours</strong>&nbsp;contact</div>
+      <div class="meta-chip">🧪 <strong>1 lab</strong>&nbsp;this week</div>
+      <div class="meta-chip">⚙️ <strong>Prereq:</strong>&nbsp;All weeks 1–9</div>
+      <div class="meta-chip">📐 <strong>Focus:</strong>&nbsp;Concepts · No new code</div>
+      <div class="meta-chip">🎓 <strong>Assessment:</strong>&nbsp;Presentations + final review</div>
+    </div>
+    <div class="pace-bar">
+      <span>Your pace:</span>
+      <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner')">🌱 Beginner</button>
+      <button class="pace-btn" data-pace="average" onclick="setPace('average')">⚡ Average</button>
+      <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced')">🚀 Advanced</button>
+    </div>
+  </div>
+</section>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('h1')">Hour 1 · Emerging Trends</button>
+  <button class="tab-btn" onclick="showTab('retro')">Hour 4 · Retrospective</button>
+  <button class="tab-btn" onclick="showTab('paths')">Learning Paths</button>
+  <button class="tab-btn" onclick="showTab('exam')">Exam Tips &amp; Summary</button>
+</nav>
+
+<div class="tab-content">
+
+<!-- ══════════════ HOUR 1 ══════════════ -->
+<div id="tab-h1" class="tab-panel active">
+
+  <div class="sec-header">
+    <span class="sec-pill purple">1.1</span>
+    <span class="sec-title">Edge Computing &amp; IoT</span>
+    <span class="sec-time">⏱ 15 min</span>
+  </div>
+
+  <div class="level-block beginner">
+    <div class="level-block-label">🌱 Beginner — start here</div>
+    Cloud computing means your app runs on a server in a big data centre, maybe thousands of kilometres away. Every time your app does something, it sends a message there and waits for the reply. Most of the time this is fine — the wait is so short you cannot feel it. But for a few situations, even a tiny wait is a serious problem.
+  </div>
+
+  <div class="analogy-box">
+    <div class="analogy-label">🚗 Analogy — the remote controlled car</div>
+    Imagine steering a remote-controlled car, but every time you push the joystick, the signal has to travel to a server in Singapore and back before the car moves. By the time the instruction arrives, the car has already hit the wall. Edge computing solves this by making decisions <em>inside</em> the controller in your hand — no round trip required.
+  </div>
+
+  <p>The <strong>edge</strong> means any device or small server that is physically close to where data is generated — a smart camera, a sensor on a factory floor, a self-driving car's onboard computer. Processing happens there, not in a distant data centre.</p>
+
+  <div class="card-grid cols3">
+    <div class="concept-card hl-red">
+      <div class="card-icon">🚗</div>
+      <div class="card-title">Autonomous Vehicles</div>
+      <div class="card-body">Must detect a pedestrian and brake in under 10 ms. A cloud round-trip takes 50–200 ms. Processing must happen on the vehicle itself.</div>
+    </div>
+    <div class="concept-card hl-amber">
+      <div class="card-icon">🏭</div>
+      <div class="card-title">Smart Factories</div>
+      <div class="card-body">A temperature sensor must trigger a machine shutdown in milliseconds. A network outage cannot be allowed to stop the safety system.</div>
+    </div>
+    <div class="concept-card hl-blue">
+      <div class="card-icon">🏥</div>
+      <div class="card-title">Hospital Patient Monitors</div>
+      <div class="card-body">Heart rate alarms cannot depend on an internet connection. Critical decisions happen on-device; only summaries are sent to the cloud.</div>
+    </div>
+  </div>
+
+  <div class="compare-split">
+    <div class="compare-col colA">
+      <div class="compare-col-label">☁️ Cloud-only approach</div>
+      <ul style="font-size:.8rem;line-height:1.75;color:var(--muted);">
+        <li>All processing in a distant data centre</li>
+        <li>50–200 ms round-trip latency</li>
+        <li>Fails completely without internet</li>
+        <li>Bandwidth cost: every sensor reading uploaded</li>
+        <li>Good for: dashboards, analytics, long-term storage</li>
+      </ul>
+    </div>
+    <div class="compare-col colB">
+      <div class="compare-col-label">📡 Edge + Cloud hybrid</div>
+      <ul style="font-size:.8rem;line-height:1.75;color:var(--muted);">
+        <li>Decisions made locally, summaries sent to cloud</li>
+        <li>&lt;1 ms latency for local decisions</li>
+        <li>Continues working offline</li>
+        <li>Only important events uploaded — lower cost</li>
+        <li>Good for: realtime control, safety, IoT sensors</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="level-block advanced">
+    <div class="level-block-label">🚀 Advanced</div>
+    AWS Greengrass, Azure IoT Edge, and Google Cloud IoT Core all let you deploy containerised Lambda/Functions directly to edge devices. The same container runtime you used in Weeks 2–7 runs on a Raspberry Pi at the edge. The architecture pattern is called <strong>fog computing</strong> — a layer of small processing nodes between the device and the cloud. Kubernetes at the edge (K3s) is increasingly used for managing fleets of edge devices.
+  </div>
+
+  <hr class="section-divider">
+
+  <div class="sec-header">
+    <span class="sec-pill purple">1.2</span>
+    <span class="sec-title">AI/ML as a Cloud Service</span>
+    <span class="sec-time">⏱ 15 min</span>
+  </div>
+
+  <div class="level-block beginner">
+    <div class="level-block-label">🌱 Beginner — plain English first</div>
+    AI (Artificial Intelligence) means making a computer do things that normally require human intelligence — like recognising faces, understanding speech, or translating languages. ML (Machine Learning) is one technique for building AI: instead of writing rules, you train the computer on millions of examples and it learns patterns itself. This is hard to build from scratch. Cloud providers offer ready-made AI/ML as a simple API call — so you can add smart features to your app without training a single model.
+  </div>
+
+  <div class="analogy-box">
+    <div class="analogy-label">☕ Analogy — buying bread vs baking it</div>
+    Training your own AI model is like building a bakery from scratch, buying wheat, and milling your own flour. Using a cloud AI API is like buying a loaf from the supermarket. For 90% of apps, buying is the right answer. Build from scratch only if you need something the supermarket does not sell.
+  </div>
+
+  <h3>What cloud AI services can do for CloudEats (without training anything)</h3>
+
+  <div class="card-grid cols2">
+    <div class="concept-card hl-green">
+      <div class="card-icon">📷</div>
+      <div class="card-title">Vision — Image Recognition</div>
+      <div class="card-body">Upload a photo of food → get back "burger", "fries", "drink" as labels. Use case: let restaurant owners tag menu items by photo. AWS Rekognition, Azure Computer Vision, GCP Vision API.</div>
+    </div>
+    <div class="concept-card hl-blue">
+      <div class="card-icon">💬</div>
+      <div class="card-title">Language — Sentiment Analysis</div>
+      <div class="card-body">Send a customer review text → get back "positive", "negative", "neutral" plus a confidence score. Use case: automatically flag negative reviews for a manager. AWS Comprehend, Azure Text Analytics.</div>
+    </div>
+    <div class="concept-card hl-amber">
+      <div class="card-icon">🗣️</div>
+      <div class="card-title">Speech — Voice Orders</div>
+      <div class="card-body">Convert a spoken order to text, then send it to the order service as a normal API call. Use case: accessibility, drive-through ordering. AWS Transcribe, Azure Speech Services.</div>
+    </div>
+    <div class="concept-card hl-purple">
+      <div class="card-icon">📈</div>
+      <div class="card-title">Prediction — Demand Forecasting</div>
+      <div class="card-body">Send historical order data → get back predicted demand for next week. Use case: tell the kitchen how much stock to prepare. AWS Forecast, Azure Machine Learning, Vertex AI.</div>
+    </div>
+  </div>
+
+  <div class="why-box">
+    <strong>Why this matters for your career:</strong> You do not need to be a data scientist to use AI. You need to know the API exists, when to reach for it, and how to connect it to your existing services. That is exactly what you have been doing all semester — connecting services via APIs.
+  </div>
+
+  <div class="callout amber">
+    <span class="callout-icon">⚖️</span>
+    <div><strong>Ethics checkpoint:</strong> AI services can reflect biases in their training data. Face recognition has been shown to perform worse on darker skin tones. Sentiment analysis can misread cultural expressions. As the developer integrating these services, you carry responsibility for how the output is used — even if you did not build the model.</div>
+  </div>
+
+  <div class="level-block average">
+    <div class="level-block-label">⚡ Average — checkpoint question</div>
+    <strong>Q:</strong> A CloudEats competitor wants to add an automatic food photo tagger to their menu management page. A developer suggests training a custom image recognition model. What questions would you ask before deciding whether to train from scratch vs use a cloud AI API?
+    <br><br><em>Hint: think about cost, time to market, data availability, and accuracy requirements.</em>
+  </div>
+
+  <hr class="section-divider">
+
+  <div class="sec-header">
+    <span class="sec-pill purple">1.3</span>
+    <span class="sec-title">Multi-Cloud vs Hybrid Cloud</span>
+    <span class="sec-time">⏱ 15 min</span>
+  </div>
+
+  <p>Two terms that are often confused. They are distinct strategies with different motivations.</p>
+
+  <div class="compare-split">
+    <div class="compare-col colA">
+      <div class="compare-col-label">☁️☁️ Multi-Cloud</div>
+      <p style="font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:.5rem;"><strong style="color:var(--accent)">Definition:</strong> Using two or more public cloud providers simultaneously (e.g. AWS + GCP).</p>
+      <ul style="font-size:.8rem;line-height:1.75;color:var(--muted);">
+        <li>Avoid vendor lock-in</li>
+        <li>Use best-of-breed services (AWS for compute, GCP for AI/ML)</li>
+        <li>Negotiate better pricing</li>
+        <li>Geographic redundancy across providers</li>
+      </ul>
+      <p style="font-size:.77rem;color:var(--red);margin-top:.5rem;">⚠️ Adds operational complexity — two consoles, two billing systems, two security models</p>
+    </div>
+    <div class="compare-col colB">
+      <div class="compare-col-label">🏢☁️ Hybrid Cloud</div>
+      <p style="font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:.5rem;"><strong style="color:var(--purple)">Definition:</strong> On-premises infrastructure connected to a public cloud (e.g. Proxmox + AWS).</p>
+      <ul style="font-size:.8rem;line-height:1.75;color:var(--muted);">
+        <li>Regulatory compliance (data must stay in-country)</li>
+        <li>Existing hardware investment is not wasted</li>
+        <li>Burst to cloud during peak load (cloud bursting)</li>
+        <li>Banks, hospitals, government agencies use this most</li>
+      </ul>
+      <p style="font-size:.77rem;color:var(--amber);margin-top:.5rem;">⚠️ Requires a network connection between on-prem and cloud (VPN or dedicated link)</p>
+    </div>
+  </div>
+
+  <div class="callout blue">
+    <span class="callout-icon">💡</span>
+    <div><strong>CloudEats connection:</strong> The Proxmox environment you have been using <em>is</em> an on-premises infrastructure. If CloudEats deployed to AWS but kept the Proxmox server for development and disaster recovery, that would be a hybrid cloud setup. The migration plan in Lab 10.1 is the first step of moving from on-prem to cloud — or choosing a hybrid architecture deliberately.</div>
+  </div>
+
+  <div class="level-block beginner">
+    <div class="level-block-label">🌱 Beginner — one-sentence memory aid</div>
+    <strong>Multi-cloud</strong> = "We use multiple cloud providers."<br>
+    <strong>Hybrid cloud</strong> = "We use our own servers AND a cloud provider together."
+  </div>
+
+  <hr class="section-divider">
+
+  <div class="sec-header">
+    <span class="sec-pill purple">1.4</span>
+    <span class="sec-title">What's Next in Cloud — Emerging Signals</span>
+    <span class="sec-time">⏱ 15 min</span>
+  </div>
+
+  <div class="card-grid cols2">
+    <div class="concept-card hl-green">
+      <div class="card-icon">⚡</div>
+      <div class="card-title">Serverless 2.0 — Faster Cold Starts</div>
+      <div class="card-body">Early serverless (AWS Lambda 2014) had slow startup times — 500ms to 3 seconds on first request. Providers have reduced this to under 100ms with container snapshots. AWS Lambda SnapStart, Google Cloud Run Gen 2. Serverless is becoming viable for APIs that previously required always-on containers.</div>
+    </div>
+    <div class="concept-card hl-blue">
+      <div class="card-icon">🤖</div>
+      <div class="card-title">AI-Assisted Development</div>
+      <div class="card-body">Code generation tools (GitHub Copilot, Amazon CodeWhisperer, Claude Code) are changing how developers work. The skill is shifting from "can you write this function?" to "can you review, test, and architect this system?" The cloud knowledge in this course becomes more valuable, not less.</div>
+    </div>
+    <div class="concept-card hl-amber">
+      <div class="card-icon">🌱</div>
+      <div class="card-title">Sustainable Cloud</div>
+      <div class="card-body">Cloud providers publish carbon emissions data per region. AWS's us-east-1 vs eu-west-1 have significantly different carbon footprints. Right-sizing (Week 9) is also a sustainability practice. Some certifications now include sustainability as a design principle.</div>
+    </div>
+    <div class="concept-card hl-purple">
+      <div class="card-icon">🔒</div>
+      <div class="card-title">Zero Trust Security</div>
+      <div class="card-body">The old model: trust everything inside the network perimeter. Zero Trust: verify every request, every time, regardless of where it comes from. The JWT + RBAC architecture from Week 8 is a zero trust pattern — you implemented this without knowing the name for it.</div>
+    </div>
+  </div>
+
+  <div class="level-block advanced">
+    <div class="level-block-label">🚀 Advanced — what breaks if you lean too far</div>
+    Multi-cloud sounds attractive but introduces a hidden cost: you now need engineers who know both AWS <em>and</em> GCP deeply. Most startups choose one provider and go deep. The architectural principle worth internalising is <strong>avoid proprietary lock-in at the data layer</strong> — using standard formats (Postgres, not proprietary DBs; S3-compatible APIs) gives you exit options without the full operational overhead of running two clouds simultaneously.
+  </div>
+
+  <div class="lab-link-row">
+    <a href="../week10/lab1_cloud_migration_plan.html" class="lab-link primary">→ Lab 10.1: Cloud Migration Plan</a>
+    <a href="../week09/index.html" class="lab-link secondary">← Week 9 Review</a>
+  </div>
+
+</div><!-- /tab-h1 -->
+
+<!-- ══════════════ HOUR 4 RETRO ══════════════ -->
+<div id="tab-retro" class="tab-panel">
+
+  <div class="sec-header">
+    <span class="sec-pill green">4.1</span>
+    <span class="sec-title">The CloudEats Architecture — Full Retrospective</span>
+    <span class="sec-time">⏱ 20 min</span>
+  </div>
+
+  <p>Ten weeks ago you had a static HTML file served by a Python script. Today you have a distributed, containerised, secured, monitored, CI/CD-deployed application. Walk through every phase.</p>
+
+  <div class="retro-timeline">
+    <div class="retro-item">
+      <div class="retro-dot"></div>
+      <div class="retro-week">Week 1</div>
+      <div class="retro-title">Static HTML menu · Python web server</div>
+      <div class="retro-desc">No database. No containers. Concepts: what cloud computing is, why local dev matters, HTTP request–response cycle.</div>
+    </div>
+    <div class="retro-item">
+      <div class="retro-dot"></div>
+      <div class="retro-week">Week 2</div>
+      <div class="retro-title">Docker containers · Docker Compose · MySQL in a container</div>
+      <div class="retro-desc">Port mapping, Docker networks, named volumes. Cloud concepts: VPC, security groups, DNS, load balancing.</div>
+    </div>
+    <div class="retro-item">
+      <div class="retro-dot"></div>
+      <div class="retro-week">Week 3</div>
+      <div class="retro-title">Relational schema · Users table · bcrypt hashing</div>
+      <div class="retro-desc">Primary keys, foreign keys, normalisation, password security. The data that now persists across containers.</div>
+    </div>
+    <div class="retro-item">
+      <div class="retro-dot"></div>
+      <div class="retro-week">Week 4</div>
+      <div class="retro-title">SQL queries · Redis shopping cart · MongoDB orders</div>
+      <div class="retro-desc">Polyglot persistence: right database for the right job. NoSQL types, cloud-native principles.</div>
+    </div>
+    <div class="retro-item">
+      <div class="retro-dot"></div>
+      <div class="retro-week">Week 5</div>
+      <div class="retro-title">Monolith split → 3 microservices + API Gateway</div>
+      <div class="retro-desc">Service boundaries, independent deployment, database-per-service rule. The architecture that everything else is built on.</div>
+    </div>
+    <div class="retro-item">
+      <div class="retro-dot"></div>
+      <div class="retro-week">Week 6</div>
+      <div class="retro-title">Git branching · CI pipeline · Automated tests</div>
+      <div class="retro-desc">DevOps culture: code review, test automation, preventing regressions. Unit vs integration tests.</div>
+    </div>
+    <div class="retro-item">
+      <div class="retro-dot"></div>
+      <div class="retro-week">Week 7</div>
+      <div class="retro-title">Docker Compose as IaC · SSH deployment · Full CI/CD</div>
+      <div class="retro-desc">Declarative infrastructure, zero-downtime deployment, automated push-to-deploy pipeline.</div>
+    </div>
+    <div class="retro-item">
+      <div class="retro-dot"></div>
+      <div class="retro-week">Week 8</div>
+      <div class="retro-title">JWT authentication · RBAC · Secrets in .env</div>
+      <div class="retro-desc">Shared responsibility model, authentication vs authorisation, least privilege, encryption. Zero trust in practice.</div>
+    </div>
+    <div class="retro-item">
+      <div class="retro-dot"></div>
+      <div class="retro-week">Week 9</div>
+      <div class="retro-title">Winston logging · prom-client metrics · Performance tuning</div>
+      <div class="retro-desc">Observability: structured logs, live dashboards, caching, horizontal scaling. The visibility layer a production app needs.</div>
+    </div>
+    <div class="retro-item">
+      <div class="retro-dot" style="border-color:var(--purple);"></div>
+      <div class="retro-week" style="color:var(--purple);">Week 10 · NOW</div>
+      <div class="retro-title" style="color:var(--purple);">Cloud migration plan · Proxmox → real cloud</div>
+      <div class="retro-desc">Map every local component to its cloud equivalent. Plan the migration. Understand where the industry is heading.</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+
+  <div class="sec-header">
+    <span class="sec-pill green">4.2</span>
+    <span class="sec-title">Local → Cloud Component Mapping</span>
+    <span class="sec-time">⏱ 15 min</span>
+  </div>
+
+  <p>Every single component in your Docker Compose stack has a cloud equivalent. This is not coincidence — Docker was designed to mirror cloud-native patterns.</p>
+
+  <table class="data-table">
+    <thead>
+      <tr><th>Local (Proxmox)</th><th>→</th><th>Cloud equivalent</th><th>Why</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>Node.js container</code></td><td>→</td><td>Container hosting (ECS, Cloud Run, Container Apps)</td><td>Same image, managed host</td></tr>
+      <tr><td><code>MySQL container</code></td><td>→</td><td>Managed relational DB (RDS, Cloud SQL, Azure DB for MySQL)</td><td>Automatic backups, failover, patching</td></tr>
+      <tr><td><code>MongoDB container</code></td><td>→</td><td>Managed document DB (DocumentDB, Cosmos DB, Atlas)</td><td>No index management, auto-scaling storage</td></tr>
+      <tr><td><code>Redis container</code></td><td>→</td><td>Managed cache (ElastiCache, Azure Cache for Redis, Memorystore)</td><td>High-availability replicas, no manual restart</td></tr>
+      <tr><td><code>Docker network</code></td><td>→</td><td>Virtual Private Cloud (VPC / VNet)</td><td>Private routing between services</td></tr>
+      <tr><td><code>.env file</code></td><td>→</td><td>Secret manager (Secrets Manager, Key Vault, Secret Manager)</td><td>Encrypted at rest, audited access, no plaintext on disk</td></tr>
+      <tr><td><code>GitHub Actions → Proxmox SSH</code></td><td>→</td><td>Cloud CI/CD (CodePipeline, Azure DevOps, Cloud Build)</td><td>Native integration with managed compute</td></tr>
+      <tr><td><code>Winston file logs</code></td><td>→</td><td>Log aggregation (CloudWatch, Azure Monitor, Cloud Logging)</td><td>Searchable, queryable, retained automatically</td></tr>
+      <tr><td><code>prom-client /metrics</code></td><td>→</td><td>Cloud monitoring (CloudWatch Metrics, Azure Monitor, Cloud Monitoring)</td><td>Alerts, dashboards, anomaly detection</td></tr>
+      <tr><td><code>Proxmox VM</code></td><td>→</td><td>Virtual machine or managed container platform (EC2, Azure VM, GCE)</td><td>Redundancy, auto-restart, managed hardware</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout green">
+    <span class="callout-icon">✅</span>
+    <div>The Proxmox environment was a deliberate stand-in for the cloud. Every concept you learned maps directly. You are not starting from zero when you open the AWS console for the first time — you are translating what you already know.</div>
+  </div>
+
+</div><!-- /tab-retro -->
+
+<!-- ══════════════ PATHS ══════════════ -->
+<div id="tab-paths" class="tab-panel">
+
+  <div class="sec-header">
+    <span class="sec-pill amber">4.3</span>
+    <span class="sec-title">What to Do After This Course</span>
+    <span class="sec-time">⏱ 25 min</span>
+  </div>
+
+  <p>Three clear paths forward. You do not have to pick just one — most professionals combine elements of all three over time.</p>
+
+  <div class="path-card" style="border-color:rgba(0,229,160,.35);background:rgba(0,229,160,.03);">
+    <div class="path-label" style="color:var(--green);">🌱 Path 1 — Cloud Foundations &amp; First Certification (0–6 months)</div>
+    <div class="path-title">Best if: you want a recognised credential and structured learning</div>
+    <div class="path-body">
+      Start with a cloud foundations certificate — they assume no prior cloud knowledge, but you already have the conceptual foundation from this course so you will move faster than most students.
+      <div class="cert-row">
+        <span class="cert-chip">AWS Cloud Practitioner (CLF-C02)</span>
+        <span class="cert-chip">Azure Fundamentals (AZ-900)</span>
+        <span class="cert-chip">GCP Associate Cloud Engineer</span>
+      </div>
+      <strong>Suggested study path:</strong> Pick one provider → use free tier to rebuild a simplified CloudEats → follow the official exam guide → take the exam. Budget 6–8 weeks part-time. Cost: ~USD 100–150 per exam.
+      <br><br>
+      <strong>Free resources:</strong> AWS Skill Builder (free tier), Microsoft Learn (free), Google Cloud Skills Boost (some free), FreeCodeCamp YouTube exam prep.
+    </div>
+  </div>
+
+  <div class="path-card" style="border-color:rgba(0,200,255,.35);background:rgba(0,200,255,.03);">
+    <div class="path-label" style="color:var(--accent);">⚡ Path 2 — Associate Developer Track (3–12 months)</div>
+    <div class="path-title">Best if: you want to work as a backend or cloud developer</div>
+    <div class="path-body">
+      Move beyond foundations into the developer associate level — hands-on implementation of the services this course introduced conceptually.
+      <div class="cert-row">
+        <span class="cert-chip">AWS Certified Developer Associate</span>
+        <span class="cert-chip">AZ-204 Azure Developer Associate</span>
+        <span class="cert-chip">GCP Professional Cloud Developer</span>
+      </div>
+      <strong>Stack to build:</strong> Deploy CloudEats to a real cloud provider. Add Lambda/Cloud Functions for one service. Replace Docker Compose with a managed container service. Connect to a managed database. This is your portfolio project.
+      <br><br>
+      <strong>Key new skills to add:</strong> Terraform basics, one cloud provider console in depth, IAM policies and roles.
+    </div>
+  </div>
+
+  <div class="path-card" style="border-color:rgba(180,110,245,.35);background:rgba(180,110,245,.03);">
+    <div class="path-label" style="color:var(--purple);">🚀 Path 3 — DevOps / Platform Engineer (6–18 months)</div>
+    <div class="path-title">Best if: you enjoy infrastructure, automation, and reliability engineering</div>
+    <div class="path-body">
+      The skills from Weeks 6–7 (Git, CI/CD, Docker Compose, IaC) are the foundation. Extend into production-grade orchestration and operations.
+      <div class="cert-row">
+        <span class="cert-chip">Kubernetes (CKA)</span>
+        <span class="cert-chip">Terraform Associate</span>
+        <span class="cert-chip">AWS SysOps Administrator</span>
+      </div>
+      <strong>Suggested sequence:</strong> Kubernetes basics with minikube → Terraform to provision a VPC and deploy CloudEats → Prometheus + Grafana full monitoring stack → GitOps with ArgoCD.
+      <br><br>
+      <strong>Community resources:</strong> CNCF landscape (cncf.io), roadmap.sh/devops, KodeKloud, TechWorld with Nana (YouTube — free).
+    </div>
+  </div>
+
+  <div class="callout blue">
+    <span class="callout-icon">💬</span>
+    <div><strong>Instructor note:</strong> The software industry changes rapidly. The specific tools will change over your career. What will not change: the need for people who understand distributed systems, can reason about trade-offs, and can communicate technical decisions clearly. This course gave you the foundation. Everything else is built on it.</div>
+  </div>
+
+</div><!-- /tab-paths -->
+
+<!-- ══════════════ EXAM TIPS ══════════════ -->
+<div id="tab-exam" class="tab-panel">
+
+  <div class="sec-header">
+    <span class="sec-pill blue">✏️</span>
+    <span class="sec-title">Exam Tips &amp; Week 10 Summary</span>
+    <span class="sec-time">⏱ Final review</span>
+  </div>
+
+  <h3>Topics most likely to appear — Week 10</h3>
+
+  <div class="exam-grid">
+    <div class="exam-item">
+      <div class="exam-q">Q: Describe edge computing and give one real-world use case.</div>
+      <div class="exam-hint">Answer structure: (1) define edge — processing at or near the data source rather than in a distant data centre; (2) name a latency-sensitive use case — autonomous vehicles, factory sensors, patient monitors; (3) explain why the cloud round-trip is unsuitable for that use case.</div>
+    </div>
+    <div class="exam-item">
+      <div class="exam-q">Q: Distinguish multi-cloud from hybrid cloud with one sentence each.</div>
+      <div class="exam-hint">Multi-cloud: using two or more public cloud providers simultaneously. Hybrid cloud: combining on-premises infrastructure with a public cloud. Common mistake: saying hybrid means "two clouds" — it specifically means on-prem plus cloud.</div>
+    </div>
+    <div class="exam-item">
+      <div class="exam-q">Q: A developer wants to add face recognition to a food delivery app's driver verification. Should they train a custom ML model or use a cloud AI API? Justify.</div>
+      <div class="exam-hint">This is a trade-off question. Cloud AI API is correct for most cases: faster to market, lower cost, no ML expertise needed, provider maintains accuracy. Custom model justified only if: data is sensitive (cannot send to third-party API), accuracy requirements are specialised, volume is high enough that API costs exceed training costs.</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+
+  <h3>Synthesis questions — any week</h3>
+
+  <div class="exam-grid">
+    <div class="exam-item">
+      <div class="exam-q">Q: Given a CloudEats scenario, choose the correct database type and justify.</div>
+      <div class="exam-hint">MySQL → structured relational data with fixed schema (users, menu items). MongoDB → flexible document data with varying fields (order documents). Redis → ephemeral data requiring sub-millisecond reads (shopping carts, sessions). Wrong answer: choosing MongoDB "because it is more modern" without justification.</div>
+    </div>
+    <div class="exam-item">
+      <div class="exam-q">Q: Draw the request flow from a user's browser to the order service through the API Gateway.</div>
+      <div class="exam-hint">Browser → HTTPS request to API Gateway (:8000) → Gateway verifies JWT → Gateway routes /orders to order-service (:3003) → order-service queries MongoDB → response returned through Gateway to browser. Include: JWT check happens at the gateway, not at each service.</div>
+    </div>
+    <div class="exam-item">
+      <div class="exam-q">Q: CloudEats receives 10x normal traffic during a peak event. What cloud strategies would you use?</div>
+      <div class="exam-hint">Horizontal scaling (add more container instances), auto-scaling groups, Redis caching for menu data (Week 9), CDN for static assets, load balancer to distribute traffic across instances, managed database with read replicas. Mention monitoring + alerts (Week 9) to detect the spike before it becomes an outage.</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+
+  <h3>Week 10 — One-line summary table</h3>
+
+  <table class="data-table">
+    <thead><tr><th>Topic</th><th>Key takeaway</th></tr></thead>
+    <tbody>
+      <tr><td>Edge computing</td><td>Processing near the data source; reduces latency; essential for IoT, autonomous systems, offline-capable apps</td></tr>
+      <tr><td>AI/ML as a service</td><td>Pre-trained models via REST API; no training required; vision, language, prediction; ethical responsibility applies</td></tr>
+      <tr><td>Multi-cloud</td><td>Multiple public cloud providers; resilience + best-of-breed; adds operational complexity</td></tr>
+      <tr><td>Hybrid cloud</td><td>On-premises + public cloud; common in regulated industries; CloudEats Proxmox setup is the on-prem side</td></tr>
+      <tr><td>Serverless evolution</td><td>Faster cold starts; containers without managing servers (Fargate, Cloud Run)</td></tr>
+      <tr><td>Cloud migration plan</td><td>Inventory → mapping → blockers → phases → success criteria</td></tr>
+      <tr><td>Architecture retrospective</td><td>Every local component has a cloud equivalent; Proxmox was a deliberate proxy for cloud infrastructure</td></tr>
+    </tbody>
+  </table>
+
+  <div class="lab-link-row">
+    <a href="../week10/lab1_cloud_migration_plan.html" class="lab-link primary">→ Go to Lab 10.1: Cloud Migration Plan</a>
+    <a href="index.html" class="lab-link secondary">← Course Index</a>
+  </div>
+
+</div><!-- /tab-exam -->
+
+</div><!-- /tab-content -->
+
+<script>
+function showTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+function setPace(pace) {
+  document.body.className = 'pace-' + pace;
+  document.querySelectorAll('.pace-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-pace="${pace}"]`).classList.add('active');
+}
+document.addEventListener('DOMContentLoaded', () => { setPace('beginner'); });
+</script>
+</body>
+</html>

@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 3.2 · User Registration · CloudEats Academy</title>
+<meta name="description" content="Build a full user registration and login system with bcrypt password hashing and MySQL. Week 3 Lab 2 of the CloudEats cloud computing diploma course.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Lab 3.2 · User Registration · CloudEats Academy">
+<meta property="og:description" content="Add users and orders tables to MySQL, build a bcrypt-secured registration API, and wire an HTML form to the backend. Step-by-step with three pace levels.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07090f; --bg2: #0d1117; --bg3: #141b27;
+    --surface: #1a2235; --surface2: #1f2c42; --border: #2a3d5a;
+    --accent: #00c8ff; --accent2: #7c6af5;
+    --green: #00e5a0; --amber: #ffb740; --red: #ff5e7a; --purple: #b46ef5;
+    --text: #e8edf5; --muted: #6b7fa0;
+    --beginner: #00e5a0; --average: #00c8ff; --advanced: #b46ef5;
+    --radius: 10px; --code-bg: #0b1120;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+
+  .site-header { background: linear-gradient(135deg, #050d1c, #091628); border-bottom: 1px solid var(--border); padding: 0 2rem; position: sticky; top: 0; z-index: 100; }
+  .header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 58px; gap: 1rem; }
+  .header-left { display: flex; align-items: center; gap: 0.75rem; }
+  .lab-badge { background: var(--purple); color: #fff; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; padding: 0.2rem 0.55rem; border-radius: 4px; text-transform: uppercase; }
+  .header-title { font-size: 0.9rem; font-weight: 600; }
+  .ghp-badge { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.68rem; font-weight: 700; padding: 0.2rem 0.6rem; background: rgba(180,110,245,0.12); border: 1px solid rgba(180,110,245,0.3); color: var(--purple); border-radius: 20px; }
+  .pace-bar { display: flex; gap: 0.35rem; background: var(--bg3); padding: 0.25rem; border-radius: 8px; border: 1px solid var(--border); }
+  .pace-btn { font-family: 'Sora', sans-serif; font-size: 0.7rem; font-weight: 600; padding: 0.28rem 0.7rem; border: none; border-radius: 5px; cursor: pointer; background: transparent; color: var(--muted); transition: all 0.2s; }
+  .pace-btn:hover { color: var(--text); }
+  .pace-btn.active[data-pace="beginner"] { background: var(--beginner); color: #000; }
+  .pace-btn.active[data-pace="average"]  { background: var(--average);  color: #000; }
+  .pace-btn.active[data-pace="advanced"] { background: var(--advanced); color: #fff; }
+
+  .lab-hero { background: linear-gradient(160deg, #060f20, #0a1020); border-bottom: 1px solid var(--border); padding: 2rem 2rem 1.75rem; position: relative; overflow: hidden; }
+  .lab-hero::before { content: ''; position: absolute; top: -60px; right: -60px; width: 320px; height: 320px; background: radial-gradient(ellipse, rgba(180,110,245,0.07), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; }
+  .hero-crumb { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.4rem; }
+  .hero-crumb a { color: var(--purple); text-decoration: none; }
+  .lab-hero h1 { font-size: clamp(1.3rem, 2.5vw, 1.8rem); font-weight: 800; background: linear-gradient(135deg, #e8edf5 40%, var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.4rem; }
+  .hero-meta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.85rem; }
+  .meta-chip { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.25rem 0.65rem; color: var(--muted); }
+  .meta-chip strong { color: var(--text); }
+  .prereq-bar { margin-top: 0.85rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .prereq-label { font-size: 0.7rem; font-weight: 700; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .prereq-chip { font-size: 0.72rem; background: rgba(180,110,245,0.08); border: 1px solid rgba(180,110,245,0.2); color: var(--purple); padding: 0.15rem 0.55rem; border-radius: 20px; }
+
+  .page-body { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 220px 1fr; gap: 0; }
+  .sidebar { position: sticky; top: 58px; height: calc(100vh - 58px); overflow-y: auto; padding: 1.5rem 1rem 2rem; border-right: 1px solid var(--border); background: var(--bg2); }
+  .sidebar-title { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.85rem; }
+  .sidebar-nav { list-style: none; }
+  .sidebar-nav li { margin-bottom: 0.1rem; }
+  .sidebar-nav a { display: block; font-size: 0.75rem; padding: 0.35rem 0.65rem; border-radius: 6px; color: var(--muted); text-decoration: none; border: 1px solid transparent; transition: all 0.15s; }
+  .sidebar-nav a:hover { background: var(--surface); color: var(--text); }
+  .sidebar-nav a.active { background: var(--surface); color: var(--purple); border-color: rgba(180,110,245,0.2); }
+  .part-divider { font-size: 0.63rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(107,127,160,0.5); padding: 0.65rem 0.65rem 0.2rem; }
+  .progress-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; margin-bottom: 1.25rem; }
+  .progress-title { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.65rem; }
+  .progress-bar-wrap { background: var(--bg3); border-radius: 4px; height: 6px; margin-bottom: 0.4rem; }
+  .progress-bar { height: 6px; border-radius: 4px; background: linear-gradient(90deg, var(--purple), var(--accent)); transition: width 0.4s; }
+  .progress-label { font-size: 0.71rem; color: var(--muted); }
+  .progress-label span { color: var(--purple); font-weight: 600; }
+
+  .lab-content { padding: 2rem 2rem 4rem; min-width: 0; }
+  section { margin-bottom: 2.5rem; }
+
+  .part-header { display: flex; align-items: center; gap: 0.75rem; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--purple); border-radius: 0 8px 8px 0; padding: 0.75rem 1rem; margin-bottom: 1.25rem; }
+  .part-pill { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; background: rgba(180,110,245,0.1); color: var(--purple); border: 1px solid rgba(180,110,245,0.25); border-radius: 20px; padding: 0.18rem 0.55rem; white-space: nowrap; }
+  .part-title { font-size: 1rem; font-weight: 700; }
+  .part-time { font-size: 0.72rem; color: var(--muted); margin-left: auto; white-space: nowrap; }
+
+  .step { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0.85rem; overflow: hidden; }
+  .step-header { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1rem; cursor: pointer; user-select: none; }
+  .step-header:hover { background: var(--surface2); }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; color: var(--muted); transition: all 0.2s; }
+  .step.completed .step-num { background: var(--purple); border-color: var(--purple); color: #fff; }
+  .step-title { font-size: 0.9rem; font-weight: 600; flex: 1; }
+  .step-toggle { font-size: 0.75rem; color: var(--muted); transition: transform 0.2s; }
+  .step.open .step-toggle { transform: rotate(90deg); }
+  .step-body { display: none; padding: 0 1rem 1rem; border-top: 1px solid var(--border); }
+  .step.open .step-body { display: block; }
+
+  code { font-family: 'Fira Code', monospace; font-size: 0.84em; background: var(--code-bg); padding: 0.08rem 0.35rem; border-radius: 3px; color: var(--green); }
+  .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; margin: 0.75rem 0; overflow: hidden; }
+  .code-header { display: flex; align-items: center; justify-content: space-between; padding: 0.45rem 0.9rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); }
+  .code-lang { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .copy-btn { font-family: 'Sora', sans-serif; font-size: 0.68rem; font-weight: 600; padding: 0.18rem 0.55rem; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 4px; cursor: pointer; transition: all 0.15s; }
+  .copy-btn:hover { background: var(--accent); color: #000; } .copy-btn.copied { background: var(--green); color: #000; }
+  pre { font-family: 'Fira Code', monospace; font-size: 0.79rem; line-height: 1.65; padding: 0.9rem; overflow-x: auto; color: #c5d5ef; white-space: pre; }
+  .cm { color: var(--muted); font-style: italic; } .ck { color: var(--accent); } .cv { color: var(--green); } .cc { color: var(--amber); } .cs { color: #ff8fab; }
+
+  .callout { border-radius: 8px; padding: 0.75rem 1rem; margin: 0.75rem 0; display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.82rem; line-height: 1.55; }
+  .callout.blue   { background: rgba(0,200,255,0.05);  border: 1px solid rgba(0,200,255,0.2);  color: #a0d8f0; }
+  .callout.green  { background: rgba(0,229,160,0.05);  border: 1px solid rgba(0,229,160,0.2);  color: #8ee8c4; }
+  .callout.amber  { background: rgba(255,183,64,0.06); border: 1px solid rgba(255,183,64,0.2); color: #d9c07a; }
+  .callout.purple { background: rgba(180,110,245,0.05);border: 1px solid rgba(180,110,245,0.2);color: #c5a8f5; }
+  .callout.red    { background: rgba(255,94,122,0.05); border: 1px solid rgba(255,94,122,0.2); color: #f0a0b0; }
+
+  .checkpoint { background: rgba(0,229,160,0.06); border: 1px solid rgba(0,229,160,0.25); border-radius: 10px; padding: 1rem 1.25rem; margin: 1.25rem 0; display: flex; gap: 0.85rem; align-items: flex-start; }
+  .checkpoint-icon { font-size: 1.5rem; flex-shrink: 0; }
+  .checkpoint-text strong { font-size: 0.92rem; color: var(--green); display: block; margin-bottom: 0.35rem; }
+  .checkpoint-text { font-size: 0.83rem; color: var(--muted); line-height: 1.6; }
+  .expected-out { font-family: 'Fira Code', monospace; font-size: 0.77rem; background: var(--bg2); border: 1px solid rgba(0,229,160,0.15); border-radius: 6px; padding: 0.6rem 0.85rem; margin-top: 0.5rem; color: var(--green); line-height: 1.65; white-space: pre; overflow-x: auto; }
+
+  .img-ph { border: 2px dashed rgba(180,110,245,0.25); border-radius: 8px; background: rgba(180,110,245,0.025); padding: 0.85rem 1.1rem; margin: 0.85rem 0; display: flex; gap: 0.75rem; align-items: flex-start; }
+  .img-ph-icon { font-size: 1.2rem; flex-shrink: 0; line-height: 1.2; }
+  .img-ph-label { font-size: 0.67rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--purple); margin-bottom: 0.18rem; }
+  .img-ph-desc { font-size: 0.79rem; color: var(--muted); line-height: 1.5; }
+
+  .trouble { background: rgba(255,94,122,0.04); border: 1px solid rgba(255,94,122,0.2); border-radius: 8px; margin: 0.6rem 0; overflow: hidden; }
+  .trouble-header { display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 0.85rem; cursor: pointer; font-size: 0.82rem; font-weight: 600; color: var(--red); user-select: none; }
+  .trouble-header:hover { background: rgba(255,94,122,0.06); }
+  .trouble-toggle { margin-left: auto; font-size: 0.75rem; transition: transform 0.2s; }
+  .trouble.open .trouble-toggle { transform: rotate(90deg); }
+  .trouble-body { display: none; padding: 0.5rem 0.85rem 0.85rem; font-size: 0.81rem; color: var(--muted); line-height: 1.65; }
+  .trouble.open .trouble-body { display: block; }
+
+  .task-list { list-style: none; margin: 0.5rem 0; }
+  .task-list li { display: flex; align-items: flex-start; gap: 0.65rem; font-size: 0.82rem; padding: 0.35rem 0; border-bottom: 1px solid rgba(42,61,90,0.25); cursor: pointer; }
+  .task-list li:last-child { border-bottom: none; }
+  .check-box { width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: #000; transition: all 0.15s; margin-top: 0.05rem; }
+  .task-list li.done .check-box { background: var(--purple); border-color: var(--purple); color: #fff; }
+  .task-list li.done { color: var(--muted); text-decoration: line-through; }
+
+  .pace-block { border-radius: 8px; padding: 0.75rem 1rem; margin: 0.75rem 0; font-size: 0.82rem; line-height: 1.6; }
+  .pace-block .pace-label { font-size: 0.64rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.35rem; }
+  .pace-block.beginner { background: rgba(0,229,160,0.04); border: 1px solid rgba(0,229,160,0.18); border-left: 3px solid var(--beginner); }
+  .pace-block.average  { background: rgba(0,200,255,0.04); border: 1px solid rgba(0,200,255,0.18); border-left: 3px solid var(--average); }
+  .pace-block.advanced { background: rgba(180,110,245,0.04); border: 1px solid rgba(180,110,245,0.18); border-left: 3px solid var(--advanced); }
+  .pace-block.beginner .pace-label { color: var(--beginner); }
+  .pace-block.average  .pace-label { color: var(--average); }
+  .pace-block.advanced .pace-label { color: var(--advanced); }
+
+  .roadmap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; margin: 0.85rem 0; }
+  .roadmap-title { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; }
+  .rm-week { display: flex; gap: 0.85rem; margin-bottom: 0.75rem; align-items: flex-start; }
+  .rm-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 0.25rem; }
+  .rm-dot.done { background: var(--green); } .rm-dot.active { background: var(--amber); box-shadow: 0 0 0 3px rgba(255,183,64,0.2); } .rm-dot.upcoming { background: var(--border); }
+  .rm-label { font-size: 0.82rem; font-weight: 600; margin-bottom: 0.15rem; }
+  .rm-desc { font-size: 0.76rem; color: var(--muted); }
+
+  .info-table { width: 100%; border-collapse: collapse; font-size: 0.81rem; margin: 0.75rem 0; }
+  .info-table th { padding: 0.4rem 0.75rem; background: var(--bg3); color: var(--muted); font-size: 0.67rem; letter-spacing: 0.07em; text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--border); }
+  .info-table td { padding: 0.42rem 0.75rem; border-bottom: 1px solid rgba(42,61,90,0.3); vertical-align: top; }
+  .info-table tr:last-child td { border-bottom: none; }
+
+  body.pace-beginner .avg-only, body.pace-beginner .adv-only { display: none; }
+  body.pace-average .adv-only { display: none; }
+
+  a { color: var(--accent); } a:hover { text-decoration: underline; }
+  strong { color: var(--text); font-weight: 600; }
+  p { margin-bottom: 0.75rem; font-size: 0.85rem; line-height: 1.7; }
+  p:last-child { margin-bottom: 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  @media (max-width: 768px) { .page-body { grid-template-columns: 1fr; } .sidebar { display: none; } .lab-content { padding: 1.25rem 1rem 3rem; } }
+</style>
+</head>
+<body class="pace-average">
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <span class="lab-badge">Lab 3.2</span>
+      <span class="header-title">User Registration System</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.85rem">
+      <div class="pace-bar">
+        <button class="pace-btn" data-pace="beginner" onclick="setPace('beginner')">🟢 Beginner</button>
+        <button class="pace-btn active" data-pace="average" onclick="setPace('average')">🔵 Average</button>
+        <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced')">🟣 Advanced</button>
+      </div>
+      <span class="ghp-badge">🐙 GitHub Pages Ready</span>
+    </div>
+  </div>
+</header>
+
+<div class="lab-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb"><a href="week03_lab1_docker_compose_mysql.html">← Lab 3.1</a> › Lab 3.2</div>
+    <h1>👤 User Registration System</h1>
+    <p style="color:var(--muted);font-size:0.86rem;margin:0.25rem 0 0">Add user accounts to CloudEats — with secure bcrypt password hashing and schema relationships.</p>
+    <div class="hero-meta">
+      <div class="meta-chip">⏱ <strong>60 min</strong></div>
+      <div class="meta-chip">🔒 <strong>bcrypt</strong> · password hashing</div>
+      <div class="meta-chip">🗄️ <strong>users + orders</strong> · two new tables</div>
+      <div class="meta-chip">🔗 <strong>FOREIGN KEY</strong> · one-to-many relationship</div>
+    </div>
+    <div class="prereq-bar">
+      <span class="prereq-label">Prerequisites:</span>
+      <span class="prereq-chip">✅ Lab 3.1 complete — MySQL running</span>
+      <span class="prereq-chip">✅ docker compose up -d successful</span>
+      <span class="prereq-chip">✅ GET /api/menu returns data</span>
+    </div>
+  </div>
+</div>
+
+<div class="page-body">
+  <aside class="sidebar">
+    <div class="progress-box">
+      <div class="progress-title">Your Progress</div>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+      <div class="progress-label"><span id="progressCount">0</span> / 10 steps done</div>
+    </div>
+    <div class="sidebar-title">Lab Navigation</div>
+    <ul class="sidebar-nav">
+      <li class="part-divider">Overview</li>
+      <li><a href="#overview">Scenario &amp; Goals</a></li>
+      <li class="part-divider">Part 1 · Database Schema</li>
+      <li><a href="#p1s1">Add Users Table</a></li>
+      <li><a href="#p1s2">Add Orders Table</a></li>
+      <li class="part-divider">Part 2 · Password Security</li>
+      <li><a href="#p2s1">Install bcrypt</a></li>
+      <li class="part-divider">Part 3 · Registration API</li>
+      <li><a href="#p3s1">Registration Endpoint</a></li>
+      <li><a href="#p3s2">Login Endpoint</a></li>
+      <li class="part-divider">Part 4 · Registration Form</li>
+      <li><a href="#p4s1">HTML Form</a></li>
+      <li class="part-divider">Part 5 · Test &amp; Verify</li>
+      <li><a href="#p5s1">Test Registration</a></li>
+      <li><a href="#p5s2">Verify in MySQL</a></li>
+      <li class="part-divider">Wrap-Up</li>
+      <li><a href="#wrapup">Checklist &amp; Next</a></li>
+    </ul>
+  </aside>
+
+  <main class="lab-content">
+
+    <!-- OVERVIEW -->
+    <section id="overview">
+      <div class="part-header">
+        <div class="part-pill">Overview</div>
+        <div class="part-title">Lab Scenario &amp; Objectives</div>
+      </div>
+
+      <div class="callout purple">
+        <span>📖</span>
+        <div><strong>The story:</strong> CloudEats customers love the menu — now they're asking: "How do I place an order? I need an account!" This lab adds the user registration system. Customers can create accounts with a secure password. Their data is stored safely with bcrypt hashing.</div>
+      </div>
+
+      <p><strong>What you'll build:</strong> Two new database tables (<code>users</code>, <code>orders</code>), a registration API endpoint, and a simple HTML registration form to test it. By the end, you can register a user and confirm in MySQL that the password is stored as a hash — never in plain text.</p>
+
+      <div class="callout red">
+        <span>🚨</span>
+        <div><strong>Security rule — non-negotiable:</strong> Passwords are <em>never</em> stored in plain text. Ever. Not even temporarily. bcrypt converts the password into a 60-character hash before it reaches the database. This lab enforces that rule from the start.</div>
+      </div>
+
+      <p style="margin-bottom:0.5rem"><strong>Learning objectives (click to track):</strong></p>
+      <ul class="task-list" id="checklistItems">
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Write CREATE TABLE SQL for users (with UNIQUE email + INDEX)</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Write CREATE TABLE SQL for orders (with FOREIGN KEY referencing users)</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Install bcrypt and explain what SALT_ROUNDS means</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Implement POST /api/auth/register with bcrypt hashing</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Implement POST /api/auth/login using bcrypt.compare()</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Build and test an HTML registration form</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Verify registered user in MySQL shows $2b$10$ hash</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Test that duplicate email returns an error (UNIQUE constraint)</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Explain why bcrypt.compare() does NOT decrypt the hash</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Complete all checkpoints successfully</li>
+      </ul>
+    </section>
+
+    <!-- PART 1: SCHEMA -->
+    <section id="p1s1">
+      <div class="part-header">
+        <div class="part-pill">Part 1</div>
+        <div class="part-title">Extend the Database Schema</div>
+        <div class="part-time">⏱ 15 min</div>
+      </div>
+
+      <!-- ── EXPAND / COLLAPSE CONTROLS ── -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.85rem;padding:0.4rem 0;">
+        <span style="font-size:0.75rem;color:var(--muted)"><strong style="color:var(--text)">8 steps</strong> across 4 parts</span>
+        <div style="display:flex;gap:0.5rem">
+          <button onclick="expandAll()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--purple)';this.style.borderColor='var(--purple)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↓ Expand All</button>
+          <button onclick="collapseAll()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--muted)';this.style.borderColor='var(--muted)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↑ Collapse All</button>
+        </div>
+      </div>
+
+      <div class="step open">
+        <div class="step-header" onclick="toggleStep(this.parentElement)">
+          <div class="step-num">1</div>
+          <div class="step-title">Add the users Table to init.sql</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Open <code>backend/init.sql</code> and append the following <strong>after</strong> the <code>menu_items</code> table definition. Do not replace it.</p>
+
+          <div class="callout amber">
+            <span>⚠️</span>
+            <div>Adding to <code>init.sql</code> only works if the database volume is <strong>fresh</strong>. Since the volume already contains <code>menu_items</code>, you need to run the new SQL manually <em>or</em> reset the volume. Step 2 covers how to do this safely.</div>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">sql · Append to backend/init.sql — users table</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm">-- ── USERS TABLE ────────────────────────────────────────────────</span>
+<span class="ck">CREATE TABLE IF NOT EXISTS</span> <span class="cv">users</span> (
+  <span class="cv">id</span>            <span class="cc">INT AUTO_INCREMENT PRIMARY KEY</span>,
+  <span class="cv">email</span>         <span class="cc">VARCHAR(255)</span> <span class="ck">UNIQUE NOT NULL</span>,        <span class="cm">-- No duplicate accounts</span>
+  <span class="cv">password_hash</span> <span class="cc">VARCHAR(255)</span> <span class="ck">NOT NULL</span>,               <span class="cm">-- NEVER plain text</span>
+  <span class="cv">full_name</span>     <span class="cc">VARCHAR(255)</span> <span class="ck">NOT NULL</span>,
+  <span class="cv">phone</span>         <span class="cc">VARCHAR(20)</span>,                           <span class="cm">-- Optional</span>
+  <span class="cv">created_at</span>    <span class="cc">TIMESTAMP</span> <span class="ck">DEFAULT CURRENT_TIMESTAMP</span>,
+  <span class="cv">updated_at</span>    <span class="cc">TIMESTAMP</span> <span class="ck">DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</span>,
+  <span class="ck">INDEX</span> <span class="cv">idx_email</span> (<span class="cv">email</span>)                           <span class="cm">-- Fast login lookup by email</span>
+);</pre>
+          </div>
+
+          <p style="margin-top:0.75rem"><strong>Column-by-column explanation:</strong></p>
+          <table class="info-table">
+            <thead><tr><th>Column</th><th>Why This Choice</th></tr></thead>
+            <tbody>
+              <tr><td><code>email UNIQUE NOT NULL</code></td><td>Prevents two accounts with the same email. MySQL enforces at DB level — even if the app code forgets to check.</td></tr>
+              <tr><td><code>password_hash VARCHAR(255)</code></td><td>bcrypt always produces a 60-char string. VARCHAR(255) gives room for any future algorithm change.</td></tr>
+              <tr><td><code>updated_at ... ON UPDATE</code></td><td>MySQL automatically updates this column when any field in the row changes. Free audit trail — no code needed.</td></tr>
+              <tr><td><code>INDEX idx_email (email)</code></td><td>Without an index, login requires scanning every user row. With it, MySQL jumps directly to the matching email. Critical at scale.</td></tr>
+            </tbody>
+          </table>
+
+          <div class="pace-block advanced">
+            <div class="pace-label">🟣 Advanced — UNIQUE vs INDEX</div>
+            <code>UNIQUE NOT NULL</code> on email does two things: (1) creates an implicit index for fast lookup, AND (2) adds a uniqueness constraint. Adding a separate <code>INDEX idx_email</code> might seem redundant, but it's explicit documentation and allows non-unique indexes on the same column if the constraint is later removed. In practice with MySQL, the UNIQUE constraint IS the index.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 — Orders table -->
+      <div class="step open" id="p1s2">
+        <div class="step-header" onclick="toggleStep(this.parentElement)">
+          <div class="step-num">2</div>
+          <div class="step-title">Add the orders Table &amp; Apply the Schema</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Continue appending to <code>init.sql</code>. The <code>orders</code> table must come <em>after</em> <code>users</code> because its FOREIGN KEY references <code>users.id</code>.</p>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">sql · Append to backend/init.sql — orders table</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm">-- ── ORDERS TABLE ───────────────────────────────────────────────</span>
+<span class="ck">CREATE TABLE IF NOT EXISTS</span> <span class="cv">orders</span> (
+  <span class="cv">id</span>               <span class="cc">INT AUTO_INCREMENT PRIMARY KEY</span>,
+  <span class="cv">user_id</span>          <span class="cc">INT</span> <span class="ck">NOT NULL</span>,
+  <span class="cv">total_amount</span>     <span class="cc">DECIMAL(10, 2)</span> <span class="ck">NOT NULL</span>,
+  <span class="cv">status</span>           <span class="cc">ENUM</span>(<span class="cs">'pending'</span>, <span class="cs">'confirmed'</span>, <span class="cs">'preparing'</span>, <span class="cs">'delivered'</span>, <span class="cs">'cancelled'</span>)
+                   <span class="ck">DEFAULT</span> <span class="cs">'pending'</span>,
+  <span class="cv">delivery_address</span> <span class="cc">TEXT</span>,
+  <span class="cv">notes</span>            <span class="cc">TEXT</span>,
+  <span class="cv">created_at</span>       <span class="cc">TIMESTAMP</span> <span class="ck">DEFAULT CURRENT_TIMESTAMP</span>,
+  <span class="cv">updated_at</span>       <span class="cc">TIMESTAMP</span> <span class="ck">DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</span>,
+
+  <span class="ck">FOREIGN KEY</span> (<span class="cv">user_id</span>) <span class="ck">REFERENCES</span> <span class="cv">users</span>(<span class="cv">id</span>) <span class="ck">ON DELETE CASCADE</span>,
+  <span class="ck">INDEX</span> <span class="cv">idx_user_id</span> (<span class="cv">user_id</span>),
+  <span class="ck">INDEX</span> <span class="cv">idx_status</span>  (<span class="cv">status</span>)
+);</pre>
+          </div>
+
+          <p style="margin-top:0.75rem">Now apply the new tables to the <em>existing</em> database without deleting menu items:</p>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">bash · Apply New Tables to Running Database</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Method A: Run SQL directly against the running container (recommended)</span>
+<span class="cm"># — keeps existing menu_items data intact</span>
+docker exec -i cloudeats-db mysql \
+  -u cloudeats_user -pcloudeats_password cloudeats_db \
+  &lt; backend/init.sql
+
+<span class="cm"># Verify the new tables were created</span>
+docker exec -it cloudeats-db mysql \
+  -u cloudeats_user -pcloudeats_password cloudeats_db \
+  -e "SHOW TABLES;"</pre>
+          </div>
+
+          <div class="expected-out">+-------------------+
+| Tables_in_cloudeats_db |
++-------------------+
+| menu_items        |
+| orders            |
+| users             |
++-------------------+</div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Screenshot · MySQL — SHOW TABLES After Schema Update</div>
+              <div class="img-ph-desc">Terminal showing <code>SHOW TABLES;</code> output with three rows: <code>menu_items</code>, <code>orders</code>, <code>users</code>. The three tables confirm the init.sql ran successfully against the existing database without wiping menu items.</div>
+            </div>
+          </div>
+
+          <div class="trouble">
+            <div class="trouble-header" onclick="toggleTrouble(this.parentElement)">
+              ❌ "ERROR 1215 (HY000): Cannot add foreign key constraint"
+              <span class="trouble-toggle">▶</span>
+            </div>
+            <div class="trouble-body">
+              The <code>orders</code> table references <code>users.id</code> — so <code>users</code> must exist first. Check that your <code>init.sql</code> creates <code>users</code> <em>before</em> <code>orders</code>. If the order is wrong in the file, the foreign key constraint fails because it can't find the referenced table.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 2: BCRYPT -->
+    <section id="p2s1">
+      <div class="part-header">
+        <div class="part-pill">Part 2</div>
+        <div class="part-title">Install bcrypt &amp; Update Dependencies</div>
+        <div class="part-time">⏱ 5 min</div>
+      </div>
+
+      <div class="step open">
+        <div class="step-header" onclick="toggleStep(this.parentElement)">
+          <div class="step-num">3</div>
+          <div class="step-title">Add bcrypt to package.json and Rebuild</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Update <code>backend/package.json</code> to include <code>bcrypt</code>. Then rebuild the Docker image so the new package is installed inside the container.</p>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">json · backend/package.json — Updated</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre>{
+  <span class="ck">"name"</span>: <span class="cs">"cloudeats-backend"</span>,
+  <span class="ck">"version"</span>: <span class="cs">"1.0.0"</span>,
+  <span class="ck">"scripts"</span>: { <span class="ck">"start"</span>: <span class="cs">"node server.js"</span> },
+  <span class="ck">"dependencies"</span>: {
+    <span class="ck">"express"</span>: <span class="cs">"^4.18.2"</span>,
+    <span class="ck">"mysql2"</span>:  <span class="cs">"^3.6.0"</span>,
+    <span class="ck">"cors"</span>:    <span class="cs">"^2.8.5"</span>,
+    <span class="ck">"bcrypt"</span>:  <span class="cs">"^5.1.1"</span>
+  }
+}</pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">bash · Rebuild Backend Container</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Rebuild the backend image (installs bcrypt during build)</span>
+docker compose up -d --build backend
+
+<span class="cm"># Confirm bcrypt is installed inside the container</span>
+docker exec cloudeats-backend node -e "const b = require('bcrypt'); console.log('bcrypt version:', b.getRounds)"</pre>
+          </div>
+
+          <div class="callout blue">
+            <span>💡</span>
+            <div><strong>Why --build backend?</strong> The <code>--build</code> flag rebuilds the image. Without it, Docker reuses the cached image which doesn't have bcrypt yet. Adding <code>backend</code> after the flags rebuilds only the backend service, not the database — faster and doesn't restart MySQL.</div>
+          </div>
+
+          <div class="trouble">
+            <div class="trouble-header" onclick="toggleTrouble(this.parentElement)">
+              ❌ "Cannot find module 'bcrypt'"
+              <span class="trouble-toggle">▶</span>
+            </div>
+            <div class="trouble-body">
+              bcrypt is not installed inside the container. This happens if you forgot <code>--build</code> when restarting. Run: <code>docker compose up -d --build backend</code>. The rebuild runs <code>npm install</code> inside the Dockerfile, which includes bcrypt.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 3: AUTH ROUTES -->
+    <section id="p3s1">
+      <div class="part-header">
+        <div class="part-pill">Part 3</div>
+        <div class="part-title">Build the Authentication API</div>
+        <div class="part-time">⏱ 20 min</div>
+      </div>
+
+      <div class="step open">
+        <div class="step-header" onclick="toggleStep(this.parentElement)">
+          <div class="step-num">4</div>
+          <div class="step-title">Create auth.js — Registration &amp; Login Routes</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Create a separate file <code>backend/auth.js</code> for authentication routes. This keeps <code>server.js</code> clean.</p>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">javascript · backend/auth.js</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="ck">const</span> express = <span class="cv">require</span>(<span class="cs">'express'</span>);
+<span class="ck">const</span> bcrypt  = <span class="cv">require</span>(<span class="cs">'bcrypt'</span>);
+<span class="ck">const</span> db      = <span class="cv">require</span>(<span class="cs">'./db'</span>);
+
+<span class="ck">const</span> router = express.<span class="cv">Router</span>();
+<span class="ck">const</span> SALT_ROUNDS = <span class="cc">10</span>;   <span class="cm">// 2^10 = 1024 rounds — never go below 10</span>
+
+<span class="cm">// ── POST /api/auth/register ──────────────────────────────────</span>
+router.<span class="cv">post</span>(<span class="cs">'/register'</span>, <span class="ck">async</span> (req, res) => {
+  <span class="ck">const</span> { email, password, full_name, phone } = req.body;
+
+  <span class="cm">// Input validation</span>
+  <span class="ck">if</span> (!email || !password || !full_name) {
+    <span class="ck">return</span> res.<span class="cv">status</span>(<span class="cc">400</span>).<span class="cv">json</span>({ error: <span class="cs">'Email, password, and full name are required'</span> });
+  }
+  <span class="ck">if</span> (password.length &lt; <span class="cc">8</span>) {
+    <span class="ck">return</span> res.<span class="cv">status</span>(<span class="cc">400</span>).<span class="cv">json</span>({ error: <span class="cs">'Password must be at least 8 characters'</span> });
+  }
+
+  <span class="ck">try</span> {
+    <span class="cm">// Hash the password — ~100ms intentional delay (SALT_ROUNDS = 10)</span>
+    <span class="ck">const</span> password_hash = <span class="ck">await</span> bcrypt.<span class="cv">hash</span>(password, SALT_ROUNDS);
+
+    <span class="cm">// Insert into database — plain text password is now discarded</span>
+    <span class="ck">const</span> [result] = <span class="ck">await</span> db.<span class="cv">query</span>(
+      <span class="cs">'INSERT INTO users (email, password_hash, full_name, phone) VALUES (?, ?, ?, ?)'</span>,
+      [email, password_hash, full_name, phone || <span class="cc">null</span>]
+    );
+
+    res.<span class="cv">status</span>(<span class="cc">201</span>).<span class="cv">json</span>({
+      message: <span class="cs">'Account created successfully'</span>,
+      userId:  result.insertId
+    });
+
+  } <span class="ck">catch</span> (err) {
+    <span class="cm">// ER_DUP_ENTRY: email already registered (UNIQUE constraint)</span>
+    <span class="ck">if</span> (err.code === <span class="cs">'ER_DUP_ENTRY'</span>) {
+      <span class="ck">return</span> res.<span class="cv">status</span>(<span class="cc">409</span>).<span class="cv">json</span>({ error: <span class="cs">'Email already registered'</span> });
+    }
+    console.<span class="cv">error</span>(<span class="cs">'Registration error:'</span>, err.message);
+    res.<span class="cv">status</span>(<span class="cc">500</span>).<span class="cv">json</span>({ error: <span class="cs">'Registration failed'</span> });
+  }
+});
+
+<span class="cm">// ── POST /api/auth/login ─────────────────────────────────────</span>
+router.<span class="cv">post</span>(<span class="cs">'/login'</span>, <span class="ck">async</span> (req, res) => {
+  <span class="ck">const</span> { email, password } = req.body;
+
+  <span class="ck">if</span> (!email || !password) {
+    <span class="ck">return</span> res.<span class="cv">status</span>(<span class="cc">400</span>).<span class="cv">json</span>({ error: <span class="cs">'Email and password are required'</span> });
+  }
+
+  <span class="ck">try</span> {
+    <span class="cm">// Lookup user by email (fast — INDEX on email)</span>
+    <span class="ck">const</span> [rows] = <span class="ck">await</span> db.<span class="cv">query</span>(
+      <span class="cs">'SELECT id, email, password_hash, full_name FROM users WHERE email = ?'</span>,
+      [email]
+    );
+
+    <span class="cm">// Use same error message for "not found" and "wrong password"</span>
+    <span class="cm">// (prevents email enumeration attacks)</span>
+    <span class="ck">if</span> (rows.length === <span class="cc">0</span>) {
+      <span class="ck">return</span> res.<span class="cv">status</span>(<span class="cc">401</span>).<span class="cv">json</span>({ error: <span class="cs">'Invalid credentials'</span> });
+    }
+
+    <span class="ck">const</span> user = rows[<span class="cc">0</span>];
+
+    <span class="cm">// bcrypt.compare re-hashes the submitted password and compares</span>
+    <span class="cm">// It does NOT decrypt the stored hash</span>
+    <span class="ck">const</span> match = <span class="ck">await</span> bcrypt.<span class="cv">compare</span>(password, user.password_hash);
+
+    <span class="ck">if</span> (!match) {
+      <span class="ck">return</span> res.<span class="cv">status</span>(<span class="cc">401</span>).<span class="cv">json</span>({ error: <span class="cs">'Invalid credentials'</span> });
+    }
+
+    <span class="cm">// Login successful — Week 8 will return a JWT token here instead</span>
+    res.<span class="cv">json</span>({
+      message:  <span class="cs">'Login successful'</span>,
+      userId:   user.id,
+      fullName: user.full_name,
+      email:    user.email
+    });
+
+  } <span class="ck">catch</span> (err) {
+    console.<span class="cv">error</span>(<span class="cs">'Login error:'</span>, err.message);
+    res.<span class="cv">status</span>(<span class="cc">500</span>).<span class="cv">json</span>({ error: <span class="cs">'Login failed'</span> });
+  }
+});
+
+module.exports = router;</pre>
+          </div>
+
+          <div class="callout amber">
+            <span>🔐</span>
+            <div><strong>Security design:</strong> Both "user not found" and "wrong password" return the identical message: <em>"Invalid credentials"</em>. If you return "Email not found" separately, attackers can enumerate which emails are registered in your system — confirming real user accounts is valuable data for targeted attacks.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5 — wire to server.js -->
+      <div class="step open" id="p3s2">
+        <div class="step-header" onclick="toggleStep(this.parentElement)">
+          <div class="step-num">5</div>
+          <div class="step-title">Wire auth.js into server.js</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Add two lines to <code>backend/server.js</code> to register the auth routes. Insert them after the existing requires:</p>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">javascript · Add to backend/server.js</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm">// Add this near the top, after existing requires:</span>
+<span class="ck">const</span> authRoutes = <span class="cv">require</span>(<span class="cs">'./auth'</span>);
+
+<span class="cm">// Add this after app.use(express.json()):</span>
+app.<span class="cv">use</span>(<span class="cs">'/api/auth'</span>, authRoutes);
+
+<span class="cm">// Your routes are now:</span>
+<span class="cm">//   POST /api/auth/register  ← new</span>
+<span class="cm">//   POST /api/auth/login     ← new</span>
+<span class="cm">//   GET  /api/menu           ← existing</span></pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">bash · Rebuild and Restart Backend</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre>docker compose up -d --build backend
+docker compose logs -f backend</pre>
+          </div>
+
+          <div class="expected-out">cloudeats-backend | ✅ MySQL connected — pool ready
+cloudeats-backend | CloudEats backend running on port 3000</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 4: HTML FORM -->
+    <section id="p4s1">
+      <div class="part-header">
+        <div class="part-pill">Part 4</div>
+        <div class="part-title">Build the Registration Form</div>
+        <div class="part-time">⏱ 10 min</div>
+      </div>
+
+      <div class="step open">
+        <div class="step-header" onclick="toggleStep(this.parentElement)">
+          <div class="step-num">6</div>
+          <div class="step-title">Create register.html in the Public Folder</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Create <code>backend/public/register.html</code>. This is a minimal form that calls the registration API. The <code>express.static('public')</code> in <code>server.js</code> already serves this folder.</p>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">bash</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre>mkdir -p backend/public
+touch backend/public/register.html</pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">html · backend/public/register.html</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;CloudEats — Register&lt;/title&gt;
+  &lt;style&gt;
+    body { font-family: sans-serif; background: #07090f; color: #e8edf5;
+           display: flex; justify-content: center; padding: 3rem 1rem; }
+    .card { background: #1a2235; border: 1px solid #2a3d5a; border-radius: 12px;
+            padding: 2rem; width: 100%; max-width: 400px; }
+    h2 { margin-bottom: 1.5rem; color: #00e5a0; }
+    label { display: block; font-size: 0.82rem; color: #6b7fa0; margin-bottom: 0.3rem; }
+    input { width: 100%; padding: 0.6rem 0.75rem; background: #0d1117;
+            border: 1px solid #2a3d5a; border-radius: 6px; color: #e8edf5;
+            font-size: 0.88rem; margin-bottom: 1rem; box-sizing: border-box; }
+    input:focus { outline: none; border-color: #00e5a0; }
+    button { width: 100%; padding: 0.7rem; background: #00e5a0; color: #000;
+             border: none; border-radius: 6px; font-size: 0.9rem;
+             font-weight: 700; cursor: pointer; }
+    button:hover { background: #00c885; }
+    #result { margin-top: 1rem; padding: 0.75rem; border-radius: 6px;
+              font-size: 0.82rem; display: none; }
+    #result.success { background: rgba(0,229,160,0.1); color: #00e5a0;
+                      border: 1px solid rgba(0,229,160,0.3); }
+    #result.error   { background: rgba(255,94,122,0.1); color: #ff5e7a;
+                      border: 1px solid rgba(255,94,122,0.3); }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="card"&gt;
+    &lt;h2&gt;🍽️ Create Account&lt;/h2&gt;
+
+    &lt;label&gt;Full Name&lt;/label&gt;
+    &lt;input type="text" id="full_name" placeholder="Ali Hassan"&gt;
+
+    &lt;label&gt;Email Address&lt;/label&gt;
+    &lt;input type="email" id="email" placeholder="ali@example.com"&gt;
+
+    &lt;label&gt;Phone (optional)&lt;/label&gt;
+    &lt;input type="tel" id="phone" placeholder="+60 12-345 6789"&gt;
+
+    &lt;label&gt;Password (min. 8 characters)&lt;/label&gt;
+    &lt;input type="password" id="password" placeholder="••••••••"&gt;
+
+    &lt;button onclick="register()"&gt;Create Account&lt;/button&gt;
+
+    &lt;div id="result"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;script&gt;
+    async function register() {
+      const result = document.getElementById('result');
+      result.style.display = 'none';
+
+      const body = {
+        full_name: document.getElementById('full_name').value,
+        email:     document.getElementById('email').value,
+        phone:     document.getElementById('phone').value,
+        password:  document.getElementById('password').value
+      };
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+
+        result.style.display = 'block';
+        if (res.ok) {
+          result.className = 'success';
+          result.textContent = '✅ ' + data.message + ' (User ID: ' + data.userId + ')';
+        } else {
+          result.className = 'error';
+          result.textContent = '❌ ' + data.error;
+        }
+      } catch (err) {
+        result.style.display = 'block';
+        result.className = 'error';
+        result.textContent = '❌ Network error: ' + err.message;
+      }
+    }
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Screenshot · Registration Form in Browser</div>
+              <div class="img-ph-desc">Browser at <code>http://[VM-IP]:3000/register.html</code> showing the dark-themed registration form with four input fields (Full Name, Email, Phone, Password) and the green "Create Account" button. Form is empty, ready for input.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 5: TEST & VERIFY -->
+    <section id="p5s1">
+      <div class="part-header">
+        <div class="part-pill">Part 5</div>
+        <div class="part-title">Test &amp; Verify</div>
+        <div class="part-time">⏱ 10 min</div>
+      </div>
+
+      <div class="step open">
+        <div class="step-header" onclick="toggleStep(this.parentElement)">
+          <div class="step-num">7</div>
+          <div class="step-title">Register a Test User</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Open the registration form in your browser and register two users. Then also test using <code>curl</code> for precision.</p>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">bash · Register via curl</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Register User 1 — Ali Hassan</span>
+curl -s -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"ali@example.com","password":"SecurePass1","full_name":"Ali Hassan","phone":"0123456789"}' \
+  | python3 -m json.tool
+
+<span class="cm"># Expected:</span>
+<span class="cm"># {"message": "Account created successfully", "userId": 1}</span>
+
+<span class="cm"># Register User 2 — Siti</span>
+curl -s -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"siti@example.com","password":"AnotherPass2","full_name":"Siti Aminah"}' \
+  | python3 -m json.tool</pre>
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Screenshot · Successful Registration Response</div>
+              <div class="img-ph-desc">Browser form after clicking "Create Account" — a green box appears below the button showing <code>✅ Account created successfully (User ID: 1)</code>. The form fields still contain the input values. OR: terminal showing the curl output with JSON <code>{"message": "Account created successfully", "userId": 1}</code>.</div>
+            </div>
+          </div>
+
+          <p style="margin-top:0.75rem"><strong>Test duplicate email (UNIQUE constraint in action):</strong></p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">bash · Test Duplicate Email</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Try registering Ali again with the same email</span>
+curl -s -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"ali@example.com","password":"DifferentPass","full_name":"Ali Clone"}' \
+  | python3 -m json.tool
+
+<span class="cm"># Expected (409 Conflict):</span>
+<span class="cm"># {"error": "Email already registered"}</span></pre>
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Screenshot · Duplicate Email Error</div>
+              <div class="img-ph-desc">Browser showing the registration form with the same email as a previous registration. After clicking "Create Account", a red error box appears: <code>❌ Email already registered</code>. This is the UNIQUE constraint on <code>users.email</code> working at the database level.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 8 — Verify in MySQL -->
+      <div class="step open" id="p5s2">
+        <div class="step-header" onclick="toggleStep(this.parentElement)">
+          <div class="step-num">8</div>
+          <div class="step-title">Verify Hash in MySQL — The Critical Check</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">bash · Inspect Users Table in MySQL</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Connect to MySQL shell</span>
+docker exec -it cloudeats-db mysql -u cloudeats_user -pcloudeats_password cloudeats_db
+
+<span class="cm"># Inside MySQL — check the password_hash column</span>
+SELECT id, email, password_hash, full_name, created_at FROM users\G</pre>
+          </div>
+
+          <div class="expected-out">*************************** 1. row ***************************
+           id: 1
+        email: ali@example.com
+ password_hash: $2b$10$XYZ8fGhJ2kLmNpQrStUvWe...  ← bcrypt hash (60 chars)
+     full_name: Ali Hassan
+    created_at: 2024-01-15 09:30:00
+*************************** 2. row ***************************
+           id: 2
+        email: siti@example.com
+ password_hash: $2b$10$ABCdEfGhIjKlMnOpQrStUv...  ← different hash!
+     full_name: Siti Aminah
+    created_at: 2024-01-15 09:31:05</div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Screenshot · MySQL — password_hash Column with $2b$10$ Strings</div>
+              <div class="img-ph-desc">MySQL terminal showing <code>SELECT id, email, password_hash FROM users\G</code> output. The <code>password_hash</code> field for each user shows a 60-character string beginning with <code>$2b$10$</code> — clearly not a human-readable password. Point out: two users who could have the same password would show completely different hashes (due to the salt). Annotate: <code>$2b$</code> = algorithm version, <code>$10$</code> = salt rounds, rest = salt + hash.</div>
+            </div>
+          </div>
+
+          <div class="checkpoint">
+            <span class="checkpoint-icon">🏆</span>
+            <div class="checkpoint-text">
+              <strong>The Key Checkpoint — bcrypt Working Correctly</strong>
+              The <code>password_hash</code> column shows a 60-character string starting with <code>$2b$10$</code>. This proves: (1) the plain text password was never stored, (2) bcrypt ran with 10 rounds, (3) each user has a unique salt embedded in their hash. <strong>This is what secure password storage looks like.</strong>
+            </div>
+          </div>
+
+          <p style="margin-top:0.85rem"><strong>Test login via curl:</strong></p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">bash · Test Login Endpoint</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Correct credentials</span>
+curl -s -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"ali@example.com","password":"SecurePass1"}' \
+  | python3 -m json.tool
+<span class="cm"># Expected: {"message":"Login successful","userId":1,"fullName":"Ali Hassan",...}</span>
+
+<span class="cm"># Wrong password</span>
+curl -s -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"ali@example.com","password":"WrongPassword"}' \
+  | python3 -m json.tool
+<span class="cm"># Expected: {"error":"Invalid credentials"}  ← same message as wrong email</span></pre>
+          </div>
+
+          <div class="pace-block average">
+            <div class="pace-label">🔵 Average — What does bcrypt.compare() actually do?</div>
+            The 60-char hash contains the salt embedded inside it (the first 29 characters). <code>bcrypt.compare(submitted, storedHash)</code> extracts the salt from <code>storedHash</code>, re-hashes <code>submitted</code> using that same salt, then compares the result to the original hash. No decryption — pure comparison of two derived values.
+          </div>
+
+          <div class="pace-block advanced">
+            <div class="pace-label">🟣 Advanced — Verify the Schema Constraints</div>
+            Run inside MySQL: <code>SHOW CREATE TABLE orders\G</code> — the output shows the full table definition including FOREIGN KEY and ENUM. Then test the foreign key: <code>INSERT INTO orders (user_id, total_amount) VALUES (999, 50.00);</code> — this should fail with <code>ERROR 1452: Cannot add or update a child row: a foreign key constraint fails</code>. The database rejected an order for a non-existent user. Try the same with <code>user_id = 1</code> — it succeeds.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WRAP-UP -->
+    <section id="wrapup">
+      <div class="part-header">
+        <div class="part-pill">Wrap-Up</div>
+        <div class="part-title">Completion Checklist &amp; What's Next</div>
+      </div>
+
+      <table class="info-table">
+        <thead><tr><th>Item</th><th>How to Verify</th></tr></thead>
+        <tbody>
+          <tr><td>✅ <code>SHOW TABLES</code> shows menu_items, users, orders</td><td><code>docker exec -it cloudeats-db mysql... -e "SHOW TABLES;"</code></td></tr>
+          <tr><td>✅ <code>POST /api/auth/register</code> returns <code>{"message":"Account created..."}</code></td><td>curl or browser form</td></tr>
+          <tr><td>✅ <code>password_hash</code> in MySQL starts with <code>$2b$10$</code></td><td><code>SELECT email, password_hash FROM users</code></td></tr>
+          <tr><td>✅ Duplicate email returns <code>{"error":"Email already registered"}</code></td><td>curl with same email twice</td></tr>
+          <tr><td>✅ <code>POST /api/auth/login</code> returns success for correct credentials</td><td>curl with registered email + password</td></tr>
+          <tr><td>✅ Wrong password returns same generic error as wrong email</td><td>curl with wrong password</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout green" style="margin-top:1rem">
+        <span>🎉</span>
+        <div><strong>Lab 3.2 complete!</strong> CloudEats now has user accounts with properly hashed passwords. You've built the security foundation that Week 8 (JWT auth) and RBAC will build on directly.</div>
+      </div>
+
+      <div class="roadmap" style="margin-top:1.25rem">
+        <div class="roadmap-title">CloudEats — Progress So Far</div>
+        <div class="rm-week"><div class="rm-dot done"></div><div><div class="rm-label">Labs 1.1, 2.1, 2.2 ✅</div><div class="rm-desc">Dev environment, static menu, Docker networking</div></div></div>
+        <div class="rm-week"><div class="rm-dot done"></div><div><div class="rm-label">Lab 3.1 · Docker Compose + MySQL ✅</div><div class="rm-desc">Dynamic menu, named volume, persistent data</div></div></div>
+        <div class="rm-week"><div class="rm-dot done"></div><div><div class="rm-label">Lab 3.2 · User Registration ✅</div><div class="rm-desc">users + orders tables, bcrypt hashing ← YOU ARE HERE</div></div></div>
+        <div class="rm-week"><div class="rm-dot active"></div><div><div class="rm-label">Lab 4.1 · Relational DB Queries → Next</div><div class="rm-desc">SELECT, JOIN, GROUP BY on the tables you built this week</div></div></div>
+        <div class="rm-week"><div class="rm-dot upcoming"></div><div><div class="rm-label">Lab 4.2 · NoSQL Orders</div><div class="rm-desc">Redis for cart, MongoDB for order history</div></div></div>
+        <div class="rm-week"><div class="rm-dot upcoming"></div><div><div class="rm-label">Lab 8.1 · JWT Authentication</div><div class="rm-desc">This users table + bcrypt becomes the JWT auth foundation</div></div></div>
+      </div>
+
+      <div class="callout purple" style="margin-top:1rem">
+        <span>🐙</span>
+        <div><strong>GitHub Pages tip:</strong> Push all three HTML files (<code>week03_Databases_in_the_Cloud.html</code>, <code>week03_lab1_docker_compose_mysql.html</code>, <code>week03_lab2_user_registration.html</code>) to your GitHub repo. Students access the complete Week 3 module at your GitHub Pages URL.</div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer style="border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;color:var(--muted);font-size:0.78rem;max-width:1100px;margin:0 auto">
+  Cloud Computing · Lab 3.2 · User Registration System &nbsp;|&nbsp; CloudEats Academy &nbsp;|&nbsp; Est. 60 min &nbsp;|&nbsp;
+  <a href="week03_lab1_docker_compose_mysql.html" style="color:var(--muted);text-decoration:none">← Lab 3.1</a>
+  &nbsp;|&nbsp;
+  <a href="#" style="color:var(--accent);text-decoration:none">Lab 4.1 →</a>
+  &nbsp;|&nbsp;
+  <span class="ghp-badge">🐙 GitHub Pages Ready</span>
+</footer>
+
+<script>
+  function setPace(pace) {
+    document.body.className = 'pace-' + pace;
+    document.querySelectorAll('.pace-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-pace="${pace}"]`).classList.add('active');
+    if (pace === 'beginner') expandAll();
+  }
+  function expandAll() {
+    document.querySelectorAll('.step').forEach(s => s.classList.add('open'));
+  }
+  function collapseAll() {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('open'));
+  }
+  function toggleStep(el) { el.classList.toggle('open'); }
+  function toggleTrouble(el) { el.classList.toggle('open'); }
+  function copyCode(btn, event) {
+    if (event) event.stopPropagation();
+    const pre = btn.closest('.code-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'Copied!'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+  function toggleCheck(li) {
+    li.classList.toggle('done');
+    li.querySelector('.check-box').textContent = li.classList.contains('done') ? '✓' : '';
+    updateProgress();
+  }
+  function updateProgress() {
+    const items = document.querySelectorAll('#checklistItems li');
+    const done  = document.querySelectorAll('#checklistItems li.done').length;
+    document.getElementById('progressBar').style.width = Math.round((done/items.length)*100) + '%';
+    document.getElementById('progressCount').textContent = done;
+  }
+  const sections  = document.querySelectorAll('[id]');
+  const sideLinks = document.querySelectorAll('.sidebar-nav a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
+    sideLinks.forEach(a => {
+      a.classList.remove('active');
+      if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+    });
+  });
+  /* Default pace is beginner — expand all steps on first load */
+  document.addEventListener('DOMContentLoaded', () => { expandAll(); });
+</script>
+</body>
+</html>

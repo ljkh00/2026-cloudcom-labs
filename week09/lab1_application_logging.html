@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 9.1 · Application Logging · CloudEats Academy</title>
+<meta name="description" content="Add production-grade structured logging to CloudEats with Winston and Morgan. Create JSON logs with timestamps, severity levels, and business event tracking. Diploma level, three pace tracks.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Lab 9.1 · Application Logging · CloudEats Academy">
+<meta property="og:description" content="Replace console.log() with structured Winston logging — timestamps, log levels, JSON format, and Morgan HTTP request logging piped into the same destination.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090f;--bg2:#0d1117;--bg3:#141b27;
+  --surface:#1a2235;--surface2:#1f2c42;--border:#2a3d5a;
+  --accent:#00c8ff;--green:#00e5a0;--amber:#ffb740;
+  --red:#ff5e7a;--purple:#b46ef5;
+  --text:#e8edf5;--muted:#6b7fa0;
+  --beginner:#00e5a0;--average:#00c8ff;--advanced:#b46ef5;
+  --lab-color:#00e5a0;--radius:10px;--code-bg:#0b1120;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;}
+.site-header{background:linear-gradient(135deg,#050d1c,#091628);border-bottom:1px solid var(--border);padding:0 1.5rem;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;gap:1rem;}
+.lab-badge{background:var(--lab-color);color:#000;font-size:.62rem;font-weight:700;letter-spacing:.1em;padding:.2rem .55rem;border-radius:4px;text-transform:uppercase;}
+.header-title{font-size:.88rem;font-weight:600;}
+.pace-switcher{display:flex;gap:.3rem;background:var(--bg3);padding:.22rem;border-radius:8px;border:1px solid var(--border);}
+.pace-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.25rem .65rem;border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--muted);transition:all .18s;}
+.pace-btn.active[data-pace="beginner"]{background:rgba(0,229,160,.18);color:var(--beginner);}
+.pace-btn.active[data-pace="average"]{background:rgba(0,200,255,.18);color:var(--average);}
+.pace-btn.active[data-pace="advanced"]{background:rgba(180,110,245,.18);color:var(--advanced);}
+.lab-hero{background:linear-gradient(160deg,#060f20,#07111e);border-bottom:1px solid var(--border);padding:2rem 1.5rem 1.75rem;position:relative;overflow:hidden;}
+.lab-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:350px;height:350px;background:radial-gradient(ellipse,rgba(0,229,160,.06),transparent 70%);pointer-events:none;}
+.hero-inner{max-width:1200px;margin:0 auto;}
+.hero-crumb{font-size:.7rem;color:var(--muted);margin-bottom:.4rem;}
+.hero-crumb a{color:var(--green);text-decoration:none;}
+.lab-hero h1{font-size:clamp(1.25rem,2.5vw,1.75rem);font-weight:800;background:linear-gradient(135deg,#e8edf5 40%,var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.35rem;}
+.hero-sub{color:var(--muted);font-size:.84rem;margin-bottom:.85rem;}
+.hero-meta{display:flex;flex-wrap:wrap;gap:.55rem;}
+.meta-chip{display:flex;align-items:center;gap:.35rem;font-size:.74rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.22rem .6rem;color:var(--muted);}
+.meta-chip strong{color:var(--text);}
+.pace-guide{max-width:1200px;margin:0 auto;padding:1rem 1.5rem 0;}
+.pace-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.65rem;margin-bottom:.5rem;}
+.pace-card{border-radius:8px;padding:.75rem;font-size:.78rem;line-height:1.5;}
+.pace-card.b{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);}
+.pace-card.a{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);}
+.pace-card.adv{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);}
+.pc-label{font-size:.65rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.3rem;}
+.b .pc-label{color:var(--beginner);}.a .pc-label{color:var(--average);}.adv .pc-label{color:var(--advanced);}
+.pc-scope{color:var(--muted);font-size:.76rem;}
+.page-body{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 200px);}
+.sidebar{position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;padding:1.25rem .85rem 2rem;border-right:1px solid var(--border);background:var(--bg2);}
+.sb-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.85rem;}
+.progress-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:.65rem;margin-bottom:1rem;}
+.prog-track{background:var(--bg2);border-radius:3px;height:5px;margin:.4rem 0;}
+.prog-fill{height:5px;border-radius:3px;background:linear-gradient(90deg,var(--green),var(--accent));transition:width .35s;width:0%;}
+.prog-text{font-size:.69rem;color:var(--muted);}
+.prog-text span{color:var(--green);font-weight:600;}
+.sb-nav{list-style:none;}
+.sb-nav li a{display:block;font-size:.73rem;padding:.32rem .6rem;border-radius:5px;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all .13s;margin-bottom:.08rem;}
+.sb-nav li a:hover{background:var(--surface);color:var(--text);}
+.sb-nav li a.active{background:rgba(0,229,160,.08);color:var(--green);border-color:rgba(0,229,160,.18);}
+.sb-section{font-size:.61rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(107,127,160,.45);padding:.6rem .6rem .18rem;list-style:none;}
+.lab-content{padding:1.75rem 1.75rem 4rem;min-width:0;}
+.part-head{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;border-radius:8px;margin-bottom:1.1rem;}
+.ph-green{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.22);border-left:4px solid var(--green);}
+.ph-blue{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.22);border-left:4px solid var(--accent);}
+.ph-amber{background:rgba(255,183,64,.04);border:1px solid rgba(255,183,64,.22);border-left:4px solid var(--amber);}
+.ph-purple{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.22);border-left:4px solid var(--purple);}
+.ph-red{background:rgba(255,94,122,.04);border:1px solid rgba(255,94,122,.22);border-left:4px solid var(--red);}
+.part-pill{font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.16rem .5rem;border-radius:4px;white-space:nowrap;}
+.pp-green{background:rgba(0,229,160,.15);color:var(--green);}
+.pp-blue{background:rgba(0,200,255,.15);color:var(--accent);}
+.pp-amber{background:rgba(255,183,64,.15);color:var(--amber);}
+.pp-purple{background:rgba(180,110,245,.15);color:var(--purple);}
+.pp-red{background:rgba(255,94,122,.15);color:var(--red);}
+.part-title{font-size:.98rem;font-weight:700;}
+.part-time{font-size:.71rem;color:var(--muted);margin-left:auto;white-space:nowrap;}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:.85rem;overflow:hidden;}
+.step-header{display:flex;align-items:center;gap:.75rem;padding:.85rem 1rem;cursor:pointer;user-select:none;transition:background .13s;}
+.step-header:hover{background:var(--surface2);}
+.step-num{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;color:var(--muted);}
+.step.open .step-num{border-color:var(--green);color:var(--green);}
+.step-title{font-size:.86rem;font-weight:600;}
+.step-body{display:none;padding:1rem 1rem 1.1rem;border-top:1px solid var(--border);}
+.step.open .step-body{display:block;}
+.step:not(.open) .step-header::after{content:'click to expand';font-size:.62rem;color:var(--muted);opacity:.5;margin-left:auto;letter-spacing:.04em;pointer-events:none;}
+.step.open .step-header::after{content:'';}
+code{font-family:'Fira Code',monospace;font-size:.84em;background:var(--code-bg);padding:.08rem .35rem;border-radius:3px;color:var(--green);}
+.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;margin:.75rem 0;overflow:hidden;}
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:.45rem .9rem;background:rgba(0,0,0,.3);border-bottom:1px solid var(--border);}
+.code-lang{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.file-chip{font-size:.68rem;font-weight:600;color:var(--amber);background:rgba(255,183,64,.1);border:1px solid rgba(255,183,64,.25);padding:.1rem .4rem;border-radius:4px;}
+.copy-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.18rem .55rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;transition:all .15s;}
+.copy-btn:hover{background:var(--green);color:#000;border-color:var(--green);}
+.copy-btn.copied{background:var(--green);color:#000;border-color:var(--green);}
+pre{font-family:'Fira Code',monospace;font-size:.79rem;line-height:1.65;padding:.9rem;overflow-x:auto;color:#c5d5ef;white-space:pre;}
+.callout{border-radius:8px;padding:.75rem 1rem;margin:.75rem 0;display:flex;gap:.6rem;align-items:flex-start;font-size:.82rem;line-height:1.55;}
+.callout.blue{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);color:#a0d8f0;}
+.callout.green{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);color:#8ee8c4;}
+.callout.amber{background:rgba(255,183,64,.06);border:1px solid rgba(255,183,64,.2);color:#d9c07a;}
+.callout.red{background:rgba(255,94,122,.05);border:1px solid rgba(255,94,122,.2);color:#f0a0b0;}
+.callout-icon{font-size:1rem;flex-shrink:0;line-height:1.4;}
+.expected-output{background:#060d18;border:1px solid rgba(0,229,160,.2);border-left:3px solid var(--green);border-radius:6px;padding:.65rem .9rem;margin:.65rem 0;}
+.eo-label{font-size:.62rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:.35rem;}
+.eo-body{font-family:'Fira Code',monospace;font-size:.77rem;color:#8ee8c4;line-height:1.6;white-space:pre-wrap;}
+.trouble{background:rgba(255,94,122,.03);border:1px solid rgba(255,94,122,.2);border-radius:8px;margin:.75rem 0;overflow:hidden;}
+.trouble-header{display:flex;align-items:center;gap:.6rem;padding:.6rem .9rem;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--red);}
+.trouble-body{display:none;padding:.75rem .9rem;border-top:1px solid rgba(255,94,122,.15);font-size:.8rem;line-height:1.6;}
+.trouble.open .trouble-body{display:block;}
+.why-box{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.2);border-left:3px solid var(--accent);border-radius:6px;padding:.7rem 1rem;margin:.75rem 0;font-size:.81rem;color:#a0d8f0;}
+.why-box strong{color:var(--accent);}
+.checkpoint{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.25);border-radius:8px;padding:.85rem 1rem;margin:1.25rem 0;}
+.checkpoint-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:.4rem;}
+.level-block{border-radius:8px;padding:.65rem .9rem;margin:.55rem 0;font-size:.8rem;line-height:1.55;}
+.level-block.beginner{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.18);border-left:3px solid var(--beginner);}
+.level-block.average{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.18);border-left:3px solid var(--average);}
+.level-block.advanced{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.18);border-left:3px solid var(--advanced);}
+.level-block-label{font-size:.63rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.25rem;}
+.level-block.beginner .level-block-label{color:var(--beginner);}
+.level-block.average .level-block-label{color:var(--average);}
+.level-block.advanced .level-block-label{color:var(--advanced);}
+.ctrl-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;padding:.4rem 0;}
+.ctrl-bar span{font-size:.75rem;color:var(--muted);}
+.ctrl-btns{display:flex;gap:.5rem;}
+.ctrl-btn{font-family:'Sora',sans-serif;font-size:.7rem;font-weight:600;padding:.25rem .75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all .15s;}
+.ctrl-btn:hover{color:var(--accent);border-color:var(--accent);}
+.summary-table{width:100%;border-collapse:collapse;font-size:.8rem;margin:.85rem 0;}
+.summary-table th{background:var(--bg3);padding:.5rem .75rem;text-align:left;font-size:.72rem;font-weight:700;color:var(--muted);border-bottom:2px solid var(--border);}
+.summary-table td{padding:.5rem .75rem;border-bottom:1px solid var(--border);vertical-align:top;}
+.summary-table tr:last-child td{border-bottom:none;}
+.challenge-box{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.25);border-radius:8px;padding:1rem 1.1rem;margin-top:1.5rem;}
+.challenge-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-bottom:.5rem;}
+p{font-size:.85rem;line-height:1.7;margin-bottom:.7rem;}
+p:last-child{margin-bottom:0;}
+ul,ol{padding-left:1.4rem;font-size:.84rem;line-height:1.75;margin-bottom:.6rem;}
+strong{color:var(--text);}
+@media(max-width:700px){.page-body{grid-template-columns:1fr;}.sidebar{display:none;}}
+</style>
+</head>
+<body class="pace-beginner">
+
+<header class="site-header">
+  <div class="header-inner">
+    <div style="display:flex;align-items:center;gap:.75rem;">
+      <span class="lab-badge">Lab 9.1</span>
+      <span class="header-title">Application Logging</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:.75rem;">
+      <div class="pace-switcher">
+        <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner')">🌱</button>
+        <button class="pace-btn" data-pace="average" onclick="setPace('average')">⚡</button>
+        <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced')">🚀</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="lab-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb"><a href="week09_Monitoring_Logging_and_Optimization.html">Week 9 Notes</a> › Lab 9.1</div>
+    <h1>📝 Lab 9.1 — Application Logging with Winston</h1>
+    <p class="hero-sub">Replace scattered <code>console.log()</code> calls with structured JSON logs — timestamps, severity levels, and searchable business events that survive container restarts.</p>
+    <div class="hero-meta">
+      <div class="meta-chip">⏱ <strong>60 min</strong></div>
+      <div class="meta-chip">🧑‍🤝‍🧑 <strong>Pairs</strong></div>
+      <div class="meta-chip">📦 <strong>Prereq:</strong>&nbsp;Labs 8.1 &amp; 8.2 complete</div>
+      <div class="meta-chip">🛠 <strong>Packages:</strong>&nbsp;winston · morgan</div>
+    </div>
+  </div>
+</section>
+
+<div class="pace-guide">
+  <div class="pace-cards">
+    <div class="pace-card b">
+      <div class="pc-label">🌱 Beginner — aim for</div>
+      <div class="pc-scope">Parts 1–3. Winston installed, logger.js created, at least one business event logged (login or registration). Log file readable. Can explain what a log level is.</div>
+    </div>
+    <div class="pace-card a">
+      <div class="pc-label">⚡ Average — aim for</div>
+      <div class="pc-scope">Full lab. Failed login → warn entry in JSON. Morgan piped to Winston. logs/ in .gitignore. Can explain why JSON logs are better than plain text.</div>
+    </div>
+    <div class="pace-card adv">
+      <div class="pc-label">🚀 Advanced — aim for</div>
+      <div class="pc-scope">Full lab + challenge: log level from environment variable. Can describe how Winston stdout transport maps to AWS CloudWatch Logs. Error rate alerting via log analysis.</div>
+    </div>
+  </div>
+</div>
+
+<div style="max-width:1200px;margin:0 auto;padding:1rem 1.5rem 0;">
+  <div class="callout blue">
+    <span class="callout-icon">📋</span>
+    <div><strong>Before you start:</strong> Labs 8.1 and 8.2 must be complete. Run <code>docker compose ps</code> and confirm all services show <code>Up</code>. You need at least one registered user in MySQL to test login logging.</div>
+  </div>
+</div>
+
+<div class="page-body">
+  <aside class="sidebar">
+    <div class="sb-title">Lab Progress</div>
+    <div class="progress-wrap">
+      <div class="prog-text">Completed: <span id="prog-count">0</span> / 14 steps</div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+    </div>
+    <ul class="sb-nav">
+      <li class="sb-section">Part 1</li>
+      <li><a href="#p1">The Problem</a></li>
+      <li class="sb-section">Part 2</li>
+      <li><a href="#p2">Install &amp; logger.js</a></li>
+      <li class="sb-section">Part 3</li>
+      <li><a href="#p3">Morgan HTTP logs</a></li>
+      <li class="sb-section">Part 4</li>
+      <li><a href="#p4">Business Events</a></li>
+      <li class="sb-section">Part 5</li>
+      <li><a href="#p5">Test &amp; Verify</a></li>
+      <li class="sb-section">Links</li>
+      <li><a href="week09_lab2_performance_monitoring.html">Lab 9.2 →</a></li>
+    </ul>
+  </aside>
+
+  <main class="lab-content">
+
+    <!-- PART 1 -->
+    <section id="p1">
+      <div class="part-head ph-red">
+        <span class="part-pill pp-red">Part 1</span>
+        <span class="part-title">The Logging Problem</span>
+        <span class="part-time">⏱ 5 min</span>
+      </div>
+
+      <div class="ctrl-bar">
+        <span><strong style="color:var(--text)">14 steps</strong> across 5 parts</span>
+        <div class="ctrl-btns">
+          <button class="ctrl-btn" onclick="expandAll()">↓ Expand All</button>
+          <button class="ctrl-btn" onclick="collapseAll()">↑ Collapse All</button>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p1-1">
+        <div class="step-header" onclick="toggleStep('step-p1-1')">
+          <div class="step-num">1</div>
+          <div class="step-title">See what logging looks like right now</div>
+        </div>
+        <div class="step-body">
+          <p>Check the current console output from your user-service. It shows <code>console.log()</code> output with no timestamps, no levels, and nothing survives a restart:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>docker logs cloudeats-user-service --tail 20</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">🔍 What you see now — no structure</div>
+            <div class="eo-body">User logged in
+Error: something went wrong
+Server running on port 3001</div>
+          </div>
+          <p style="margin-top:.6rem;">By the end of this lab, the same events will look like:</p>
+          <div class="expected-output">
+            <div class="eo-label">✅ What you will see after this lab</div>
+            <div class="eo-body">{"level":"info","message":"User login successful","service":"user-service","userId":1,"email":"ali@example.com","timestamp":"2026-06-26 10:23:45:123"}
+{"level":"warn","message":"Login failed - invalid password","service":"user-service","email":"hacker@bad.com","ip":"192.168.1.10","timestamp":"2026-06-26 10:23:51:456"}</div>
+          </div>
+          <div class="why-box">
+            <strong>Why does JSON matter?</strong> The structured version is machine-readable. You can query: <em>"show all warn-level entries from user-service in the last hour where email contains @bad.com"</em>. You cannot do that with plain text.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section id="p2">
+      <div class="part-head ph-green">
+        <span class="part-pill pp-green">Part 2</span>
+        <span class="part-title">Install Winston and Create logger.js</span>
+        <span class="part-time">⏱ 18 min</span>
+      </div>
+
+      <div class="step open" id="step-p2-1">
+        <div class="step-header" onclick="toggleStep('step-p2-1')">
+          <div class="step-num">2</div>
+          <div class="step-title">Navigate to user-service and install packages</div>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>cd ~/cloudeats-app/services/user-service
+pwd
+npm install winston morgan</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Expected</div>
+            <div class="eo-body">added 2 packages ... found 0 vulnerabilities</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p2-2">
+        <div class="step-header" onclick="toggleStep('step-p2-2')">
+          <div class="step-num">3</div>
+          <div class="step-title">Create the logs directory and add it to .gitignore</div>
+        </div>
+        <div class="step-body">
+          <p>Winston needs the <code>logs/</code> folder to exist before it can write to it. Log files must never be committed to Git — they can be large and may contain sensitive data.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>mkdir -p logs
+echo "logs/" >> .gitignore
+echo ".env" >> .gitignore
+cat .gitignore</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ .gitignore should contain</div>
+            <div class="eo-body">node_modules/
+.env
+logs/</div>
+          </div>
+          <div class="trouble">
+            <div class="trouble-header" onclick="toggleTrouble(this.closest('.trouble'),event)">⚠️ Trouble: ENOENT: logs directory not found (after rebuild)</div>
+            <div class="trouble-body">The logs/ folder is created on the host but the Docker container has its own filesystem. Make sure your Dockerfile has <code>RUN mkdir -p logs</code> or create the folder in the container entrypoint. Alternatively, add a volume mount in docker-compose.yml: <code>- ./services/user-service/logs:/app/logs</code></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p2-3">
+        <div class="step-header" onclick="toggleStep('step-p2-3')">
+          <div class="step-num">4</div>
+          <div class="step-title">Create config/logger.js — the Winston configuration</div>
+        </div>
+        <div class="step-body">
+          <p>Create the <code>config/</code> directory and the logger file. This is the single source of truth for all logging configuration in the user-service:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>mkdir -p config
+nano config/logger.js</pre>
+          </div>
+          <p>Copy the complete logger configuration below:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">config/logger.js</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>const winston = require('winston');
+
+// Log level from environment variable — debug in dev, info in production
+const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
+
+// Custom level definitions (error=0 is most severe; debug=4 is least)
+const levels = { error: 0, warn: 1, info: 2, http: 3, debug: 4 };
+
+// Colour map for console output
+const colors = { error: 'red', warn: 'yellow', info: 'green', http: 'magenta', debug: 'white' };
+winston.addColors(colors);
+
+// Console format: coloured, human-readable
+const consoleFormat = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
+  winston.format.colorize({ all: true }),
+  winston.format.printf(({ timestamp, level, message }) => `${timestamp} ${level}: ${message}`)
+);
+
+// File format: uncoloured JSON — searchable, machine-readable
+const fileFormat = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
+  winston.format.uncolorize(),
+  winston.format.json()
+);
+
+const logger = winston.createLogger({
+  level: LOG_LEVEL,
+  levels,
+  transports: [
+    // Console: coloured output for development
+    new winston.transports.Console({ format: consoleFormat }),
+
+    // error.log: only error-level entries
+    new winston.transports.File({
+      filename: 'logs/error.log',
+      level: 'error',
+      format: fileFormat
+    }),
+
+    // combined.log: everything at or above LOG_LEVEL
+    new winston.transports.File({
+      filename: 'logs/combined.log',
+      format: fileFormat
+    }),
+  ],
+});
+
+// Add a service label to every log entry
+logger.defaultMeta = { service: 'user-service' };
+
+module.exports = logger;</pre>
+          </div>
+          <div class="level-block beginner">
+            <div class="level-block-label">🌱 Beginner — what are transports?</div>
+            A transport is a destination for log entries. We have three: Console (you see it while the container is running), <code>error.log</code> (errors only — for quick incident response), and <code>combined.log</code> (everything — for searching through history). The same event can go to multiple transports at once.
+          </div>
+          <div class="level-block advanced">
+            <div class="level-block-label">🚀 Advanced — cloud transport</div>
+            In a cloud deployment, replace the File transports with a single Console transport writing to stdout. The container orchestrator (ECS, GKE, AKS) captures stdout from all containers and ships it to CloudWatch Logs, Google Cloud Logging, or Azure Monitor. Add <code>winston-cloudwatch</code> or similar npm packages for direct integration. The same <code>logger.info()</code> calls in your code work unchanged.
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p2-4">
+        <div class="step-header" onclick="toggleStep('step-p2-4')">
+          <div class="step-num">5</div>
+          <div class="step-title">Create config/morganLogger.js — HTTP request logging</div>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>nano config/morganLogger.js</pre>
+          </div>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">config/morganLogger.js</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>const morgan  = require('morgan');
+const logger  = require('./logger');
+
+// Route Morgan's output into Winston's http level
+const stream = {
+  write: (message) => logger.http(message.trim())
+};
+
+// Format: METHOD URL STATUS size - responseTimeMs
+const morganMiddleware = morgan(
+  ':method :url :status :res[content-length] - :response-time ms',
+  { stream }
+);
+
+module.exports = morganMiddleware;</pre>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- PART 3 -->
+    <section id="p3">
+      <div class="part-head ph-blue">
+        <span class="part-pill pp-blue">Part 3</span>
+        <span class="part-title">Wire Logger into server.js</span>
+        <span class="part-time">⏱ 10 min</span>
+      </div>
+
+      <div class="step open" id="step-p3-1">
+        <div class="step-header" onclick="toggleStep('step-p3-1')">
+          <div class="step-num">6</div>
+          <div class="step-title">Add logger imports to the top of server.js</div>
+        </div>
+        <div class="step-body">
+          <p>Open <code>server.js</code> and add these two lines after your existing <code>require()</code> statements:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — add after existing requires</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>// ── ADD THESE TWO LINES after existing requires ──
+const logger         = require('./config/logger');
+const morganMiddleware = require('./config/morganLogger');</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p3-2">
+        <div class="step-header" onclick="toggleStep('step-p3-2')">
+          <div class="step-num">7</div>
+          <div class="step-title">Add Morgan middleware and startup log</div>
+        </div>
+        <div class="step-body">
+          <p>Find the <code>app.use(cors())</code> line and add Morgan right below it. Also update the server startup line:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — middleware section</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>app.use(cors());
+app.use(express.json());
+app.use(morganMiddleware);   // ← ADD THIS — logs every HTTP request
+
+// ... rest of your middleware and routes ...
+
+// Update the app.listen line at the bottom:
+app.listen(PORT, () => {
+  logger.info(`User service started on port ${PORT}`);   // ← replace console.log
+});</pre>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- PART 4 -->
+    <section id="p4">
+      <div class="part-head ph-amber">
+        <span class="part-pill pp-amber">Part 4</span>
+        <span class="part-title">Add Business Event Logging</span>
+        <span class="part-time">⏱ 15 min</span>
+      </div>
+
+      <div class="step open" id="step-p4-1">
+        <div class="step-header" onclick="toggleStep('step-p4-1')">
+          <div class="step-num">8</div>
+          <div class="step-title">Log successful and failed logins</div>
+        </div>
+        <div class="step-body">
+          <p>Find your login endpoint (<code>POST /api/auth/login</code>) and add logger calls at the key decision points:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — login endpoint</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>// Inside the login endpoint, after bcrypt.compare():
+
+// Failed password:
+if (!isValidPassword) {
+  logger.warn('Login failed - invalid password', {
+    email: email,
+    ip: req.ip
+  });
+  return res.status(401).json({ error: 'Invalid email or password' });
+}
+
+// Successful login (just before returning the token):
+logger.info('User login successful', {
+  userId: user.id,
+  email: user.email
+});
+return res.json({ token: token, user: { ... } });</pre>
+          </div>
+          <div class="level-block beginner">
+            <div class="level-block-label">🌱 Beginner — why log the IP on failure?</div>
+            If the same IP address has 50 failed login attempts in one minute, that's a brute-force attack. Logging the IP lets you identify and block attackers. We log the IP only on failure — on success, we log the userId instead.
+          </div>
+          <div class="callout red">
+            <span class="callout-icon">⚠️</span>
+            <div><strong>Never pass the password into the logger.</strong> Not the plain text, not the hash. If you log <code>{ password: req.body.password }</code>, it is stored permanently in the log file where anyone who can read the file can see it.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p4-2">
+        <div class="step-header" onclick="toggleStep('step-p4-2')">
+          <div class="step-num">9</div>
+          <div class="step-title">Log user registration</div>
+        </div>
+        <div class="step-body">
+          <p>Find your registration endpoint and add a log on success:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — registration endpoint</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>// After INSERT succeeds and you have the new userId:
+logger.info('New user registered', {
+  userId: result.insertId,
+  email: email
+  // do NOT log: name, password, phone
+});</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p4-3">
+        <div class="step-header" onclick="toggleStep('step-p4-3')">
+          <div class="step-num">10</div>
+          <div class="step-title">Log database errors</div>
+        </div>
+        <div class="step-body">
+          <p>Find any database error handlers and replace <code>console.error()</code>:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — database error handlers</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>// Replace:
+// console.error('Database error:', err);
+
+// With:
+logger.error('Database query failed', {
+  error: err.message,
+  code: err.code,
+  endpoint: req.path
+});</pre>
+          </div>
+          <div class="level-block average">
+            <div class="level-block-label">⚡ Average — admin action logging</div>
+            If your admin routes from Lab 8.2 delete users or change roles, add an audit log there too: <code>logger.warn('Admin action: role changed', { adminId: req.user.userId, targetUserId: id, newRole: role })</code>. In regulated industries, admin audit logs are a compliance requirement.
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p4-4">
+        <div class="step-header" onclick="toggleStep('step-p4-4')">
+          <div class="step-num">11</div>
+          <div class="step-title">Rebuild and restart</div>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal — from ~/cloudeats-app</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>cd ~/cloudeats-app
+docker compose build user-service
+docker compose up -d user-service</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Startup log entry should appear in docker logs</div>
+            <div class="eo-body">2026-06-26 10:00:00:000 info: User service started on port 3001</div>
+          </div>
+          <div class="trouble">
+            <div class="trouble-header" onclick="toggleTrouble(this.closest('.trouble'),event)">⚠️ Trouble: Cannot find module './config/logger'</div>
+            <div class="trouble-body">The config/ directory and logger.js must be inside the user-service folder (same level as server.js). Check: <code>ls services/user-service/config/</code> — you should see logger.js and morganLogger.js. If missing, recreate them.</div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- PART 5 -->
+    <section id="p5">
+      <div class="part-head ph-green">
+        <span class="part-pill pp-green">Part 5</span>
+        <span class="part-title">Test and Verify — Key Checkpoint</span>
+        <span class="part-time">⏱ 12 min</span>
+      </div>
+
+      <div class="step open" id="step-p5-1">
+        <div class="step-header" onclick="toggleStep('step-p5-1')">
+          <div class="step-num">12</div>
+          <div class="step-title">Trigger a failed login to generate a warn entry</div>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>curl -s -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"notauser@test.com","password":"wrongpassword"}'</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p5-2">
+        <div class="step-header" onclick="toggleStep('step-p5-2')">
+          <div class="step-num">13</div>
+          <div class="step-title">Read the log file and verify the JSON entry</div>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>docker exec cloudeats-user-service cat logs/combined.log | tail -5</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Expected — JSON warn entry</div>
+            <div class="eo-body">{"level":"warn","message":"Login failed - invalid password","service":"user-service","email":"notauser@test.com","ip":"172.18.0.1","timestamp":"2026-06-26 10:05:12:345"}</div>
+          </div>
+          <div class="callout green">
+            <span class="callout-icon">🎯</span>
+            <div>If you see a JSON entry with <code>level: "warn"</code> containing the email and timestamp, your structured logging is working correctly.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p5-3">
+        <div class="step-header" onclick="toggleStep('step-p5-3')">
+          <div class="step-num">14</div>
+          <div class="step-title">Watch logs in real time with tail -f</div>
+        </div>
+        <div class="step-body">
+          <p>In a second terminal, stream the log file while making requests in your first terminal:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal 2 — live log stream</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>docker exec cloudeats-user-service tail -f logs/combined.log</pre>
+          </div>
+          <p style="margin-top:.5rem;">Now make a successful login in Terminal 1 and watch the info entry appear in real time. Press <strong>Ctrl+C</strong> to stop tailing.</p>
+          <div class="level-block advanced">
+            <div class="level-block-label">🚀 Advanced — grep log analysis</div>
+            You can search logs like a database query using grep: <code>docker exec cloudeats-user-service grep '"level":"warn"' logs/combined.log | wc -l</code> — counts all warn entries. Or: <code>grep 'Login failed' logs/combined.log</code> to list all failed attempts. This is the basic version of what Kibana or CloudWatch Logs Insights do.
+          </div>
+        </div>
+      </div>
+
+      <div class="checkpoint">
+        <div class="checkpoint-label">🎯 Lab 9.1 Key Checkpoint — all must be true</div>
+        <ul>
+          <li>✅ <code>logs/combined.log</code> exists and contains JSON entries</li>
+          <li>✅ A failed login produces a <code>level: "warn"</code> entry with email and timestamp</li>
+          <li>✅ HTTP requests produce <code>level: "http"</code> entries (from Morgan)</li>
+          <li>✅ <code>logs/</code> is listed in <code>.gitignore</code></li>
+        </ul>
+      </div>
+
+    </section>
+
+    <section style="margin-top:1.5rem;">
+      <div class="challenge-box">
+        <div class="challenge-label">🚀 Advanced Challenge Extension</div>
+        <p>Make the log level configurable without rebuilding the container. Add <code>LOG_LEVEL=debug</code> to your <code>.env</code> file, load it in logger.js with <code>process.env.LOG_LEVEL || 'info'</code>, then restart (not rebuild) the container with <code>docker compose restart user-service</code>.</p>
+        <p style="margin-top:.5rem;">Verify: add a <code>logger.debug('Test debug message')</code> anywhere in server.js and confirm it appears in the log at debug level but disappears when you change the env var back to <code>info</code>.</p>
+      </div>
+    </section>
+
+    <section style="margin-top:1.75rem;">
+      <div class="part-head ph-green" style="margin-bottom:1rem;">
+        <span class="part-pill pp-green">Summary</span>
+        <span class="part-title">What You Built</span>
+      </div>
+      <table class="summary-table">
+        <thead><tr><th>Before</th><th>After</th></tr></thead>
+        <tbody>
+          <tr><td><code>console.log('User logged in')</code> — no timestamp, no context, lost on restart</td><td><code>logger.info('User login successful', {userId, email})</code> — JSON, timestamped, searchable, persistent</td></tr>
+          <tr><td>No HTTP request records</td><td>Morgan logs every request with method, URL, status, response time through Winston</td></tr>
+          <tr><td>Errors mixed with info in one stream</td><td>Errors isolated in <code>error.log</code>; everything in <code>combined.log</code>; different levels for different urgency</td></tr>
+          <tr><td>Hardcoded log verbosity</td><td>Log level controlled by <code>LOG_LEVEL</code> environment variable — debug locally, info in production</td></tr>
+        </tbody>
+      </table>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.25rem;">
+        <a href="week09_Monitoring_Logging_and_Optimization.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;background:rgba(255,183,64,.08);border:1px solid rgba(255,183,64,.25);color:var(--amber);padding:.4rem .9rem;border-radius:7px;text-decoration:none;">← Week 9 Notes</a>
+        <a href="week09_lab2_performance_monitoring.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;background:rgba(0,200,255,.1);border:1px solid rgba(0,200,255,.3);color:var(--accent);padding:.4rem .9rem;border-radius:7px;text-decoration:none;">Lab 9.2: Metrics →</a>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+let completedSteps=0;const TOTAL=14;
+function toggleStep(id,event){if(event&&!event.target.closest('.step-header'))return;const el=document.getElementById(id);if(!el)return;const wasOpen=el.classList.contains('open');el.classList.toggle('open');if(!wasOpen){completedSteps=Math.min(completedSteps+1,TOTAL);updateProgress();}}
+function toggleTrouble(el,event){if(event&&!event.target.closest('.trouble-header'))return;el.classList.toggle('open');}
+function copyCode(btn,event){if(event)event.stopPropagation();const pre=btn.closest('.code-block').querySelector('pre');navigator.clipboard.writeText(pre.innerText).then(()=>{btn.textContent='Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2000);});}
+function expandAll(){document.querySelectorAll('.step').forEach(s=>s.classList.add('open'));completedSteps=TOTAL;updateProgress();}
+function collapseAll(){document.querySelectorAll('.step').forEach(s=>s.classList.remove('open'));}
+function updateProgress(){const pct=Math.round((completedSteps/TOTAL)*100);document.getElementById('prog-fill').style.width=pct+'%';document.getElementById('prog-count').textContent=completedSteps;}
+function setPace(pace){document.body.className='pace-'+pace;document.querySelectorAll('.pace-btn').forEach(b=>b.classList.remove('active'));document.querySelector(`[data-pace="${pace}"]`).classList.add('active');if(pace==='beginner')expandAll();}
+document.addEventListener('DOMContentLoaded',()=>{expandAll();setPace('beginner');});
+</script>
+</body>
+</html>

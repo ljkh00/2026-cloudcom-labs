@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 4.1 · SQL Queries in the Shell · CloudEats Academy</title>
+<meta name="description" content="Write and run SQL queries directly inside the MySQL container — SELECT, JOIN, INSERT, UPDATE. Week 4 Lab 1 of the CloudEats cloud computing diploma course.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Lab 4.1 · SQL Queries in the Shell · CloudEats Academy">
+<meta property="og:description" content="Hands-on MySQL query practice — joins, aggregations, transactions and indexes — run live inside a Docker container. Three pace levels.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07090f; --bg2: #0d1117; --bg3: #141b27;
+    --surface: #1a2235; --surface2: #1f2c42; --border: #2a3d5a;
+    --accent: #00c8ff; --green: #00e5a0; --amber: #ffb740;
+    --red: #ff5e7a; --purple: #b46ef5;
+    --text: #e8edf5; --muted: #6b7fa0;
+    --beginner: #00e5a0; --average: #00c8ff; --advanced: #b46ef5;
+    --lab-color: #00e5a0;
+    --radius: 10px; --code-bg: #0b1120;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+
+  /* ── HEADER ── */
+  .site-header { background: linear-gradient(135deg, #050d1c, #091628); border-bottom: 1px solid var(--border); padding: 0 2rem; position: sticky; top: 0; z-index: 100; }
+  .header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 58px; gap: 1rem; }
+  .header-left { display: flex; align-items: center; gap: 0.75rem; }
+  .lab-badge { background: var(--green); color: #000; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; padding: 0.2rem 0.55rem; border-radius: 4px; text-transform: uppercase; }
+  .header-title { font-size: 0.9rem; font-weight: 600; }
+  .ghp-badge { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.68rem; font-weight: 700; padding: 0.2rem 0.6rem; background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.3); color: var(--green); border-radius: 20px; }
+
+  /* ── PACE SELECTOR ── */
+  .pace-bar { display: flex; gap: 0.35rem; background: var(--bg3); padding: 0.25rem; border-radius: 8px; border: 1px solid var(--border); }
+  .pace-btn { font-family: 'Sora', sans-serif; font-size: 0.7rem; font-weight: 600; padding: 0.28rem 0.7rem; border: none; border-radius: 5px; cursor: pointer; background: transparent; color: var(--muted); transition: all 0.2s; }
+  .pace-btn:hover { color: var(--text); }
+  .pace-btn.active[data-pace="beginner"] { background: var(--beginner); color: #000; }
+  .pace-btn.active[data-pace="average"]  { background: var(--average);  color: #000; }
+  .pace-btn.active[data-pace="advanced"] { background: var(--advanced); color: #fff; }
+
+  /* ── HERO ── */
+  .lab-hero { background: linear-gradient(160deg, #060f20, #071a10); border-bottom: 1px solid var(--border); padding: 2rem 2rem 1.75rem; position: relative; overflow: hidden; }
+  .lab-hero::before { content: ''; position: absolute; top: -80px; right: -80px; width: 360px; height: 360px; background: radial-gradient(ellipse, rgba(0,229,160,0.07), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; }
+  .hero-crumb { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.4rem; }
+  .hero-crumb a { color: var(--green); text-decoration: none; }
+  .lab-hero h1 { font-size: clamp(1.3rem, 2.5vw, 1.8rem); font-weight: 800; background: linear-gradient(135deg, #e8edf5 40%, var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.4rem; }
+  .hero-meta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.85rem; }
+  .meta-chip { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.25rem 0.65rem; color: var(--muted); }
+  .meta-chip strong { color: var(--text); }
+  .prereq-bar { margin-top: 0.85rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .prereq-label { font-size: 0.7rem; font-weight: 700; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .prereq-chip { font-size: 0.72rem; background: rgba(0,229,160,0.08); border: 1px solid rgba(0,229,160,0.2); color: var(--green); padding: 0.15rem 0.55rem; border-radius: 20px; }
+
+  /* ── PAGE LAYOUT ── */
+  .page-body { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 220px 1fr; }
+
+  /* ── SIDEBAR ── */
+  .sidebar { position: sticky; top: 58px; height: calc(100vh - 58px); overflow-y: auto; padding: 1.5rem 1rem 2rem; border-right: 1px solid var(--border); background: var(--bg2); }
+  .sidebar-title { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.85rem; }
+  .sidebar-nav { list-style: none; }
+  .sidebar-nav li { margin-bottom: 0.1rem; }
+  .sidebar-nav a { display: block; font-size: 0.75rem; padding: 0.35rem 0.65rem; border-radius: 6px; color: var(--muted); text-decoration: none; border: 1px solid transparent; transition: all 0.15s; }
+  .sidebar-nav a:hover { background: var(--surface); color: var(--text); }
+  .sidebar-nav a.active { background: var(--surface); color: var(--green); border-color: rgba(0,229,160,0.2); }
+  .part-divider { font-size: 0.63rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(107,127,160,0.45); padding: 0.65rem 0.65rem 0.2rem; }
+  .progress-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; margin-bottom: 1.25rem; }
+  .progress-title { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.65rem; }
+  .progress-bar-wrap { background: var(--bg3); border-radius: 4px; height: 6px; margin-bottom: 0.4rem; }
+  .progress-bar { height: 6px; border-radius: 4px; background: linear-gradient(90deg, var(--green), var(--accent)); transition: width 0.4s; }
+  .progress-label { font-size: 0.71rem; color: var(--muted); }
+  .progress-label span { color: var(--green); font-weight: 600; }
+
+  /* ── MAIN CONTENT ── */
+  .lab-content { padding: 2rem 2rem 4rem; min-width: 0; }
+  section { margin-bottom: 2.5rem; }
+
+  /* ── PART HEADER ── */
+  .part-header { display: flex; align-items: center; gap: 0.75rem; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--green); border-radius: 0 8px 8px 0; padding: 0.75rem 1rem; margin-bottom: 1.25rem; }
+  .part-pill { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; background: rgba(0,229,160,0.1); color: var(--green); border: 1px solid rgba(0,229,160,0.25); border-radius: 20px; padding: 0.18rem 0.55rem; white-space: nowrap; }
+  .part-title { font-size: 1rem; font-weight: 700; }
+  .part-time { font-size: 0.72rem; color: var(--muted); margin-left: auto; white-space: nowrap; }
+
+  /* ── STEPS ── */
+  .step { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0.85rem; overflow: hidden; }
+  .step-header { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1rem; cursor: pointer; user-select: none; }
+  .step-header:hover { background: var(--surface2); }
+  .step:not(.open) .step-header::after { content: 'click to expand'; font-size: 0.62rem; color: var(--muted); opacity: 0.5; margin-left: auto; letter-spacing: 0.04em; pointer-events: none; }
+  .step.open .step-header::after { content: ''; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; color: var(--muted); transition: all 0.2s; }
+  .step.completed .step-num { background: var(--green); border-color: var(--green); color: #000; }
+  .step-title { font-size: 0.9rem; font-weight: 600; flex: 1; }
+  .step-toggle { font-size: 0.75rem; color: var(--muted); transition: transform 0.2s; }
+  .step.open .step-toggle { transform: rotate(90deg); }
+  .step-body { display: none; padding: 0 1rem 1.25rem; border-top: 1px solid var(--border); }
+  .step.open .step-body { display: block; }
+
+  /* ── CODE ── */
+  code { font-family: 'Fira Code', monospace; font-size: 0.84em; background: var(--code-bg); padding: 0.08rem 0.35rem; border-radius: 3px; color: var(--green); }
+  .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; margin: 0.75rem 0; overflow: hidden; }
+  .code-header { display: flex; align-items: center; justify-content: space-between; padding: 0.45rem 0.9rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); }
+  .code-lang { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .copy-btn { font-family: 'Sora', sans-serif; font-size: 0.68rem; font-weight: 600; padding: 0.18rem 0.55rem; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 4px; cursor: pointer; transition: all 0.15s; }
+  .copy-btn:hover { background: var(--green); color: #000; border-color: var(--green); }
+  .copy-btn.copied { background: var(--green); color: #000; border-color: var(--green); }
+  pre { font-family: 'Fira Code', monospace; font-size: 0.79rem; line-height: 1.65; padding: 0.9rem; overflow-x: auto; color: #c5d5ef; white-space: pre; }
+  .ck { color: var(--accent); }
+  .cv { color: var(--green); }
+  .cc { color: var(--amber); }
+  .cn { color: #ff8fab; }
+  .ct { color: var(--purple); }
+  .cm { color: var(--muted); font-style: italic; }
+
+  /* ── CALLOUTS ── */
+  .callout { border-radius: 8px; padding: 0.75rem 1rem; margin: 0.75rem 0; display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.82rem; line-height: 1.55; }
+  .callout.blue   { background: rgba(0,200,255,0.05);  border: 1px solid rgba(0,200,255,0.2);  color: #a0d8f0; }
+  .callout.green  { background: rgba(0,229,160,0.05);  border: 1px solid rgba(0,229,160,0.2);  color: #8ee8c4; }
+  .callout.amber  { background: rgba(255,183,64,0.06); border: 1px solid rgba(255,183,64,0.2); color: #d9c07a; }
+  .callout.purple { background: rgba(180,110,245,0.05);border: 1px solid rgba(180,110,245,0.2);color: #c5a8f5; }
+  .callout.red    { background: rgba(255,94,122,0.05); border: 1px solid rgba(255,94,122,0.2); color: #f0a0b0; }
+
+  /* ── WHAT HAPPENED BOX ── */
+  .what-happened { background: rgba(0,229,160,0.04); border: 1px solid rgba(0,229,160,0.2); border-left: 3px solid var(--green); border-radius: 0 8px 8px 0; padding: 0.75rem 1rem; margin: 0.75rem 0; font-size: 0.82rem; line-height: 1.6; }
+  .wh-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); margin-bottom: 0.4rem; }
+
+  /* ── EXPECTED OUTPUT ── */
+  .expected-out { font-family: 'Fira Code', monospace; font-size: 0.77rem; background: var(--bg2); border: 1px solid rgba(0,229,160,0.15); border-radius: 6px; padding: 0.6rem 0.85rem; margin-top: 0.5rem; color: #a0d8a0; line-height: 1.65; white-space: pre; overflow-x: auto; }
+  .out-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.3rem; margin-top: 0.85rem; }
+
+  /* ── CHECKPOINT ── */
+  .checkpoint { background: rgba(0,229,160,0.06); border: 1px solid rgba(0,229,160,0.25); border-radius: 10px; padding: 1rem 1.25rem; margin: 1.25rem 0; display: flex; gap: 0.85rem; align-items: flex-start; }
+  .checkpoint-icon { font-size: 1.5rem; flex-shrink: 0; }
+  .checkpoint-text strong { font-size: 0.92rem; color: var(--green); display: block; margin-bottom: 0.35rem; }
+  .checkpoint-text { font-size: 0.83rem; color: var(--muted); line-height: 1.6; }
+
+  /* ── IMAGE PLACEHOLDER ── */
+  .img-ph { border: 2px dashed rgba(0,229,160,0.2); border-radius: 8px; background: rgba(0,229,160,0.025); padding: 0.85rem 1.1rem; margin: 0.85rem 0; display: flex; gap: 0.75rem; align-items: flex-start; }
+  .img-ph-icon { font-size: 1.2rem; flex-shrink: 0; line-height: 1.2; }
+  .img-ph-label { font-size: 0.67rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--green); margin-bottom: 0.18rem; }
+  .img-ph-desc { font-size: 0.79rem; color: var(--muted); line-height: 1.5; }
+
+  /* ── TROUBLESHOOT ── */
+  .trouble { background: rgba(255,94,122,0.04); border: 1px solid rgba(255,94,122,0.2); border-radius: 8px; margin: 0.6rem 0; overflow: hidden; }
+  .trouble-header { display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 0.85rem; cursor: pointer; font-size: 0.82rem; font-weight: 600; color: var(--red); user-select: none; }
+  .trouble-header:hover { background: rgba(255,94,122,0.06); }
+  .trouble-toggle { margin-left: auto; font-size: 0.75rem; color: var(--red); transition: transform 0.2s; }
+  .trouble.open .trouble-toggle { transform: rotate(90deg); }
+  .trouble-body { display: none; padding: 0.5rem 0.85rem 0.85rem; font-size: 0.81rem; color: var(--muted); line-height: 1.65; }
+  .trouble.open .trouble-body { display: block; }
+
+  /* ── PACE BLOCKS ── */
+  .pace-block { border-radius: 8px; padding: 0.75rem 1rem; margin: 0.75rem 0; font-size: 0.82rem; line-height: 1.6; }
+  .pace-block .pace-label { font-size: 0.64rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.35rem; }
+  .pace-block.beginner { background: rgba(0,229,160,0.04); border: 1px solid rgba(0,229,160,0.18); border-left: 3px solid var(--beginner); }
+  .pace-block.average  { background: rgba(0,200,255,0.04); border: 1px solid rgba(0,200,255,0.18); border-left: 3px solid var(--average); }
+  .pace-block.advanced { background: rgba(180,110,245,0.04); border: 1px solid rgba(180,110,245,0.18); border-left: 3px solid var(--advanced); }
+  .pace-block.beginner .pace-label { color: var(--beginner); }
+  .pace-block.average  .pace-label { color: var(--average); }
+  .pace-block.advanced .pace-label { color: var(--advanced); }
+
+  /* ── TASK CHECKLIST ── */
+  .task-list { list-style: none; margin: 0.5rem 0; }
+  .task-list li { display: flex; align-items: flex-start; gap: 0.65rem; font-size: 0.82rem; padding: 0.35rem 0; border-bottom: 1px solid rgba(42,61,90,0.25); cursor: pointer; }
+  .task-list li:last-child { border-bottom: none; }
+  .check-box { width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: #000; transition: all 0.15s; margin-top: 0.05rem; }
+  .task-list li.done .check-box { background: var(--green); border-color: var(--green); }
+  .task-list li.done { color: var(--muted); text-decoration: line-through; }
+
+  /* ── DATA TABLE ── */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 0.79rem; margin: 0.6rem 0; font-family: 'Fira Code', monospace; }
+  .data-table th { padding: 0.35rem 0.75rem; background: var(--bg2); color: var(--green); font-size: 0.72rem; text-align: left; border: 1px solid var(--border); }
+  .data-table td { padding: 0.32rem 0.75rem; border: 1px solid rgba(42,61,90,0.5); color: var(--text); }
+  .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ── CONCEPT BOX (differs from what-happened) ── */
+  .concept-note { background: rgba(0,200,255,0.04); border: 1px solid rgba(0,200,255,0.2); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 0.75rem 1rem; margin: 0.75rem 0; font-size: 0.82rem; line-height: 1.6; color: #a0d8f0; }
+  .cn-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.4rem; }
+
+  /* ── EXTENSION BLOCK ── */
+  .extension-block { background: rgba(180,110,245,0.04); border: 1px solid rgba(180,110,245,0.2); border-radius: 10px; padding: 1.25rem; margin-top: 1.5rem; }
+  .ext-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.85rem; }
+  .ext-badge { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.2rem 0.55rem; background: rgba(180,110,245,0.12); color: var(--purple); border: 1px solid rgba(180,110,245,0.3); border-radius: 20px; }
+  .ext-title { font-size: 0.95rem; font-weight: 700; color: var(--purple); }
+
+  /* ── INFO TABLE ── */
+  .info-table { width: 100%; border-collapse: collapse; font-size: 0.81rem; margin: 0.75rem 0; }
+  .info-table th { padding: 0.4rem 0.75rem; background: var(--bg3); color: var(--muted); font-size: 0.67rem; letter-spacing: 0.07em; text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--border); }
+  .info-table td { padding: 0.42rem 0.75rem; border-bottom: 1px solid rgba(42,61,90,0.3); vertical-align: top; }
+  .info-table tr:last-child td { border-bottom: none; }
+
+  a { color: var(--accent); } a:hover { text-decoration: underline; }
+  strong { color: var(--text); font-weight: 600; }
+  p { margin-bottom: 0.75rem; font-size: 0.85rem; line-height: 1.7; }
+  p:last-child { margin-bottom: 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 768px) {
+    .page-body { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .lab-content { padding: 1.25rem 1rem 3rem; }
+  }
+</style>
+</head>
+<body class="pace-average">
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <span class="lab-badge">Lab 4.1</span>
+      <span class="header-title">SQL Queries in the Shell</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.85rem">
+      <div class="pace-bar">
+        <button class="pace-btn" data-pace="beginner" onclick="setPace('beginner')">🟢 Beginner</button>
+        <button class="pace-btn active" data-pace="average" onclick="setPace('average')">🔵 Average</button>
+        <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced')">🟣 Advanced</button>
+      </div>
+      <span class="ghp-badge">🐙 GitHub Pages Ready</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<div class="lab-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb"><a href="../week04/index.html">← Week 4 Lecture</a> › Lab 4.1</div>
+    <h1>🗃️ SQL Queries in the Shell</h1>
+    <p style="color:var(--muted);font-size:0.86rem;margin:0.25rem 0 0">Ask questions directly to a live database — no application code, just SQL.</p>
+    <div class="hero-meta">
+      <div class="meta-chip">⏱ <strong>60 min</strong></div>
+      <div class="meta-chip">🗄️ <strong>MySQL</strong> · live container</div>
+      <div class="meta-chip">🔍 <strong>SELECT · JOIN · INSERT</strong></div>
+      <div class="meta-chip">🖥️ <strong>Shell only</strong> · no code files today</div>
+    </div>
+    <div class="prereq-bar">
+      <span class="prereq-label">Prerequisites:</span>
+      <span class="prereq-chip">✅ Lab 3.2 completed</span>
+      <span class="prereq-chip">✅ Docker running with <code>db</code> container up</span>
+      <span class="prereq-chip">✅ menu_items · users · orders tables exist</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── PAGE BODY ── -->
+<div class="page-body">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="progress-box">
+      <div class="progress-title">Your Progress</div>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+      <div class="progress-label"><span id="progressCount">0</span> / 8 tasks done</div>
+    </div>
+    <div class="sidebar-title">Lab Navigation</div>
+    <ul class="sidebar-nav">
+      <li class="part-divider">Overview</li>
+      <li><a href="#overview">Scenario &amp; Goals</a></li>
+      <li class="part-divider">Part 1 · Connect</li>
+      <li><a href="#p1">Get into MySQL</a></li>
+      <li class="part-divider">Part 2 · Explore</li>
+      <li><a href="#p2">See What's There</a></li>
+      <li class="part-divider">Part 3 · SELECT</li>
+      <li><a href="#p3s1">Filter with WHERE</a></li>
+      <li><a href="#p3s2">Sort &amp; Limit</a></li>
+      <li><a href="#p3s3">Search with LIKE</a></li>
+      <li class="part-divider">Part 4 · JOIN</li>
+      <li><a href="#p4">Combine Two Tables</a></li>
+      <li class="part-divider">Part 5 · INSERT</li>
+      <li><a href="#p5">Add a Menu Item</a></li>
+      <li class="part-divider">Wrap-Up</li>
+      <li><a href="#wrapup">Checklist &amp; Next</a></li>
+    </ul>
+  </aside>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="lab-content">
+
+    <!-- ══ OVERVIEW ══ -->
+    <section id="overview">
+      <div class="part-header">
+        <div class="part-pill">Overview</div>
+        <div class="part-title">Scenario &amp; Goals</div>
+      </div>
+
+      <div class="callout blue">
+        <span>📖</span>
+        <div><strong>The story:</strong> The CloudEats manager walks over. <em>"Can you pull the breakfast items under RM 10? Also — which customers placed orders? And add Laksa Sarawak to the menu."</em> The database is live. No one needs to change any code. You just need to ask the right questions — in SQL.</div>
+      </div>
+
+      <div class="callout amber">
+        <span>🧠</span>
+        <div><strong>Remember:</strong> You do not need to memorise this SQL syntax. Focus on the <em>idea</em> — a database is a structured store you can interrogate with questions. The syntax is something you look up. The thinking is what matters.</div>
+      </div>
+
+      <p style="margin-bottom:0.5rem"><strong>What you will accomplish today:</strong></p>
+      <ul class="task-list" id="checklistItems">
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Connect directly to the running MySQL container</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Explore tables and column definitions with DESCRIBE</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Filter rows using WHERE and AND</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Sort results with ORDER BY and limit them with LIMIT</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Search text with LIKE and the % wildcard</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Combine the users and orders tables with JOIN</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Add a new menu item with INSERT</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Explain the difference between INNER JOIN and LEFT JOIN</li>
+      </ul>
+    </section>
+
+    <!-- ══ PART 1: CONNECT ══ -->
+    <section id="p1">
+      <div class="part-header">
+        <div class="part-pill">Part 1</div>
+        <div class="part-title">Get Into MySQL</div>
+        <div class="part-time">⏱ 10 min</div>
+      </div>
+
+      <!-- ── EXPAND / COLLAPSE CONTROLS ── -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.85rem;padding:0.4rem 0;">
+        <span style="font-size:0.75rem;color:var(--muted)"><strong style="color:var(--text)">8 steps</strong> across 4 parts</span>
+        <div style="display:flex;gap:0.5rem">
+          <button onclick="expandAll()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--green)';this.style.borderColor='var(--green)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↓ Expand All</button>
+          <button onclick="collapseAll()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--muted)';this.style.borderColor='var(--muted)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↑ Collapse All</button>
+        </div>
+      </div>
+
+      <div class="step open" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">1</div>
+          <div class="step-title">Check your containers are running</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Open a terminal. Navigate to your project folder and check that the database container is up.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>cd ~/cloudeats-app
+docker compose ps</pre>
+          </div>
+          <div class="out-label">Expected output — look for <code>db</code> with status <strong>Up</strong></div>
+          <div class="expected-out">NAME                    STATUS    PORTS
+cloudeats-app-backend-1  Up        0.0.0.0:3000->3000/tcp
+cloudeats-app-db-1       Up        3306/tcp</pre></div>
+
+          <div class="trouble" onclick="toggleTrouble(this, event)">
+            <div class="trouble-header"><span>🔴</span> db container is not running<div class="trouble-toggle">▶</div></div>
+            <div class="trouble-body">Run <code>docker compose up -d db</code> to start only the database container. Wait 15–20 seconds for MySQL to initialise, then run <code>docker compose ps</code> again to confirm it's Up.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">2</div>
+          <div class="step-title">Enter the MySQL shell inside the container</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>We use <code>docker exec</code> to run the MySQL client <em>inside</em> the running container.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>docker exec -it cloudeats-app-db-1 mysql -u cloudeats_user -pcloudeats_password cloudeats_db</pre>
+          </div>
+
+          <div class="what-happened">
+            <div class="wh-label">🔍 What does this command do?</div>
+            <strong>docker exec -it</strong> opens an interactive terminal session inside the running container.<br>
+            <strong>mysql</strong> is the MySQL command-line client, already installed inside the MySQL container.<br>
+            <strong>-u cloudeats_user</strong> is the username. <strong>-p...</strong> is the password (no space between flag and password).<br>
+            <strong>cloudeats_db</strong> is the database to connect to. You land directly inside it.
+          </div>
+
+          <div class="out-label">You should see the MySQL prompt</div>
+          <div class="expected-out">Welcome to the MySQL monitor. Commands end with ; or \g.
+mysql></pre></div>
+
+          <div class="callout amber">
+            <span>⚠️</span>
+            <div>Every SQL command you type must end with a <strong>semicolon <code>;</code></strong> before pressing Enter. Without it, MySQL waits for more input. If you accidentally press Enter without a semicolon, just type <code>;</code> on the next line and press Enter again.</div>
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Student Screenshot · MySQL Prompt</div>
+              <div class="img-ph-desc">Your terminal showing the <code>mysql&gt;</code> prompt after running the <code>docker exec</code> command above. This is your starting state for all queries in this lab.</div>
+            </div>
+          </div>
+
+          <div class="trouble" onclick="toggleTrouble(this, event)">
+            <div class="trouble-header"><span>🔴</span> "No such container" error<div class="trouble-toggle">▶</div></div>
+            <div class="trouble-body">Your container might have a slightly different name. Run <code>docker compose ps</code> and copy the exact name of the <code>db</code> container from the output, then replace <code>cloudeats-app-db-1</code> in the command above.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="checkpoint">
+        <div class="checkpoint-icon">✅</div>
+        <div class="checkpoint-text">
+          <strong>Part 1 Checkpoint</strong>
+          You see the <code>mysql&gt;</code> prompt. MySQL is live and waiting for your questions.
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PART 2: EXPLORE ══ -->
+    <section id="p2">
+      <div class="part-header">
+        <div class="part-pill">Part 2</div>
+        <div class="part-title">See What's There</div>
+        <div class="part-time">⏱ 10 min</div>
+      </div>
+
+      <div class="step open" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">3</div>
+          <div class="step-title">List tables, then inspect a table's structure</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Before writing queries, confirm what tables exist and what columns they contain.</p>
+
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">SQL · List all tables</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="ck">SHOW TABLES</span>;</pre>
+          </div>
+          <div class="expected-out">+----------------------+
+| Tables_in_cloudeats_db |
++----------------------+
+| menu_items           |
+| orders               |
+| users                |
++----------------------+</div>
+
+          <div class="code-block" style="margin-top:0.85rem">
+            <div class="code-header"><span class="code-lang">SQL · Inspect the menu_items table</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="ck">DESCRIBE</span> <span class="ct">menu_items</span>;</pre>
+          </div>
+          <div class="expected-out">+------------+--------------+------+-----+---------+----------------+
+| Field      | Type         | Null | Key | Default | Extra          |
++------------+--------------+------+-----+---------+----------------+
+| id         | int          | NO   | PRI | NULL    | auto_increment |
+| name       | varchar(100) | YES  |     | NULL    |                |
+| category   | varchar(50)  | YES  |     | NULL    |                |
+| price      | decimal(6,2) | YES  |     | NULL    |                |
+| available  | tinyint(1)   | YES  |     | 1       |                |
++------------+--------------+------+-----+---------+----------------+</div>
+
+          <div class="what-happened">
+            <div class="wh-label">🔍 What does DESCRIBE tell us?</div>
+            Each row is one <strong>column</strong> in the table. The <strong>Field</strong> column is the column name. <strong>Type</strong> is what kind of data it holds — <code>varchar</code> is text, <code>decimal</code> is a precise number (good for prices), <code>tinyint(1)</code> is a yes/no flag. The <strong>Key: PRI</strong> shows <code>id</code> is the primary key. <strong>auto_increment</strong> means MySQL assigns the next number automatically — you never set it yourself.
+          </div>
+
+          <div class="pace-block beginner">
+            <div class="pace-label">🟢 Beginner</div>
+            <code>DESCRIBE</code> is like reading the column headers of a spreadsheet before you start using it. It tells you what information this table is capable of holding.
+          </div>
+          <div class="pace-block advanced">
+            <div class="pace-label">🟣 Advanced</div>
+            Run <code>DESCRIBE users;</code> and <code>DESCRIBE orders;</code> as well. Notice <code>orders.user_id</code> — this is the foreign key column that links to <code>users.id</code>. You will use this in Part 4 to JOIN the two tables.
+          </div>
+        </div>
+      </div>
+
+      <div class="checkpoint">
+        <div class="checkpoint-icon">✅</div>
+        <div class="checkpoint-text">
+          <strong>Part 2 Checkpoint</strong>
+          You can see three tables. <code>menu_items</code> has columns: id, name, category, price, available. Move to Part 3.
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PART 3: SELECT ══ -->
+    <section id="p3s1">
+      <div class="part-header">
+        <div class="part-pill">Part 3</div>
+        <div class="part-title">SELECT — Ask the Database Questions</div>
+        <div class="part-time">⏱ 15 min</div>
+      </div>
+
+      <div class="callout blue">
+        <span>💡</span>
+        <div><strong>The idea:</strong> SELECT is how you read from a database. Every time you open the CloudEats menu in the browser, a SELECT runs in the background. You are now doing manually what the app does automatically.</div>
+      </div>
+
+      <!-- Step 4 — WHERE -->
+      <div class="step open" onclick="toggleStep(this, event)" id="p3s1-step">
+        <div class="step-header">
+          <div class="step-num">4</div>
+          <div class="step-title">Filter rows with WHERE</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>The manager wants Breakfast items only. Add a WHERE clause to filter:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="ck">SELECT</span> <span class="cc">name</span>, <span class="cc">price</span>
+<span class="ck">FROM</span>   <span class="ct">menu_items</span>
+<span class="ck">WHERE</span>  <span class="cc">category</span> = <span class="cv">'Breakfast'</span>;</pre>
+          </div>
+
+          <div class="what-happened">
+            <div class="wh-label">🔍 What happened?</div>
+            MySQL scanned every row in <code>menu_items</code>. For each row, it checked: <em>is category equal to 'Breakfast'?</em> Only the rows that passed the test appear in the result. The others were silently skipped. This is the core job of WHERE — it is a filter, not a search engine.
+          </div>
+
+          <p style="margin-top:0.75rem">Now tighten it — the manager said <em>under RM 10</em>. Add a second condition:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="ck">SELECT</span> <span class="cc">name</span>, <span class="cc">price</span>
+<span class="ck">FROM</span>   <span class="ct">menu_items</span>
+<span class="ck">WHERE</span>  <span class="cc">category</span> = <span class="cv">'Breakfast'</span>
+<span class="ck">AND</span>    <span class="cc">price</span> &lt; <span class="cn">10</span>;</pre>
+          </div>
+
+          <div class="concept-note">
+            <div class="cn-label">💡 AND vs OR</div>
+            <strong>AND</strong> — both conditions must be true. The item must be Breakfast <em>and</em> cost under RM 10.<br>
+            <strong>OR</strong> — either condition is enough. <em>Show me Breakfast items or anything under RM 5.</em><br>
+            Think of AND as narrowing the result. Think of OR as widening it.
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Student Screenshot · WHERE result</div>
+              <div class="img-ph-desc">Your terminal showing the result table from the WHERE + AND query above — only Breakfast items under RM 10 should appear. Include the row count at the bottom of the MySQL output (e.g. "3 rows in set").</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5 — ORDER BY + LIMIT -->
+      <div class="step open" onclick="toggleStep(this, event)" id="p3s2">
+        <div class="step-header">
+          <div class="step-num">5</div>
+          <div class="step-title">Sort and limit with ORDER BY and LIMIT</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Show the most expensive items first, but only the top 3:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="ck">SELECT</span>   <span class="cc">name</span>, <span class="cc">price</span>
+<span class="ck">FROM</span>     <span class="ct">menu_items</span>
+<span class="ck">ORDER BY</span> <span class="cc">price</span> <span class="ck">DESC</span>
+<span class="ck">LIMIT</span>    <span class="cn">3</span>;</pre>
+          </div>
+
+          <div class="what-happened">
+            <div class="wh-label">🔍 What happened?</div>
+            <strong>ORDER BY price DESC</strong> sorted all rows — highest price first. <em>DESC</em> = descending (biggest → smallest). <em>ASC</em> = ascending (smallest → biggest). <strong>LIMIT 3</strong> then cut the result to the first three rows <em>after</em> sorting. Think of it as: sort the entire pile, then hand me only the top 3.
+          </div>
+
+          <div class="pace-block beginner">
+            <div class="pace-label">🟢 Beginner</div>
+            ORDER BY + LIMIT is how leaderboards work. "Show me the top 10 highest-scoring players" is exactly this pattern — sort by score descending, limit to 10.
+          </div>
+          <div class="pace-block average">
+            <div class="pace-label">🔵 Average</div>
+            Change <code>DESC</code> to <code>ASC</code> and observe the result flip. Then try sorting by <code>name ASC</code> — the items appear alphabetically. The column you sort by does not have to appear in your SELECT list.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 6 — LIKE -->
+      <div class="step open" onclick="toggleStep(this, event)" id="p3s3">
+        <div class="step-header">
+          <div class="step-num">6</div>
+          <div class="step-title">Search text with LIKE and the % wildcard</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Find every menu item that contains the word "Nasi" anywhere in its name:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="ck">SELECT</span> <span class="cc">name</span>, <span class="cc">category</span>, <span class="cc">price</span>
+<span class="ck">FROM</span>   <span class="ct">menu_items</span>
+<span class="ck">WHERE</span>  <span class="cc">name</span> <span class="ck">LIKE</span> <span class="cv">'%Nasi%'</span>;</pre>
+          </div>
+
+          <div class="what-happened">
+            <div class="wh-label">🔍 What does % mean?</div>
+            <code>%</code> is a wildcard — it means "any text here, of any length." <code>'%Nasi%'</code> matches anything with "Nasi" anywhere: <em>Nasi Lemak</em>, <em>Nasi Goreng</em>, <em>Ayam Nasi</em>. <code>'Nasi%'</code> would only match names that <em>start</em> with "Nasi". <code>'%Goreng'</code> would only match names that <em>end</em> with "Goreng".
+          </div>
+
+          <div class="concept-note">
+            <div class="cn-label">🌐 Real-world connection</div>
+            When you type "Nasi" into a search bar on any website and results appear as you type, the server is running a query like this — usually <code>LIKE '%your_text%'</code> — against the database. The percent signs are what make partial matches work.
+          </div>
+
+          <div class="pace-block advanced">
+            <div class="pace-label">🟣 Advanced</div>
+            LIKE with leading % (e.g. <code>'%Nasi'</code>) cannot use a column index, so it performs a full table scan — slow on millions of rows. Production search features use a dedicated full-text search engine (Elasticsearch, MySQL FULLTEXT index) instead of LIKE. For CloudEats at this scale, LIKE is fine.
+          </div>
+        </div>
+      </div>
+
+      <div class="checkpoint">
+        <div class="checkpoint-icon">✅</div>
+        <div class="checkpoint-text">
+          <strong>Part 3 Checkpoint</strong>
+          You can filter, sort, and search your menu data. The key idea: WHERE filters rows in or out. ORDER BY controls the order. LIKE searches inside text. Proceed to Part 4.
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PART 4: JOIN ══ -->
+    <section id="p4">
+      <div class="part-header">
+        <div class="part-pill">Part 4</div>
+        <div class="part-title">JOIN — Combine Two Tables</div>
+        <div class="part-time">⏱ 15 min</div>
+      </div>
+
+      <div class="callout blue">
+        <span>💡</span>
+        <div><strong>The idea:</strong> The <code>orders</code> table stores a <code>user_id</code> number — not the customer's name. The actual name lives in the <code>users</code> table. A JOIN brings both together in one result, matching orders to the right customer automatically.</div>
+      </div>
+
+      <div class="step open" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">7</div>
+          <div class="step-title">JOIN orders with users to see customer names</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+
+          <p>First, look at the orders table on its own — notice it has <code>user_id</code> numbers, not names:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">SQL · Orders alone — ID numbers only</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="ck">SELECT</span> <span class="cc">id</span>, <span class="cc">user_id</span>, <span class="cc">total_amount</span>, <span class="cc">status</span>
+<span class="ck">FROM</span>   <span class="ct">orders</span>;</pre>
+          </div>
+          <div class="expected-out">+----+---------+--------------+-----------+
+| id | user_id | total_amount | status    |
++----+---------+--------------+-----------+
+|  1 |       1 | 26.00        | delivered |
+|  2 |       1 | 14.00        | pending   |
+|  3 |       2 | 12.00        | confirmed |
++----+---------+--------------+-----------+</div>
+
+          <p style="margin-top:0.85rem">Now run the JOIN — the names appear alongside the orders:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">SQL · JOIN to get the customer name</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="ck">SELECT</span>   <span class="ct">users</span>.<span class="cc">full_name</span>,
+         <span class="ct">orders</span>.<span class="cc">total_amount</span>,
+         <span class="ct">orders</span>.<span class="cc">status</span>
+<span class="ck">FROM</span>     <span class="ct">orders</span>
+<span class="ck">JOIN</span>     <span class="ct">users</span> <span class="ck">ON</span> <span class="ct">orders</span>.<span class="cc">user_id</span> = <span class="ct">users</span>.<span class="cc">id</span>;</pre>
+          </div>
+          <div class="expected-out">+-------------+--------------+-----------+
+| full_name   | total_amount | status    |
++-------------+--------------+-----------+
+| Ali Hassan  | 26.00        | delivered |
+| Ali Hassan  | 14.00        | pending   |
+| Siti Aminah | 12.00        | confirmed |
++-------------+--------------+-----------+</div>
+
+          <div class="what-happened">
+            <div class="wh-label">🔍 What happened — and why?</div>
+            MySQL looked at each row in <code>orders</code>. For each order, it took the <code>user_id</code> number and found the matching row in <code>users</code> where <code>users.id</code> equals that number. Then it merged both rows into one result row. Ali Hassan appears twice because he placed two orders — both match his <code>id = 1</code>. This is why we stored a <code>user_id</code> foreign key instead of copying the name into every order row.
+          </div>
+
+          <div class="concept-note">
+            <div class="cn-label">💡 INNER JOIN vs LEFT JOIN — the difference that matters</div>
+            The <code>JOIN</code> you wrote above is an <strong>INNER JOIN</strong>. It only shows orders that have a matching user. If an order had a broken <code>user_id</code> that pointed to no one, that order would <em>not</em> appear.<br><br>
+            A <strong>LEFT JOIN</strong> shows every row from the <em>left</em> table (orders) regardless — even if there's no match on the right. A user with no orders would appear with NULL in the order columns.<br><br>
+            <strong>The concept, not the syntax, is the exam point</strong> — which join keeps all rows, and which keeps only matched pairs.
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Student Screenshot · JOIN result</div>
+              <div class="img-ph-desc">Your terminal showing the result of the JOIN query — customer names appearing alongside order amounts and statuses. Ali Hassan should appear twice (two orders). If you have more seed data, more rows may appear.</div>
+            </div>
+          </div>
+
+          <div class="pace-block beginner">
+            <div class="pace-label">🟢 Beginner</div>
+            Imagine having two separate Excel sheets — one for orders, one for customers. JOIN is doing an automatic VLOOKUP across both sheets based on the ID column. The database does this for every row instantly.
+          </div>
+          <div class="pace-block average">
+            <div class="pace-label">🔵 Average</div>
+            Notice we write <code>orders.user_id</code> and <code>users.id</code> — the table name prefix avoids ambiguity when both tables have a column with the same name (like <code>id</code>). Without the prefix, MySQL would ask: "which table's id?"
+          </div>
+          <div class="pace-block advanced">
+            <div class="pace-label">🟣 Advanced</div>
+            Try: <code>SELECT users.full_name, COUNT(orders.id) AS total_orders FROM users LEFT JOIN orders ON users.id = orders.user_id GROUP BY users.id;</code> — this shows every user and how many orders they've placed, including users with zero orders (they show 0, not nothing).
+          </div>
+
+          <div class="trouble" onclick="toggleTrouble(this, event)">
+            <div class="trouble-header"><span>🔴</span> "Column 'id' in ON clause is ambiguous" error<div class="trouble-toggle">▶</div></div>
+            <div class="trouble-body">Both tables have a column named <code>id</code>. MySQL doesn't know which you mean. Always prefix with the table name: <code>orders.user_id = users.id</code>, not just <code>user_id = id</code>.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="checkpoint">
+        <div class="checkpoint-icon">✅</div>
+        <div class="checkpoint-text">
+          <strong>Part 4 Checkpoint</strong>
+          You can see customer names next to their order amounts. The key idea: JOIN links two tables using a shared ID column. Without it, you'd have to query each table separately and connect the dots manually.
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PART 5: INSERT ══ -->
+    <section id="p5">
+      <div class="part-header">
+        <div class="part-pill">Part 5</div>
+        <div class="part-title">INSERT — Add a New Menu Item</div>
+        <div class="part-time">⏱ 10 min</div>
+      </div>
+
+      <div class="step open" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">8</div>
+          <div class="step-title">Add Laksa Sarawak to the menu</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>The manager asked us to add Laksa Sarawak to the menu. One SQL command does this:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="ck">INSERT INTO</span> <span class="ct">menu_items</span> (<span class="cc">name</span>, <span class="cc">category</span>, <span class="cc">price</span>, <span class="cc">available</span>)
+<span class="ck">VALUES</span> (<span class="cv">'Laksa Sarawak'</span>, <span class="cv">'Main'</span>, <span class="cn">11.50</span>, <span class="cn">1</span>);</pre>
+          </div>
+
+          <div class="what-happened">
+            <div class="wh-label">🔍 What happened — and what about the id?</div>
+            MySQL added a new row with the name, category, price, and available flag we provided. We did <em>not</em> specify the <code>id</code> — we left it out of the column list intentionally. Because the column is <code>AUTO_INCREMENT</code>, MySQL automatically assigned the next available integer. The new item gets its own unique ID without any effort from us.
+          </div>
+
+          <p style="margin-top:0.75rem">Verify it was added:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="ck">SELECT</span> * <span class="ck">FROM</span> <span class="ct">menu_items</span> <span class="ck">WHERE</span> <span class="cc">name</span> = <span class="cv">'Laksa Sarawak'</span>;</pre>
+          </div>
+          <div class="expected-out">+----+---------------+----------+-------+-----------+
+| id | name          | category | price | available |
++----+---------------+----------+-------+-----------+
+| 11 | Laksa Sarawak | Main     | 11.50 |         1 |
++----+---------------+----------+-------+-----------+</div>
+
+          <div class="callout green">
+            <span>🌐</span>
+            <div>Now open your browser and go to <code>http://localhost:3000</code>. If the frontend fetches the menu from the database, <strong>Laksa Sarawak appears on the menu automatically</strong> — no rebuild, no redeploy. This is the whole point of separating data from code.</div>
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Student Screenshot · Laksa Sarawak in the Browser</div>
+              <div class="img-ph-desc">Two screenshots side by side: (Left) The SELECT result in the MySQL shell confirming Laksa Sarawak was inserted with its auto-generated ID. (Right) The CloudEats menu page in the browser showing Laksa Sarawak now appearing in the menu list without any code change.</div>
+            </div>
+          </div>
+
+          <div class="pace-block advanced">
+            <div class="pace-label">🟣 Advanced — What if you insert a duplicate?</div>
+            Try inserting "Laksa Sarawak" a second time. It works — MySQL happily creates a second row with a new ID. To prevent duplicates, you'd add a <code>UNIQUE</code> constraint on the <code>name</code> column (as done for the email column in <code>users</code>). The database enforces uniqueness, not just the application code.
+          </div>
+        </div>
+      </div>
+
+      <div class="checkpoint">
+        <div class="checkpoint-icon">✅</div>
+        <div class="checkpoint-text">
+          <strong>Part 5 Checkpoint</strong>
+          Laksa Sarawak appears in both the database and the live browser page. You made a data change without touching any code. This is the core value of a database.
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ EXTENSION ══ -->
+    <div class="extension-block" id="extension">
+      <div class="ext-header">
+        <span class="ext-badge">🟣 Advanced Extension</span>
+        <span class="ext-title">UPDATE, DELETE and a small challenge — 15 min</span>
+      </div>
+      <p style="font-size:0.83rem;color:var(--muted);margin-bottom:0.85rem">Completed Parts 1–5 with time to spare? Try these. They are not required — they are for students who want to push further.</p>
+
+      <p><strong>UPDATE — change an existing row</strong></p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">SQL · Change a price</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ck">UPDATE</span> <span class="ct">menu_items</span>
+<span class="ck">SET</span>    <span class="cc">price</span> = <span class="cn">12.50</span>
+<span class="ck">WHERE</span>  <span class="cc">name</span> = <span class="cv">'Laksa Sarawak'</span>;</pre>
+      </div>
+
+      <div class="callout red" style="margin:0.5rem 0">
+        <span>⚠️</span>
+        <div><strong>Always include WHERE in an UPDATE.</strong> <code>UPDATE menu_items SET price = 0;</code> without WHERE sets <em>every</em> menu item's price to zero. MySQL will not ask you to confirm — it just does it.</div>
+      </div>
+
+      <p style="margin-top:0.85rem"><strong>DELETE — remove a row</strong></p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">SQL · Remove a specific item</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ck">DELETE FROM</span> <span class="ct">menu_items</span>
+<span class="ck">WHERE</span>       <span class="cc">name</span> = <span class="cv">'Laksa Sarawak'</span>;</pre>
+      </div>
+
+      <p style="margin-top:0.85rem"><strong>🧩 Challenge query</strong> — try to write this yourself before running it:</p>
+      <div class="callout purple">
+        <span>🏆</span>
+        <div><em>"Find the full name of the customer who placed the highest-value order. Show their name and the order total."</em> Hint: you'll need a JOIN, ORDER BY, and LIMIT.</div>
+      </div>
+    </div>
+
+    <!-- ══ WRAP-UP ══ -->
+    <section id="wrapup" style="margin-top:2rem">
+      <div class="part-header">
+        <div class="part-pill" style="background:rgba(0,229,160,0.1);color:var(--green);border-color:rgba(0,229,160,0.25)">Wrap-Up</div>
+        <div class="part-title">What You Learned — and What to Remember</div>
+      </div>
+
+      <div class="callout amber">
+        <span>🧠</span>
+        <div><strong>What to remember — not the syntax, the concepts:</strong>
+          <br><strong>WHERE</strong> = filter. Only rows that pass the test appear.
+          <br><strong>ORDER BY + LIMIT</strong> = sort, then take the top N.
+          <br><strong>LIKE %text%</strong> = find rows where a column contains that text anywhere.
+          <br><strong>JOIN</strong> = combine two tables on a shared ID column. INNER = only matches. LEFT = all rows from the left side.
+          <br><strong>INSERT</strong> = add a row. AUTO_INCREMENT handles the ID automatically.
+        </div>
+      </div>
+
+      <table class="info-table" style="margin-top:1rem">
+        <thead><tr><th>Operation</th><th>What it does</th><th>Real-world trigger</th></tr></thead>
+        <tbody>
+          <tr><td><code>SELECT + WHERE</code></td><td>Read specific rows from a table</td><td>Customer browses menu by category</td></tr>
+          <tr><td><code>ORDER BY + LIMIT</code></td><td>Sort and cap the number of results</td><td>"Top 5 best-selling items" report</td></tr>
+          <tr><td><code>LIKE</code></td><td>Partial text match</td><td>Customer types into a search bar</td></tr>
+          <tr><td><code>JOIN</code></td><td>Merge two tables by a shared ID</td><td>Order history shows customer name, not user_id number</td></tr>
+          <tr><td><code>INSERT</code></td><td>Add a new row</td><td>Restaurant owner adds a new dish via admin panel</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout purple" style="margin-top:1rem">
+        <span>🔮</span>
+        <div><strong>Coming next — Lab 4.2:</strong> You'll add Redis (for the shopping cart) and MongoDB (for order history) to the Docker Compose stack. You'll interact with both through their own shells — redis-cli and mongosh — and see why three different databases coexist in the same app.</div>
+      </div>
+
+      <div class="callout green" style="margin-top:0.75rem">
+        <span>🚪</span>
+        <div>Type <code>exit;</code> or press <strong>Ctrl + D</strong> to leave the MySQL shell when you're done.</div>
+      </div>
+    </section>
+
+  </main>
+</div><!-- /page-body -->
+
+<footer style="border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;color:var(--muted);font-size:0.78rem;max-width:1100px;margin:0 auto">
+  Cloud Computing · Lab 4.1 · SQL Queries in the Shell &nbsp;|&nbsp; CloudEats Academy &nbsp;|&nbsp;
+  <a href="../week04/index.html" style="color:var(--muted);text-decoration:none">← Week 4 Lecture</a>
+  &nbsp;|&nbsp;
+  <span class="ghp-badge">🐙 GitHub Pages Ready</span>
+  &nbsp;|&nbsp;
+  <a href="../week04/lab2_nosql_orders.html" style="color:var(--muted);text-decoration:none">Lab 4.2 →</a>
+</footer>
+
+<script>
+  /* ── Pace selector ── */
+  function setPace(pace) {
+    document.body.className = 'pace-' + pace;
+    document.querySelectorAll('.pace-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-pace="${pace}"]`).classList.add('active');
+    if (pace === 'beginner') expandAll();
+  }
+
+  function expandAll() {
+    document.querySelectorAll('.step').forEach(s => s.classList.add('open'));
+  }
+  function collapseAll() {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('open'));
+  }
+
+  /* ── Step toggle ── */
+  function toggleStep(el, event) {
+    if (event && !event.target.closest('.step-header')) return;
+    el.classList.toggle('open');
+  }
+
+  /* ── Trouble toggle ── */
+  function toggleTrouble(el, event) {
+    if (event && !event.target.closest('.trouble-header')) return;
+    el.classList.toggle('open');
+  }
+
+  /* ── Copy code ── */
+  function copyCode(btn, event) {
+    if (event) event.stopPropagation();
+    const pre = btn.closest('.code-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'Copied!'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  /* ── Task checklist + progress bar ── */
+  function toggleCheck(li) {
+    li.classList.toggle('done');
+    li.querySelector('.check-box').textContent = li.classList.contains('done') ? '✓' : '';
+    updateProgress();
+  }
+  function updateProgress() {
+    const items = document.querySelectorAll('#checklistItems li');
+    const done  = document.querySelectorAll('#checklistItems li.done').length;
+    document.getElementById('progressBar').style.width = Math.round((done / items.length) * 100) + '%';
+    document.getElementById('progressCount').textContent = done;
+  }
+
+  /* ── Sidebar active link on scroll ── */
+  const sections  = document.querySelectorAll('section[id], div[id]');
+  const sideLinks = document.querySelectorAll('.sidebar-nav a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 110) current = s.id; });
+    sideLinks.forEach(a => {
+      a.classList.remove('active');
+      if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+    });
+  });
+  /* Default pace is beginner — expand all steps on first load */
+  document.addEventListener('DOMContentLoaded', () => { expandAll(); });
+</script>
+</body>
+</html>

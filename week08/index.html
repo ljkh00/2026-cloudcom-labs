@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 8 · Cloud Security and Access Control · CloudEats Academy</title>
+<meta name="description" content="Learn cloud security fundamentals: shared responsibility model, JWT authentication, role-based access control, SQL injection prevention, and encryption. Diploma-level, three pace tracks.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Week 8 · Cloud Security and Access Control · CloudEats Academy">
+<meta property="og:description" content="Protect the CloudEats API with JWT tokens and RBAC — the same security pattern used by real-world apps. Covers shared responsibility, threat awareness, and encryption fundamentals.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090f;--bg2:#0d1117;--bg3:#141b27;
+  --surface:#1a2235;--surface2:#1f2c42;--border:#2a3d5a;
+  --accent:#00c8ff;--green:#00e5a0;--amber:#ffb740;
+  --red:#ff5e7a;--purple:#b46ef5;
+  --text:#e8edf5;--muted:#6b7fa0;
+  --beginner:#00e5a0;--average:#00c8ff;--advanced:#b46ef5;
+  --week-color:#ff5e7a;--radius:10px;--code-bg:#0b1120;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;}
+/* ── Header ── */
+.site-header{background:linear-gradient(135deg,#050d1c,#091628);border-bottom:1px solid var(--border);padding:0 2rem;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:58px;gap:1rem;}
+.header-left{display:flex;align-items:center;gap:.75rem;}
+.week-badge{background:var(--week-color);color:#fff;font-size:.65rem;font-weight:700;letter-spacing:.1em;padding:.2rem .55rem;border-radius:4px;text-transform:uppercase;}
+.header-title{font-size:.9rem;font-weight:600;}
+.ghp-badge{display:inline-flex;align-items:center;gap:.35rem;font-size:.68rem;font-weight:700;padding:.2rem .6rem;background:rgba(255,94,122,.1);border:1px solid rgba(255,94,122,.3);color:var(--red);border-radius:20px;}
+.week-nav{display:flex;gap:.4rem;align-items:center;}
+.week-nav a{font-size:.68rem;font-weight:600;padding:.2rem .55rem;border:1px solid var(--border);border-radius:4px;color:var(--muted);text-decoration:none;transition:all .15s;}
+.week-nav a:hover{color:var(--accent);border-color:var(--accent);}
+.week-nav a.current{background:rgba(255,94,122,.1);color:var(--red);border-color:rgba(255,94,122,.3);}
+/* ── Hero ── */
+.page-hero{background:linear-gradient(160deg,#0a0e18,#0f1620);border-bottom:1px solid var(--border);padding:2.5rem 2rem 2rem;position:relative;overflow:hidden;}
+.page-hero::before{content:'';position:absolute;top:-80px;right:-80px;width:420px;height:420px;background:radial-gradient(ellipse,rgba(255,94,122,.07),transparent 70%);pointer-events:none;}
+.hero-inner{max-width:1100px;margin:0 auto;}
+.hero-crumb{font-size:.72rem;color:var(--muted);margin-bottom:.5rem;}
+.hero-crumb span{color:var(--red);}
+.page-hero h1{font-size:clamp(1.5rem,3vw,2.1rem);font-weight:800;background:linear-gradient(135deg,#e8edf5 40%,var(--red));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.5rem;}
+.hero-sub{color:var(--muted);font-size:.88rem;margin-top:.3rem;}
+.hero-meta{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1rem;}
+.meta-chip{display:flex;align-items:center;gap:.4rem;font-size:.78rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.28rem .7rem;color:var(--muted);}
+.meta-chip strong{color:var(--text);}
+.pace-bar{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.25rem;align-items:center;}
+.pace-bar span{font-size:.73rem;color:var(--muted);margin-right:.25rem;}
+.pace-btn{font-family:'Sora',sans-serif;font-size:.75rem;font-weight:700;padding:.3rem .85rem;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);cursor:pointer;transition:all .18s;}
+.pace-btn.active[data-pace="beginner"]{background:rgba(0,229,160,.12);color:var(--beginner);border-color:rgba(0,229,160,.4);}
+.pace-btn.active[data-pace="average"]{background:rgba(0,200,255,.12);color:var(--average);border-color:rgba(0,200,255,.4);}
+.pace-btn.active[data-pace="advanced"]{background:rgba(180,110,245,.12);color:var(--advanced);border-color:rgba(180,110,245,.4);}
+/* ── Tabs ── */
+.tab-nav{max-width:1100px;margin:0 auto;padding:1.5rem 2rem 0;display:flex;gap:.4rem;flex-wrap:wrap;}
+.tab-btn{font-family:'Sora',sans-serif;font-size:.78rem;font-weight:600;padding:.5rem 1rem;border:1px solid var(--border);border-radius:8px 8px 0 0;background:var(--bg3);color:var(--muted);cursor:pointer;transition:all .15s;border-bottom:none;}
+.tab-btn:hover{color:var(--text);background:var(--surface);}
+.tab-btn.active{background:var(--surface);color:var(--red);border-color:var(--border);border-bottom:1px solid var(--surface);position:relative;z-index:1;}
+.tab-content{max-width:1100px;margin:0 auto;padding:0 2rem 4rem;}
+.tab-panel{display:none;background:var(--surface);border:1px solid var(--border);border-radius:0 var(--radius) var(--radius) var(--radius);padding:2rem;margin-top:-1px;}
+.tab-panel.active{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+/* ── Section headers ── */
+.sec-header{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;padding-bottom:.6rem;border-bottom:1px solid var(--border);}
+.sec-pill{font-size:.67rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.18rem .55rem;border-radius:20px;white-space:nowrap;}
+.sec-pill.red{background:rgba(255,94,122,.1);color:var(--red);border:1px solid rgba(255,94,122,.2);}
+.sec-pill.amber{background:rgba(255,183,64,.1);color:var(--amber);border:1px solid rgba(255,183,64,.2);}
+.sec-pill.blue{background:rgba(0,200,255,.1);color:var(--accent);border:1px solid rgba(0,200,255,.2);}
+.sec-pill.green{background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.2);}
+.sec-pill.purple{background:rgba(180,110,245,.1);color:var(--purple);border:1px solid rgba(180,110,245,.2);}
+.sec-title{font-size:1.1rem;font-weight:700;}
+.sec-time{font-size:.73rem;color:var(--muted);margin-left:auto;}
+.section-divider{border:none;border-top:1px solid var(--border);margin:2rem 0;}
+/* ── Typography ── */
+p{margin-bottom:.75rem;font-size:.86rem;line-height:1.7;}
+p:last-child{margin-bottom:0;}
+strong{color:var(--text);font-weight:600;}
+a{color:var(--accent);}a:hover{text-decoration:underline;}
+ul,ol{padding-left:1.4rem;margin-bottom:.75rem;font-size:.85rem;line-height:1.75;}
+li{margin-bottom:.2rem;}
+/* ── Code ── */
+code{font-family:'Fira Code',monospace;font-size:.84em;background:var(--code-bg);padding:.08rem .35rem;border-radius:3px;color:var(--green);}
+.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;margin:.75rem 0;overflow:hidden;}
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:.45rem .9rem;background:rgba(0,0,0,.3);border-bottom:1px solid var(--border);}
+.code-lang{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.copy-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.18rem .55rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;transition:all .15s;}
+.copy-btn:hover{background:var(--red);color:#fff;border-color:var(--red);}
+.copy-btn.copied{background:var(--green);color:#000;border-color:var(--green);}
+pre{font-family:'Fira Code',monospace;font-size:.79rem;line-height:1.65;padding:.9rem;overflow-x:auto;color:#c5d5ef;white-space:pre;}
+/* ── Callouts ── */
+.callout{border-radius:8px;padding:.75rem 1rem;margin:.75rem 0;display:flex;gap:.6rem;align-items:flex-start;font-size:.82rem;line-height:1.55;}
+.callout.blue{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);color:#a0d8f0;}
+.callout.green{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);color:#8ee8c4;}
+.callout.amber{background:rgba(255,183,64,.06);border:1px solid rgba(255,183,64,.2);color:#d9c07a;}
+.callout.red{background:rgba(255,94,122,.05);border:1px solid rgba(255,94,122,.2);color:#f0a0b0;}
+.callout.purple{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);color:#c5a8f5;}
+.callout-icon{font-size:1rem;flex-shrink:0;line-height:1.4;}
+/* ── Why box ── */
+.why-box{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.2);border-left:3px solid var(--accent);border-radius:6px;padding:.7rem 1rem;margin:.75rem 0;font-size:.81rem;color:#a0d8f0;}
+.why-box strong{color:var(--accent);}
+/* ── Level blocks ── */
+.level-block{border-radius:8px;padding:.75rem 1rem;margin:.6rem 0;font-size:.82rem;line-height:1.55;}
+.level-block.beginner{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.18);border-left:3px solid var(--beginner);}
+.level-block.average{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.18);border-left:3px solid var(--average);}
+.level-block.advanced{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.18);border-left:3px solid var(--advanced);}
+.level-block-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem;}
+.level-block.beginner .level-block-label{color:var(--beginner);}
+.level-block.average .level-block-label{color:var(--average);}
+.level-block.advanced .level-block-label{color:var(--advanced);}
+/* ── Card grids ── */
+.card-grid{display:grid;gap:.85rem;margin:.85rem 0;}
+.card-grid.cols2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));}
+.card-grid.cols3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));}
+.concept-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem;}
+.concept-card.hl-red{border-color:rgba(255,94,122,.35);background:rgba(255,94,122,.04);}
+.concept-card.hl-green{border-color:rgba(0,229,160,.35);background:rgba(0,229,160,.04);}
+.concept-card.hl-blue{border-color:rgba(0,200,255,.35);background:rgba(0,200,255,.04);}
+.concept-card.hl-purple{border-color:rgba(180,110,245,.35);background:rgba(180,110,245,.04);}
+.concept-card.hl-amber{border-color:rgba(255,183,64,.35);background:rgba(255,183,64,.04);}
+.card-icon{font-size:1.4rem;margin-bottom:.4rem;}
+.card-title{font-size:.82rem;font-weight:700;margin-bottom:.3rem;}
+.card-body{font-size:.78rem;color:var(--muted);line-height:1.55;}
+/* ── Table ── */
+.data-table{width:100%;border-collapse:collapse;font-size:.8rem;margin:.85rem 0;}
+.data-table th{background:var(--bg3);padding:.55rem .75rem;text-align:left;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:2px solid var(--border);}
+.data-table td{padding:.5rem .75rem;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:rgba(255,255,255,.02);}
+/* ── Status badges ── */
+.badge{display:inline-block;font-size:.68rem;font-weight:700;padding:.14rem .45rem;border-radius:4px;}
+.badge.green{background:rgba(0,229,160,.15);color:var(--green);}
+.badge.red{background:rgba(255,94,122,.15);color:var(--red);}
+.badge.amber{background:rgba(255,183,64,.15);color:var(--amber);}
+.badge.blue{background:rgba(0,200,255,.15);color:var(--accent);}
+/* ── Analogy box ── */
+.analogy-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin:.85rem 0;font-size:.82rem;}
+.analogy-label{font-size:.63rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--amber);margin-bottom:.3rem;}
+/* ── JWT diagram ── */
+.jwt-visual{display:flex;gap:.4rem;flex-wrap:wrap;margin:1rem 0;align-items:stretch;}
+.jwt-part{flex:1;min-width:120px;border-radius:8px;padding:.85rem 1rem;text-align:center;}
+.jwt-part.header{background:rgba(255,94,122,.08);border:1px solid rgba(255,94,122,.3);}
+.jwt-part.payload{background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.3);}
+.jwt-part.signature{background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.3);}
+.jwt-label{font-size:.63rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.4rem;}
+.jwt-part.header .jwt-label{color:var(--red);}
+.jwt-part.payload .jwt-label{color:var(--accent);}
+.jwt-part.signature .jwt-label{color:var(--green);}
+.jwt-value{font-family:'Fira Code',monospace;font-size:.72rem;word-break:break-all;color:var(--muted);line-height:1.5;}
+.jwt-dot{align-self:center;font-size:1.5rem;font-weight:700;color:var(--border);}
+/* ── Flow diagram ── */
+.flow-steps{display:flex;flex-direction:column;gap:.5rem;margin:.85rem 0;}
+.flow-step{display:flex;gap:.85rem;align-items:flex-start;}
+.flow-num{width:28px;height:28px;border-radius:50%;background:rgba(255,94,122,.15);border:2px solid rgba(255,94,122,.4);color:var(--red);font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.05rem;}
+.flow-text{font-size:.82rem;padding-top:.15rem;line-height:1.6;}
+.flow-text strong{color:var(--text);}
+/* ── Pacing guide ── */
+.pace-guide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.75rem;margin:.85rem 0;}
+.pace-guide-card{border-radius:8px;padding:.85rem 1rem;font-size:.8rem;line-height:1.55;}
+.pgc-b{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.2);}
+.pgc-a{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.2);}
+.pgc-adv{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.2);}
+.pgc-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.35rem;}
+.pgc-b .pgc-label{color:var(--beginner);}
+.pgc-a .pgc-label{color:var(--average);}
+.pgc-adv .pgc-label{color:var(--advanced);}
+/* ── Comparison split ── */
+.compare-split{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin:.85rem 0;}
+.compare-col{border-radius:8px;padding:1rem;}
+.compare-col.bad{background:rgba(255,94,122,.04);border:1px solid rgba(255,94,122,.2);}
+.compare-col.good{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.2);}
+.compare-col-label{font-size:.65rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.55rem;}
+.compare-col.bad .compare-col-label{color:var(--red);}
+.compare-col.good .compare-col-label{color:var(--green);}
+/* ── Lab links ── */
+.lab-link-row{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1.5rem;}
+.lab-link{display:inline-flex;align-items:center;gap:.45rem;font-size:.8rem;font-weight:600;padding:.45rem 1rem;border-radius:7px;text-decoration:none;transition:all .18s;}
+.lab-link.primary{background:rgba(255,94,122,.12);border:1px solid rgba(255,94,122,.35);color:var(--red);}
+.lab-link.primary:hover{background:rgba(255,94,122,.22);border-color:var(--red);}
+.lab-link.secondary{background:rgba(180,110,245,.1);border:1px solid rgba(180,110,245,.3);color:var(--purple);}
+.lab-link.secondary:hover{background:rgba(180,110,245,.2);border-color:var(--purple);}
+@media(max-width:680px){
+  .compare-split{grid-template-columns:1fr;}
+  .jwt-visual{flex-direction:column;}
+  .jwt-dot{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <span class="week-badge">Week 8</span>
+      <span class="header-title">Cloud Security &amp; Access Control</span>
+    </div>
+    <nav class="week-nav">
+      <a href="week07_CICD_and_Infrastructure_as_Code.html">← W7</a>
+      <a href="week08_Cloud_Security_and_Access_Control.html" class="current">W8</a>
+      <a href="week09_Monitoring_Logging_and_Optimization.html">W9 →</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<section class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb">CloudEats Academy &rsaquo; <span>Week 8</span></div>
+    <h1>🔒 Cloud Security &amp; Access Control</h1>
+    <p class="hero-sub">Protect your CloudEats API with JWT tokens and role-based permissions — the security layer every production app needs.</p>
+    <div class="hero-meta">
+      <div class="meta-chip">⏱ <strong>4 hours</strong>&nbsp;contact</div>
+      <div class="meta-chip">🧪 <strong>2 labs</strong>&nbsp;this week</div>
+      <div class="meta-chip">⚙️ <strong>Prereq:</strong>&nbsp;Week 7 complete</div>
+      <div class="meta-chip">🛠 <strong>Stack:</strong>&nbsp;JWT · bcrypt · MySQL · Node.js</div>
+    </div>
+    <div class="pace-bar">
+      <span>Your pace:</span>
+      <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner')">🌱 Beginner</button>
+      <button class="pace-btn" data-pace="average" onclick="setPace('average')">⚡ Average</button>
+      <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced')">🚀 Advanced</button>
+    </div>
+  </div>
+</section>
+
+<!-- ── TABS ── -->
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('h1')">Hour 1 · Fundamentals</button>
+  <button class="tab-btn" onclick="showTab('h2')">Hour 2 · IAM &amp; JWT</button>
+  <button class="tab-btn" onclick="showTab('labs')">Hours 3–4 · Labs</button>
+  <button class="tab-btn" onclick="showTab('summary')">Summary &amp; Exam Tips</button>
+</nav>
+
+<div class="tab-content">
+
+<!-- ══════════════════════════════════════
+     HOUR 1 — CLOUD SECURITY FUNDAMENTALS
+     ══════════════════════════════════════ -->
+<div id="tab-h1" class="tab-panel active">
+
+  <!-- 1.1 Shared Responsibility -->
+  <div class="sec-header">
+    <span class="sec-pill red">1.1</span>
+    <span class="sec-title">The Shared Responsibility Model</span>
+    <span class="sec-time">⏱ 20 min</span>
+  </div>
+
+  <div class="analogy-box">
+    <div class="analogy-label">🏠 Real-world analogy</div>
+    Think of renting an apartment. The landlord is responsible for the building structure, the roof, and the plumbing inside the walls. <strong>You</strong> are responsible for locking your door, keeping your keys safe, and not leaving the stove on. Neither party can do the other's job. Cloud security works the same way.
+  </div>
+
+  <p>When you run an application on a cloud provider, security is <strong>shared</strong>. The provider secures some layers. You secure the rest. Exactly where that line falls depends on which <em>service model</em> you chose:</p>
+
+  <table class="data-table">
+    <thead>
+      <tr><th>Model</th><th>Example</th><th>Provider secures</th><th>You secure</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>IaaS</strong></td>
+        <td>AWS EC2 virtual machine</td>
+        <td>Physical hardware, network cables, hypervisor</td>
+        <td>Operating system, middleware, application, database, credentials, access rules</td>
+      </tr>
+      <tr>
+        <td><strong>PaaS</strong></td>
+        <td>AWS Elastic Beanstalk, Azure App Service</td>
+        <td>Hardware + OS + runtime platform</td>
+        <td>Application code, data, who has access</td>
+      </tr>
+      <tr>
+        <td><strong>SaaS</strong></td>
+        <td>Gmail, Salesforce</td>
+        <td>Everything except your data and user accounts</td>
+        <td>Who has accounts, what data you put in</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout blue">
+    <span class="callout-icon">🖥️</span>
+    <div><strong>In our Proxmox environment:</strong> Proxmox is the physical server and hypervisor — it is "the cloud". You are responsible for everything inside your VM: the Ubuntu OS, Docker, your Node.js application, database credentials, and access control rules. There is no managed service to do it for you.</div>
+  </div>
+
+  <div class="level-block beginner">
+    <div class="level-block-label">🌱 Beginner focus</div>
+    The key takeaway: <strong>the cloud provider will never fix a bug in your code</strong>. If your app has no login protection, that is your problem to fix — not Amazon's or Microsoft's.
+  </div>
+  <div class="level-block average">
+    <div class="level-block-label">⚡ Average — think deeper</div>
+    Consider: which parts of the CloudEats stack are your responsibility right now? (Answer: all of it — Node.js services, MySQL, credentials in docker-compose.yml, open ports, no authentication on API routes yet.)
+  </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">🚀 Advanced</div>
+    In a real AWS deployment, CloudEats would be split: EC2 (IaaS) for the app servers, RDS (PaaS) for the database. The responsibility boundary shifts — AWS patches the MySQL engine, you configure who connects to it. Think about how this changes your security checklist.
+  </div>
+
+  <div class="callout amber">
+    <span class="callout-icon">⚠️</span>
+    <div><strong>Most common cloud breaches are customer mistakes, not provider failures:</strong> database left open to the internet, passwords committed to GitHub, no multi-factor authentication on the admin account, IAM roles with "give everything access to everything".</div>
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- 1.2 Common Threats -->
+  <div class="sec-header">
+    <span class="sec-pill red">1.2</span>
+    <span class="sec-title">Common Security Threats — Awareness Level</span>
+    <span class="sec-time">⏱ 20 min</span>
+  </div>
+
+  <p>You do not need to be a security expert. You need to <strong>recognise these threats and not write vulnerable code</strong>. The five most relevant threats for a web application developer:</p>
+
+  <div class="card-grid cols2">
+    <div class="concept-card hl-red">
+      <div class="card-icon">💉</div>
+      <div class="card-title">SQL Injection</div>
+      <div class="card-body">Attacker puts SQL code inside an input field to manipulate the database. Example: typing <code>admin' OR '1'='1</code> as a username can bypass login entirely.</div>
+    </div>
+    <div class="concept-card hl-red">
+      <div class="card-icon">🔑</div>
+      <div class="card-title">Broken Authentication</div>
+      <div class="card-body">Weak passwords, tokens that never expire, or plain-text passwords stored in the database. Our bcrypt hashing (Week 3) already addresses the last one.</div>
+    </div>
+    <div class="concept-card hl-amber">
+      <div class="card-icon">👁️</div>
+      <div class="card-title">Sensitive Data Exposure</div>
+      <div class="card-body">API keys or passwords committed to GitHub. Database credentials hardcoded in docker-compose.yml. Passwords printed to server logs.</div>
+    </div>
+    <div class="concept-card hl-amber">
+      <div class="card-icon">🚪</div>
+      <div class="card-title">Broken Access Control</div>
+      <div class="card-body">Customer A can view Customer B's orders by guessing the order ID. Authenticated users reach admin endpoints that should be blocked. Fixed by RBAC (Lab 8.2).</div>
+    </div>
+    <div class="concept-card hl-amber">
+      <div class="card-icon">⚙️</div>
+      <div class="card-title">Security Misconfiguration</div>
+      <div class="card-body">MySQL port 3306 open to the whole internet. Default passwords never changed. Admin panel with no authentication at <code>/admin</code>.</div>
+    </div>
+  </div>
+
+  <div class="sec-header" style="margin-top:1.5rem;">
+    <span class="sec-pill green">Fix</span>
+    <span class="sec-title">SQL Injection Prevention — The Parameterised Query</span>
+  </div>
+
+  <p>The rule is simple: <strong>never build SQL strings by joining user input with text</strong>. Always use a <code>?</code> placeholder:</p>
+
+  <div class="compare-split">
+    <div class="compare-col bad">
+      <div class="compare-col-label">❌ Vulnerable — never do this</div>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">JavaScript</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre>// DANGER: user input goes directly into the query string
+const query = "SELECT * FROM users WHERE email = '" + email + "'";
+db.query(query, callback);</pre>
+      </div>
+      <p style="font-size:.78rem;color:var(--muted);margin-top:.4rem;">If email is <code>x' OR '1'='1</code>, this returns ALL users.</p>
+    </div>
+    <div class="compare-col good">
+      <div class="compare-col-label">✅ Safe — parameterised query</div>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">JavaScript</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre>// SAFE: the ? is a placeholder — input is treated as DATA
+db.query(
+  'SELECT * FROM users WHERE email = ?',
+  [email],   // ← passed separately, never concatenated
+  callback
+);</pre>
+      </div>
+      <p style="font-size:.78rem;color:var(--muted);margin-top:.4rem;">The <code>mysql2</code> library handles escaping automatically.</p>
+    </div>
+  </div>
+
+  <div class="why-box">
+    <strong>Why?</strong> When you use <code>?</code>, the database driver escapes the input so it can never be interpreted as SQL code — it is treated as a raw string value. You already do this in your CloudEats code. Do not change to string concatenation for any reason.
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- 1.3 Network Security -->
+  <div class="sec-header">
+    <span class="sec-pill blue">1.3</span>
+    <span class="sec-title">Network Security in the Cloud</span>
+    <span class="sec-time">⏱ 15 min</span>
+  </div>
+
+  <p>You already know VPCs, subnets, and security groups from Week 2. Here is how they apply to security specifically:</p>
+
+  <table class="data-table">
+    <thead><tr><th>Port</th><th>Service</th><th>Safe rule</th><th>Common mistake</th></tr></thead>
+    <tbody>
+      <tr><td><code>22</code></td><td>SSH</td><td>Allow only your IP address</td><td>Open to <code>0.0.0.0/0</code> (the whole internet)</td></tr>
+      <tr><td><code>3306</code></td><td>MySQL</td><td>Allow only the app server, inside Docker network</td><td>Port mapped to host and open to internet</td></tr>
+      <tr><td><code>27017</code></td><td>MongoDB</td><td>Same as MySQL — no external access</td><td>Default config binds to all interfaces</td></tr>
+      <tr><td><code>8000</code></td><td>API Gateway</td><td>Public — the only public entry point</td><td>Exposing every service port individually</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout green">
+    <span class="callout-icon">🐳</span>
+    <div><strong>Proxmox/Docker equivalent:</strong> In our stack, MySQL and MongoDB have <em>no</em> <code>-p</code> port mapping in docker-compose.yml — they cannot be reached from outside the Docker network. Only the API Gateway is exposed on port 8000. This mirrors the real-world pattern: load balancer in the public subnet, databases in private subnets with no internet route.</div>
+  </div>
+
+  <div class="level-block advanced">
+    <div class="level-block-label">🚀 Advanced — VPN context</div>
+    A VPN (Virtual Private Network) encrypts traffic between two networks. Cloud use cases: <em>site-to-site VPN</em> connects an office network to a cloud VPC; <em>client VPN</em> lets remote employees access private cloud resources (like the database subnet) without exposing ports to the internet. We do not implement VPN in this course — the concept is sufficient for the final exam and interview questions.
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- 1.4 Encryption -->
+  <div class="sec-header">
+    <span class="sec-pill purple">1.4</span>
+    <span class="sec-title">Encryption at Rest and in Transit</span>
+    <span class="sec-time">⏱ 5 min</span>
+  </div>
+
+  <div class="card-grid cols2">
+    <div class="concept-card hl-purple">
+      <div class="card-icon">💾</div>
+      <div class="card-title">Encryption at Rest</div>
+      <div class="card-body">Data stored on disk is encrypted. Even if someone physically steals the hard drive, they cannot read the data without the key. Managed cloud databases (AWS RDS, Azure Database) enable this with one checkbox — no code required from you.</div>
+    </div>
+    <div class="concept-card hl-blue">
+      <div class="card-icon">🔐</div>
+      <div class="card-title">Encryption in Transit (TLS/HTTPS)</div>
+      <div class="card-body">Data moving between the browser and server is encrypted. Without HTTPS, JWT tokens and passwords travel in plain text — anyone on the same Wi-Fi can intercept them. In production, the API Gateway terminates HTTPS. Internal service-to-service traffic can remain HTTP.</div>
+    </div>
+  </div>
+
+  <div class="analogy-box" style="margin-top:.85rem;">
+    <div class="analogy-label">📬 Analogy</div>
+    <strong>Encryption at rest</strong> = locking documents in a safe. <strong>Encryption in transit</strong> = sending them in a sealed, tamper-evident envelope rather than on a postcard.
+  </div>
+
+</div><!-- /tab-h1 -->
+
+<!-- ══════════════════════════════════════
+     HOUR 2 — IDENTITY & ACCESS MANAGEMENT
+     ══════════════════════════════════════ -->
+<div id="tab-h2" class="tab-panel">
+
+  <!-- 2.1 AuthN vs AuthZ -->
+  <div class="sec-header">
+    <span class="sec-pill red">2.1</span>
+    <span class="sec-title">Authentication vs Authorisation</span>
+    <span class="sec-time">⏱ 10 min</span>
+  </div>
+
+  <div class="analogy-box">
+    <div class="analogy-label">🏨 Hotel analogy</div>
+    <strong>Authentication</strong> is showing your passport at check-in — proving who you are. <strong>Authorisation</strong> is the key card that only opens your room — even though you are authenticated as a guest, you cannot open every door in the hotel.
+  </div>
+
+  <div class="card-grid cols2" style="margin-top:.85rem;">
+    <div class="concept-card hl-red">
+      <div class="card-icon">🪪</div>
+      <div class="card-title">Authentication (AuthN) — "Who are you?"</div>
+      <div class="card-body">Verify the user is who they claim to be. Method: username + password, biometric, OTP. Result: a confirmed identity — "this is user ID 5, email ali@example.com".</div>
+    </div>
+    <div class="concept-card hl-purple">
+      <div class="card-icon">🛡️</div>
+      <div class="card-title">Authorisation (AuthZ) — "What can you do?"</div>
+      <div class="card-body">Given a confirmed identity, decide what they may access. Method: RBAC, permission lists. Result: access granted or denied — "Ali can view his own orders but not the admin dashboard".</div>
+    </div>
+  </div>
+
+  <div class="callout red">
+    <span class="callout-icon">⚠️</span>
+    <div><strong>Both are required.</strong> Authentication without authorisation means any logged-in user can do anything. Authorisation without authentication means anyone can claim any identity. This week we implement both: Lab 8.1 adds authentication (JWT), Lab 8.2 adds authorisation (RBAC).</div>
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- 2.2 JWT -->
+  <div class="sec-header">
+    <span class="sec-pill blue">2.2</span>
+    <span class="sec-title">JSON Web Tokens (JWT)</span>
+    <span class="sec-time">⏱ 30 min</span>
+  </div>
+
+  <div class="level-block beginner">
+    <div class="level-block-label">🌱 Beginner — plain English first</div>
+    A JWT is like a <strong>signed wristband at a concert</strong>. The venue stamps it when you enter (login). Every time you want a beer or access a VIP area, staff check the stamp — they do not radio back to the ticket office each time. The stamp itself proves you were authorised.
+  </div>
+
+  <p>Before JWT, the common approach was <strong>server-side sessions</strong>:</p>
+
+  <div class="compare-split">
+    <div class="compare-col bad">
+      <div class="compare-col-label">🗄️ Session-based (older approach)</div>
+      <ul style="font-size:.8rem;line-height:1.7;color:var(--muted);">
+        <li>User logs in → server stores a session record in a database</li>
+        <li>Server gives user a session cookie with a session ID</li>
+        <li>On every request, server queries the database to look up the session</li>
+        <li><strong>Problem:</strong> every request hits the database; hard to scale across multiple servers</li>
+      </ul>
+    </div>
+    <div class="compare-col good">
+      <div class="compare-col-label">🎫 JWT (stateless, modern)</div>
+      <ul style="font-size:.8rem;line-height:1.7;color:var(--muted);">
+        <li>User logs in → server creates a signed token containing user info</li>
+        <li>Server sends token to the client; client stores it</li>
+        <li>On every request, client sends the token; server <em>verifies the signature</em> — no database lookup</li>
+        <li><strong>Benefit:</strong> fast, stateless, any server can verify (scales horizontally)</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="font-size:.95rem;font-weight:700;margin:1.25rem 0 .6rem;">JWT Structure — Three Parts</h3>
+
+  <div class="jwt-visual">
+    <div class="jwt-part header">
+      <div class="jwt-label">Part 1 · Header</div>
+      <div class="jwt-value">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9</div>
+      <div style="margin-top:.5rem;font-size:.72rem;color:var(--muted);">Algorithm + token type (base64 encoded)</div>
+    </div>
+    <div class="jwt-dot">.</div>
+    <div class="jwt-part payload">
+      <div class="jwt-label">Part 2 · Payload</div>
+      <div class="jwt-value">eyJ1c2VySWQiOjEsImVtYWlsIjoidXNlckBleGFtcGxlLmNvbSIsInJvbGUiOiJjdXN0b21lciJ9</div>
+      <div style="margin-top:.5rem;font-size:.72rem;color:var(--muted);">User data: ID, email, role (base64 encoded)</div>
+    </div>
+    <div class="jwt-dot">.</div>
+    <div class="jwt-part signature">
+      <div class="jwt-label">Part 3 · Signature</div>
+      <div class="jwt-value">SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</div>
+      <div style="margin-top:.5rem;font-size:.72rem;color:var(--muted);">HMAC-SHA256 of header+payload signed with JWT_SECRET</div>
+    </div>
+  </div>
+
+  <div class="callout amber">
+    <span class="callout-icon">⚠️</span>
+    <div><strong>JWT is NOT encrypted — it is signed.</strong> Anyone can decode the payload and read the user ID and email. Never put passwords, credit card numbers, or secrets inside a JWT. The signature only proves it has not been tampered with.</div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">JavaScript — decoded JWT payload</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+    <pre>{
+  "userId": 1,
+  "email": "ali@example.com",
+  "role": "customer",
+  "iat": 1750000000,   // issued at (Unix timestamp)
+  "exp": 1750086400    // expires at (24 hours later)
+}</pre>
+  </div>
+
+  <h3 style="font-size:.95rem;font-weight:700;margin:1.25rem 0 .6rem;">The Full JWT Authentication Flow</h3>
+
+  <div class="flow-steps">
+    <div class="flow-step">
+      <div class="flow-num">1</div>
+      <div class="flow-text"><strong>Login:</strong> User sends <code>POST /api/auth/login</code> with email + password.</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">2</div>
+      <div class="flow-text"><strong>Verify credentials:</strong> Server checks bcrypt hash. If valid, creates a JWT with <code>jwt.sign({ userId, email, role }, JWT_SECRET, { expiresIn: '24h' })</code>.</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">3</div>
+      <div class="flow-text"><strong>Token returned:</strong> Server responds with <code>{ token: "eyJ..." }</code>. Client stores it (usually in memory or localStorage).</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">4</div>
+      <div class="flow-text"><strong>Subsequent requests:</strong> Client includes the token in the <code>Authorization</code> header: <code>Bearer eyJ...</code></div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">5</div>
+      <div class="flow-text"><strong>Middleware verifies:</strong> <code>authenticateToken</code> middleware calls <code>jwt.verify(token, JWT_SECRET)</code>. If valid, it attaches <code>req.user = decoded</code> and passes on to the route handler.</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">6</div>
+      <div class="flow-text"><strong>Response:</strong> Route handler uses <code>req.user.userId</code> to serve only that user's data. Returns <span class="badge green">200</span> if valid, <span class="badge red">401</span> if missing/invalid, <span class="badge amber">403</span> if wrong role.</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">JavaScript — authenticateToken middleware</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+    <pre>function authenticateToken(req, res, next) {
+  // Extract token from: "Bearer eyJ..."
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'No token provided' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+    req.user = decoded;   // { userId, email, role, iat, exp }
+    next();               // pass control to the route handler
+  });
+}</pre>
+  </div>
+
+  <div class="callout red">
+    <span class="callout-icon">🔑</span>
+    <div><strong>JWT_SECRET must never be in your code or committed to Git.</strong> Store it in a <code>.env</code> file, add <code>.env</code> to <code>.gitignore</code>, and load it with <code>require('dotenv').config()</code>. If the secret leaks, anyone can forge valid tokens for any user.</div>
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- 2.3 RBAC -->
+  <div class="sec-header">
+    <span class="sec-pill purple">2.3</span>
+    <span class="sec-title">Role-Based Access Control (RBAC)</span>
+    <span class="sec-time">⏱ 15 min</span>
+  </div>
+
+  <p>RBAC is the answer to: <em>"A user is authenticated — but <strong>what are they allowed to do?</strong>"</em></p>
+
+  <p>The principle: <strong>grant the minimum access a user needs to do their job — nothing more</strong>. This is called the <em>principle of least privilege</em>.</p>
+
+  <div class="card-grid cols3">
+    <div class="concept-card">
+      <div class="card-icon">🛒</div>
+      <div class="card-title" style="color:var(--beginner);">Customer</div>
+      <div class="card-body">Browse menus, place orders, view own orders. Cannot see other customers' data. Cannot modify menus.</div>
+    </div>
+    <div class="concept-card">
+      <div class="card-icon">🍽️</div>
+      <div class="card-title" style="color:var(--average);">Restaurant Owner</div>
+      <div class="card-body">All customer permissions + add/edit menu items for their own restaurant + view restaurant-level analytics.</div>
+    </div>
+    <div class="concept-card">
+      <div class="card-icon">⚙️</div>
+      <div class="card-title" style="color:var(--advanced);">Admin</div>
+      <div class="card-body">All permissions + manage all users + view system-wide stats + access admin endpoints.</div>
+    </div>
+  </div>
+
+  <p style="margin-top:.85rem;">RBAC is implemented in two steps: the <strong>role is stored in the JWT payload</strong> (so the server knows who you are), and a <strong><code>requireRole()</code> middleware checks it</strong> before allowing access to protected routes:</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">JavaScript — requireRole middleware</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+    <pre>// Factory function — returns a middleware configured for the required role(s)
+function requireRole(...roles) {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        error: `Access denied — requires role: ${roles.join(' or ')}`
+      });
+    }
+    next();
+  };
+}
+
+// Usage on routes:
+app.get('/api/admin/users',
+  authenticateToken,          // step 1: must have valid JWT
+  requireRole('admin'),       // step 2: must be admin
+  (req, res) => { /* ... */ }
+);
+
+app.post('/api/menu',
+  authenticateToken,
+  requireRole('admin', 'owner'), // either role is fine
+  (req, res) => { /* ... */ }
+);</pre>
+  </div>
+
+  <table class="data-table" style="margin-top:.85rem;">
+    <thead><tr><th>HTTP Code</th><th>Meaning</th><th>When we use it</th><th>What client should do</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="badge green">200</span></td>
+        <td>OK</td>
+        <td>Valid token, correct role, data returned</td>
+        <td>Show the data</td>
+      </tr>
+      <tr>
+        <td><span class="badge red">401 Unauthorized</span></td>
+        <td>Not authenticated</td>
+        <td>Missing token, expired token, invalid signature</td>
+        <td>Redirect to login page</td>
+      </tr>
+      <tr>
+        <td><span class="badge amber">403 Forbidden</span></td>
+        <td>Not authorised</td>
+        <td>Valid token but wrong role (customer trying admin route)</td>
+        <td>Show "Access Denied" — do NOT redirect to login</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="why-box">
+    <strong>401 vs 403 — why does the distinction matter?</strong> A 401 tells the client "we don't know who you are — log in". A 403 tells the client "we know exactly who you are, and you are not allowed". Treating them the same leads to a confusing UX and leaks information about what routes exist.
+  </div>
+
+  <div class="level-block average">
+    <div class="level-block-label">⚡ Average — checkpoint question</div>
+    A restaurant owner's JWT contains <code>"role": "owner"</code>. They try to access <code>GET /api/admin/users</code> which requires <code>requireRole('admin')</code>. What HTTP status code is returned, and why? (Answer: 403 — they are authenticated but not in the admin role.)
+  </div>
+
+  <div class="level-block advanced">
+    <div class="level-block-label">🚀 Advanced — real-world extension</div>
+    The <code>requireRole()</code> pattern above checks role names exactly. Production systems often use <em>permission-based</em> RBAC instead: a role maps to a set of permissions (<code>"orders:read"</code>, <code>"menus:write"</code>), and middleware checks individual permissions rather than role names. This makes it easier to add new roles without rewriting middleware. See AWS IAM policies for a real example.
+  </div>
+
+</div><!-- /tab-h2 -->
+
+<!-- ══════════════════════════════════════
+     HOURS 3–4 — LABS
+     ══════════════════════════════════════ -->
+<div id="tab-labs" class="tab-panel">
+
+  <div class="sec-header">
+    <span class="sec-pill red">Labs</span>
+    <span class="sec-title">Hours 3–4: Hands-on Security Implementation</span>
+    <span class="sec-time">⏱ 60 + 60 min</span>
+  </div>
+
+  <div class="callout blue">
+    <span class="callout-icon">ℹ️</span>
+    <div><strong>Prerequisite state:</strong> Your CloudEats stack is running via <code>docker compose up -d</code>. You have a GitHub repository with your code from Week 7. The users table exists in MySQL with email and password_hash columns.</div>
+  </div>
+
+  <div class="pace-guide-grid">
+    <div class="pace-guide-card pgc-b">
+      <div class="pgc-label">🌱 Beginner — target</div>
+      <strong>Lab 8.1:</strong> Complete Parts 1–3. .env created, JWT returned on login, <code>authenticateToken</code> middleware protecting at least one route.<br><br>
+      <strong>Lab 8.2:</strong> Complete Parts 1–2. Role column added, role included in JWT payload.<br><br>
+      Key question you can answer: "What does a 401 response mean?"
+    </div>
+    <div class="pace-guide-card pgc-a">
+      <div class="pgc-label">⚡ Average — target</div>
+      <strong>Lab 8.1:</strong> Full lab. All protected routes return 401 without a token and 200 with a valid one. Can explain why JWT_SECRET must be in .env.<br><br>
+      <strong>Lab 8.2:</strong> Full lab. Customer token returns 403 on admin routes. Admin token returns 200.<br><br>
+      Key question: "What is the difference between 401 and 403?"
+    </div>
+    <div class="pace-guide-card pgc-adv">
+      <div class="pgc-label">🚀 Advanced — target</div>
+      Both labs complete + challenge extensions. Token expiry tested (set <code>expiresIn: '1m'</code> to demo). Can explain why JWT is preferred over sessions in a microservices architecture.<br><br>
+      Key question: "How would you implement token refresh?"
+    </div>
+  </div>
+
+  <div class="card-grid cols2" style="margin-top:1.25rem;">
+    <div class="concept-card hl-red">
+      <div class="card-icon">🔐</div>
+      <div class="card-title">Lab 8.1 — JWT Authentication</div>
+      <div class="card-body" style="margin-bottom:1rem;">
+        Move credentials to <code>.env</code>, implement <code>jwt.sign()</code> on login, build <code>authenticateToken</code> middleware, apply it to cart and order routes, verify with curl.
+      </div>
+      <strong>Key checkpoint:</strong> <code>curl</code> with no token → <span class="badge red">401</span>. With valid token → <span class="badge green">200</span>.
+    </div>
+    <div class="concept-card hl-purple">
+      <div class="card-icon">👥</div>
+      <div class="card-title">Lab 8.2 — Role-Based Access Control</div>
+      <div class="card-body" style="margin-bottom:1rem;">
+        Add <code>role</code> column to users table, include role in JWT payload, build <code>requireRole()</code> middleware, create admin-only routes, create admin user directly in MySQL.
+      </div>
+      <strong>Key checkpoint:</strong> Customer token → <span class="badge amber">403</span> on admin routes. Admin token → <span class="badge green">200</span>.
+    </div>
+  </div>
+
+  <h3 style="font-size:.9rem;font-weight:700;margin:1.5rem 0 .75rem;">Common Issues &amp; Fixes</h3>
+  <table class="data-table">
+    <thead><tr><th>Error message</th><th>Likely cause</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>invalid signature</code></td>
+        <td><code>JWT_SECRET</code> in .env was changed after the token was signed</td>
+        <td>Log out and log in again to get a fresh token</td>
+      </tr>
+      <tr>
+        <td><code>jwt must be provided</code></td>
+        <td>Authorization header missing <code>Bearer </code> prefix</td>
+        <td>Header must be <code>Authorization: Bearer eyJ...</code> (note the space)</td>
+      </tr>
+      <tr>
+        <td><code>role is not defined</code></td>
+        <td>Role was not included in <code>jwt.sign()</code> payload</td>
+        <td>Confirm payload is <code>{ userId, email, role }</code> not just <code>{ userId, email }</code></td>
+      </tr>
+      <tr>
+        <td><code>process.env.JWT_SECRET is undefined</code></td>
+        <td><code>require('dotenv').config()</code> not at the top of server.js</td>
+        <td>Move <code>require('dotenv').config()</code> to the very first line, before any other requires</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="lab-link-row">
+    <a href="week08_lab1_jwt_authentication.html" class="lab-link primary">🔐 Open Lab 8.1 — JWT Authentication →</a>
+    <a href="week08_lab2_rbac_access_control.html" class="lab-link secondary">👥 Open Lab 8.2 — RBAC Access Control →</a>
+  </div>
+
+</div><!-- /tab-labs -->
+
+<!-- ══════════════════════════════════════
+     SUMMARY & EXAM TIPS
+     ══════════════════════════════════════ -->
+<div id="tab-summary" class="tab-panel">
+
+  <div class="sec-header">
+    <span class="sec-pill green">Summary</span>
+    <span class="sec-title">Week 8 at a Glance</span>
+  </div>
+
+  <table class="data-table">
+    <thead><tr><th>Topic</th><th>Key takeaway</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Shared responsibility</strong></td><td>Provider secures hardware and hypervisor; you secure code, data, credentials, and access rules</td></tr>
+      <tr><td><strong>SQL injection</strong></td><td>Use parameterised queries (<code>?</code>) — never string concatenation</td></tr>
+      <tr><td><strong>AuthN vs AuthZ</strong></td><td>AuthN = who are you (JWT); AuthZ = what can you do (RBAC)</td></tr>
+      <tr><td><strong>JWT structure</strong></td><td>Header.Payload.Signature — signed but not encrypted; payload is readable by anyone</td></tr>
+      <tr><td><strong>JWT flow</strong></td><td>Login → sign token → client sends on every request → middleware verifies → allow or deny</td></tr>
+      <tr><td><strong>JWT_SECRET</strong></td><td>Must live in <code>.env</code>, never in code or Git. If leaked, anyone can forge tokens.</td></tr>
+      <tr><td><strong>RBAC</strong></td><td>Users have roles; middleware checks role before allowing route access</td></tr>
+      <tr><td><strong>Least privilege</strong></td><td>Grant minimum access needed — a customer has no reason to see admin data</td></tr>
+      <tr><td><strong>401 vs 403</strong></td><td>401 = not authenticated (log in); 403 = authenticated but not authorised (wrong role)</td></tr>
+      <tr><td><strong>Encryption at rest/transit</strong></td><td>Managed DB enables at-rest by default; HTTPS handles in-transit at the gateway</td></tr>
+    </tbody>
+  </table>
+
+  <hr class="section-divider">
+
+  <div class="sec-header">
+    <span class="sec-pill amber">Exam</span>
+    <span class="sec-title">Final Exam Likely Questions</span>
+  </div>
+
+  <div class="card-grid cols2">
+    <div class="concept-card hl-amber">
+      <div class="card-title">Draw the JWT flow</div>
+      <div class="card-body">Draw a diagram: user → login → server signs token → client stores → client sends header → middleware verifies → route handler → response. Label the 401 and 403 branches.</div>
+    </div>
+    <div class="concept-card hl-amber">
+      <div class="card-title">Explain 401 vs 403</div>
+      <div class="card-body">Given a status code scenario, state what the client should do next: redirect to login (401) or show "access denied" (403).</div>
+    </div>
+    <div class="concept-card hl-amber">
+      <div class="card-title">Shared responsibility — IaaS example</div>
+      <div class="card-body">Give one thing the provider is responsible for and one thing the customer is responsible for under IaaS. (Provider: physical hardware. Customer: OS patching, application code.)</div>
+    </div>
+    <div class="concept-card hl-amber">
+      <div class="card-title">Why JWT over sessions in microservices?</div>
+      <div class="card-body">JWT is stateless — any service can verify it using the shared secret without contacting a central session store. Sessions require shared database access across all services.</div>
+    </div>
+    <div class="concept-card hl-amber">
+      <div class="card-title">Why must JWT_SECRET not be in Git?</div>
+      <div class="card-body">If the secret is public, anyone can run <code>jwt.sign({ userId: 1, role: 'admin' }, knownSecret)</code> and forge an admin token for any user ID.</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+
+  <div class="sec-header">
+    <span class="sec-pill purple">Connections</span>
+    <span class="sec-title">How Week 8 Links to Other Weeks</span>
+  </div>
+
+  <div class="card-grid cols2">
+    <div class="concept-card">
+      <div class="card-title">← Week 3: Databases</div>
+      <div class="card-body">The <code>users</code> table created in Lab 3.2 (with <code>password_hash</code>) gets a <code>role</code> column in Lab 8.2. bcrypt from Week 3 is still in use.</div>
+    </div>
+    <div class="concept-card">
+      <div class="card-title">← Week 5: Microservices</div>
+      <div class="card-body">The API Gateway introduced in Lab 5.2 is the ideal place to centralise JWT verification — services behind it can trust <code>req.user</code> without each verifying the token themselves.</div>
+    </div>
+    <div class="concept-card">
+      <div class="card-title">← Week 7: CI/CD</div>
+      <div class="card-body">SSH keys from Lab 7.2 use the same public/private key concept as JWT asymmetric signing (RS256). The <code>.env</code> pattern extends naturally to cloud secret managers in production.</div>
+    </div>
+    <div class="concept-card">
+      <div class="card-title">→ Week 9: Monitoring</div>
+      <div class="card-body">Failed auth attempts (401/403 responses) are security events — they should be logged and trigger alerts. Week 9 will wire Winston logging to capture these.</div>
+    </div>
+  </div>
+
+  <div class="callout green" style="margin-top:1.25rem;">
+    <span class="callout-icon">🚀</span>
+    <div><strong>GitHub Pages note:</strong> These notes are available on GitHub Pages. If you are following along online without classroom access — complete all prerequisite labs first, have your <code>docker compose up -d</code> stack running, and refer to the lab pages linked in the Labs tab for the full step-by-step instructions.</div>
+  </div>
+
+  <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.25rem;">
+    <a href="week07_CICD_and_Infrastructure_as_Code.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;background:rgba(255,183,64,.08);border:1px solid rgba(255,183,64,.25);color:var(--amber);padding:.4rem .9rem;border-radius:7px;text-decoration:none;">← Week 7: CI/CD</a>
+    <a href="week09_Monitoring_Logging_and_Optimization.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.25);color:var(--green);padding:.4rem .9rem;border-radius:7px;text-decoration:none;">Week 9: Monitoring →</a>
+  </div>
+
+</div><!-- /tab-summary -->
+
+</div><!-- /tab-content -->
+
+<script>
+function showTab(id){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{
+    const ids=['h1','h2','labs','summary'];
+    b.classList.toggle('active', ids[i]===id);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+}
+function setPace(pace){
+  document.body.className='pace-'+pace;
+  document.querySelectorAll('.pace-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`[data-pace="${pace}"]`).classList.add('active');
+}
+function copyCode(btn,event){
+  if(event)event.stopPropagation();
+  const pre=btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    btn.textContent='Copied!';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2000);
+  });
+}
+document.addEventListener('DOMContentLoaded',()=>setPace('beginner'));
+</script>
+</body>
+</html>

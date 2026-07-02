@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 6.1 · Git Version Control · CloudEats Academy</title>
+<meta name="description" content="Push CloudEats to GitHub, create a feature branch, write clean commits, open a pull request, and resolve a real merge conflict — hands-on Git for diploma students.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Lab 6.1 · Git Version Control · CloudEats Academy">
+<meta property="og:description" content="Hands-on Git: feature branches, pull requests, merge conflicts — the professional workflow used in every real software team.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090f;--bg2:#0d1117;--bg3:#141b27;
+  --surface:#1a2235;--surface2:#1f2c42;--border:#2a3d5a;
+  --accent:#00c8ff;--green:#00e5a0;--amber:#ffb740;
+  --red:#ff5e7a;--purple:#b46ef5;
+  --text:#e8edf5;--muted:#6b7fa0;
+  --beginner:#00e5a0;--average:#00c8ff;--advanced:#b46ef5;
+  --lab-color:#ffb740;--radius:10px;--code-bg:#0b1120;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;}
+
+/* ── Header ── */
+.site-header{background:linear-gradient(135deg,#050d1c,#091628);border-bottom:1px solid var(--border);padding:0 1.5rem;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;gap:1rem;}
+.lab-badge{background:var(--lab-color);color:#000;font-size:.62rem;font-weight:700;letter-spacing:.1em;padding:.2rem .55rem;border-radius:4px;text-transform:uppercase;}
+.header-title{font-size:.88rem;font-weight:600;}
+.ghp-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.67rem;font-weight:700;padding:.18rem .55rem;background:rgba(255,183,64,.08);border:1px solid rgba(255,183,64,.25);color:var(--amber);border-radius:20px;}
+.pace-switcher{display:flex;gap:.3rem;background:var(--bg3);padding:.22rem;border-radius:8px;border:1px solid var(--border);}
+.pace-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.25rem .65rem;border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--muted);transition:all .18s;}
+.pace-btn.active[data-pace="beginner"]{background:rgba(0,229,160,.18);color:var(--beginner);}
+.pace-btn.active[data-pace="average"]{background:rgba(0,200,255,.18);color:var(--average);}
+.pace-btn.active[data-pace="advanced"]{background:rgba(180,110,245,.18);color:var(--advanced);}
+
+/* ── Hero ── */
+.lab-hero{background:linear-gradient(160deg,#060f20,#07111e);border-bottom:1px solid var(--border);padding:2rem 1.5rem 1.75rem;position:relative;overflow:hidden;}
+.lab-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:350px;height:350px;background:radial-gradient(ellipse,rgba(255,183,64,.06),transparent 70%);pointer-events:none;}
+.hero-inner{max-width:1200px;margin:0 auto;}
+.hero-crumb{font-size:.7rem;color:var(--muted);margin-bottom:.4rem;}
+.hero-crumb a{color:var(--amber);text-decoration:none;}
+.lab-hero h1{font-size:clamp(1.25rem,2.5vw,1.75rem);font-weight:800;background:linear-gradient(135deg,#e8edf5 40%,var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.35rem;}
+.hero-sub{color:var(--muted);font-size:.84rem;margin-bottom:.85rem;}
+.hero-meta{display:flex;flex-wrap:wrap;gap:.55rem;}
+.meta-chip{display:flex;align-items:center;gap:.35rem;font-size:.74rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.22rem .6rem;color:var(--muted);}
+.meta-chip strong{color:var(--text);}
+.meta-chip.amber{background:rgba(255,183,64,.06);border-color:rgba(255,183,64,.2);color:var(--amber);}
+
+/* ── Pace guide ── */
+.pace-guide{max-width:1200px;margin:0 auto;padding:1rem 1.5rem 0;}
+.pace-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin-bottom:.5rem;}
+.pace-card{border-radius:8px;padding:.75rem;font-size:.78rem;line-height:1.5;}
+.pace-card.b{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);}
+.pace-card.a{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);}
+.pace-card.adv{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);}
+.pc-label{font-size:.65rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.3rem;}
+.b .pc-label{color:var(--beginner);}.a .pc-label{color:var(--average);}.adv .pc-label{color:var(--advanced);}
+.pc-scope{color:var(--muted);font-size:.76rem;}
+
+/* ── Layout ── */
+.page-body{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 200px);}
+
+/* ── Sidebar ── */
+.sidebar{position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;padding:1.25rem .85rem 2rem;border-right:1px solid var(--border);background:var(--bg2);}
+.sb-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.85rem;}
+.progress-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:.65rem;margin-bottom:1rem;}
+.prog-track{background:var(--bg2);border-radius:3px;height:5px;margin:.4rem 0;}
+.prog-fill{height:5px;border-radius:3px;background:linear-gradient(90deg,var(--amber),var(--purple));transition:width .35s;width:0%;}
+.prog-text{font-size:.69rem;color:var(--muted);}
+.prog-text span{color:var(--amber);font-weight:600;}
+.sb-nav{list-style:none;}
+.sb-nav li a{display:block;font-size:.73rem;padding:.32rem .6rem;border-radius:5px;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all .13s;margin-bottom:.08rem;}
+.sb-nav li a:hover{background:var(--surface);color:var(--text);}
+.sb-nav li a.active{background:rgba(255,183,64,.08);color:var(--amber);border-color:rgba(255,183,64,.18);}
+.sb-section{font-size:.61rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(107,127,160,.45);padding:.6rem .6rem .18rem;list-style:none;}
+
+/* ── Lab content ── */
+.lab-content{padding:1.75rem 1.75rem 4rem;min-width:0;}
+
+/* ── Part headers ── */
+.part-head{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;border-radius:8px;margin-bottom:1.1rem;}
+.ph-amber{background:rgba(255,183,64,.04);border:1px solid rgba(255,183,64,.22);border-left:4px solid var(--amber);}
+.ph-green{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.22);border-left:4px solid var(--green);}
+.ph-blue{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.22);border-left:4px solid var(--accent);}
+.ph-purple{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.22);border-left:4px solid var(--purple);}
+.ph-red{background:rgba(255,94,122,.04);border:1px solid rgba(255,94,122,.22);border-left:4px solid var(--red);}
+.part-pill{font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.16rem .5rem;border-radius:4px;white-space:nowrap;}
+.pp-amber{background:rgba(255,183,64,.15);color:var(--amber);}
+.pp-green{background:rgba(0,229,160,.15);color:var(--green);}
+.pp-blue{background:rgba(0,200,255,.15);color:var(--accent);}
+.pp-purple{background:rgba(180,110,245,.15);color:var(--purple);}
+.pp-red{background:rgba(255,94,122,.15);color:var(--red);}
+.part-title{font-size:.98rem;font-weight:700;}
+.part-time{font-size:.7rem;color:var(--muted);margin-left:auto;white-space:nowrap;}
+
+/* ── Steps (accordion) ── */
+.step{background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:.6rem;overflow:hidden;}
+.step-hd{display:flex;align-items:center;gap:.7rem;padding:.7rem .95rem;cursor:pointer;user-select:none;transition:background .13s;}
+.step-hd:hover{background:var(--surface2);}
+.step-num{width:27px;height:27px;border-radius:50%;border:2px solid rgba(255,183,64,.3);background:rgba(255,183,64,.07);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:var(--amber);flex-shrink:0;}
+.step-num.done{background:var(--amber);border-color:var(--amber);color:#000;}
+.step-label{font-size:.84rem;font-weight:600;flex:1;}
+.step-arrow{font-size:.75rem;color:var(--muted);transition:transform .18s;flex-shrink:0;}
+.step.open .step-arrow{transform:rotate(90deg);}
+.step-body{display:none;padding:.85rem .95rem 1rem;border-top:1px solid var(--border);}
+.step.open .step-body{display:block;}
+.step:not(.open) .step-hd::after{content:'click to expand';font-size:.6rem;color:var(--muted);opacity:.45;margin-left:auto;padding-right:.25rem;letter-spacing:.04em;pointer-events:none;}
+.step.open .step-hd::after{content:'';}
+
+/* ── Code ── */
+code{font-family:'Fira Code',monospace;font-size:.83em;background:var(--code-bg);padding:.07rem .32rem;border-radius:3px;color:var(--green);}
+.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;margin:.65rem 0;overflow:hidden;}
+.code-hd{display:flex;align-items:center;justify-content:space-between;padding:.4rem .85rem;background:rgba(0,0,0,.3);border-bottom:1px solid var(--border);}
+.code-lang{font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.copy-btn{font-family:'Sora',sans-serif;font-size:.66rem;font-weight:600;padding:.16rem .5rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;transition:all .13s;}
+.copy-btn:hover{background:var(--amber);color:#000;border-color:var(--amber);}
+.copy-btn.copied{background:var(--green);color:#000;}
+pre{font-family:'Fira Code',monospace;font-size:.77rem;line-height:1.65;padding:.85rem;overflow-x:auto;color:#c5d5ef;}
+.ck{color:var(--accent);}.cv{color:var(--green);}.cm{color:var(--muted);font-style:italic;}.cp{color:var(--purple);}.ca{color:var(--amber);}
+
+/* ── Expected output ── */
+.out-label{font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:.6rem 0 .28rem;}
+.exp-out{font-family:'Fira Code',monospace;font-size:.76rem;background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.15);border-radius:6px;padding:.6rem .85rem;color:#8ee8c4;line-height:1.6;margin-bottom:.5rem;white-space:pre;}
+
+/* ── Callouts ── */
+.callout{border-radius:8px;padding:.7rem .95rem;margin:.65rem 0;display:flex;gap:.55rem;align-items:flex-start;font-size:.81rem;line-height:1.55;}
+.callout.blue{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);color:#a0d8f0;}
+.callout.green{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);color:#8ee8c4;}
+.callout.amber{background:rgba(255,183,64,.06);border:1px solid rgba(255,183,64,.2);color:#d9c07a;}
+.callout.purple{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);color:#c5a8f5;}
+.callout.red{background:rgba(255,94,122,.05);border:1px solid rgba(255,94,122,.2);color:#f0a0b0;}
+
+/* ── Pace blocks ── */
+.pb{border-radius:7px;padding:.6rem .85rem;margin:.5rem 0;font-size:.8rem;line-height:1.55;}
+.pb.b{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.15);border-left:3px solid var(--beginner);}
+.pb.a{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.15);border-left:3px solid var(--average);}
+.pb.adv{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.15);border-left:3px solid var(--advanced);}
+.pb-label{font-size:.63rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.25rem;}
+.pb.b .pb-label{color:var(--beginner);}.pb.a .pb-label{color:var(--average);}.pb.adv .pb-label{color:var(--advanced);}
+
+/* ── Checkpoint ── */
+.checkpoint{background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.22);border-radius:8px;padding:.8rem .95rem;margin:1.1rem 0;display:flex;gap:.7rem;align-items:flex-start;font-size:.81rem;color:#8ee8c4;line-height:1.5;}
+
+/* ── Trouble accordion ── */
+.trouble{background:rgba(255,94,122,.03);border:1px solid rgba(255,94,122,.15);border-radius:7px;margin:.6rem 0;overflow:hidden;}
+.trouble-hd{display:flex;align-items:center;gap:.5rem;padding:.55rem .8rem;font-size:.79rem;font-weight:600;color:var(--red);cursor:pointer;user-select:none;}
+.trouble-arrow{font-size:.7rem;color:var(--muted);margin-left:auto;transition:transform .18s;}
+.trouble.open .trouble-arrow{transform:rotate(90deg);}
+.trouble-body{display:none;padding:0 .8rem .7rem;font-size:.78rem;color:var(--muted);line-height:1.55;}
+.trouble.open .trouble-body{display:block;}
+
+/* ── Why box ── */
+.why-box{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.2);border-left:3px solid var(--accent);border-radius:6px;padding:.65rem .9rem;margin:.6rem 0;font-size:.8rem;color:#a0d8f0;}
+.why-box strong{color:var(--accent);}
+
+/* ── Advanced only block ── */
+.adv-only{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.2);border-radius:8px;padding:.9rem;margin:.65rem 0;}
+.adv-only-label{font-size:.63rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--purple);margin-bottom:.45rem;}
+
+/* ── GitHub Pages special block ── */
+.ghp-section{background:linear-gradient(135deg,rgba(255,183,64,.04),rgba(180,110,245,.04));border:1px solid rgba(255,183,64,.22);border-radius:10px;padding:1.25rem;margin:1.5rem 0;}
+.ghp-section-title{font-size:.9rem;font-weight:700;margin-bottom:.65rem;display:flex;align-items:center;gap:.5rem;}
+.ghp-steps{counter-reset:ghp;list-style:none;}
+.ghp-steps li{counter-increment:ghp;display:flex;gap:.75rem;align-items:flex-start;font-size:.81rem;color:var(--muted);padding:.4rem 0;border-bottom:1px solid rgba(42,61,90,.25);}
+.ghp-steps li:last-child{border-bottom:none;}
+.ghp-steps li::before{content:counter(ghp);width:22px;height:22px;border-radius:50%;background:rgba(255,183,64,.12);color:var(--amber);font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* ── Summary table ── */
+.summary-table{width:100%;border-collapse:collapse;font-size:.81rem;margin:.85rem 0;}
+.summary-table th{padding:.45rem .75rem;background:var(--bg3);color:var(--muted);font-size:.67rem;letter-spacing:.07em;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border);}
+.summary-table td{padding:.45rem .75rem;border-bottom:1px solid rgba(42,61,90,.3);vertical-align:top;}
+.summary-table tr:last-child td{border-bottom:none;}
+.summary-table tr:hover td{background:rgba(255,255,255,.02);}
+
+/* ── Expand/collapse bar ── */
+.ctrl-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;padding:.4rem 0;}
+.ctrl-bar-info{font-size:.73rem;color:var(--muted);}
+.ctrl-bar-info strong{color:var(--text);}
+.ctrl-btns{display:flex;gap:.5rem;}
+.ctrl-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.22rem .7rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all .15s;}
+.ctrl-btn:hover{color:var(--amber);border-color:var(--amber);}
+
+a{color:var(--accent);}a:hover{text-decoration:underline;}
+strong{color:var(--text);font-weight:600;}
+p{margin-bottom:.65rem;font-size:.84rem;line-height:1.68;}
+p:last-child{margin-bottom:0;}
+section{margin-bottom:2.25rem;}
+.section-divider{border:none;border-top:1px solid var(--border);margin:1.75rem 0;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+@media(max-width:860px){
+  .page-body{grid-template-columns:1fr;}
+  .sidebar{display:none;}
+  .pace-cards{grid-template-columns:1fr;}
+  .header-title{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="header-inner">
+    <div style="display:flex;align-items:center;gap:.65rem">
+      <span class="lab-badge">Lab 6.1</span>
+      <span class="header-title">Git Version Control &middot; CloudEats</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:.85rem">
+      <div class="pace-switcher">
+        <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner',this)">&#127807; Beginner</button>
+        <button class="pace-btn" data-pace="average" onclick="setPace('average',this)">&#9889; Average</button>
+        <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced',this)">&#128640; Advanced</button>
+      </div>
+      <span class="ghp-badge">&#127758; GitHub Pages Ready</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<div class="lab-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb"><a href="../week06/index.html">&larr; Week 6 Lecture</a> &rsaquo; Lab 6.1</div>
+    <h1>Git Version Control &mdash; Feature Branch Workflow</h1>
+    <p class="hero-sub">Push the CloudEats repo to GitHub, build a ratings feature on a branch, merge it back to main via a Pull Request, and survive your first merge conflict.</p>
+    <div class="hero-meta">
+      <div class="meta-chip">&#9200; <strong>60 min</strong></div>
+      <div class="meta-chip">&#128279; <strong>Prereq:</strong>&nbsp;Lab 5.1 complete &middot; GitHub account ready</div>
+      <div class="meta-chip">&#128336; <strong>Git</strong>&nbsp;+ GitHub</div>
+      <div class="meta-chip">&#128300; <strong>Next:</strong>&nbsp;Lab 6.2 Automated Testing</div>
+      <div class="meta-chip amber">&#128640; <strong>Advanced bonus:</strong>&nbsp;GitHub Pages deploy</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PACE GUIDE ── -->
+<div class="pace-guide">
+  <div class="pace-cards">
+    <div class="pace-card b">
+      <div class="pc-label">&#127807; Beginner &mdash; Parts 0&ndash;4</div>
+      <div class="pc-scope">Every command is shown in full with expected output. All steps auto-expand. Troubleshoot boxes appear exactly where errors happen. Complete <strong>all five parts</strong> at your own pace. Allow 75 min.</div>
+    </div>
+    <div class="pace-card a">
+      <div class="pc-label">&#9889; Average &mdash; Parts 0&ndash;5</div>
+      <div class="pc-scope">Steps are collapsed by default. Why-boxes explain each architectural decision. You verify your own output. Complete the <strong>merge conflict challenge</strong> in Part 5. Allow 65 min.</div>
+    </div>
+    <div class="pace-card adv">
+      <div class="pc-label">&#128640; Advanced &mdash; Parts 0&ndash;6</div>
+      <div class="pc-scope">Collapse-all default. Branch protection rule challenge. Deploy CloudEats README to <strong>GitHub Pages</strong> as a portfolio piece in Part 6. Allow 60 min (faster pace).</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── BODY ── -->
+<div class="page-body">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="progress-wrap">
+    <div class="sb-title" style="margin-bottom:.45rem">Lab Progress</div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+    <div class="prog-text">Part <span id="prog-cur">0</span> of <span id="prog-max">6</span></div>
+  </div>
+  <div class="sb-title">Contents</div>
+  <ul class="sb-nav">
+    <li class="sb-section">Setup</li>
+    <li><a href="#p0">Part 0 &middot; Prereq Check</a></li>
+    <li><a href="#p1">Part 1 &middot; Push to GitHub</a></li>
+    <li class="sb-section">Branch Workflow</li>
+    <li><a href="#p2">Part 2 &middot; Feature Branch</a></li>
+    <li><a href="#p3">Part 3 &middot; Commit &amp; Push</a></li>
+    <li><a href="#p4">Part 4 &middot; PR &amp; Merge</a></li>
+    <li class="sb-section">Conflicts</li>
+    <li><a href="#p5">Part 5 &middot; Merge Conflict</a></li>
+    <li class="sb-section">Advanced</li>
+    <li><a href="#p6">&#128640; Part 6 &middot; GitHub Pages</a></li>
+  </ul>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="lab-content">
+
+<!-- INTRO CALLOUT -->
+<div class="callout amber">
+  <span>&#127919;</span>
+  <div><strong>What you will build:</strong> By the end of this lab you will have the CloudEats codebase live on GitHub, a feature branch with a real commit history, a merged Pull Request, and first-hand experience resolving a merge conflict &mdash; the same workflow used at every software company.</div>
+</div>
+
+<!-- EXPAND/COLLAPSE BAR -->
+<div class="ctrl-bar">
+  <span class="ctrl-bar-info"><strong>18 steps</strong> across 6 parts</span>
+  <div class="ctrl-btns">
+    <button class="ctrl-btn" onclick="expandAll()">&#8595; Expand All</button>
+    <button class="ctrl-btn" onclick="collapseAll()">&#8593; Collapse All</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PART 0 — PREREQ CHECK
+     ═══════════════════════════════════════════ -->
+<section id="p0">
+  <div class="part-head ph-amber">
+    <span class="part-pill pp-amber">Part 0</span>
+    <span class="part-title">Prerequisite Check</span>
+    <span class="part-time">5 min</span>
+  </div>
+
+  <!-- Step 0.1 -->
+  <div class="step open" id="step-p0-1">
+    <div class="step-hd" onclick="toggleStep('step-p0-1')">
+      <span class="step-num">0.1</span>
+      <span class="step-label">Verify your starting point</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>Before touching Git, confirm you have the CloudEats codebase from Lab 5.1 and a GitHub account. Run the following checks one at a time.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># Where are you right now?</span>
+<span class="ca">pwd</span>
+<span class="cm"># Expected: something like /home/yourname or /Users/yourname</span>
+
+<span class="cm"># Navigate to the CloudEats project folder</span>
+<span class="ca">cd ~/cloudeats-app</span>
+
+<span class="cm"># Confirm the folder has the right files</span>
+<span class="ca">ls</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">docker-compose.yml  services/  README.md  package.json</div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># Check Git is installed</span>
+<span class="ca">git --version</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">git version 2.x.x</div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; Git not found?</div>
+        If you see "command not found", Git is not installed. On Ubuntu/Debian: <code>sudo apt install git -y</code>. On macOS: <code>xcode-select --install</code>. On Windows: download from <a href="https://git-scm.com/downloads" target="_blank" rel="noopener">git-scm.com/downloads</a>. Then restart your terminal.
+      </div>
+
+      <div class="trouble" onclick="toggleTrouble(this)">
+        <div class="trouble-hd">&#9888; "No such file or directory: ~/cloudeats-app" <span class="trouble-arrow">&#9654;</span></div>
+        <div class="trouble-body">Your Lab 5.1 folder might be named differently. Try <code>ls ~</code> to list your home directory and find the folder. Then use <code>cd ~/whatever-the-folder-is-named</code>. If you do not have the folder at all, download the starter files from the course index page before continuing.</div>
+      </div>
+    </div>
+  </div><!-- /step 0.1 -->
+
+  <!-- Step 0.2 -->
+  <div class="step open" id="step-p0-2">
+    <div class="step-hd" onclick="toggleStep('step-p0-2')">
+      <span class="step-num">0.2</span>
+      <span class="step-label">Configure Git with your identity</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>Git needs to know who you are before you can commit. This is a one-time setup per machine &mdash; it attaches your name and email to every commit you make.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal &mdash; replace with your real name and email</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">git config --global user.name "Your Full Name"</span>
+<span class="ca">git config --global user.email "your.email@example.com"</span>
+
+<span class="cm"># Verify it saved</span>
+<span class="ca">git config --list | grep user</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">user.name=Your Full Name
+user.email=your.email@example.com</div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; Why does Git need my name?</div>
+        Every commit is a snapshot with metadata attached: who made it, when, and why. When your teammates look at the project history (using <code>git log</code>), they see your name next to each commit. This is how teams trace "who added this line?" without asking around.
+      </div>
+      <div class="pb a">
+        <div class="pb-label">&#9889; Average &mdash; --global flag</div>
+        The <code>--global</code> flag writes to <code>~/.gitconfig</code> &mdash; it applies to every repository on this machine. Omit <code>--global</code> to set a name/email for one specific repo only (useful when you contribute to work and personal projects from the same machine with different identities).
+      </div>
+    </div>
+  </div><!-- /step 0.2 -->
+
+  <div class="checkpoint">&#9989; <div><strong>Part 0 complete.</strong> You are inside <code>~/cloudeats-app</code>, Git is installed, and your name and email are configured.</div></div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PART 1 — PUSH TO GITHUB
+     ═══════════════════════════════════════════ -->
+<section id="p1">
+  <div class="part-head ph-green">
+    <span class="part-pill pp-green">Part 1</span>
+    <span class="part-title">Initialise Git &amp; Push to GitHub</span>
+    <span class="part-time">10 min</span>
+  </div>
+
+  <!-- Step 1.1 -->
+  <div class="step open" id="step-p1-1">
+    <div class="step-hd" onclick="toggleStep('step-p1-1')">
+      <span class="step-num">1.1</span>
+      <span class="step-label">Initialise the repository and make the first commit</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>If <code>~/cloudeats-app</code> was not already tracked by Git (no <code>.git</code> folder), we initialise it now and record the current state as the first commit.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">cd ~/cloudeats-app</span>
+
+<span class="cm"># Check whether Git is already tracking this folder</span>
+<span class="ca">ls -la | grep \.git</span></pre>
+      </div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; What does this output mean?</div>
+        If you see <code>drwxr-xr-x ... .git</code>, Git is already tracking this folder &mdash; skip the <code>git init</code> line below and go straight to <code>git status</code>. If you see nothing, the folder is not yet tracked and you need <code>git init</code>.
+      </div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal &mdash; only run git init if .git does NOT exist</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># Initialise (creates hidden .git folder — only needed once)</span>
+<span class="ca">git init</span>
+
+<span class="cm"># Create .gitignore BEFORE your first commit</span>
+<span class="ca">cat &gt; .gitignore &lt;&lt; 'EOF'
+node_modules/
+.env
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+EOF</span>
+
+<span class="cm"># Check what Git can see</span>
+<span class="ca">git status</span></pre>
+      </div>
+      <div class="out-label">What you should see (abbreviated)</div>
+      <div class="exp-out">On branch main
+
+No commits yet
+
+Untracked files:
+  (use "git add &lt;file&gt;..." to include in what will be committed)
+    docker-compose.yml
+    services/
+    README.md
+    package.json
+
+nothing added to commit but untracked files present</div>
+
+      <div class="callout amber">
+        <span>&#128683;</span>
+        <div><strong>Critical:</strong> Always create <code>.gitignore</code> before your <em>very first</em> <code>git add</code>. Once <code>node_modules/</code> or <code>.env</code> is committed, it takes significant effort to remove it from history.</div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal &mdash; stage and commit everything</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># Stage all files (respects .gitignore automatically)</span>
+<span class="ca">git add .</span>
+
+<span class="cm"># Confirm what is staged</span>
+<span class="ca">git status</span>
+
+<span class="cm"># Make the first commit</span>
+<span class="ca">git commit -m "Initial commit: CloudEats microservices from Lab 5.1"</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">[main (root-commit) a3f82b1] Initial commit: CloudEats microservices from Lab 5.1
+ 14 files changed, 487 insertions(+)</div>
+
+      <div class="trouble" onclick="toggleTrouble(this)">
+        <div class="trouble-hd">&#9888; "error: could not commit — nothing to commit" <span class="trouble-arrow">&#9654;</span></div>
+        <div class="trouble-body">This means the folder was already a Git repo with everything committed. That is fine &mdash; move on to Step 1.2. Run <code>git log --oneline -3</code> to see existing commits.</div>
+      </div>
+      <div class="trouble" onclick="toggleTrouble(this)">
+        <div class="trouble-hd">&#9888; "fatal: not a git repository" after running git status <span class="trouble-arrow">&#9654;</span></div>
+        <div class="trouble-body">You are not inside the cloudeats-app folder. Run <code>pwd</code> to see where you are, then <code>cd ~/cloudeats-app</code> to get there. Run <code>git status</code> again.</div>
+      </div>
+    </div>
+  </div><!-- /step 1.1 -->
+
+  <!-- Step 1.2 -->
+  <div class="step open" id="step-p1-2">
+    <div class="step-hd" onclick="toggleStep('step-p1-2')">
+      <span class="step-num">1.2</span>
+      <span class="step-label">Create a GitHub repository and connect it</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>Now create an empty repository on GitHub and link your local folder to it. The local folder is called the <strong>local repo</strong>; the one on GitHub is called the <strong>remote repo</strong>.</p>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; How to create the repo on GitHub</div>
+        1. Go to <a href="https://github.com/new" target="_blank" rel="noopener">github.com/new</a><br>
+        2. Repository name: <code>cloudeats-app</code><br>
+        3. Set to <strong>Public</strong> (required for GitHub Pages)<br>
+        4. <strong>Do NOT tick</strong> "Add a README" or "Add .gitignore" &mdash; we already have them<br>
+        5. Click <strong>Create repository</strong><br>
+        6. Copy the HTTPS URL shown (looks like <code>https://github.com/YOUR-USERNAME/cloudeats-app.git</code>)
+      </div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal &mdash; replace YOUR-USERNAME with your GitHub username</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># Link local repo to GitHub remote (origin = the nickname for GitHub)</span>
+<span class="ca">git remote add origin https://github.com/YOUR-USERNAME/cloudeats-app.git</span>
+
+<span class="cm"># Rename default branch to 'main' (if it is still 'master')</span>
+<span class="ca">git branch -M main</span>
+
+<span class="cm"># Push commits to GitHub for the first time</span>
+<span class="cm"># -u sets 'origin main' as the default for future push/pull</span>
+<span class="ca">git push -u origin main</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">Enumerating objects: 14, done.
+Counting objects: 100% (14/14), done.
+Writing objects: 100% (14/14), 3.21 KiB | 3.21 MiB/s, done.
+To https://github.com/YOUR-USERNAME/cloudeats-app.git
+ * [new branch]      main -&gt; main
+Branch 'main' set up to track remote branch 'main' from 'origin'.</div>
+
+      <div class="pb a">
+        <div class="pb-label">&#9889; Average &mdash; What is 'origin'?</div>
+        <code>origin</code> is just a nickname (alias) for the remote URL. You could call it anything, but <code>origin</code> is the universal convention. <code>git remote -v</code> shows the full URL behind the alias. Having a nickname means you type <code>git push origin main</code> instead of the full HTTPS URL every time.
+      </div>
+
+      <div class="trouble" onclick="toggleTrouble(this)">
+        <div class="trouble-hd">&#9888; Prompted for username and password every time <span class="trouble-arrow">&#9654;</span></div>
+        <div class="trouble-body">GitHub no longer accepts your account password for Git over HTTPS. You need a <strong>Personal Access Token</strong>: Settings &rarr; Developer settings &rarr; Personal access tokens &rarr; Tokens (classic) &rarr; Generate new token. Select <code>repo</code> scope. Use this token as your password when prompted. Or switch to SSH: <a href="https://docs.github.com/en/authentication/connecting-to-github-with-ssh" target="_blank" rel="noopener">GitHub SSH docs &rarr;</a></div>
+      </div>
+      <div class="trouble" onclick="toggleTrouble(this)">
+        <div class="trouble-hd">&#9888; "remote origin already exists" <span class="trouble-arrow">&#9654;</span></div>
+        <div class="trouble-body">A remote called <code>origin</code> was already added. Check it with <code>git remote -v</code>. To change the URL: <code>git remote set-url origin https://github.com/YOUR-USERNAME/cloudeats-app.git</code></div>
+      </div>
+
+      <div class="why-box">
+        <strong>Why push to GitHub at all?</strong> A local Git repo protects you from your own mistakes (you can always revert). A remote on GitHub also protects you if your laptop is stolen, breaks, or gets coffee spilled on it. It also lets teammates clone and contribute, and it is where the CI pipeline in Lab 6.2 will watch for pushes.
+      </div>
+    </div>
+  </div><!-- /step 1.2 -->
+
+  <!-- Step 1.3 -->
+  <div class="step open" id="step-p1-3">
+    <div class="step-hd" onclick="toggleStep('step-p1-3')">
+      <span class="step-num">1.3</span>
+      <span class="step-label">Verify on GitHub</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>Open <code>https://github.com/YOUR-USERNAME/cloudeats-app</code> in your browser. You should see all your files listed. Click the <strong>commits</strong> link (e.g. "1 commit") to see the commit history.</p>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; What should I see?</div>
+        You should see a file listing that mirrors your local folder: <code>docker-compose.yml</code>, <code>services/</code>, <code>README.md</code>, <code>package.json</code>, <code>.gitignore</code>. If you do NOT see <code>node_modules/</code> in the file listing, that means <code>.gitignore</code> worked correctly.
+      </div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal &mdash; confirm remote is configured correctly</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">git remote -v</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">origin  https://github.com/YOUR-USERNAME/cloudeats-app.git (fetch)
+origin  https://github.com/YOUR-USERNAME/cloudeats-app.git (push)</div>
+    </div>
+  </div><!-- /step 1.3 -->
+
+  <div class="checkpoint">&#9989; <div><strong>Part 1 complete.</strong> CloudEats is on GitHub. You can share your repo URL with teammates and it will appear in your GitHub profile.</div></div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PART 2 — FEATURE BRANCH
+     ═══════════════════════════════════════════ -->
+<section id="p2">
+  <div class="part-head ph-blue">
+    <span class="part-pill pp-blue">Part 2</span>
+    <span class="part-title">Create a Feature Branch</span>
+    <span class="part-time">10 min</span>
+  </div>
+
+  <!-- Step 2.1 -->
+  <div class="step open" id="step-p2-1">
+    <div class="step-hd" onclick="toggleStep('step-p2-1')">
+      <span class="step-num">2.1</span>
+      <span class="step-label">Create and switch to feature/add-laksa-to-menu</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>You are going to add a laksa item to the CloudEats menu. Rather than editing <code>main</code> directly, you create a <strong>feature branch</strong> — an isolated space where your changes cannot affect anything else until you choose to merge.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">cd ~/cloudeats-app</span>
+<span class="ca">pwd</span>
+<span class="cm"># Confirm: ~/cloudeats-app</span>
+
+<span class="cm"># Make sure main is up to date before branching</span>
+<span class="ca">git checkout main</span>
+<span class="ca">git pull origin main</span>
+
+<span class="cm"># Create a new branch AND switch to it in one step</span>
+<span class="ca">git checkout -b feature/add-laksa-to-menu</span>
+
+<span class="cm"># Confirm which branch you are on</span>
+<span class="ca">git branch</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">* feature/add-laksa-to-menu
+  main</div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; What does the * mean?</div>
+        The asterisk (*) marks your <em>current</em> branch. Any commits you make now will be added to <code>feature/add-laksa-to-menu</code>. The <code>main</code> branch stays exactly as it was &mdash; no asterisk, no changes.
+      </div>
+      <div class="pb a">
+        <div class="pb-label">&#9889; Average &mdash; Why pull before branching?</div>
+        <code>git pull origin main</code> downloads any new commits your teammates pushed since your last sync. Branching from an outdated <code>main</code> means your feature branch will be missing those changes, which makes the eventual merge larger and messier. Always pull before branching.
+      </div>
+      <div class="pb adv">
+        <div class="pb-label">&#128640; Advanced &mdash; Branch naming conventions</div>
+        The <code>feature/</code> prefix is a Gitflow convention. Other common prefixes: <code>fix/</code> for bug fixes, <code>chore/</code> for maintenance tasks with no user-facing change, <code>hotfix/</code> for urgent production fixes. These prefixes appear in GitHub's PR view, making it instantly clear what a PR is doing before you read the description.
+      </div>
+
+      <div class="trouble" onclick="toggleTrouble(this)">
+        <div class="trouble-hd">&#9888; "error: pathspec 'feature/add-laksa-to-menu' did not match any file(s) known to git" <span class="trouble-arrow">&#9654;</span></div>
+        <div class="trouble-body">This happens when you use <code>git checkout</code> without <code>-b</code> and the branch does not exist yet. Use <code>git checkout -b feature/add-laksa-to-menu</code> (note the <code>-b</code> flag) to create and switch in one step.</div>
+      </div>
+    </div>
+  </div><!-- /step 2.1 -->
+
+  <!-- Step 2.2 -->
+  <div class="step open" id="step-p2-2">
+    <div class="step-hd" onclick="toggleStep('step-p2-2')">
+      <span class="step-num">2.2</span>
+      <span class="step-label">Add the laksa menu item to the seed data</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>Open <code>services/menu-service/seed.js</code> (or the equivalent seed/fixture file in your project). Add the laksa item to the menu array.</p>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; Open the file</div>
+        In your terminal: <code>nano services/menu-service/seed.js</code><br>
+        Or in VS Code: <code>code services/menu-service/seed.js</code><br>
+        Use the arrow keys to navigate to the end of the <code>menuItems</code> array (before the closing <code>]</code>).
+      </div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">services/menu-service/seed.js &mdash; add inside the menuItems array</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm">// Add a comma after the last existing item, then paste this:</span>
+{
+  <span class="cp">name</span>: <span class="cv">'Laksa'</span>,
+  <span class="cp">description</span>: <span class="cv">'Spicy coconut noodle soup with prawns and tofu puffs'</span>,
+  <span class="cp">price</span>: <span class="cv">9.50</span>,
+  <span class="cp">category</span>: <span class="cv">'Noodles'</span>,
+  <span class="cp">available</span>: <span class="ck">true</span>
+}</pre>
+      </div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; Save in nano</div>
+        After pasting: press <kbd>Ctrl+O</kbd> then <kbd>Enter</kbd> to write the file, then <kbd>Ctrl+X</kbd> to exit nano.
+      </div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal &mdash; verify the file was changed</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># See what changed since the last commit</span>
+<span class="ca">git diff services/menu-service/seed.js</span></pre>
+      </div>
+
+      <div class="pb a">
+        <div class="pb-label">&#9889; Average &mdash; Reading git diff output</div>
+        Lines starting with <code>+</code> (green) are additions. Lines starting with <code>-</code> (red) are removals. Lines with no prefix are unchanged context. Press <kbd>q</kbd> to exit the diff view.
+      </div>
+    </div>
+  </div><!-- /step 2.2 -->
+
+  <div class="checkpoint">&#9989; <div><strong>Part 2 complete.</strong> You are on <code>feature/add-laksa-to-menu</code> and have made a change to <code>seed.js</code>. <code>main</code> is untouched.</div></div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PART 3 — COMMIT & PUSH
+     ═══════════════════════════════════════════ -->
+<section id="p3">
+  <div class="part-head ph-amber">
+    <span class="part-pill pp-amber">Part 3</span>
+    <span class="part-title">Commit, Push &amp; Write Good Messages</span>
+    <span class="part-time">10 min</span>
+  </div>
+
+  <!-- Step 3.1 -->
+  <div class="step open" id="step-p3-1">
+    <div class="step-hd" onclick="toggleStep('step-p3-1')">
+      <span class="step-num">3.1</span>
+      <span class="step-label">Stage and commit the laksa addition</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>Always run <code>git status</code> before <code>git add</code>. It is your safety net &mdash; it shows exactly what you are about to include in the snapshot.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">pwd</span>
+<span class="cm"># Confirm: ~/cloudeats-app</span>
+
+<span class="cm"># Always check before staging</span>
+<span class="ca">git status</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">On branch feature/add-laksa-to-menu
+Changes not staged for commit:
+  (use "git add &lt;file&gt;..." to update what will be committed)
+    modified:   services/menu-service/seed.js</div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># Stage specifically the file you changed</span>
+<span class="ca">git add services/menu-service/seed.js</span>
+
+<span class="cm"># Confirm it is staged (green = ready to commit)</span>
+<span class="ca">git status</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">On branch feature/add-laksa-to-menu
+Changes to be committed:
+  (use "git restore --staged &lt;file&gt;..." to unstage)
+    modified:   services/menu-service/seed.js</div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># Commit with a clear, imperative message</span>
+<span class="ca">git commit -m "feat(menu): Add Laksa to menu seed data
+
+- Added Laksa item to menuItems array
+- Price: RM 9.50, Category: Noodles
+- Spicy coconut noodle soup with prawns and tofu puffs"</span>
+
+<span class="cm"># View the commit in the log</span>
+<span class="ca">git log --oneline -5</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">7c14de8 feat(menu): Add Laksa to menu seed data
+a3f82b1 Initial commit: CloudEats microservices from Lab 5.1</div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; Why stage before committing?</div>
+        The staging area is a "review room". You can change 10 files but only commit 3 of them in this snapshot. This lets you make one logical commit ("Add Laksa") separately from another ("Fix typo in README"), even if you edited both files at the same time.
+      </div>
+      <div class="pb a">
+        <div class="pb-label">&#9889; Average &mdash; Conventional Commits format</div>
+        The message <code>feat(menu): Add Laksa to menu seed data</code> follows <a href="https://www.conventionalcommits.org" target="_blank" rel="noopener">Conventional Commits</a>: <code>type(scope): description</code>. Common types: <code>feat</code> (new feature), <code>fix</code> (bug fix), <code>docs</code> (docs only), <code>chore</code> (maintenance). This format is machine-readable &mdash; tools like <code>semantic-release</code> use it to auto-generate changelogs and bump version numbers.
+      </div>
+      <div class="pb adv">
+        <div class="pb-label">&#128640; Advanced &mdash; What breaks if you force-push to main?</div>
+        <code>git push --force origin main</code> rewrites the remote history. If any teammate pulled main before your force-push, their local history now diverges from the remote. When they try to push, Git refuses. They must <code>git pull --rebase</code> or reset. Force-pushing to a shared branch is considered destructive. Reserve <code>--force-with-lease</code> (safer) for feature branches only, never for main.
+      </div>
+    </div>
+  </div><!-- /step 3.1 -->
+
+  <!-- Step 3.2 -->
+  <div class="step open" id="step-p3-2">
+    <div class="step-hd" onclick="toggleStep('step-p3-2')">
+      <span class="step-num">3.2</span>
+      <span class="step-label">Make a second commit — add a rating field</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>A good feature branch has multiple, logical commits. Add a <code>rating</code> field to the same menu item to practice making a second commit.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">services/menu-service/seed.js &mdash; update the laksa object</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre>{
+  <span class="cp">name</span>: <span class="cv">'Laksa'</span>,
+  <span class="cp">description</span>: <span class="cv">'Spicy coconut noodle soup with prawns and tofu puffs'</span>,
+  <span class="cp">price</span>: <span class="cv">9.50</span>,
+  <span class="cp">category</span>: <span class="cv">'Noodles'</span>,
+  <span class="cp">available</span>: <span class="ck">true</span>,
+  <span class="cp">rating</span>: <span class="cv">4.5</span>      <span class="cm">// add this line</span>
+}</pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">git add services/menu-service/seed.js</span>
+<span class="ca">git commit -m "feat(menu): Add initial rating to Laksa item"</span>
+<span class="ca">git log --oneline -5</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">f901aa5 feat(menu): Add initial rating to Laksa item
+7c14de8 feat(menu): Add Laksa to menu seed data
+a3f82b1 Initial commit: CloudEats microservices from Lab 5.1</div>
+    </div>
+  </div><!-- /step 3.2 -->
+
+  <!-- Step 3.3 -->
+  <div class="step open" id="step-p3-3">
+    <div class="step-hd" onclick="toggleStep('step-p3-3')">
+      <span class="step-num">3.3</span>
+      <span class="step-label">Push the feature branch to GitHub</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>Your two commits exist locally. Push the branch to GitHub so it is visible online and ready for a Pull Request.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># Push this branch to GitHub for the first time</span>
+<span class="cm"># --set-upstream (-u) tells Git to remember this mapping for future pushes</span>
+<span class="ca">git push -u origin feature/add-laksa-to-menu</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">Enumerating objects: 7, done.
+...
+To https://github.com/YOUR-USERNAME/cloudeats-app.git
+ * [new branch]      feature/add-laksa-to-menu -&gt; feature/add-laksa-to-menu
+Branch 'feature/add-laksa-to-menu' set up to track remote branch from 'origin'.</div>
+
+      <p>Now refresh your GitHub repo page. You will see a yellow banner: <em>"feature/add-laksa-to-menu had recent pushes &mdash; Compare &amp; pull request"</em>. Do not click it yet &mdash; that is Part 4.</p>
+
+      <div class="trouble" onclick="toggleTrouble(this)">
+        <div class="trouble-hd">&#9888; "src refspec feature/add-laksa-to-menu does not match any" <span class="trouble-arrow">&#9654;</span></div>
+        <div class="trouble-body">You have not committed anything on this branch yet. Git cannot push a branch with no commits. Run <code>git log --oneline</code> to confirm commits exist, then push again.</div>
+      </div>
+    </div>
+  </div><!-- /step 3.3 -->
+
+  <div class="checkpoint">&#9989; <div><strong>Part 3 complete.</strong> Two commits on your feature branch, pushed to GitHub. The branch is now visible in your repo under the "branches" dropdown.</div></div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PART 4 — PULL REQUEST & MERGE
+     ═══════════════════════════════════════════ -->
+<section id="p4">
+  <div class="part-head ph-purple">
+    <span class="part-pill pp-purple">Part 4</span>
+    <span class="part-title">Open a Pull Request &amp; Merge to Main</span>
+    <span class="part-time">10 min</span>
+  </div>
+
+  <!-- Step 4.1 -->
+  <div class="step open" id="step-p4-1">
+    <div class="step-hd" onclick="toggleStep('step-p4-1')">
+      <span class="step-num">4.1</span>
+      <span class="step-label">Open a Pull Request on GitHub</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>A <strong>Pull Request (PR)</strong> is a formal request to merge one branch into another. On GitHub it shows the exact diff, creates a space for code review comments, and (once Lab 6.2 is done) will also show the CI result.</p>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; Steps to open the PR</div>
+        1. Go to <code>https://github.com/YOUR-USERNAME/cloudeats-app</code><br>
+        2. Click the yellow banner <strong>"Compare &amp; pull request"</strong>, OR click <strong>Pull requests</strong> tab &rarr; <strong>New pull request</strong><br>
+        3. Set <strong>base:</strong> <code>main</code> (where you want to merge into)<br>
+        4. Set <strong>compare:</strong> <code>feature/add-laksa-to-menu</code> (what you are merging from)<br>
+        5. Title: <code>feat(menu): Add Laksa to menu</code><br>
+        6. Description: Explain what you added and why<br>
+        7. Click <strong>Create pull request</strong>
+      </div>
+
+      <div class="pb a">
+        <div class="pb-label">&#9889; Average &mdash; Reading the diff in a PR</div>
+        The "Files changed" tab in the PR shows exactly what lines were added (green) and removed (red). This is what your reviewer will read. Good PR hygiene: keep PRs small (one feature), link to the task it resolves, and write a description that explains <em>why</em>, not just <em>what</em> (the diff already shows what).
+      </div>
+      <div class="pb adv">
+        <div class="pb-label">&#128640; Advanced &mdash; What breaks if you skip the PR and merge directly?</div>
+        Merging directly from the command line with <code>git merge</code> still works technically. But you lose: the code review record, the CI check gate (Lab 6.2 attaches to PRs), the diff comment thread, and the permanent "why" documentation. In a team of two or more, a direct merge to main is a code review bypass. At companies with compliance requirements, bypassing PR review can trigger policy violations.
+      </div>
+    </div>
+  </div><!-- /step 4.1 -->
+
+  <!-- Step 4.2 -->
+  <div class="step open" id="step-p4-2">
+    <div class="step-hd" onclick="toggleStep('step-p4-2')">
+      <span class="step-num">4.2</span>
+      <span class="step-label">Merge the PR and pull locally</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>Once the PR is open (and in a real team, once a reviewer approves it), click <strong>Merge pull request</strong> on GitHub. Then update your local <code>main</code> branch to match.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal &mdash; after merging on GitHub</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># Switch back to main</span>
+<span class="ca">git checkout main</span>
+
+<span class="cm"># Pull the merge commit from GitHub</span>
+<span class="ca">git pull origin main</span>
+
+<span class="cm"># Confirm laksa is in the history on main</span>
+<span class="ca">git log --oneline --graph -6</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">*   2b88cc4 Merge pull request #1 from feature/add-laksa-to-menu
+|\
+| * f901aa5 feat(menu): Add initial rating to Laksa item
+| * 7c14de8 feat(menu): Add Laksa to menu seed data
+|/
+* a3f82b1 Initial commit: CloudEats microservices from Lab 5.1</div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; What is the branching graph telling me?</div>
+        The <code>*</code> is a commit. The <code>|\</code> and <code>|/</code> lines show the branch splitting off and rejoining. Reading from bottom to top: initial commit &rarr; feature branch splits off (two feature commits) &rarr; feature merges back into main (merge commit at top). This is your complete feature history, preserved forever.
+      </div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal &mdash; clean up the feature branch</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># Delete the local feature branch (already merged, safe to delete)</span>
+<span class="ca">git branch -d feature/add-laksa-to-menu</span>
+
+<span class="cm"># Delete the remote branch on GitHub</span>
+<span class="ca">git push origin --delete feature/add-laksa-to-menu</span>
+
+<span class="cm"># Confirm only main remains</span>
+<span class="ca">git branch</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">* main</div>
+
+      <div class="why-box">
+        <strong>Why delete the feature branch after merging?</strong> Stale branches pile up and confuse the team. If main has the merged code, the branch has served its purpose. Deleting it keeps the repo clean. GitHub even offers a "Delete branch" button on the closed PR page. The history is still in the commit graph &mdash; nothing is lost.
+      </div>
+    </div>
+  </div><!-- /step 4.2 -->
+
+  <div class="checkpoint">&#9989; <div><strong>Part 4 complete.</strong> You have opened a PR, merged it, and cleaned up the branch. This is the core feature branch workflow used in industry every single day.</div></div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PART 5 — MERGE CONFLICT
+     ═══════════════════════════════════════════ -->
+<section id="p5">
+  <div class="part-head ph-red">
+    <span class="part-pill pp-red">Part 5</span>
+    <span class="part-title">Trigger &amp; Resolve a Merge Conflict</span>
+    <span class="part-time">15 min</span>
+  </div>
+
+  <div class="callout blue">
+    <span>&#128161;</span>
+    <div><strong>What you are doing:</strong> You will deliberately create a conflict by editing the same line on two different branches. Then you will resolve it the same way a real team does. Merge conflicts look scary the first time — this exercise makes them routine.</div>
+  </div>
+
+  <!-- Step 5.1 -->
+  <div class="step open" id="step-p5-1">
+    <div class="step-hd" onclick="toggleStep('step-p5-1')">
+      <span class="step-num">5.1</span>
+      <span class="step-label">Set up the conflict — two branches, same line</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>You will create two branches that both edit the same line in <code>services/menu-service/server.js</code>. When you try to merge, Git cannot auto-decide which version to keep.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal &mdash; create branch A and commit a change</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">git checkout main</span>
+
+<span class="cm"># Branch A — person sets port to 3002</span>
+<span class="ca">git checkout -b conflict/branch-a</span>
+
+<span class="cm"># Edit the first line of server.js that sets the port</span>
+<span class="cm"># On macOS/Linux: sed replaces in-place</span>
+<span class="ca">sed -i 's/const PORT = .*/const PORT = 3002;/' services/menu-service/server.js</span>
+
+<span class="cm"># On macOS you may need: sed -i '' 's/const PORT = .*/const PORT = 3002;/' ...</span>
+
+<span class="cm"># Verify the change</span>
+<span class="ca">grep "const PORT" services/menu-service/server.js</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">const PORT = 3002;</div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">git add services/menu-service/server.js</span>
+<span class="ca">git commit -m "chore(menu): Set port to 3002 for menu service"</span>
+
+<span class="cm"># Now go back to main and create a SECOND branch</span>
+<span class="ca">git checkout main</span>
+<span class="ca">git checkout -b conflict/branch-b</span>
+
+<span class="cm"># Branch B — different person sets port to 3003</span>
+<span class="ca">sed -i 's/const PORT = .*/const PORT = 3003;/' services/menu-service/server.js</span>
+<span class="cm"># macOS: sed -i '' 's/const PORT = .*/const PORT = 3003;/' ...</span>
+
+<span class="ca">git add services/menu-service/server.js</span>
+<span class="ca">git commit -m "chore(menu): Set port to 3003 for testing environment"</span></pre>
+      </div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; What just happened?</div>
+        You now have two branches that both started from the same <code>main</code> and both changed the same line (<code>const PORT = ...</code>) to different values. When you try to merge one into the other, Git will not know which value is correct &mdash; so it marks the conflict and waits for you to decide.
+      </div>
+    </div>
+  </div><!-- /step 5.1 -->
+
+  <!-- Step 5.2 -->
+  <div class="step open" id="step-p5-2">
+    <div class="step-hd" onclick="toggleStep('step-p5-2')">
+      <span class="step-num">5.2</span>
+      <span class="step-label">Trigger the conflict by merging branch-a into branch-b</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># You are on conflict/branch-b</span>
+<span class="ca">git branch</span>
+<span class="cm"># Expected: * conflict/branch-b</span>
+
+<span class="cm"># Try to merge branch-a INTO branch-b</span>
+<span class="ca">git merge conflict/branch-a</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">Auto-merging services/menu-service/server.js
+CONFLICT (content): Merge conflict in services/menu-service/server.js
+Automatic merge failed; fix conflicts and then commit the result.</div>
+
+      <div class="callout green">
+        <span>&#9989;</span>
+        <div><strong>This is expected.</strong> Git has paused and is waiting for you. Your repo is in a special "merging" state. Nothing is broken &mdash; Git just needs your decision.</div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal &mdash; confirm what git status shows during a conflict</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">git status</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">On branch conflict/branch-b
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+  (use "git merge --abort" to abort the merge)
+
+Unmerged paths:
+  (use "git add &lt;file&gt;..." to mark resolution)
+    both modified:   services/menu-service/server.js</div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; "both modified" means conflict</div>
+        <code>both modified</code> is Git saying "both branches changed this file in the same area and I cannot auto-merge them." You need to open the file and decide what to keep. We do that in Step 5.3.
+      </div>
+      <div class="pb a">
+        <div class="pb-label">&#9889; Average &mdash; Escape hatch</div>
+        If you ever want to <em>cancel</em> a merge that has gone wrong: <code>git merge --abort</code>. This returns your branch to exactly where it was before you ran <code>git merge</code>. Nothing is lost. Use it to start over if you make a mistake during conflict resolution.
+      </div>
+    </div>
+  </div><!-- /step 5.2 -->
+
+  <!-- Step 5.3 -->
+  <div class="step open" id="step-p5-3">
+    <div class="step-hd" onclick="toggleStep('step-p5-3')">
+      <span class="step-num">5.3</span>
+      <span class="step-label">Read the conflict markers and resolve</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>Open <code>services/menu-service/server.js</code> in your editor. Find the conflict markers. They look like this:</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">what you will see inside server.js</span></div>
+        <pre><span class="cv">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</span>
+<span class="ca">const PORT = 3003;</span>
+<span class="cm">=======</span>
+<span class="cp">const PORT = 3002;</span>
+<span class="cv">&gt;&gt;&gt;&gt;&gt;&gt;&gt; conflict/branch-a</span></pre>
+      </div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; Decoding the markers</div>
+        <strong style="color:var(--green)">Between &lt;&lt;&lt; HEAD and =======</strong> is YOUR branch's version (branch-b, port 3003)<br><br>
+        <strong style="color:var(--accent)">Between ======= and &gt;&gt;&gt;</strong> is the INCOMING version (branch-a, port 3002)<br><br>
+        You need to: (1) decide which port is correct, (2) delete the three marker lines, (3) leave only the final correct code.
+      </div>
+
+      <p>For this exercise, port <strong>3002</strong> is correct for the menu service. Edit the file so it reads exactly:</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">services/menu-service/server.js &mdash; after resolving</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">const PORT = 3002;</span>
+<span class="cm">// All three conflict marker lines deleted — file is clean</span></pre>
+      </div>
+
+      <div class="callout red">
+        <span>&#9888;</span>
+        <div>Make sure you delete <strong>all three</strong> marker lines: the <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code>, the <code>=======</code>, and the <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code>. Leaving any marker in the file will cause your app to crash with a syntax error.</div>
+      </div>
+
+      <div class="pb a">
+        <div class="pb-label">&#9889; Average &mdash; VS Code makes conflicts visual</div>
+        VS Code highlights conflict markers with green/blue colour coding and shows buttons: <strong>Accept Current Change</strong>, <strong>Accept Incoming Change</strong>, <strong>Accept Both Changes</strong>, <strong>Compare Changes</strong>. Clicking "Accept Incoming Change" does the same as manually deleting the markers and keeping the incoming version. For complex conflicts with many files, VS Code's merge editor is much easier than using nano.
+      </div>
+    </div>
+  </div><!-- /step 5.3 -->
+
+  <!-- Step 5.4 -->
+  <div class="step open" id="step-p5-4">
+    <div class="step-hd" onclick="toggleStep('step-p5-4')">
+      <span class="step-num">5.4</span>
+      <span class="step-label">Stage the resolved file and complete the merge</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>Once the file is clean (no conflict markers), you tell Git "I have resolved this" by staging the file. Then you complete the merge with a commit.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># Confirm the file no longer has conflict markers</span>
+<span class="ca">grep -n "&lt;&lt;&lt;\|===\|&gt;&gt;&gt;" services/menu-service/server.js</span>
+<span class="cm"># Expected: no output (empty = no markers found)</span>
+
+<span class="cm"># Stage the resolved file</span>
+<span class="ca">git add services/menu-service/server.js</span>
+
+<span class="cm"># Check status — "all conflicts fixed"</span>
+<span class="ca">git status</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">On branch conflict/branch-b
+All conflicts fixed but you are still merging.
+  (use "git commit" to conclude merge)</div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># Complete the merge with a descriptive commit</span>
+<span class="ca">git commit -m "Merge conflict/branch-a: resolve PORT conflict, keep 3002 for menu service"</span>
+
+<span class="cm"># View the final graph</span>
+<span class="ca">git log --oneline --graph -6</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">*   9e51ff2 Merge conflict/branch-a: resolve PORT conflict, keep 3002 for menu service
+|\
+| * 2b88cc4 chore(menu): Set port to 3002 for menu service
+* | f901aa5 chore(menu): Set port to 3003 for testing environment
+|/
+*   7c14de8 Merge pull request #1 from feature/add-laksa-to-menu
+...</div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; You just did what senior devs do</div>
+        Merge conflicts look terrifying in tutorials but in practice they are just text editing. The key steps are always the same: find the markers, decide what to keep, delete the markers, <code>git add</code>, <code>git commit</code>. After you do this five times, it takes under two minutes.
+      </div>
+      <div class="pb adv">
+        <div class="pb-label">&#128640; Advanced &mdash; Preventing conflicts at scale</div>
+        Teams reduce conflict frequency by: (1) trunk-based development with feature flags (branches live less than 24 hours), (2) <code>git pull --rebase</code> instead of merge pulls (keeps history linear), (3) file ownership policies (CODEOWNERS file in GitHub assigns specific files to specific people, reducing simultaneous edits), (4) breaking large files into smaller modules. The nuclear option is <code>git rerere</code> (reuse recorded resolution) &mdash; Git memorises how you resolved a conflict and replays it automatically next time.
+      </div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal &mdash; clean up both conflict branches</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">git checkout main</span>
+<span class="ca">git branch -d conflict/branch-a</span>
+<span class="ca">git branch -d conflict/branch-b</span>
+<span class="ca">git branch</span>
+<span class="cm"># Expected: * main</span></pre>
+      </div>
+    </div>
+  </div><!-- /step 5.4 -->
+
+  <div class="checkpoint">&#9989; <div><strong>Part 5 complete.</strong> You deliberately caused a merge conflict and resolved it. This is a milestone &mdash; most students are afraid of conflicts until they do it hands-on once.</div></div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PART 6 — GITHUB PAGES (ADVANCED ONLY)
+     ═══════════════════════════════════════════ -->
+<section id="p6">
+  <div class="part-head ph-purple">
+    <span class="part-pill pp-purple">Part 6</span>
+    <span class="part-title">&#128640; Deploy README to GitHub Pages</span>
+    <span class="part-time">10 min &middot; Advanced only</span>
+  </div>
+
+  <div class="adv-only">
+    <div class="adv-only-label">&#128640; Advanced Track &mdash; Portfolio builder</div>
+    <p>GitHub Pages lets you publish any HTML from your repository as a public website &mdash; for free. You will deploy an enhanced README as a project homepage. This is the exact same mechanism used to publish this course. At the end, you will have a live URL you can put on your LinkedIn and resume.</p>
+  </div>
+
+  <!-- Step 6.1 -->
+  <div class="step" id="step-p6-1">
+    <div class="step-hd" onclick="toggleStep('step-p6-1')">
+      <span class="step-num">6.1</span>
+      <span class="step-label">Create a docs/ folder with an index.html portfolio page</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>GitHub Pages can serve from a <code>/docs</code> folder on your <code>main</code> branch. Create a polished landing page for the CloudEats project.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">cd ~/cloudeats-app</span>
+<span class="ca">mkdir -p docs</span>
+<span class="ca">git checkout -b feature/github-pages</span></pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">docs/index.html &mdash; create this file</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm">&lt;!-- Save as docs/index.html --&gt;</span>
+<span class="cv">&lt;!DOCTYPE html&gt;</span>
+<span class="cv">&lt;html lang="en"&gt;</span>
+<span class="cv">&lt;head&gt;</span>
+<span class="cv">  &lt;meta charset="UTF-8"&gt;</span>
+<span class="cv">  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span>
+<span class="cv">  &lt;title&gt;CloudEats &mdash; Food Ordering Platform&lt;/title&gt;</span>
+<span class="cv">  &lt;style&gt;</span>
+<span class="ca">    body { font-family: system-ui, sans-serif; max-width: 700px;</span>
+<span class="ca">           margin: 0 auto; padding: 2rem 1rem; background: #07090f; color: #e8edf5; }</span>
+<span class="ca">    h1 { color: #ffb740; } h2 { color: #00e5a0; border-bottom: 1px solid #2a3d5a; padding-bottom:.4rem; }</span>
+<span class="ca">    code { background: #141b27; padding: .1rem .4rem; border-radius: 4px; color: #00e5a0; }</span>
+<span class="ca">    .badge { display:inline-block; background:#1a2235; border:1px solid #2a3d5a;</span>
+<span class="ca">             border-radius:4px; padding:.2rem .6rem; font-size:.8rem; margin:.2rem; }</span>
+<span class="cv">  &lt;/style&gt;</span>
+<span class="cv">&lt;/head&gt;</span>
+<span class="cv">&lt;body&gt;</span>
+<span class="cv">  &lt;h1&gt;&#127828; CloudEats&lt;/h1&gt;</span>
+<span class="cv">  &lt;p&gt;A microservices-based food ordering platform built with Node.js, Docker, MySQL, and Redis.&lt;/p&gt;</span>
+<span class="cv">  &lt;span class="badge"&gt;Node.js&lt;/span&gt; &lt;span class="badge"&gt;Docker&lt;/span&gt;</span>
+<span class="cv">  &lt;span class="badge"&gt;MySQL&lt;/span&gt; &lt;span class="badge"&gt;Redis&lt;/span&gt;</span>
+<span class="cv">  &lt;span class="badge"&gt;GitHub Actions&lt;/span&gt;</span>
+<span class="cv">  &lt;h2&gt;Architecture&lt;/h2&gt;</span>
+<span class="cv">  &lt;ul&gt;</span>
+<span class="cv">    &lt;li&gt;&lt;strong&gt;User Service&lt;/strong&gt; &mdash; JWT authentication, port 3001&lt;/li&gt;</span>
+<span class="cv">    &lt;li&gt;&lt;strong&gt;Menu Service&lt;/strong&gt; &mdash; Menu CRUD + ratings, port 3002&lt;/li&gt;</span>
+<span class="cv">    &lt;li&gt;&lt;strong&gt;Order Service&lt;/strong&gt; &mdash; Cart + orders via Redis, port 3003&lt;/li&gt;</span>
+<span class="cv">  &lt;/ul&gt;</span>
+<span class="cv">  &lt;h2&gt;Quick Start&lt;/h2&gt;</span>
+<span class="cv">  &lt;pre&gt;&lt;code&gt;git clone https://github.com/YOUR-USERNAME/cloudeats-app</span>
+<span class="cv">cd cloudeats-app</span>
+<span class="cv">cp .env.example .env</span>
+<span class="cv">docker compose up -d&lt;/code&gt;&lt;/pre&gt;</span>
+<span class="cv">  &lt;p&gt;Built during Cloud Computing Diploma &mdash; Week 6 Lab 6.1&lt;/p&gt;</span>
+<span class="cv">&lt;/body&gt;</span>
+<span class="cv">&lt;/html&gt;</span></pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">git add docs/index.html</span>
+<span class="ca">git commit -m "docs: Add GitHub Pages portfolio site in docs/"</span>
+<span class="ca">git push -u origin feature/github-pages</span></pre>
+      </div>
+
+      <p>Open a PR on GitHub and merge <code>feature/github-pages</code> into <code>main</code>.</p>
+    </div>
+  </div><!-- /step 6.1 -->
+
+  <!-- Step 6.2 -->
+  <div class="step" id="step-p6-2">
+    <div class="step-hd" onclick="toggleStep('step-p6-2')">
+      <span class="step-num">6.2</span>
+      <span class="step-label">Enable GitHub Pages in the repo settings</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+
+      <div class="ghp-section">
+        <div class="ghp-section-title">&#127758; Enable GitHub Pages &mdash; 4 steps</div>
+        <ol class="ghp-steps">
+          <li>Go to your repo on GitHub &rarr; click <strong>Settings</strong> tab (top row)</li>
+          <li>In the left sidebar click <strong>Pages</strong></li>
+          <li>Under <strong>Branch</strong>, select <code>main</code> and folder <code>/docs</code> &rarr; click <strong>Save</strong></li>
+          <li>Wait 60&ndash;90 seconds, then refresh the Settings &rarr; Pages page. You will see: <em>"Your site is live at https://YOUR-USERNAME.github.io/cloudeats-app"</em></li>
+        </ol>
+      </div>
+
+      <div class="pb adv">
+        <div class="pb-label">&#128640; Advanced &mdash; What GitHub Pages actually does</div>
+        GitHub Pages runs a static site server that serves files from the branch and folder you specified. Every time you push to <code>main</code>, GitHub rebuilds the site automatically within ~60 seconds. It uses the same CDN infrastructure as GitHub itself, so your site loads fast globally for free. The <code>docs/</code> folder approach keeps your app code and public site in the same repo &mdash; a clean pattern for portfolio projects.
+      </div>
+
+      <div class="callout green">
+        <span>&#127758;</span>
+        <div><strong>Your live URL:</strong> <code>https://YOUR-USERNAME.github.io/cloudeats-app</code> &mdash; add this to your GitHub profile, LinkedIn, and resume. You now have a live, public portfolio piece from this lab.</div>
+      </div>
+
+      <div class="trouble" onclick="toggleTrouble(this)">
+        <div class="trouble-hd">&#9888; Site shows 404 after enabling Pages <span class="trouble-arrow">&#9654;</span></div>
+        <div class="trouble-body">Wait 2&ndash;3 minutes after saving the Pages setting — GitHub needs time to build. Hard-refresh the URL (Ctrl+Shift+R). Also confirm you selected <code>/docs</code> folder (not <code>/ (root)</code>) and that <code>docs/index.html</code> exists on the <code>main</code> branch after your merge.</div>
+      </div>
+    </div>
+  </div><!-- /step 6.2 -->
+
+  <div class="checkpoint">&#9989; <div><strong>Part 6 complete.</strong> You have a live public URL. Every course lab you publish to <code>docs/</code> will appear here — making your GitHub profile an active portfolio of work.</div></div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     LAB SUMMARY
+     ═══════════════════════════════════════════ -->
+<section>
+  <hr class="section-divider">
+  <div class="part-head ph-green">
+    <span class="part-pill pp-green">Done</span>
+    <span class="part-title">Lab 6.1 Complete &mdash; Quick Reference</span>
+  </div>
+
+  <table class="summary-table">
+    <thead>
+      <tr><th>What you did</th><th>Git command</th><th>Why it matters</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Set identity</td><td><code>git config --global user.name/email</code></td><td>Every commit is attributed to you by name</td></tr>
+      <tr><td>First commit</td><td><code>git add . &amp;&amp; git commit -m "..."</code></td><td>Snapshot of initial state before any changes</td></tr>
+      <tr><td>Push to GitHub</td><td><code>git push -u origin main</code></td><td>Backup + public visibility + CI trigger</td></tr>
+      <tr><td>Feature branch</td><td><code>git checkout -b feature/...</code></td><td>Isolated dev without affecting main</td></tr>
+      <tr><td>Clean commit</td><td><code>git commit -m "feat(scope): description"</code></td><td>Conventional format, machine-readable history</td></tr>
+      <tr><td>Push branch</td><td><code>git push -u origin feature/...</code></td><td>Makes branch visible on GitHub for PR</td></tr>
+      <tr><td>Pull Request</td><td>GitHub UI</td><td>Code review gate + CI gate + permanent record</td></tr>
+      <tr><td>Merge + clean</td><td><code>git pull &amp;&amp; git branch -d feature/...</code></td><td>Keep main current, remove stale branches</td></tr>
+      <tr><td>Conflict: stage</td><td><code>git add</code> after editing</td><td>Tells Git the file is resolved</td></tr>
+      <tr><td>Conflict: commit</td><td><code>git commit</code> (no -m needed, opens editor)</td><td>Completes the merge with a record of resolution</td></tr>
+    </tbody>
+  </table>
+
+  <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.5rem">
+    <a href="../week06/index.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:700;padding:.45rem 1rem;background:var(--surface2);color:var(--muted);border:1px solid var(--border);border-radius:6px;text-decoration:none">&larr; Week 6 Lecture</a>
+    <a href="../week06/lab2_automated_testing.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:700;padding:.45rem 1rem;background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.35);border-radius:6px;text-decoration:none">Lab 6.2 &mdash; Automated Testing &rarr;</a>
+  </div>
+</section>
+
+</main><!-- /lab-content -->
+</div><!-- /page-body -->
+
+<!-- FOOTER -->
+<footer style="border-top:1px solid var(--border);padding:1.25rem 1.5rem;text-align:center;color:var(--muted);font-size:.76rem;max-width:1200px;margin:0 auto">
+  Cloud Computing &middot; Lab 6.1 &middot; Git Version Control &nbsp;|&nbsp; CloudEats Academy &nbsp;|&nbsp;
+  <a href="../week06/index.html" style="color:var(--muted);text-decoration:none">&larr; Week 6 Lecture</a>
+  &nbsp;|&nbsp;
+  <span class="ghp-badge">&#127758; GitHub Pages Ready</span>
+  &nbsp;|&nbsp;
+  <a href="../week06/lab2_automated_testing.html" style="color:var(--muted);text-decoration:none">Lab 6.2 &rarr;</a>
+</footer>
+
+<script>
+/* ── Pace ── */
+function setPace(pace,btn){
+  document.body.setAttribute('data-pace',pace);
+  document.querySelectorAll('.pace-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // Beginner: open all steps
+  if(pace==='beginner') expandAll();
+  // Advanced: collapse all
+  if(pace==='advanced') collapseAll();
+}
+
+/* ── Steps ── */
+function toggleStep(id){
+  const el=document.getElementById(id);
+  if(!el) return;
+  const wasOpen=el.classList.contains('open');
+  el.classList.toggle('open',!wasOpen);
+  if(!wasOpen) markProgress(id);
+}
+function expandAll(){
+  document.querySelectorAll('.step').forEach(s=>s.classList.add('open'));
+}
+function collapseAll(){
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('open'));
+}
+
+/* ── Trouble ── */
+function toggleTrouble(el){
+  el.classList.toggle('open');
+}
+
+/* ── Copy code ── */
+function copyCode(btn,event){
+  event.stopPropagation();
+  const pre=btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    btn.textContent='Copied!';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2000);
+  });
+}
+
+/* ── Progress tracking ── */
+const totalParts=6;
+const completedParts=new Set();
+function markProgress(stepId){
+  // Extract part number from step id e.g. "step-p3-2" → "p3"
+  const match=stepId.match(/step-(p\d+)-/);
+  if(match) completedParts.add(match[1]);
+  updateProgress();
+}
+function updateProgress(){
+  const cur=completedParts.size;
+  document.getElementById('prog-cur').textContent=cur;
+  document.getElementById('prog-fill').style.width=(cur/totalParts*100)+'%';
+}
+
+/* ── Sidebar active nav ── */
+const sections=document.querySelectorAll('section[id]');
+const navLinks=document.querySelectorAll('.sb-nav a');
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      navLinks.forEach(a=>a.classList.remove('active'));
+      const link=document.querySelector('.sb-nav a[href="#'+e.target.id+'"]');
+      if(link)link.classList.add('active');
+    }
+  });
+},{threshold:0.2,rootMargin:'-56px 0px -60% 0px'});
+sections.forEach(s=>observer.observe(s));
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded',()=>{
+  // Beginner: open all steps by default
+  expandAll();
+  document.getElementById('prog-max').textContent=totalParts;
+});
+</script>
+</body>
+</html>

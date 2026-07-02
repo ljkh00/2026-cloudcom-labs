@@ -1,0 +1,2187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 1.1 · Dev Environment Setup · CloudEats Academy</title>
+<meta name="description" content="Step-by-step cloud development environment setup: VirtualBox VM, Ubuntu, Docker, Node.js, Python, VS Code Remote-SSH. Week 1 of the CloudEats cloud computing diploma course.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Lab 1.1 · Dev Environment Setup · CloudEats Academy">
+<meta property="og:description" content="Set up your professional cloud development environment — VirtualBox, Ubuntu, Docker, VS Code Remote-SSH. Beginner-friendly with pace controls.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07090f;
+    --bg2: #0d1117;
+    --bg3: #141b27;
+    --surface: #1a2235;
+    --surface2: #1f2c42;
+    --border: #2a3d5a;
+    --accent: #00c8ff;
+    --accent2: #7c6af5;
+    --green: #00e5a0;
+    --amber: #ffb740;
+    --red: #ff5e7a;
+    --text: #e8edf5;
+    --muted: #6b7fa0;
+    --beginner: #00e5a0;
+    --average: #00c8ff;
+    --advanced: #b46ef5;
+    --radius: 10px;
+    --code-bg: #0b1120;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  .site-header {
+    background: linear-gradient(135deg, #050d1c 0%, #091628 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 58px;
+    gap: 1rem;
+  }
+  .header-left { display: flex; align-items: center; gap: 0.75rem; }
+  .lab-badge {
+    background: var(--green);
+    color: #000;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .header-title { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+
+  /* ── PACE SELECTOR ── */
+  .pace-bar {
+    display: flex;
+    gap: 0.35rem;
+    background: var(--bg3);
+    padding: 0.25rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .pace-btn {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.28rem 0.7rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+  .pace-btn:hover { color: var(--text); }
+  .pace-btn.active[data-pace="beginner"] { background: var(--beginner); color: #000; }
+  .pace-btn.active[data-pace="average"]  { background: var(--average); color: #000; }
+  .pace-btn.active[data-pace="advanced"] { background: var(--advanced); color: #fff; }
+
+  /* ── HERO / LAB META ── */
+  .lab-hero {
+    background: linear-gradient(160deg, #060f20, #0d1f38);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 2rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .lab-hero::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -100px;
+    width: 400px; height: 400px;
+    background: radial-gradient(ellipse, rgba(0,229,160,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .lab-hero-inner { max-width: 960px; margin: 0 auto; }
+  .lab-crumb {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .lab-crumb span { color: var(--green); }
+  .lab-hero h1 {
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #e8edf5 40%, var(--green) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .lab-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  .meta-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.3rem 0.75rem;
+    color: var(--muted);
+  }
+  .meta-chip strong { color: var(--text); }
+
+  /* ── LAYOUT ── */
+  .lab-layout {
+    max-width: 960px;
+    margin: 2rem auto 4rem;
+    padding: 0 2rem;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: sticky;
+    top: 80px;
+  }
+  .sidebar-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+  .sidebar-nav { list-style: none; }
+  .sidebar-nav li { margin-bottom: 0.1rem; }
+  .sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 7px;
+    color: var(--muted);
+    text-decoration: none;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+  }
+  .sidebar-nav a:hover { background: var(--surface); color: var(--text); }
+  .sidebar-nav a.active { background: var(--surface); color: var(--green); border-color: rgba(0,229,160,0.2); }
+  .part-divider {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0.5rem 0.75rem 0.2rem;
+    margin-top: 0.5rem;
+  }
+
+  /* ── PROGRESS TRACKER ── */
+  .progress-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+  .progress-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; }
+  .progress-bar-wrap { background: var(--bg3); border-radius: 4px; height: 6px; margin-bottom: 0.5rem; }
+  .progress-bar { height: 6px; border-radius: 4px; background: linear-gradient(90deg, var(--green), var(--accent)); transition: width 0.4s; }
+  .progress-label { font-size: 0.72rem; color: var(--muted); }
+  .progress-label span { color: var(--green); font-weight: 600; }
+
+  /* ── CONTENT ── */
+  .lab-content > section { margin-bottom: 3rem; }
+  .part-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .part-pill {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    background: rgba(0,229,160,0.1);
+    color: var(--green);
+    border: 1px solid rgba(0,229,160,0.2);
+    white-space: nowrap;
+  }
+  .part-title { font-size: 1.15rem; font-weight: 700; }
+  .part-time { font-size: 0.75rem; color: var(--muted); margin-left: auto; white-space: nowrap; }
+
+  /* ── STEP CARD ── */
+  .step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .step.completed { border-color: rgba(0,229,160,0.4); }
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.9rem 1.1rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  /* Reinforce clickable affordance — subtle "click to expand" label */
+  .step:not(.open) .step-header::after {
+    content: 'click to expand';
+    font-size: 0.62rem;
+    color: var(--muted);
+    opacity: 0.55;
+    margin-left: auto;
+    letter-spacing: 0.04em;
+    pointer-events: none;
+  }
+  .step.open .step-header::after { content: ''; }
+  .step-header:hover { background: var(--surface2); }
+  .step-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .step.completed .step-num {
+    background: var(--green);
+    border-color: var(--green);
+    color: #000;
+  }
+  .step-title { font-size: 0.9rem; font-weight: 600; flex: 1; }
+  .step-why {
+    font-size: 0.72rem;
+    color: var(--accent);
+    font-weight: 500;
+    white-space: nowrap;
+    display: none;
+  }
+  .step.open .step-why { display: block; }
+  .step-chevron { color: var(--muted); transition: transform 0.2s; font-size: 0.9rem; flex-shrink: 0; }
+  .step.open .step-chevron { transform: rotate(90deg); }
+  .step-body {
+    display: none;
+    padding: 0 1.25rem 1.25rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.86rem;
+    line-height: 1.7;
+  }
+  .step.open .step-body { display: block; animation: fadeDown 0.2s ease; }
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── WHY BOX ── */
+  .why-box {
+    background: rgba(0,200,255,0.05);
+    border: 1px solid rgba(0,200,255,0.15);
+    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+    margin: 0.75rem 0;
+    font-size: 0.82rem;
+    color: #a0d8f0;
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  /* ── PACE HINT ── */
+  .pace-hint {
+    display: none;
+    border-radius: 7px;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    margin: 0.6rem 0;
+    border-left: 2px solid;
+  }
+  .pace-hint.beginner { background: rgba(0,229,160,0.05); border-color: var(--beginner); color: #8ee8c4; }
+  .pace-hint.average  { background: rgba(0,200,255,0.05); border-color: var(--average);  color: #a0d8f0; }
+  .pace-hint.advanced { background: rgba(180,110,245,0.05); border-color: var(--advanced); color: #c5a8f5; }
+  body.pace-beginner .pace-hint.beginner,
+  body.pace-average  .pace-hint.average,
+  body.pace-advanced .pace-hint.advanced { display: block; }
+
+  /* ── CODE BLOCK ── */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin: 0.75rem 0;
+    overflow: hidden;
+  }
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.9rem;
+    background: rgba(0,0,0,0.3);
+    border-bottom: 1px solid var(--border);
+  }
+  .code-lang {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .copy-btn {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+  .copy-btn.copied { background: var(--green); color: #000; border-color: var(--green); }
+  pre {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.8rem;
+    line-height: 1.65;
+    padding: 1rem;
+    overflow-x: auto;
+    color: #c5d5ef;
+    white-space: pre;
+  }
+  /* Syntax highlight */
+  .cm { color: var(--muted); font-style: italic; } /* comment */
+  .ck { color: var(--accent); }                     /* keyword/flag */
+  .cv { color: var(--green); }                      /* value/string */
+  .cc { color: var(--amber); }                      /* command */
+  .cs { color: #f07090; }                           /* special */
+
+  /* ── SUBSTEP ── */
+  .substep-list { list-style: none; margin: 0.75rem 0; }
+  .substep-list li {
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+    padding: 0.35rem 0;
+    font-size: 0.85rem;
+    border-bottom: 1px solid rgba(42,61,90,0.35);
+  }
+  .substep-list li:last-child { border-bottom: none; }
+  .substep-bullet {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+  }
+
+  /* ── CHECKPOINT ── */
+  .checkpoint {
+    background: linear-gradient(135deg, rgba(0,229,160,0.08), rgba(0,229,160,0.04));
+    border: 1px solid rgba(0,229,160,0.25);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin: 1.25rem 0 0;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+  .checkpoint-icon { font-size: 1.3rem; flex-shrink: 0; }
+  .checkpoint-text { font-size: 0.85rem; color: var(--green); line-height: 1.5; }
+  .checkpoint-text strong { font-size: 0.92rem; display: block; margin-bottom: 0.2rem; }
+
+  /* ── WARNING ── */
+  .warning {
+    background: rgba(255,183,64,0.07);
+    border: 1px solid rgba(255,183,64,0.25);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    margin: 0.75rem 0;
+    font-size: 0.82rem;
+    color: #d9c07a;
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+  }
+
+  /* ── CHECKLIST ── */
+  .checklist { list-style: none; margin: 0.5rem 0; }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.45rem 0;
+    font-size: 0.85rem;
+    border-bottom: 1px solid rgba(42,61,90,0.35);
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li.done { color: var(--green); text-decoration: line-through; opacity: 0.7; }
+  .check-box {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    transition: all 0.15s;
+    background: var(--bg3);
+  }
+  .checklist li.done .check-box {
+    background: var(--green);
+    border-color: var(--green);
+    color: #000;
+  }
+
+  /* ── TROUBLESHOOT ── */
+  .trouble-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+  }
+  .trouble-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1.1rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  .trouble-header:hover { background: var(--surface2); }
+  .trouble-icon { font-size: 1rem; flex-shrink: 0; }
+  .trouble-title { font-size: 0.87rem; font-weight: 600; flex: 1; color: var(--amber); }
+  .trouble-chevron { color: var(--muted); transition: transform 0.2s; }
+  .trouble-card.open .trouble-chevron { transform: rotate(90deg); }
+  .trouble-body {
+    display: none;
+    padding: 0 1.1rem 1.1rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.84rem;
+    line-height: 1.7;
+    color: #c2cfe0;
+  }
+  .trouble-card.open .trouble-body { display: block; }
+
+  /* ── KNOWLEDGE CHECK ── */
+  .kc-question {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 0.85rem;
+  }
+  .kc-q { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem; }
+  .kc-options { list-style: none; }
+  .kc-options li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.83rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-bottom: 0.3rem;
+    border: 1px solid transparent;
+  }
+  .kc-options li:hover { background: var(--surface2); }
+  .kc-options li.correct { background: rgba(0,229,160,0.1); border-color: rgba(0,229,160,0.3); color: var(--green); }
+  .kc-options li.wrong   { background: rgba(255,94,122,0.08); border-color: rgba(255,94,122,0.25); color: var(--red); }
+  .kc-radio {
+    width: 16px; height: 16px;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .kc-options li.correct .kc-radio { background: var(--green); border-color: var(--green); }
+  .kc-options li.wrong   .kc-radio { background: var(--red); border-color: var(--red); }
+
+  /* ── COURSE ROADMAP ── */
+  .roadmap {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-top: 1rem;
+  }
+  .roadmap-title { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; }
+  .rm-week {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(42,61,90,0.4);
+  }
+  .rm-week:last-child { border-bottom: none; }
+  .rm-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-top: 0.35rem;
+    flex-shrink: 0;
+  }
+  .rm-dot.done   { background: var(--green); }
+  .rm-dot.active { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .rm-dot.upcoming { background: var(--border); }
+  .rm-label { font-size: 0.8rem; font-weight: 600; }
+  .rm-desc  { font-size: 0.73rem; color: var(--muted); }
+
+  /* ── SECTION TITLE ── */
+  .section-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.4rem; }
+  .section-desc  { font-size: 0.83rem; color: var(--muted); margin-bottom: 1.25rem; line-height: 1.6; }
+
+  /* ── TAG ── */
+  .inline-tag {
+    display: inline;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    vertical-align: middle;
+  }
+  .tag-green { background: rgba(0,229,160,0.12); color: var(--green); }
+  .tag-blue  { background: rgba(0,200,255,0.12); color: var(--accent); }
+  .tag-amber { background: rgba(255,183,64,0.12); color: var(--amber); }
+
+  a { color: var(--accent); }
+  a:hover { text-decoration: underline; }
+  strong { color: var(--text); font-weight: 600; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 720px) {
+    .lab-layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .lab-hero, .lab-layout { padding: 1.5rem 1rem; }
+  }
+</style>
+</head>
+<body class="pace-beginner">
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <span class="lab-badge">Lab 1.1</span>
+      <span class="header-title">Dev Environment Setup</span>
+    </div>
+    <div class="pace-bar">
+      <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner')">🌱 Beginner</button>
+      <button class="pace-btn" data-pace="average"  onclick="setPace('average')">⚡ Average</button>
+      <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced')">🚀 Advanced</button>
+    </div>
+  </div>
+</header>
+
+<!-- ── LAB HERO ── -->
+<div class="lab-hero">
+  <div class="lab-hero-inner">
+    <div class="lab-crumb">Week 1 <span>›</span> Lab 1.1</div>
+    <h1>Dev Environment Setup</h1>
+    <p style="color:var(--muted);font-size:0.88rem;margin-top:0.4rem">Setting up your professional cloud development environment for the <strong style="color:var(--green)">CloudEats</strong> food ordering app.</p>
+    <div class="lab-meta-row">
+      <div class="meta-chip">⏱ <strong>60 min</strong> &nbsp;Duration</div>
+      <div class="meta-chip">🎯 <strong>Beginner</strong> &nbsp;Skill Level</div>
+      <div class="meta-chip">📋 <strong>5 Parts</strong> &nbsp;18 Steps</div>
+      <div class="meta-chip">🖥 <strong>VirtualBox + Ubuntu + SSH</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LAYOUT ── -->
+<div class="lab-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="sidebar-title">Lab Navigation</div>
+    <ul class="sidebar-nav">
+      <li class="part-divider">Overview</li>
+      <li><a href="#overview" class="active">📋 Lab Overview</a></li>
+      <li><a href="#objectives">🎯 Objectives</a></li>
+      <li class="part-divider">Part 1 · VM Setup</li>
+      <li><a href="#step1">Step 1 · VirtualBox</a></li>
+      <li><a href="#step2">Step 2 · Create VM</a></li>
+      <li><a href="#step3">Step 3 · Install Ubuntu</a></li>
+      <li class="part-divider">Part 2 · Software</li>
+      <li><a href="#step4">Step 4 · System Setup</a></li>
+      <li><a href="#step5">Step 5 · Install Docker</a></li>
+      <li><a href="#step6">Step 6 · Verify Docker</a></li>
+      <li class="part-divider">Part 3 · Dev Tools</li>
+      <li><a href="#step7">Step 7 · VS Code</a></li>
+      <li><a href="#step8">Step 8 · Node.js</a></li>
+      <li><a href="#step9">Step 9 · Python</a></li>
+      <li><a href="#step10">Step 10 · Utilities</a></li>
+      <li class="part-divider">Part 4 · Project</li>
+      <li><a href="#step11">Step 11 · Folders</a></li>
+      <li><a href="#step12">Step 12 · Access VS Code</a></li>
+      <li><a href="#step13">Step 13 · Config Files</a></li>
+      <li><a href="#step14">Step 14 · Git Init</a></li>
+      <li class="part-divider">Part 5 · Remote Access</li>
+      <li><a href="#step15">Step 15 · Get VM IP</a></li>
+      <li><a href="#step16">Step 16 · SSH Extension</a></li>
+      <li><a href="#step17">Step 17 · SSH Config</a></li>
+      <li><a href="#step18">Step 18 · Connect &amp; Verify</a></li>
+      <li class="part-divider">Wrap-Up</li>
+      <li><a href="#checklist">✅ Checklist</a></li>
+      <li><a href="#troubleshoot">🔧 Troubleshoot</a></li>
+      <li><a href="#knowledgecheck">🧠 Knowledge Check</a></li>
+    </ul>
+
+    <div class="progress-box">
+      <div class="progress-title">Your Progress</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progressBar" style="width:0%"></div>
+      </div>
+      <div class="progress-label"><span id="progressCount">0</span> / 12 items done</div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="lab-content">
+
+    <!-- ── OVERVIEW ── -->
+    <section id="overview">
+      <div class="part-header">
+        <div class="part-pill">Overview</div>
+        <div class="part-title">Lab Overview &amp; Scenario</div>
+      </div>
+
+      <div class="step open" style="cursor:default;">
+        <div class="step-body" style="display:block; padding: 1.1rem 1.25rem;">
+          <p style="margin-bottom:0.85rem">You're starting work at <strong>CloudEats</strong> — a new food delivery startup. Your first task: set up the development environment that developers use to build cloud applications.</p>
+
+          <div class="warning">
+            <span>⚠️</span>
+            <span><strong>Important:</strong> In this lab, we'll install Docker but won't use it yet. You'll learn <em>why</em> we need Docker in Week 3. For now, just get it installed!</span>
+          </div>
+
+          <div class="pace-hint beginner">
+            🌱 <strong>Beginner tip:</strong> Don't worry if some tools sound unfamiliar. Each step explains what a tool does and why you need it. Follow each step carefully and ask if you're stuck.
+          </div>
+          <div class="pace-hint average">
+            ⚡ <strong>Average tip:</strong> As you install each tool, think about <em>how</em> it fits into a cloud development workflow. By the end, you should see how the pieces connect: VM → OS → containers → app code.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 <strong>Advanced tip:</strong> Notice the architectural pattern: we're simulating a cloud server locally (VirtualBox), installing container infrastructure (Docker), and setting up the dev toolchain. Reflect on why this mirrors what a cloud engineer does when provisioning a fresh EC2 instance.
+          </div>
+
+          <!-- ═══ MEDIA 7: Architecture Nesting Diagram ═══ -->
+          <style>
+          #media-nest { margin-top: 1rem; }
+          #media-nest svg { width: 100%; height: auto; display: block; }
+          #media-nest .nest-grp { cursor: pointer; }
+          #media-nest .nest-hover {
+            fill: rgba(255,255,255,0); transition: fill 0.15s;
+            pointer-events: none;
+          }
+          #media-nest .nest-grp:hover .nest-hover { fill: rgba(255,255,255,0.025); }
+          #media-nest .nest-grp.active .nest-hover { fill: rgba(0,200,255,0.04); }
+          #media-nest .nest-detail {
+            margin-top: 0.75rem; padding: 0.85rem 1rem;
+            background: var(--bg3); border: 1px solid var(--border);
+            border-radius: 9px; font-size: 0.83rem; line-height: 1.65;
+            color: var(--muted); animation: nestFade 0.2s ease;
+            min-height: 64px;
+          }
+          @keyframes nestFade { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+          #media-nest .nd-title {
+            font-size: 0.9rem; font-weight: 700; color: var(--text);
+            margin-bottom: 0.3rem; display: flex; align-items: center; gap: 0.5rem;
+          }
+          #media-nest .nd-cloud {
+            font-size: 0.7rem; font-weight: 600; letter-spacing: 0.05em;
+            background: rgba(0,200,255,0.1); color: var(--accent);
+            border: 1px solid rgba(0,200,255,0.2); border-radius: 4px;
+            padding: 0.1rem 0.45rem; margin-left: auto; white-space: nowrap;
+          }
+          #media-nest .nd-b { display: none; }
+          #media-nest .nd-a { display: none; }
+          #media-nest .nd-x { display: none; }
+          body.pace-beginner #media-nest .nd-b { display: block; }
+          body.pace-average  #media-nest .nd-a { display: block; }
+          body.pace-advanced #media-nest .nd-x { display: block; }
+          </style>
+
+          <div id="media-nest">
+            <svg viewBox="0 0 640 350" xmlns="http://www.w3.org/2000/svg">
+
+              <!-- Layer 1: Laptop -->
+              <g class="nest-grp" id="ng-laptop" onclick="nestClick('laptop')">
+                <rect x="3" y="3" width="634" height="344" rx="13"
+                      fill="rgba(10,14,26,0.55)" stroke="#3a4d6a" stroke-width="1.5"/>
+                <rect class="nest-hover" x="3" y="3" width="634" height="344" rx="13"/>
+                <text x="17" y="22" font-size="11" font-family="Sora,sans-serif" fill="#6b7fa0" font-weight="600">🖥️ Your Laptop — Host Computer</text>
+                <text x="621" y="22" font-size="9.5" font-family="Sora,sans-serif" fill="#3a4d6a" text-anchor="end">Your physical machine</text>
+              </g>
+
+              <!-- Layer 2: VirtualBox -->
+              <g class="nest-grp" id="ng-vbox" onclick="nestClick('vbox')">
+                <rect x="30" y="34" width="580" height="278" rx="10"
+                      fill="rgba(255,183,64,0.035)" stroke="rgba(255,183,64,0.38)" stroke-width="1.5"/>
+                <rect class="nest-hover" x="30" y="34" width="580" height="278" rx="10"/>
+                <text x="44" y="52" font-size="11" font-family="Sora,sans-serif" fill="#ffb740" font-weight="700">VirtualBox / Proxmox VM</text>
+                <text x="602" y="52" font-size="9.5" font-family="Sora,sans-serif" fill="rgba(255,183,64,0.45)" text-anchor="end">≡ AWS EC2 instance</text>
+                <text x="44" y="303" font-size="9" font-family="Sora,sans-serif" fill="rgba(255,183,64,0.35)" font-style="italic">Simulates a cloud virtual machine — locally, on your hardware</text>
+              </g>
+
+              <!-- Layer 3: Ubuntu -->
+              <g class="nest-grp" id="ng-ubuntu" onclick="nestClick('ubuntu')">
+                <rect x="58" y="64" width="524" height="210" rx="8"
+                      fill="rgba(0,200,255,0.035)" stroke="rgba(0,200,255,0.28)" stroke-width="1.5"/>
+                <rect class="nest-hover" x="58" y="64" width="524" height="210" rx="8"/>
+                <text x="72" y="83" font-size="11" font-family="Sora,sans-serif" fill="#00c8ff" font-weight="700">🐧 Ubuntu Server 22.04 LTS</text>
+                <text x="574" y="83" font-size="9.5" font-family="Sora,sans-serif" fill="rgba(0,200,255,0.4)" text-anchor="end">≡ Amazon Machine Image (AMI)</text>
+              </g>
+
+              <!-- Component Box 1: VS Code -->
+              <g class="nest-grp" id="ng-vscode" onclick="nestClick('vscode')">
+                <rect x="70" y="96" width="116" height="164" rx="7"
+                      fill="rgba(0,229,160,0.05)" stroke="rgba(0,229,160,0.32)" stroke-width="1.5"/>
+                <rect class="nest-hover" x="70" y="96" width="116" height="164" rx="7"/>
+                <text x="128" y="124" font-size="24" text-anchor="middle" font-family="Sora,sans-serif">💻</text>
+                <text x="128" y="150" font-size="10" font-family="Sora,sans-serif" fill="#e8edf5" text-anchor="middle" font-weight="700">VS Code</text>
+                <text x="128" y="164" font-size="9" font-family="Sora,sans-serif" fill="#6b7fa0" text-anchor="middle">Server :8080</text>
+                <text x="128" y="239" font-size="8.5" font-family="Sora,sans-serif" fill="rgba(0,229,160,0.45)" text-anchor="middle">≡ AWS Cloud9</text>
+              </g>
+
+              <!-- Component Box 2: Node.js + Python -->
+              <g class="nest-grp" id="ng-node" onclick="nestClick('node')">
+                <rect x="198" y="96" width="116" height="164" rx="7"
+                      fill="rgba(0,229,160,0.05)" stroke="rgba(0,229,160,0.32)" stroke-width="1.5"/>
+                <rect class="nest-hover" x="198" y="96" width="116" height="164" rx="7"/>
+                <text x="256" y="124" font-size="24" text-anchor="middle" font-family="Sora,sans-serif">🟩</text>
+                <text x="256" y="150" font-size="10" font-family="Sora,sans-serif" fill="#e8edf5" text-anchor="middle" font-weight="700">Node.js + Python</text>
+                <text x="256" y="164" font-size="9" font-family="Sora,sans-serif" fill="#6b7fa0" text-anchor="middle">Dev Runtimes</text>
+                <text x="256" y="239" font-size="8.5" font-family="Sora,sans-serif" fill="rgba(0,229,160,0.45)" text-anchor="middle">≡ EC2 Runtime</text>
+              </g>
+
+              <!-- Component Box 3: Docker (greyed, future) -->
+              <g class="nest-grp" id="ng-docker" onclick="nestClick('docker')" style="opacity:0.38">
+                <rect x="326" y="96" width="116" height="164" rx="7"
+                      fill="rgba(107,127,160,0.05)" stroke="#3a4d6a" stroke-width="1.5" stroke-dasharray="5 3"/>
+                <rect class="nest-hover" x="326" y="96" width="116" height="164" rx="7"/>
+                <text x="384" y="124" font-size="24" text-anchor="middle" font-family="Sora,sans-serif">🐳</text>
+                <text x="384" y="150" font-size="10" font-family="Sora,sans-serif" fill="#e8edf5" text-anchor="middle" font-weight="700">Docker</text>
+                <text x="384" y="164" font-size="9" font-family="Sora,sans-serif" fill="#6b7fa0" text-anchor="middle">Container Engine</text>
+                <text x="384" y="239" font-size="8.5" font-family="Sora,sans-serif" fill="#3a4d6a" text-anchor="middle">≡ ECS / Fargate</text>
+              </g>
+              <!-- Week badge outside greyed group so it's always visible -->
+              <rect x="349" y="99" width="70" height="15" rx="7.5"
+                    fill="rgba(255,183,64,0.14)" stroke="rgba(255,183,64,0.4)" stroke-width="1"/>
+              <text x="384" y="111" font-size="8.5" font-family="Sora,sans-serif"
+                    fill="#ffb740" text-anchor="middle" font-weight="700">Week 2+ →</text>
+
+              <!-- Component Box 4: Project Folder -->
+              <g class="nest-grp" id="ng-project" onclick="nestClick('project')">
+                <rect x="454" y="96" width="116" height="164" rx="7"
+                      fill="rgba(0,200,255,0.05)" stroke="rgba(0,200,255,0.28)" stroke-width="1.5"/>
+                <rect class="nest-hover" x="454" y="96" width="116" height="164" rx="7"/>
+                <text x="512" y="124" font-size="24" text-anchor="middle" font-family="Sora,sans-serif">📁</text>
+                <text x="512" y="150" font-size="10" font-family="Sora,sans-serif" fill="#e8edf5" text-anchor="middle" font-weight="700">cloudeats-app/</text>
+                <text x="512" y="164" font-size="9" font-family="Sora,sans-serif" fill="#6b7fa0" text-anchor="middle">Your Project</text>
+                <text x="512" y="239" font-size="8.5" font-family="Sora,sans-serif" fill="rgba(0,200,255,0.45)" text-anchor="middle">≡ Git repo on EC2</text>
+              </g>
+
+              <!-- Click hint -->
+              <text x="320" y="339" font-size="9.5" font-family="Sora,sans-serif"
+                    fill="#3a4d6a" text-anchor="middle" font-style="italic">↑ Click any layer or component to explore what it does and its cloud equivalent</text>
+            </svg>
+
+            <div class="nest-detail" id="nestDetail">
+              <div class="nd-title">Explore the architecture</div>
+              <div class="nd-b">Click any labelled box or layer above — each one explains what it is and why it exists in a cloud development setup.</div>
+              <div class="nd-a">Click any layer to see how it maps to AWS and what cloud concept it represents. The nesting reflects real infrastructure hierarchy.</div>
+              <div class="nd-x">Click any layer to see the cloud equivalent, hypervisor type, and the architectural principle behind why this layer exists in the stack.</div>
+            </div>
+          </div>
+
+          <script>
+          (function(){
+            const data = {
+              laptop:{
+                title:'🖥️ Your Laptop — Host Computer',
+                cloud:'AWS Developer Workstation / Cloud9',
+                b:'This is your actual computer. Everything else — VirtualBox, Ubuntu, VS Code — runs inside it as simulated infrastructure. Your laptop\'s CPU and RAM are shared between everything.',
+                a:'The host machine runs a Type-2 hypervisor (VirtualBox) which creates fully isolated VMs. In professional environments, developers often SSH from their laptop into a remote cloud server instead of running a local VM.',
+                x:'Large engineering teams use cloud-based development environments (AWS Cloud9, GitHub Codespaces) to avoid "works on my machine" issues. The entire dev environment lives on a cloud VM — no local setup required.'
+              },
+              vbox:{
+                title:'📦 VirtualBox / Proxmox VM',
+                cloud:'AWS EC2 Instance',
+                b:'VirtualBox creates a "computer inside a computer." It simulates the server you\'d rent from AWS — it runs separately from your laptop and can be stopped, started, or deleted just like a real cloud VM.',
+                a:'This is a Type-2 hypervisor running on your OS. It creates isolated VMs with their own CPU, RAM, network interfaces, and storage — functionally equivalent to an EC2 instance, just local and free.',
+                x:'AWS EC2 uses the Nitro System (Type-1 hypervisor) — dedicated silicon for network and storage offload, achieving near-bare-metal performance. Your VirtualBox commands (start, stop, snapshot) translate 1:1 to EC2 CLI operations.'
+              },
+              ubuntu:{
+                title:'🐧 Ubuntu Server 22.04 LTS',
+                cloud:'Amazon Machine Image (AMI)',
+                b:'Ubuntu is the operating system — like Windows but for servers. It\'s free, open-source, and the most popular OS for cloud servers worldwide. The "Server" edition has no graphical interface — just a command line.',
+                a:'22.04 LTS receives security patches until 2027. All interaction is via CLI — same as how real cloud servers are managed. Learning CLI here is learning the same skills cloud engineers use every day.',
+                x:'The ubuntu-22.04-server-cloudimg-amd64 AMI is the official AWS image. Cloud-init runs on first boot, configuring hostname, SSH keys, and users from EC2 instance metadata. Identical OS — just launched from a snapshot instead of an ISO.'
+              },
+              vscode:{
+                title:'💻 VS Code Server — Code Editor',
+                cloud:'AWS Cloud9 / VS Code Remote-SSH',
+                b:'VS Code is where you write all your code. The "server" version runs inside the Ubuntu VM and lets you access it from any browser on your laptop — no need to install VS Code locally.',
+                a:'code-server is VS Code packaged as a web app, accessible at http://VM-IP:8080. This is the remote development pattern: the editor runs where the code lives, on the server. No file sync needed.',
+                x:'This architecture — editor on the remote server — is how cloud engineers work at scale. VS Code Remote-SSH is the alternative: local editor, remote filesystem. AWS Cloud9 uses the same server-side model with IAM integration.'
+              },
+              node:{
+                title:'🟩 Node.js + Python — Dev Runtimes',
+                cloud:'EC2 Runtime / Lambda Runtime',
+                b:'Node.js runs your JavaScript API server. Python is for scripting and automation. These are the languages CloudEats is built with. You install them directly on Ubuntu.',
+                a:'Runtime management is your responsibility in IaaS — you install and update it. PaaS (Heroku, Elastic Beanstalk) installs it for you. FaaS (Lambda) lets you pick a version and handles the rest.',
+                x:'On EC2, use NVM (Node Version Manager) to switch Node versions without reinstalling. In production, Docker pins runtime versions into the container image — this solves the version drift problem between dev and production environments.'
+              },
+              docker:{
+                title:'🐳 Docker — Container Engine (Week 2+)',
+                cloud:'AWS ECS / AWS Fargate',
+                b:'Docker is installed now but not used until Week 2. It packages apps and their dependencies into portable "containers." The same container runs identically on your laptop, a colleague\'s machine, or AWS.',
+                a:'Docker solves the "works on my machine" problem by bundling the app + runtime + config into one portable image. On AWS, ECS runs those images as managed tasks; Fargate removes the need to manage the underlying servers.',
+                x:'Docker uses Linux namespaces (process isolation) and cgroups (resource limits). Containers share the host kernel — unlike VMs. The container image you build locally is the same artifact deployed to ECS in production.'
+              },
+              project:{
+                title:'📁 cloudeats-app/ — Your Project',
+                cloud:'Git Repository + EC2 / S3',
+                b:'This folder is where all CloudEats code lives. Every lab this semester builds on it. By Week 10 it will be a complete food ordering system with a database, API, and microservices.',
+                a:'The folder structure mirrors the three-tier architecture: frontend/ (presentation), backend/ (application logic), database/ (data). This separation is enforced by convention now and enforced by containers later.',
+                x:'In production, code lives in Git — not on the server. CI/CD pulls from Git and deploys. The server\'s local copy is ephemeral. This is the immutable infrastructure principle: servers are cattle, not pets. Your folder becomes a Docker image becomes a Git tag becomes an ECS deployment.'
+              }
+            };
+
+            let activeId = null;
+            window.nestClick = function(id) {
+              if (activeId) document.getElementById('ng-'+activeId)?.classList.remove('active');
+              activeId = id;
+              document.getElementById('ng-'+id)?.classList.add('active');
+              const d = data[id];
+              document.getElementById('nestDetail').innerHTML =
+                '<div class="nd-title">' + d.title +
+                  '<span class="nd-cloud">≡ ' + d.cloud + '</span>' +
+                '</div>' +
+                '<div class="nd-b">' + d.b + '</div>' +
+                '<div class="nd-a">' + d.a + '</div>' +
+                '<div class="nd-x">' + d.x + '</div>';
+            };
+          })();
+          </script>
+          <!-- ═══ END MEDIA 7 ═══ -->
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ── OBJECTIVES ── -->
+    <section id="objectives">
+      <div class="section-title">🎯 Learning Objectives</div>
+      <p class="section-desc">By the end of this lab, you will be able to:</p>
+      <div class="step" style="cursor:default;">
+        <div class="step-body" style="display:block; padding: 1rem 1.25rem;">
+          <ul class="substep-list">
+            <li><div class="substep-bullet">1</div><div>Set up a <strong>virtual machine</strong> for development (simulates cloud servers)</div></li>
+            <li><div class="substep-bullet">2</div><div>Install <strong>Docker</strong> — the foundation for cloud containerisation</div></li>
+            <li><div class="substep-bullet">3</div><div>Install essential <strong>web development tools</strong> (Node.js, Python, VS Code)</div></li>
+            <li><div class="substep-bullet">4</div><div>Create a proper <strong>project folder structure</strong></div></li>
+            <li><div class="substep-bullet">5</div><div>Understand <strong>why</strong> each component exists in the dev environment</div></li>
+            <li><div class="substep-bullet">6</div><div>Connect VS Code on <strong>Windows 11</strong> directly to your Linux VM via <strong>Remote-SSH</strong> — the workflow you'll use for the entire semester</div></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- PART 1 -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section id="part1">
+      <div class="part-header">
+        <div class="part-pill">Part 1</div>
+        <div class="part-title">Virtual Machine Setup</div>
+        <div class="part-time">⏱ ~15 min</div>
+      </div>
+
+      <!-- ── EXPAND / COLLAPSE CONTROLS ── -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.85rem;padding:0.4rem 0;">
+        <span style="font-size:0.75rem;color:var(--muted)"><strong style="color:var(--text)">18 steps</strong> across 5 parts</span>
+        <div style="display:flex;gap:0.5rem">
+          <button onclick="expandAll()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--green)';this.style.borderColor='var(--green)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↓ Expand All</button>
+          <button onclick="collapseAll()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--muted)';this.style.borderColor='var(--muted)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↑ Collapse All</button>
+        </div>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="step" id="step1" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">1</div>
+          <div class="step-title">Download &amp; Install VirtualBox</div>
+          <div class="step-why">Why VirtualBox?</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <div class="why-box">💡 <span><strong>Why VirtualBox?</strong> It creates a virtual computer inside your real computer. This simulates the cloud virtual machines (VMs) you'll use later. Think of it as a "safe sandbox" environment.</span></div>
+          <ul class="substep-list">
+            <li><div class="substep-bullet">a</div><div>Go to <a href="https://www.virtualbox.org/wiki/Downloads" target="_blank">virtualbox.org</a> → download for your OS (Windows / Mac / Linux)</div></li>
+            <li><div class="substep-bullet">b</div><div>Install with <strong>default settings</strong> — don't change anything</div></li>
+            <li><div class="substep-bullet">c</div><div>Go to <a href="https://ubuntu.com/download/server" target="_blank">ubuntu.com/download/server</a> → download <strong>Ubuntu Server 22.04 LTS</strong></div></li>
+            <li><div class="substep-bullet">d</div><div>Save the <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">.iso</code> file to your Downloads folder</div></li>
+          </ul>
+          <div class="pace-hint beginner">
+            🌱 LTS = "Long Term Support" — the most stable, well-supported version. Always choose LTS for servers.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 Ubuntu Server 22.04 uses kernel 5.15 with systemd. Note that "Server" edition has no GUI by default — all interaction is via CLI, mirroring how cloud VMs are typically managed (SSH only).
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step" id="step2" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">2</div>
+          <div class="step-title">Create Development VM</div>
+          <div class="step-why">VM Configuration</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <ul class="substep-list">
+            <li><div class="substep-bullet">a</div><div>Open VirtualBox → click <strong>"New"</strong></div></li>
+            <li><div class="substep-bullet">b</div><div>Name: <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">CloudEats-Dev</code> &nbsp;|&nbsp; Type: <strong>Linux</strong> &nbsp;|&nbsp; Version: <strong>Ubuntu (64-bit)</strong></div></li>
+            <li><div class="substep-bullet">c</div><div>Memory: <strong>4096 MB (4 GB)</strong> &nbsp;|&nbsp; Hard disk: <strong>25 GB (create new)</strong></div></li>
+            <li><div class="substep-bullet">d</div><div>After creation → click <strong>Settings → Network</strong></div></li>
+            <li><div class="substep-bullet">e</div><div>Adapter 1 → Attached to: <strong>NAT</strong> (for internet access)</div></li>
+            <li><div class="substep-bullet">f</div><div>Adapter 2 → Enable ✓ → Attached to: <strong>Host-only Adapter</strong> (for VS Code access from your computer)</div></li>
+          </ul>
+          <div class="pace-hint beginner">
+            🌱 <strong>NAT</strong> = your VM can reach the internet through your host. <strong>Host-only</strong> = your laptop can talk to the VM directly. Both are needed!
+          </div>
+          <div class="pace-hint average">
+            ⚡ The dual-network setup mirrors a cloud server: NAT = public interface (egress to internet), Host-only = private interface (internal network). In AWS, these map to public subnet and private subnet respectively.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 VirtualBox's Host-only network uses a virtual NIC (typically vboxnet0). This is conceptually similar to a VPC's private subnet with no internet gateway. The NAT adapter uses VirtualBox's built-in NAT engine — note that incoming connections are blocked by default (no port forwarding set up yet), matching the default deny-inbound posture of a cloud security group.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step" id="step3" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">3</div>
+          <div class="step-title">Install Ubuntu Server</div>
+          <div class="step-why">OS Installation</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <ul class="substep-list">
+            <li><div class="substep-bullet">a</div><div>Start the VM → select the Ubuntu ISO file when prompted</div></li>
+            <li><div class="substep-bullet">b</div><div>Language: <strong>English</strong> · Update installer: <strong>Skip</strong> · Keyboard: <strong>Default</strong></div></li>
+            <li><div class="substep-bullet">c</div><div>Network/Proxy/Mirror: <strong>Accept all defaults</strong></div></li>
+            <li><div class="substep-bullet">d</div><div>Storage: <strong>Use entire disk</strong></div></li>
+            <li><div class="substep-bullet">e</div><div>Profile: Name <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">Cloud Developer</code> · Server <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">cloudeats-dev</code> · User <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">developer</code> · Password <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">CloudEats2024!</code></div></li>
+            <li><div class="substep-bullet">f</div><div>SSH: <strong>✓ Install OpenSSH server</strong> · Snaps: Skip</div></li>
+            <li><div class="substep-bullet">g</div><div>Wait for installation → reboot → remove ISO media</div></li>
+          </ul>
+          <div class="warning">
+            <span>⚠️</span>
+            <span>This password is only for a local dev environment. <strong>Never use simple passwords in real cloud deployments.</strong></span>
+          </div>
+
+          <div class="checkpoint">
+            <span class="checkpoint-icon">⏱</span>
+            <div class="checkpoint-text">
+              <strong>Checkpoint · 15 min mark</strong>
+              VM should be running Ubuntu with a login prompt. Login with username <code style="font-family:'Fira Code',monospace;font-size:0.85em">developer</code> and your password.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- PART 2 -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section id="part2">
+      <div class="part-header">
+        <div class="part-pill">Part 2</div>
+        <div class="part-title">Essential Software Installation</div>
+        <div class="part-time">⏱ ~20 min</div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step" id="step4" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">4</div>
+          <div class="step-title">Initial System Setup</div>
+          <div class="step-why">Update &amp; install tools</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.75rem">Login to your VM and run these commands:</p>
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-lang">🐧 bash</div>
+              <button class="copy-btn" onclick="copyCode(this, event)">Copy</button>
+            </div>
+            <pre><span class="cm"># Update system packages (always do this first!)</span>
+sudo apt update && sudo apt upgrade -y
+
+<span class="cm"># Install essential tools</span>
+sudo apt install -y curl wget git vim nano tree htop net-tools
+
+<span class="cm"># Install build tools (needed for compiling software)</span>
+sudo apt install -y build-essential software-properties-common apt-transport-https ca-certificates gnupg lsb-release</pre>
+          </div>
+          <div class="pace-hint beginner">
+            🌱 <strong>sudo</strong> = "do this as admin". <strong>apt</strong> = Ubuntu's app store for installing software. The <strong>-y</strong> flag means "yes to all" so you don't have to confirm each package.
+          </div>
+          <div class="pace-hint average">
+            ⚡ <code>apt update</code> refreshes the package index (list of available software). <code>apt upgrade</code> installs the latest versions. Always run both before installing anything to avoid dependency conflicts.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="step" id="step5" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">5</div>
+          <div class="step-title">Install Docker</div>
+          <div class="step-why">Foundation for containers</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <div class="why-box">🐳 <span><strong>Why Docker?</strong> It's the foundation of cloud containerisation. We're installing it now but you'll learn what it does in <strong>Week 3</strong>. Think of it as installing a tool you'll use later.</span></div>
+
+          <p style="margin-bottom:0.75rem; margin-top:0.75rem">First, check the official docs for current steps:</p>
+          <ul class="substep-list" style="margin-bottom:1rem">
+            <li><div class="substep-bullet">1</div><div><a href="https://docs.docker.com/engine/install/ubuntu/" target="_blank">Docker Engine Docs</a> — follow the 3 installation steps on the page</div></li>
+            <li><div class="substep-bullet">2</div><div><a href="https://docs.docker.com/compose/install/linux/" target="_blank">Docker Compose Plugin Docs</a> — install as a Docker plugin</div></li>
+          </ul>
+
+          <p style="margin-bottom:0.75rem; color:var(--muted); font-size:0.82rem">Or use these commands (may need updating — check docs if they fail):</p>
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-lang">🐧 bash · Docker Install</div>
+              <button class="copy-btn" onclick="copyCode(this, event)">Copy</button>
+            </div>
+            <pre><span class="cm"># Add Docker's official GPG key (security verification)</span>
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+<span class="cm"># Add Docker repository to apt sources</span>
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+<span class="cm"># Update and install Docker Engine</span>
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io
+
+<span class="cm"># Add your user to the docker group (so you don't need sudo every time)</span>
+sudo usermod -aG docker $USER
+
+<span class="cm"># Restart system to apply group membership</span>
+sudo reboot</pre>
+          </div>
+          <div class="pace-hint advanced">
+            🚀 The GPG key verification step is crucial for supply-chain security. Adding the official key ensures packages are cryptographically verified to be from Docker Inc. — preventing a MITM attack from substituting a malicious package. The user group addition avoids running containers as root, following the principle of least privilege.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 6 -->
+      <div class="step" id="step6" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">6</div>
+          <div class="step-title">Verify Docker Installation</div>
+          <div class="step-why">Test everything works</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.75rem">After reboot, login and run:</p>
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-lang">🐧 bash · Verification</div>
+              <button class="copy-btn" onclick="copyCode(this, event)">Copy</button>
+            </div>
+            <pre><span class="cm"># Check Docker version</span>
+docker --version
+
+<span class="cm"># Check Docker Compose</span>
+docker compose --version
+
+<span class="cm"># Run the hello-world test container</span>
+docker run hello-world
+
+<span class="cm"># Confirm Docker daemon is running</span>
+sudo systemctl status docker</pre>
+          </div>
+
+          <div class="warning">
+            <span>📋</span>
+            <span><strong>Expected output:</strong> Docker version 24.0.x · docker compose version 2.x.x · "Hello from Docker!" message · Active: active (running)</span>
+          </div>
+
+          <div class="checkpoint">
+            <span class="checkpoint-icon">⏱</span>
+            <div class="checkpoint-text">
+              <strong>Checkpoint · 35 min mark</strong>
+              Docker installed and verified working. The hello-world container ran successfully.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- PART 3 -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section id="part3">
+      <div class="part-header">
+        <div class="part-pill">Part 3</div>
+        <div class="part-title">Development Tools Setup</div>
+        <div class="part-time">⏱ ~15 min</div>
+      </div>
+
+      <!-- Step 7 -->
+      <div class="step" id="step7" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">7</div>
+          <div class="step-title">Install VS Code</div>
+          <div class="step-why">Professional code editor</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <div class="why-box">💻 <span><strong>Why VS Code?</strong> Professional IDE with excellent cloud dev features — integrated terminal, Git support, Docker extension, remote SSH. Access it via your browser (no need to set up a GUI on the server).</span></div>
+
+          <p style="margin:0.75rem 0 0.5rem"><strong>Option A</strong> · Download .deb directly <span class="inline-tag tag-green">Recommended</span></p>
+          <ul class="substep-list" style="margin-bottom:0.75rem">
+            <li><div class="substep-bullet">1</div><div>Go to <a href="https://code.visualstudio.com/download" target="_blank">code.visualstudio.com/download</a></div></li>
+            <li><div class="substep-bullet">2</div><div>Download the <strong>.deb (Debian/Ubuntu)</strong> package</div></li>
+            <li><div class="substep-bullet">3</div><div>Run: <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">sudo dpkg -i code_*.deb</code></div></li>
+          </ul>
+
+          <p style="margin-bottom:0.5rem"><strong>Option B</strong> · Install code-server (browser-based)</p>
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-lang">🐧 bash · VS Code Server</div>
+              <button class="copy-btn" onclick="copyCode(this, event)">Copy</button>
+            </div>
+            <pre><span class="cm"># Install code-server (VS Code in your browser)</span>
+curl -fsSL https://code-server.dev/install.sh | sh
+
+<span class="cm"># Enable and start the service</span>
+sudo systemctl enable --now code-server@$USER
+
+<span class="cm"># Configure: set password and allow all connections</span>
+mkdir -p ~/.config/code-server
+cat > ~/.config/code-server/config.yaml &lt;&lt; 'EOF'
+bind-addr: 0.0.0.0:8080
+auth: password
+password: CloudEats2024!
+cert: false
+EOF
+
+sudo systemctl restart code-server@$USER</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 8 -->
+      <div class="step" id="step8" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">8</div>
+          <div class="step-title">Install Node.js and npm</div>
+          <div class="step-why">Web app runtime</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <div class="why-box">🟩 <span><strong>Why Node.js?</strong> Most popular runtime for building web servers and APIs. The <strong>npm</strong> package manager gives access to thousands of open-source libraries.</span></div>
+          <p style="margin:0.75rem 0 0.5rem">Reference: <a href="https://docs.npmjs.com/downloading-and-installing-node-js-and-npm" target="_blank">npm docs</a> · <a href="https://nodesource.com/products/distributions" target="_blank">NodeSource</a></p>
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-lang">🐧 bash · Node.js 22.x LTS</div>
+              <button class="copy-btn" onclick="copyCode(this, event)">Copy</button>
+            </div>
+            <pre><span class="cm"># Add NodeSource repository for Node.js 22.x</span>
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs
+
+<span class="cm"># Verify</span>
+node --version
+npm --version</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 9 -->
+      <div class="step" id="step9" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">9</div>
+          <div class="step-title">Install Python 3 and pip</div>
+          <div class="step-why">Scripting &amp; automation</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <div class="why-box">🐍 <span><strong>Why Python?</strong> Great for scripting, automation, and building APIs with frameworks like Flask or FastAPI. Often used for data processing in cloud pipelines.</span></div>
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-lang">🐧 bash · Python 3</div>
+              <button class="copy-btn" onclick="copyCode(this, event)">Copy</button>
+            </div>
+            <pre><span class="cm"># Install Python 3, pip (package manager), and venv (virtual environments)</span>
+sudo apt install -y python3 python3-pip python3-venv
+
+<span class="cm"># Verify</span>
+python3 --version
+pip3 --version</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 10 -->
+      <div class="step" id="step10" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">10</div>
+          <div class="step-title">Install Dev Utilities</div>
+          <div class="step-why">Command-line helpers</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-lang">🐧 bash · Utilities</div>
+              <button class="copy-btn" onclick="copyCode(this, event)">Copy</button>
+            </div>
+            <pre><span class="cm"># Install essential development CLI tools</span>
+sudo apt install -y curl jq tree htop</pre>
+          </div>
+          <ul class="substep-list" style="margin-top:0.75rem">
+            <li><div class="substep-bullet">curl</div><div>Test APIs and download files — you'll use this constantly</div></li>
+            <li><div class="substep-bullet">jq</div><div>Format and query JSON responses from APIs</div></li>
+            <li><div class="substep-bullet">tree</div><div>View your project folder structure as a diagram</div></li>
+            <li><div class="substep-bullet">htop</div><div>Monitor CPU, memory, and processes in real time</div></li>
+          </ul>
+
+          <div class="checkpoint">
+            <span class="checkpoint-icon">⏱</span>
+            <div class="checkpoint-text">
+              <strong>Checkpoint · 50 min mark</strong>
+              All development tools installed. Run <code style="font-family:'Fira Code',monospace;font-size:0.85em">node -v && python3 -V && docker -v</code> — all should print version numbers.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- PART 4 -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section id="part4">
+      <div class="part-header">
+        <div class="part-pill">Part 4</div>
+        <div class="part-title">Project Structure &amp; Git</div>
+        <div class="part-time">⏱ ~10 min</div>
+      </div>
+
+      <!-- Step 11 -->
+      <div class="step" id="step11" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">11</div>
+          <div class="step-title">Create Project Directory Structure</div>
+          <div class="step-why">Organised folders</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-lang">🐧 bash · Project Setup</div>
+              <button class="copy-btn" onclick="copyCode(this, event)">Copy</button>
+            </div>
+            <pre><span class="cm"># Create the main project directory</span>
+mkdir -p ~/cloudeats-app
+cd ~/cloudeats-app
+
+<span class="cm"># Create organised sub-folders</span>
+mkdir -p {frontend,backend,database,docs}
+mkdir -p frontend/{html,css,js,images}
+mkdir -p backend/{api,models,controllers}
+mkdir -p database/{schemas,data}
+
+<span class="cm"># Create placeholder files</span>
+touch README.md
+touch .gitignore
+touch docker-compose.yml
+
+<span class="cm"># View the structure</span>
+tree ~/cloudeats-app</pre>
+          </div>
+          <div class="pace-hint beginner">
+            🌱 This structure separates your code into logical sections: <strong>frontend</strong> = what users see, <strong>backend</strong> = server logic, <strong>database</strong> = data storage. This is standard in real projects.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 This structure aligns with the three-tier architecture (presentation / application / data). In a microservices setup, each backend folder would become its own independent service with its own container. The <code>docker-compose.yml</code> will eventually define all services and their networking.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 12 -->
+      <div class="step" id="step12" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">12</div>
+          <div class="step-title">Access VS Code — Choose Your Method</div>
+          <div class="step-why">Open the editor</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.85rem">There are <strong>three ways</strong> to access VS Code. Choose based on your setup — all three connect to the same Linux VM and work identically for every lab this semester.</p>
+
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1rem">
+            <div style="background:rgba(0,229,160,0.06);border:1px solid rgba(0,229,160,0.2);border-radius:8px;padding:0.75rem;font-size:0.8rem">
+              <div style="font-weight:700;color:var(--green);margin-bottom:0.3rem">Option A</div>
+              <div style="color:var(--muted)">code-server in Browser</div>
+              <div style="margin-top:0.4rem;font-size:0.73rem;color:#8ee8c4">✅ No install needed<br>✅ Works on any OS<br>✅ Shared lab PCs</div>
+            </div>
+            <div style="background:rgba(0,200,255,0.06);border:1px solid rgba(0,200,255,0.2);border-radius:8px;padding:0.75rem;font-size:0.8rem">
+              <div style="font-weight:700;color:var(--accent);margin-bottom:0.3rem">Option B ⭐ Recommended</div>
+              <div style="color:var(--muted)">VS Code Remote-SSH</div>
+              <div style="margin-top:0.4rem;font-size:0.73rem;color:#a0d8f0">✅ Full VS Code features<br>✅ Git sidebar works<br>✅ Personal laptop</div>
+            </div>
+            <div style="background:rgba(180,110,245,0.06);border:1px solid rgba(180,110,245,0.2);border-radius:8px;padding:0.75rem;font-size:0.8rem">
+              <div style="font-weight:700;color:var(--advanced);margin-bottom:0.3rem">Option C</div>
+              <div style="color:var(--muted)">VirtualBox Console</div>
+              <div style="margin-top:0.4rem;font-size:0.73rem;color:#c5a8f5">⚠️ Week 1 setup only<br>❌ Tiny screen<br>❌ No copy-paste</div>
+            </div>
+          </div>
+
+          <p style="margin-bottom:0.5rem"><strong>Option A · Browser-based (code-server) — any computer</strong></p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · run inside VM</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Find your VM's Host-only IP (look for 192.168.56.x)</span>
+ip addr show
+
+<span class="cm"># Print the URL automatically</span>
+echo "VS Code → http://$(hostname -I | awk '{print $2}'):8080"</pre>
+          </div>
+          <p style="font-size:0.83rem;color:var(--muted);margin-top:0.3rem;margin-bottom:0.85rem">Open the printed URL in your <strong>Windows browser</strong>. Password: <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">CloudEats2024!</code></p>
+
+          <p style="margin-bottom:0.5rem"><strong>Option B · VS Code Remote-SSH — full setup in Part 5 below ↓</strong></p>
+          <div class="why-box">🔗 <span>If you have <strong>VS Code installed on your Windows 11 laptop</strong>, skip ahead to <strong>Part 5</strong> after completing Part 4. The Remote-SSH method gives you the full VS Code experience — Git sidebar, extensions, split terminals — and works for every lab from Week 1 to Week 10.</span></div>
+
+          <div class="pace-hint beginner">
+            🌱 <strong>Not sure which to use?</strong> Use Option A (browser) today to get started quickly. Come back to Part 5 (Remote-SSH) once your VM is fully working. Both options work equally well for the labs.
+          </div>
+          <div class="pace-hint average">
+            ⚡ Option B (Remote-SSH) is what professional developers use — your editor runs locally but all code, terminals, and Docker commands execute on the remote Linux server. Set it up in Part 5 today so you're ready for Week 2 onward.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 VS Code Remote-SSH uses the SSH protocol to forward filesystem access and terminal I/O to the remote host. Extensions install server-side on the VM — not on Windows. This is architecturally identical to how engineers connect to EC2 instances or on-prem dev servers. Option A (code-server) uses the same server-side model but wraps it in a web browser instead.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 13 -->
+      <div class="step" id="step13" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">13</div>
+          <div class="step-title">Create Configuration Files</div>
+          <div class="step-why">Docker Compose + .gitignore</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.5rem">In VS Code, click <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">docker-compose.yml</code> and paste:</p>
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-lang">📄 docker-compose.yml</div>
+              <button class="copy-btn" onclick="copyCode(this, event)">Copy</button>
+            </div>
+            <pre>services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "3000:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    restart: unless-stopped
+
+  database:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: cloudeats_dev
+      MYSQL_USER: developer
+      MYSQL_PASSWORD: dev_password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+
+  cache:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+volumes:
+  mysql_data:</pre>
+          </div>
+
+          <p style="margin:0.75rem 0 0.5rem">Now open <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">.gitignore</code> and paste:</p>
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-lang">📄 .gitignore</div>
+              <button class="copy-btn" onclick="copyCode(this, event)">Copy</button>
+            </div>
+            <pre>node_modules/
+__pycache__/
+*.pyc
+venv/
+.env
+.env.local
+*.log
+logs/
+*.sqlite
+*.db
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/</pre>
+          </div>
+          <div class="pace-hint beginner">
+            🌱 <strong>.gitignore</strong> tells Git to ignore certain files — things like passwords (.env), temporary files, or massive folders (node_modules) that don't need to be saved in version control.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 The docker-compose.yml defines a 3-tier stack: nginx (web/reverse proxy, port 3000), MySQL (relational DB, port 3306), Redis (in-memory cache, port 6379). We're using named volumes (<code>mysql_data</code>) for data persistence — without this, database data would be lost when the container restarts.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 14 -->
+      <div class="step" id="step14" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">14</div>
+          <div class="step-title">Initialise Git Repository</div>
+          <div class="step-why">Version control</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <div class="why-box">🔀 <span><strong>Why Git?</strong> Tracks every change you make, enables collaboration, and allows you to revert mistakes. Used by every professional software team.</span></div>
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-lang">🐧 bash · Git Setup</div>
+              <button class="copy-btn" onclick="copyCode(this, event)">Copy</button>
+            </div>
+            <pre><span class="cm"># View project structure first</span>
+tree ~/cloudeats-app
+
+<span class="cm"># Initialise Git repository</span>
+cd ~/cloudeats-app
+git init
+git add .
+
+<span class="cm"># Configure identity (one-time setup)</span>
+git config user.name "Cloud Developer"
+git config user.email "developer@cloudeats.com"
+
+<span class="cm"># Create the first commit</span>
+git commit -m "Initial project setup - Lab 1.1 complete"
+
+<span class="cm"># Verify it worked</span>
+git status
+git log --oneline</pre>
+          </div>
+
+          <div class="checkpoint">
+            <span class="checkpoint-icon">🎉</span>
+            <div class="checkpoint-text">
+              <strong>Checkpoint · 60 min mark — Lab Complete!</strong>
+              Git repo initialised with first commit. Open browser to http://[VM-IP]:8080 to explore your project in VS Code.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- PART 5 — VS CODE REMOTE-SSH (WINDOWS HOST)    -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section id="part5">
+      <div class="part-header">
+        <div class="part-pill">Part 5</div>
+        <div class="part-title">VS Code Remote-SSH from Windows 11</div>
+        <div class="part-time">⏱ ~15 min (one-time)</div>
+      </div>
+
+      <div class="step" style="cursor:default;">
+        <div class="step-body" style="display:block;padding:1rem 1.25rem;">
+          <div class="why-box">🔗 <span><strong>What this does:</strong> Your VS Code editor runs on <em>Windows</em>, but all files, terminals, and Docker commands run inside the <em>Linux VM</em>. No copy-paste issues, no file sync — it just feels like the VM is local. This is your primary workflow for the entire semester.</span></div>
+          <div class="pace-hint beginner">
+            🌱 <strong>Prerequisite:</strong> You need VS Code installed on your <strong>Windows 11 laptop</strong>. Download it free from <a href="https://code.visualstudio.com" target="_blank">code.visualstudio.com</a>. If you're on a college lab PC without admin rights, use Option A (browser / code-server) instead.
+          </div>
+          <div class="pace-hint average">
+            ⚡ SSH (Secure Shell) is a protocol for securely connecting to a remote machine over a network. The same steps you follow here — IP address, username, password or key — are identical to connecting to an AWS EC2 instance. You're learning real-world skills.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 VS Code Remote-SSH installs a small server-side agent on the Linux VM the first time you connect. Extensions, language servers, and linters all run on the VM — not Windows. This is why the IntelliSense "just works" for Node.js even though Node isn't installed on your Windows host.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 15 -->
+      <div class="step" id="step15" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">15</div>
+          <div class="step-title">Confirm SSH is Running &amp; Get VM IP</div>
+          <div class="step-why">Pre-flight check</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.75rem">Run these commands <strong>inside your Linux VM</strong> (VirtualBox console or code-server terminal):</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · inside VM</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># 1. Confirm OpenSSH server is active</span>
+sudo systemctl status ssh
+
+<span class="cm"># Expected: "Active: active (running)" in green</span>
+<span class="cm"># If not running:</span>
+sudo systemctl enable --now ssh
+
+<span class="cm"># 2. Find your Host-only adapter IP</span>
+ip addr show
+<span class="cm"># Look for an IP on the 192.168.56.x range</span>
+<span class="cm"># That's your Host-only NIC — the one Windows can reach</span>
+
+<span class="cm"># 3. Print it cleanly</span>
+hostname -I
+<span class="cm"># Usually two IPs: 10.0.2.x (NAT/internet) and 192.168.56.x (Host-only)</span>
+<span class="cm"># Write down the 192.168.56.x one — you'll need it in the next step</span></pre>
+          </div>
+
+          <div class="warning">
+            <span>⚠️</span>
+            <span>Use the <strong>192.168.56.x</strong> IP (Host-only adapter), not the 10.0.2.x NAT IP. The NAT IP is for internet access only — it can't receive SSH connections from Windows.</span>
+          </div>
+
+          <div class="pace-hint beginner">
+            🌱 <strong>Didn't see 192.168.56.x?</strong> Your Host-only adapter might not be enabled. In VirtualBox → select your VM → Settings → Network → Adapter 2 → check "Enable Network Adapter" → Attached to: Host-only Adapter. Then restart the VM.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 VirtualBox's Host-only adapter creates a virtual LAN between your Windows host and the VM. By default it uses the 192.168.56.0/24 subnet. The VirtualBox DHCP server (vboxnet0 interface) assigns addresses automatically. In contrast, the NAT adapter uses one-way NAT — the VM can reach the internet, but the Windows host cannot initiate connections to the VM on that interface.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 16 -->
+      <div class="step" id="step16" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">16</div>
+          <div class="step-title">Install Remote-SSH Extension on Windows</div>
+          <div class="step-why">Windows side</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <div class="why-box">🧩 <span><strong>Why an extension?</strong> VS Code's Remote-SSH capability is built by Microsoft but shipped as an extension — it's free and part of the official "Remote Development" pack.</span></div>
+
+          <ul class="substep-list">
+            <li><div class="substep-bullet">a</div><div>Open <strong>VS Code on Windows</strong> (not inside the VM)</div></li>
+            <li><div class="substep-bullet">b</div><div>Press <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">Ctrl + Shift + X</code> to open Extensions</div></li>
+            <li><div class="substep-bullet">c</div><div>Search: <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">Remote - SSH</code></div></li>
+            <li><div class="substep-bullet">d</div><div>Click <strong>Install</strong> on "Remote - SSH" by <em>Microsoft</em> (the one with the blue remote icon)</div></li>
+            <li><div class="substep-bullet">e</div><div>After install, you'll see a green <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">&gt;&lt;</code> icon at the bottom-left corner of VS Code</div></li>
+          </ul>
+
+          <div class="pace-hint beginner">
+            🌱 You only install this extension <strong>once</strong>. It stays installed in VS Code permanently. Next semester, next course — same extension, just a different IP address.
+          </div>
+          <div class="pace-hint average">
+            ⚡ The full "Remote Development" extension pack (ID: <code style="font-family:'Fira Code',monospace;font-size:0.85em">ms-vscode-remote.vscode-remote-extensionpack</code>) includes Remote-SSH, Remote-Containers, and WSL. Installing all three is useful — you'll use Remote-SSH for VMs and Remote-Containers when working with Docker devcontainers in advanced setups.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 17 -->
+      <div class="step" id="step17" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">17</div>
+          <div class="step-title">Configure SSH Connection</div>
+          <div class="step-why">Add your VM as a host</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.75rem"><strong>Method 1 — Quick connect (beginner-friendly):</strong></p>
+          <ul class="substep-list" style="margin-bottom:1rem">
+            <li><div class="substep-bullet">a</div><div>Press <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">Ctrl + Shift + P</code> → type <strong>Remote-SSH: Connect to Host</strong> → press Enter</div></li>
+            <li><div class="substep-bullet">b</div><div>Click <strong>"+ Add New SSH Host..."</strong></div></li>
+            <li><div class="substep-bullet">c</div><div>Type: <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">developer@192.168.56.xxx</code> (replace xxx with your actual IP from Step 15)</div></li>
+            <li><div class="substep-bullet">d</div><div>Select <strong>the first config file</strong> when asked where to save it (usually <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">C:\Users\YourName\.ssh\config</code>)</div></li>
+          </ul>
+
+          <p style="margin-bottom:0.5rem"><strong>Method 2 — Edit SSH config directly (recommended for reuse):</strong></p>
+          <p style="font-size:0.83rem;color:var(--muted);margin-bottom:0.5rem">On Windows, open Notepad or VS Code and create/edit the file at <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">C:\Users\YourName\.ssh\config</code>:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">💻 Windows · ~/.ssh/config</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre>Host cloudeats-vm
+    HostName 192.168.56.xxx
+    User developer
+    Port 22
+    ServerAliveInterval 60
+    ServerAliveCountMax 3</pre>
+          </div>
+          <p style="font-size:0.83rem;color:var(--muted);margin-top:0.5rem">Replace <code style="font-family:'Fira Code',monospace;font-size:0.85em">192.168.56.xxx</code> with your actual VM IP. Save the file.</p>
+
+          <div class="pace-hint beginner">
+            🌱 The <code>Host cloudeats-vm</code> line is just a friendly name — you can call it anything. It's what you'll see in the VS Code connection list. The <code>HostName</code> is the actual IP address your VM has.
+          </div>
+          <div class="pace-hint average">
+            ⚡ <code>ServerAliveInterval 60</code> sends a keep-alive packet every 60 seconds so the SSH connection doesn't drop during lab sessions. This matters when you're waiting for long Docker builds — without it, an idle SSH session can disconnect after a few minutes.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 SSH config files support multiple hosts and can specify per-host keys (<code>IdentityFile</code>), jump hosts (<code>ProxyJump</code>), and port forwarding rules. In Week 7 Lab 2, GitHub Actions uses the same <code>~/.ssh/config</code> pattern on the runner to SSH into your deployment VM automatically.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 18 -->
+      <div class="step" id="step18" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">18</div>
+          <div class="step-title">Connect &amp; Verify</div>
+          <div class="step-why">Confirm it works</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <ul class="substep-list" style="margin-bottom:1rem">
+            <li><div class="substep-bullet">a</div><div>Press <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">Ctrl + Shift + P</code> → <strong>Remote-SSH: Connect to Host</strong> → select <strong>cloudeats-vm</strong></div></li>
+            <li><div class="substep-bullet">b</div><div>A new VS Code window opens. When prompted for the OS type, select <strong>Linux</strong></div></li>
+            <li><div class="substep-bullet">c</div><div>Enter password: <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">CloudEats2024!</code> and press Enter</div></li>
+            <li><div class="substep-bullet">d</div><div>VS Code will install the Remote-SSH server on your VM (one-time, ~30 seconds)</div></li>
+            <li><div class="substep-bullet">e</div><div>Click <strong>Open Folder</strong> → navigate to <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">/home/developer/cloudeats-app</code> → click OK</div></li>
+            <li><div class="substep-bullet">f</div><div>Open Terminal in VS Code: <code style="font-family:'Fira Code',monospace;font-size:0.85em;background:var(--code-bg);padding:0.1rem 0.35rem;border-radius:3px">Ctrl + `</code> (backtick). You should see a Linux bash prompt</div></li>
+          </ul>
+
+          <p style="margin-bottom:0.5rem">Run the verification commands in the VS Code terminal (this is a Linux terminal, not Windows cmd):</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · VS Code terminal (running on Linux VM)</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Confirm you are on the Linux VM, not Windows</span>
+whoami            <span class="cm"># Should print: developer</span>
+uname -a          <span class="cm"># Should say: Linux cloudeats-dev ... GNU/Linux</span>
+pwd               <span class="cm"># Should print: /home/developer/cloudeats-app</span>
+
+<span class="cm"># Check Docker is reachable from here</span>
+docker --version  <span class="cm"># Should print: Docker version 24.x...</span>
+
+<span class="cm"># Check Node.js</span>
+node --version    <span class="cm"># Should print: v22.x.x</span></pre>
+          </div>
+
+          <div class="checkpoint">
+            <span class="checkpoint-icon">🎉</span>
+            <div class="checkpoint-text">
+              <strong>Checkpoint · Remote-SSH Working!</strong>
+              VS Code on Windows is now connected to your Linux VM. The bottom-left corner of VS Code shows <strong>SSH: cloudeats-vm</strong> in green. You're ready for every lab this semester — keep this VS Code window open during class.
+            </div>
+          </div>
+
+          <div class="warning" style="margin-top:1rem">
+            <span>🔄</span>
+            <span><strong>Next time you open VS Code:</strong> the connection won't auto-reconnect. Press <code style="font-family:'Fira Code',monospace;font-size:0.85em">Ctrl+Shift+P</code> → Remote-SSH: Connect to Host → cloudeats-vm → enter password. Takes about 5 seconds.</span>
+          </div>
+
+          <div style="background:rgba(0,229,160,0.05);border:1px solid rgba(0,229,160,0.2);border-radius:8px;padding:0.85rem 1rem;margin-top:0.85rem;font-size:0.82rem">
+            <div style="font-weight:700;color:var(--green);margin-bottom:0.4rem">🔑 Optional — Skip the password with SSH keys (advanced)</div>
+            <div style="color:#8ee8c4">Generate an SSH key pair on Windows and copy the public key to the VM. After this, VS Code connects with no password prompt. You'll do this properly in <strong>Week 7 Lab 2</strong> for CI/CD — but if you want it now:</div>
+            <div class="code-block" style="margin-top:0.6rem">
+              <div class="code-header"><div class="code-lang">💻 Windows PowerShell (run as user, not admin)</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+              <pre><span class="cm"># Generate key pair on Windows</span>
+ssh-keygen -t ed25519 -C "cloudeats-dev"
+<span class="cm"># Press Enter three times to accept defaults and skip passphrase</span>
+
+<span class="cm"># Copy public key to VM (replace IP with yours)</span>
+ssh-copy-id developer@192.168.56.xxx
+<span class="cm"># Enter password one last time: CloudEats2024!</span>
+
+<span class="cm"># Test — should connect with NO password prompt now</span>
+ssh developer@192.168.56.xxx</pre>
+            </div>
+          </div>
+
+          <div class="pace-hint beginner">
+            🌱 <strong>Something went wrong?</strong> Jump to the Troubleshooting section below and look for "Remote-SSH" issues. The most common fix is checking that your VM is running and that you're using the right IP address.
+          </div>
+          <div class="pace-hint average">
+            ⚡ Notice that VS Code installs extensions <em>twice</em> — once on Windows for the UI, and once on the VM for the language servers. When you install the Docker or ESLint extension from within the Remote-SSH window, it installs on the VM. That's the correct behaviour.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 The SSH key you generated here uses the Ed25519 algorithm — a modern elliptic-curve algorithm that's faster and more secure than RSA-2048. In Week 7, you'll add this key (or a dedicated deploy key) to GitHub Secrets so GitHub Actions can SSH into the VM automatically for CI/CD deployments.
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="checklist">
+      <div class="part-header">
+        <div class="part-pill">Wrap-Up</div>
+        <div class="part-title">Verification Checklist</div>
+      </div>
+      <p class="section-desc">Click each item to mark it complete. Track your progress before moving to Lab 1.2.</p>
+
+      <div class="step" style="cursor:default;">
+        <div class="step-body" style="display:block; padding:1.1rem 1.25rem">
+          <ul class="checklist" id="checklistItems">
+            <li onclick="toggleCheck(this)"><div class="check-box"></div><div><strong>VirtualBox VM</strong> running Ubuntu Server 22.04</div></li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div><div><strong>Docker</strong> installed — <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker run hello-world</code> works</div></li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div><div><strong>Docker Compose</strong> installed — <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker compose --version</code> works</div></li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div><div><strong>Node.js and npm</strong> installed and verified</div></li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div><div><strong>Python 3 and pip</strong> installed and verified</div></li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div><div><strong>VS Code accessible</strong> — browser (code-server) or Remote-SSH working</div></li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div><div><strong>Project structure</strong> created in <code style="font-family:'Fira Code',monospace;font-size:0.85em">~/cloudeats-app</code> with subfolders</div></li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div><div><strong>docker-compose.yml</strong> and <strong>.gitignore</strong> files created</div></li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div><div><strong>Git repository</strong> initialised with first commit</div></li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div><div><strong>README.md</strong> created with project description</div></li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div><div><strong>Remote-SSH connected</strong> — VS Code status bar shows <em>SSH: cloudeats-vm</em> <span class="inline-tag tag-blue">Part 5</span></div></li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div><div><strong>VS Code terminal = Linux</strong> — <code style="font-family:'Fira Code',monospace;font-size:0.85em">uname -a</code> shows GNU/Linux, not Windows <span class="inline-tag tag-blue">Part 5</span></div></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- TROUBLESHOOTING -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section id="troubleshoot">
+      <div class="part-header">
+        <div class="part-pill">Help</div>
+        <div class="part-title">Troubleshooting</div>
+      </div>
+      <p class="section-desc">Click a problem to see its fix.</p>
+
+      <div class="trouble-card" onclick="toggleTrouble(this, event)">
+        <div class="trouble-header">
+          <span class="trouble-icon">🔌</span>
+          <div class="trouble-title">VS Code Remote-SSH: "Connection refused" or timeout</div>
+          <span class="trouble-chevron">›</span>
+        </div>
+        <div class="trouble-body">
+          <p style="margin-top:0.5rem;font-size:0.83rem;margin-bottom:0.5rem">This usually means SSH is not running on the VM, or you're using the wrong IP.</p>
+          <div class="code-block" style="margin-top:0.5rem">
+            <div class="code-header"><div class="code-lang">🐧 bash · inside VM</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># 1. Check SSH service is running</span>
+sudo systemctl status ssh
+sudo systemctl enable --now ssh   <span class="cm"># start and enable on boot</span>
+
+<span class="cm"># 2. Confirm which IP to use (Host-only = 192.168.56.x)</span>
+ip addr show | grep "192.168"
+
+<span class="cm"># 3. Test SSH locally (from inside the VM)</span>
+ssh developer@localhost            <span class="cm"># should succeed</span>
+
+<span class="cm"># 4. Check firewall isn't blocking port 22</span>
+sudo ufw status
+sudo ufw allow ssh</pre>
+          </div>
+          <p style="margin-top:0.5rem;font-size:0.83rem">If the Host-only IP is missing: VirtualBox → VM Settings → Network → Adapter 2 → must be <strong>enabled</strong> and set to <strong>Host-only Adapter</strong>. Restart the VM after changing.</p>
+        </div>
+      </div>
+
+      <div class="trouble-card" onclick="toggleTrouble(this, event)">
+        <div class="trouble-header">
+          <span class="trouble-icon">🔑</span>
+          <div class="trouble-title">VS Code Remote-SSH: "Permission denied (publickey)"</div>
+          <span class="trouble-chevron">›</span>
+        </div>
+        <div class="trouble-body">
+          <p style="margin-top:0.5rem;font-size:0.83rem;margin-bottom:0.5rem">This happens when VS Code is trying to use an SSH key instead of a password, or the key is not set up correctly.</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">💻 Windows PowerShell</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Option 1: Force password auth — add this to ~/.ssh/config on Windows</span>
+Host cloudeats-vm
+    HostName 192.168.56.xxx
+    User developer
+    Port 22
+    PreferredAuthentications password
+    PubkeyAuthentication no
+
+<span class="cm"># Option 2: If using keys, check the public key is on the VM</span>
+<span class="cm"># Run this on Windows:</span>
+ssh-copy-id developer@192.168.56.xxx</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="trouble-card" onclick="toggleTrouble(this, event)">
+        <div class="trouble-header">
+          <span class="trouble-icon">📡</span>
+          <div class="trouble-title">VS Code Remote-SSH: VM IP keeps changing</div>
+          <span class="trouble-chevron">›</span>
+        </div>
+        <div class="trouble-body">
+          <p style="margin-top:0.5rem;font-size:0.83rem;margin-bottom:0.5rem">VirtualBox DHCP may assign a different Host-only IP after a restart. Fix it by assigning a static IP on the VM:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · inside VM · Netplan static IP</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Find your Host-only interface name (look for enp0s8 or similar)</span>
+ip addr show
+
+<span class="cm"># Create a Netplan config for a static IP</span>
+sudo nano /etc/netplan/99-host-only.yaml</pre>
+          </div>
+          <p style="font-size:0.83rem;margin:0.5rem 0">Paste this content (replace <code style="font-family:'Fira Code',monospace;font-size:0.85em">enp0s8</code> if your interface name is different):</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">📄 /etc/netplan/99-host-only.yaml</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre>network:
+  version: 2
+  ethernets:
+    enp0s8:
+      dhcp4: no
+      addresses:
+        - 192.168.56.10/24</pre>
+          </div>
+          <div class="code-block" style="margin-top:0.5rem">
+            <div class="code-header"><div class="code-lang">🐧 bash</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre>sudo netplan apply
+ip addr show enp0s8   <span class="cm"># Should now show 192.168.56.10</span></pre>
+          </div>
+          <p style="font-size:0.83rem;margin-top:0.5rem">Update your Windows <code style="font-family:'Fira Code',monospace;font-size:0.85em">~/.ssh/config</code> <code style="font-family:'Fira Code',monospace;font-size:0.85em">HostName</code> to <code style="font-family:'Fira Code',monospace;font-size:0.85em">192.168.56.10</code>. The IP will now be the same every reboot.</p>
+        </div>
+      </div>
+
+      <div class="trouble-card" onclick="toggleTrouble(this, event)">
+        <div class="trouble-header">
+          <span class="trouble-icon">🖥</span>
+          <div class="trouble-title">VS Code Remote-SSH: "Could not establish connection" on college PC</div>
+          <span class="trouble-chevron">›</span>
+        </div>
+        <div class="trouble-body">
+          <p style="margin-top:0.5rem;font-size:0.83rem">College lab PCs may block outbound SSH or restrict extension installs. Use <strong>Option A (code-server in browser)</strong> instead — it works on any PC without admin rights. Go to <code style="font-family:'Fira Code',monospace;font-size:0.85em">http://192.168.56.xxx:8080</code> in your browser.</p>
+        </div>
+      </div>
+        <div class="trouble-body">
+          <div class="code-block" style="margin-top:0.5rem">
+            <div class="code-header"><div class="code-lang">🐧 bash</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre>sudo systemctl status code-server@$USER   <span class="cm"># Check status</span>
+sudo systemctl restart code-server@$USER  <span class="cm"># Restart if needed</span>
+sudo ufw allow 8080                       <span class="cm"># Allow port through firewall</span>
+ip addr show                              <span class="cm"># Confirm VM IP address</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="trouble-card" onclick="toggleTrouble(this, event)">
+        <div class="trouble-header">
+          <span class="trouble-icon">🐳</span>
+          <div class="trouble-title">Docker permission denied</div>
+          <span class="trouble-chevron">›</span>
+        </div>
+        <div class="trouble-body">
+          <div class="code-block" style="margin-top:0.5rem">
+            <div class="code-header"><div class="code-lang">🐧 bash</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre>sudo usermod -aG docker $USER
+sudo reboot    <span class="cm"># Must reboot for group change to apply</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="trouble-card" onclick="toggleTrouble(this, event)">
+        <div class="trouble-header">
+          <span class="trouble-icon">🐢</span>
+          <div class="trouble-title">VM is slow or unresponsive</div>
+          <span class="trouble-chevron">›</span>
+        </div>
+        <div class="trouble-body">
+          <ul style="padding-left:1.2rem;margin-top:0.5rem">
+            <li>Increase VM memory to <strong>4 GB minimum</strong> in VirtualBox Settings</li>
+            <li>Enable <strong>hardware acceleration</strong> in VirtualBox Settings → System → Acceleration</li>
+            <li>Close other applications on your host computer</li>
+            <li>Check that <strong>virtualisation is enabled in BIOS</strong> (Intel VT-x / AMD-V)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="trouble-card" onclick="toggleTrouble(this, event)">
+        <div class="trouble-header">
+          <span class="trouble-icon">🌐</span>
+          <div class="trouble-title">Cannot access internet from VM</div>
+          <span class="trouble-chevron">›</span>
+        </div>
+        <div class="trouble-body">
+          <div class="code-block" style="margin-top:0.5rem">
+            <div class="code-header"><div class="code-lang">🐧 bash</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre>ip addr show               <span class="cm"># Should see eth0 / enp0s3 with IP</span>
+ping -c 3 google.com       <span class="cm"># Test internet connectivity</span>
+sudo systemctl restart networking</pre>
+          </div>
+          <p style="margin-top:0.5rem;font-size:0.83rem">Ensure VirtualBox Adapter 1 is set to <strong>NAT</strong> (not Bridged or Host-only).</p>
+        </div>
+      </div>
+
+      <div class="trouble-card" onclick="toggleTrouble(this, event)">
+        <div class="trouble-header">
+          <span class="trouble-icon">📦</span>
+          <div class="trouble-title">Docker Compose command not found</div>
+          <span class="trouble-chevron">›</span>
+        </div>
+        <div class="trouble-body">
+          <div class="code-block" style="margin-top:0.5rem">
+            <div class="code-header"><div class="code-lang">🐧 bash</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre>which docker            <span class="cm"># Check Docker location</span>
+docker compose version  <span class="cm"># Note: "compose" not "compose-compose"</span>
+
+<span class="cm"># If still not found, install as plugin:</span>
+sudo apt install docker-compose-plugin
+docker compose version  <span class="cm"># Try again</span></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- KNOWLEDGE CHECK -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section id="knowledgecheck">
+      <div class="part-header">
+        <div class="part-pill">Assessment</div>
+        <div class="part-title">Knowledge Check</div>
+      </div>
+      <p class="section-desc">Test your understanding. Click an answer to see if you're correct.</p>
+
+      <div class="kc-question">
+        <div class="kc-q">1. What is the main purpose of a Virtual Machine in this lab?</div>
+        <ul class="kc-options">
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>To make the internet faster</li>
+          <li onclick="checkAnswer(this, true)"><div class="kc-radio"></div>To simulate a cloud server locally for development and testing</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>To replace Docker</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>To store database files</li>
+        </ul>
+      </div>
+
+      <div class="kc-question">
+        <div class="kc-q">2. Why did we install Docker even though we won't use it until Week 3?</div>
+        <ul class="kc-options">
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Because Docker is needed to install Node.js</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>It's not really needed</li>
+          <li onclick="checkAnswer(this, true)"><div class="kc-radio"></div>Installation takes time and can have issues — better to set it up now while we have time</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Docker starts automatically and speeds up the VM</li>
+        </ul>
+      </div>
+
+      <div class="kc-question">
+        <div class="kc-q">3. What does the <code style="font-family:'Fira Code',monospace;font-size:0.9em">.gitignore</code> file do?</div>
+        <ul class="kc-options">
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Deletes files from the project</li>
+          <li onclick="checkAnswer(this, true)"><div class="kc-radio"></div>Tells Git which files to exclude from version control (e.g. secrets, logs, large folders)</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Encrypts your code before uploading</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Configures Docker containers</li>
+        </ul>
+      </div>
+
+      <div class="kc-question">
+        <div class="kc-q">4. The project structure separates code into <em>frontend</em>, <em>backend</em>, and <em>database</em>. What does this reflect?</div>
+        <ul class="kc-options">
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Three different programming languages</li>
+          <li onclick="checkAnswer(this, true)"><div class="kc-radio"></div>The three-tier architecture: presentation, application logic, and data layers</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Three different developers working on the project</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Three separate VMs</li>
+        </ul>
+      </div>
+
+      <div class="kc-question">
+        <div class="kc-q">5. When using VS Code Remote-SSH, where do your Docker commands actually run?</div>
+        <ul class="kc-options">
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>On Windows — VS Code sends commands to Docker Desktop</li>
+          <li onclick="checkAnswer(this, true)"><div class="kc-radio"></div>On the Linux VM — the terminal in VS Code is a Linux shell running on the VM</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>In the cloud — Remote-SSH connects to AWS automatically</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>It depends on which terminal tab you're using</li>
+        </ul>
+      </div>
+
+      <div class="kc-question">
+        <div class="kc-q">6. Why should you use the <strong>192.168.56.x</strong> IP (Host-only) and NOT the <strong>10.0.2.x</strong> IP (NAT) for SSH?</div>
+        <ul class="kc-options">
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>The 192.168.56.x address is faster</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>The 10.0.2.x address is used by Docker and can't be shared</li>
+          <li onclick="checkAnswer(this, true)"><div class="kc-radio"></div>The NAT adapter is one-way only — the VM can reach out but Windows cannot initiate connections to it; the Host-only adapter allows bidirectional communication</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>The 10.0.2.x IP changes every reboot but 192.168.56.x does not</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- ROADMAP -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section>
+      <div class="part-header">
+        <div class="part-pill">What's Next</div>
+        <div class="part-title">Course Roadmap</div>
+      </div>
+      <div class="roadmap">
+        <div class="roadmap-title">Your Journey — CloudEats App</div>
+        <div class="rm-week"><div class="rm-dot active"></div><div><div class="rm-label">Weeks 1–2 · Foundation Setup ← YOU ARE HERE</div><div class="rm-desc">Lab 1.1: Dev Environment ✅ · Lab 1.2: Static Menu (Next!)</div></div></div>
+        <div class="rm-week"><div class="rm-dot upcoming"></div><div><div class="rm-label">Weeks 2–3 · Containers &amp; Docker</div><div class="rm-desc">Learn what Docker does and run your first containers</div></div></div>
+        <div class="rm-week"><div class="rm-dot upcoming"></div><div><div class="rm-label">Weeks 3–4 · Databases</div><div class="rm-desc">MySQL, NoSQL, Docker Compose multi-container apps</div></div></div>
+        <div class="rm-week"><div class="rm-dot upcoming"></div><div><div class="rm-label">Weeks 5–6 · APIs &amp; Microservices</div><div class="rm-desc">Build REST APIs, service-to-service communication</div></div></div>
+        <div class="rm-week"><div class="rm-dot upcoming"></div><div><div class="rm-label">Weeks 7–8 · DevOps &amp; CI/CD</div><div class="rm-desc">Git workflows, automated testing, deployment pipelines</div></div></div>
+        <div class="rm-week"><div class="rm-dot upcoming"></div><div><div class="rm-label">Weeks 9–10 · Security &amp; Monitoring</div><div class="rm-desc">Secure your app, monitor performance, set up alerts</div></div></div>
+        <div class="rm-week"><div class="rm-dot upcoming"></div><div><div class="rm-label">Week 10+ · Cloud Deployment</div><div class="rm-desc">Deploy CloudEats to an actual cloud provider! 🚀</div></div></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer style="border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;color:var(--muted);font-size:0.78rem;max-width:960px;margin:0 auto">
+  Cloud Computing Course · Lab 1.1 · Dev Environment Setup &nbsp;|&nbsp; CloudEats Project &nbsp;|&nbsp; Estimated time: 75 min &nbsp;|&nbsp; <span style="color:var(--accent)">+ Part 5: VS Code Remote-SSH (15 min)</span>
+</footer>
+
+<script>
+  function setPace(pace) {
+    document.body.className = 'pace-' + pace;
+    document.querySelectorAll('.pace-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-pace="${pace}"]`).classList.add('active');
+    /* Beginners get all steps open so they can scroll linearly without
+       worrying about accordion state management while copying code */
+    if (pace === 'beginner') expandAll();
+  }
+
+  function toggleStep(el, event) {
+    /* Only toggle when the click originated from the header row — never from
+       inside step-body (code blocks, text selection, copy button etc.) */
+    if (event && !event.target.closest('.step-header')) return;
+    el.classList.toggle('open');
+  }
+
+  function expandAll() {
+    document.querySelectorAll('.step:not([style*="cursor:default"])').forEach(s => s.classList.add('open'));
+  }
+  function collapseAll() {
+    document.querySelectorAll('.step:not([style*="cursor:default"])').forEach(s => s.classList.remove('open'));
+  }
+
+  function toggleTrouble(el, event) {
+    if (event && !event.target.closest('.trouble-header')) return;
+    el.classList.toggle('open');
+  }
+
+  function toggleActivity(el) {
+    el.classList.toggle('open');
+  }
+
+  function copyCode(btn, event) {
+    if (event) event.stopPropagation();  /* prevent bubbling to step/trouble toggles */
+    const pre = btn.closest('.code-block').querySelector('pre');
+    const text = pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  function toggleCheck(li) {
+    li.classList.toggle('done');
+    if (li.classList.contains('done')) {
+      li.querySelector('.check-box').textContent = '✓';
+    } else {
+      li.querySelector('.check-box').textContent = '';
+    }
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const items = document.querySelectorAll('#checklistItems li');
+    const done  = document.querySelectorAll('#checklistItems li.done').length;
+    const pct   = Math.round((done / items.length) * 100);
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressCount').textContent = done;
+    const label = document.querySelector('.progress-label');
+    if (label) label.innerHTML = `<span id="progressCount">${done}</span> / ${items.length} items done`;
+  }
+
+  function checkAnswer(li, correct) {
+    const parent = li.closest('ul');
+    parent.querySelectorAll('li').forEach(item => {
+      item.classList.remove('correct', 'wrong');
+    });
+    li.classList.add(correct ? 'correct' : 'wrong');
+    if (!correct) {
+      parent.querySelectorAll('li').forEach(item => {
+        const isCorrect = item.getAttribute('onclick')?.includes('true');
+        if (isCorrect) item.classList.add('correct');
+      });
+    }
+  }
+
+  // Active sidebar link on scroll
+  const sections = document.querySelectorAll('[id]');
+  const sideLinks = document.querySelectorAll('.sidebar-nav a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 100) current = s.id;
+    });
+    sideLinks.forEach(a => {
+      a.classList.remove('active');
+      if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+    });
+  });
+
+  /* On first load, default pace is beginner — expand all steps so students
+     can scroll the lab linearly without accordion confusion */
+  document.addEventListener('DOMContentLoaded', () => { expandAll(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 9.2 · Performance Monitoring · CloudEats Academy</title>
+<meta name="description" content="Add live metrics to CloudEats with prom-client — counters, gauges, and histograms exposed at /metrics in Prometheus format, plus a Chart.js dashboard. Diploma level, three pace tracks.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Lab 9.2 · Performance Monitoring · CloudEats Academy">
+<meta property="og:description" content="Collect response times, error rates, and business metrics with prom-client and visualise them in a live Chart.js dashboard — the observability pattern used in every production service.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090f;--bg2:#0d1117;--bg3:#141b27;
+  --surface:#1a2235;--surface2:#1f2c42;--border:#2a3d5a;
+  --accent:#00c8ff;--green:#00e5a0;--amber:#ffb740;
+  --red:#ff5e7a;--purple:#b46ef5;
+  --text:#e8edf5;--muted:#6b7fa0;
+  --beginner:#00e5a0;--average:#00c8ff;--advanced:#b46ef5;
+  --lab-color:#00c8ff;--radius:10px;--code-bg:#0b1120;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;}
+.site-header{background:linear-gradient(135deg,#050d1c,#091628);border-bottom:1px solid var(--border);padding:0 1.5rem;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;gap:1rem;}
+.lab-badge{background:var(--lab-color);color:#000;font-size:.62rem;font-weight:700;letter-spacing:.1em;padding:.2rem .55rem;border-radius:4px;text-transform:uppercase;}
+.header-title{font-size:.88rem;font-weight:600;}
+.pace-switcher{display:flex;gap:.3rem;background:var(--bg3);padding:.22rem;border-radius:8px;border:1px solid var(--border);}
+.pace-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.25rem .65rem;border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--muted);transition:all .18s;}
+.pace-btn.active[data-pace="beginner"]{background:rgba(0,229,160,.18);color:var(--beginner);}
+.pace-btn.active[data-pace="average"]{background:rgba(0,200,255,.18);color:var(--average);}
+.pace-btn.active[data-pace="advanced"]{background:rgba(180,110,245,.18);color:var(--advanced);}
+.lab-hero{background:linear-gradient(160deg,#060f20,#07111e);border-bottom:1px solid var(--border);padding:2rem 1.5rem 1.75rem;position:relative;overflow:hidden;}
+.lab-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:350px;height:350px;background:radial-gradient(ellipse,rgba(0,200,255,.06),transparent 70%);pointer-events:none;}
+.hero-inner{max-width:1200px;margin:0 auto;}
+.hero-crumb{font-size:.7rem;color:var(--muted);margin-bottom:.4rem;}
+.hero-crumb a{color:var(--accent);text-decoration:none;}
+.lab-hero h1{font-size:clamp(1.25rem,2.5vw,1.75rem);font-weight:800;background:linear-gradient(135deg,#e8edf5 40%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.35rem;}
+.hero-sub{color:var(--muted);font-size:.84rem;margin-bottom:.85rem;}
+.hero-meta{display:flex;flex-wrap:wrap;gap:.55rem;}
+.meta-chip{display:flex;align-items:center;gap:.35rem;font-size:.74rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.22rem .6rem;color:var(--muted);}
+.meta-chip strong{color:var(--text);}
+.pace-guide{max-width:1200px;margin:0 auto;padding:1rem 1.5rem 0;}
+.pace-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.65rem;margin-bottom:.5rem;}
+.pace-card{border-radius:8px;padding:.75rem;font-size:.78rem;line-height:1.5;}
+.pace-card.b{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);}
+.pace-card.a{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);}
+.pace-card.adv{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);}
+.pc-label{font-size:.65rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.3rem;}
+.b .pc-label{color:var(--beginner);}.a .pc-label{color:var(--average);}.adv .pc-label{color:var(--advanced);}
+.pc-scope{color:var(--muted);font-size:.76rem;}
+.page-body{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 200px);}
+.sidebar{position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;padding:1.25rem .85rem 2rem;border-right:1px solid var(--border);background:var(--bg2);}
+.sb-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.85rem;}
+.progress-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:.65rem;margin-bottom:1rem;}
+.prog-track{background:var(--bg2);border-radius:3px;height:5px;margin:.4rem 0;}
+.prog-fill{height:5px;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--purple));transition:width .35s;width:0%;}
+.prog-text{font-size:.69rem;color:var(--muted);}
+.prog-text span{color:var(--accent);font-weight:600;}
+.sb-nav{list-style:none;}
+.sb-nav li a{display:block;font-size:.73rem;padding:.32rem .6rem;border-radius:5px;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all .13s;margin-bottom:.08rem;}
+.sb-nav li a:hover{background:var(--surface);color:var(--text);}
+.sb-nav li a.active{background:rgba(0,200,255,.08);color:var(--accent);border-color:rgba(0,200,255,.18);}
+.sb-section{font-size:.61rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(107,127,160,.45);padding:.6rem .6rem .18rem;list-style:none;}
+.lab-content{padding:1.75rem 1.75rem 4rem;min-width:0;}
+.part-head{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;border-radius:8px;margin-bottom:1.1rem;}
+.ph-blue{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.22);border-left:4px solid var(--accent);}
+.ph-green{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.22);border-left:4px solid var(--green);}
+.ph-amber{background:rgba(255,183,64,.04);border:1px solid rgba(255,183,64,.22);border-left:4px solid var(--amber);}
+.ph-purple{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.22);border-left:4px solid var(--purple);}
+.ph-red{background:rgba(255,94,122,.04);border:1px solid rgba(255,94,122,.22);border-left:4px solid var(--red);}
+.part-pill{font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.16rem .5rem;border-radius:4px;white-space:nowrap;}
+.pp-blue{background:rgba(0,200,255,.15);color:var(--accent);}
+.pp-green{background:rgba(0,229,160,.15);color:var(--green);}
+.pp-amber{background:rgba(255,183,64,.15);color:var(--amber);}
+.pp-purple{background:rgba(180,110,245,.15);color:var(--purple);}
+.pp-red{background:rgba(255,94,122,.15);color:var(--red);}
+.part-title{font-size:.98rem;font-weight:700;}
+.part-time{font-size:.71rem;color:var(--muted);margin-left:auto;white-space:nowrap;}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:.85rem;overflow:hidden;}
+.step-header{display:flex;align-items:center;gap:.75rem;padding:.85rem 1rem;cursor:pointer;user-select:none;transition:background .13s;}
+.step-header:hover{background:var(--surface2);}
+.step-num{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;color:var(--muted);}
+.step.open .step-num{border-color:var(--accent);color:var(--accent);}
+.step-title{font-size:.86rem;font-weight:600;}
+.step-body{display:none;padding:1rem 1rem 1.1rem;border-top:1px solid var(--border);}
+.step.open .step-body{display:block;}
+.step:not(.open) .step-header::after{content:'click to expand';font-size:.62rem;color:var(--muted);opacity:.5;margin-left:auto;letter-spacing:.04em;pointer-events:none;}
+.step.open .step-header::after{content:'';}
+code{font-family:'Fira Code',monospace;font-size:.84em;background:var(--code-bg);padding:.08rem .35rem;border-radius:3px;color:var(--green);}
+.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;margin:.75rem 0;overflow:hidden;}
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:.45rem .9rem;background:rgba(0,0,0,.3);border-bottom:1px solid var(--border);}
+.code-lang{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.file-chip{font-size:.68rem;font-weight:600;color:var(--amber);background:rgba(255,183,64,.1);border:1px solid rgba(255,183,64,.25);padding:.1rem .4rem;border-radius:4px;}
+.copy-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.18rem .55rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;transition:all .15s;}
+.copy-btn:hover{background:var(--accent);color:#000;border-color:var(--accent);}
+.copy-btn.copied{background:var(--green);color:#000;border-color:var(--green);}
+pre{font-family:'Fira Code',monospace;font-size:.79rem;line-height:1.65;padding:.9rem;overflow-x:auto;color:#c5d5ef;white-space:pre;}
+.callout{border-radius:8px;padding:.75rem 1rem;margin:.75rem 0;display:flex;gap:.6rem;align-items:flex-start;font-size:.82rem;line-height:1.55;}
+.callout.blue{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);color:#a0d8f0;}
+.callout.green{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);color:#8ee8c4;}
+.callout.amber{background:rgba(255,183,64,.06);border:1px solid rgba(255,183,64,.2);color:#d9c07a;}
+.callout-icon{font-size:1rem;flex-shrink:0;line-height:1.4;}
+.expected-output{background:#060d18;border:1px solid rgba(0,229,160,.2);border-left:3px solid var(--green);border-radius:6px;padding:.65rem .9rem;margin:.65rem 0;}
+.eo-label{font-size:.62rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:.35rem;}
+.eo-body{font-family:'Fira Code',monospace;font-size:.77rem;color:#8ee8c4;line-height:1.6;white-space:pre-wrap;}
+.trouble{background:rgba(255,94,122,.03);border:1px solid rgba(255,94,122,.2);border-radius:8px;margin:.75rem 0;overflow:hidden;}
+.trouble-header{display:flex;align-items:center;gap:.6rem;padding:.6rem .9rem;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--red);}
+.trouble-body{display:none;padding:.75rem .9rem;border-top:1px solid rgba(255,94,122,.15);font-size:.8rem;line-height:1.6;}
+.trouble.open .trouble-body{display:block;}
+.why-box{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.2);border-left:3px solid var(--accent);border-radius:6px;padding:.7rem 1rem;margin:.75rem 0;font-size:.81rem;color:#a0d8f0;}
+.why-box strong{color:var(--accent);}
+.checkpoint{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.25);border-radius:8px;padding:.85rem 1rem;margin:1.25rem 0;}
+.checkpoint-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:.4rem;}
+.level-block{border-radius:8px;padding:.65rem .9rem;margin:.55rem 0;font-size:.8rem;line-height:1.55;}
+.level-block.beginner{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.18);border-left:3px solid var(--beginner);}
+.level-block.average{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.18);border-left:3px solid var(--average);}
+.level-block.advanced{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.18);border-left:3px solid var(--advanced);}
+.level-block-label{font-size:.63rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.25rem;}
+.level-block.beginner .level-block-label{color:var(--beginner);}
+.level-block.average .level-block-label{color:var(--average);}
+.level-block.advanced .level-block-label{color:var(--advanced);}
+.ctrl-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;padding:.4rem 0;}
+.ctrl-bar span{font-size:.75rem;color:var(--muted);}
+.ctrl-btns{display:flex;gap:.5rem;}
+.ctrl-btn{font-family:'Sora',sans-serif;font-size:.7rem;font-weight:600;padding:.25rem .75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all .15s;}
+.ctrl-btn:hover{color:var(--accent);border-color:var(--accent);}
+.summary-table{width:100%;border-collapse:collapse;font-size:.8rem;margin:.85rem 0;}
+.summary-table th{background:var(--bg3);padding:.5rem .75rem;text-align:left;font-size:.72rem;font-weight:700;color:var(--muted);border-bottom:2px solid var(--border);}
+.summary-table td{padding:.5rem .75rem;border-bottom:1px solid var(--border);vertical-align:top;}
+.summary-table tr:last-child td{border-bottom:none;}
+.challenge-box{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.25);border-radius:8px;padding:1rem 1.1rem;margin-top:1.5rem;}
+.challenge-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-bottom:.5rem;}
+p{font-size:.85rem;line-height:1.7;margin-bottom:.7rem;}
+p:last-child{margin-bottom:0;}
+ul,ol{padding-left:1.4rem;font-size:.84rem;line-height:1.75;margin-bottom:.6rem;}
+strong{color:var(--text);}
+@media(max-width:700px){.page-body{grid-template-columns:1fr;}.sidebar{display:none;}}
+</style>
+</head>
+<body class="pace-beginner">
+
+<header class="site-header">
+  <div class="header-inner">
+    <div style="display:flex;align-items:center;gap:.75rem;">
+      <span class="lab-badge">Lab 9.2</span>
+      <span class="header-title">Performance Monitoring</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:.75rem;">
+      <div class="pace-switcher">
+        <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner')">🌱</button>
+        <button class="pace-btn" data-pace="average" onclick="setPace('average')">⚡</button>
+        <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced')">🚀</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="lab-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb"><a href="week09_Monitoring_Logging_and_Optimization.html">Week 9 Notes</a> › <a href="week09_lab1_application_logging.html">Lab 9.1</a> › Lab 9.2</div>
+    <h1>📊 Lab 9.2 — Performance Monitoring</h1>
+    <p class="hero-sub">Collect live metrics — request count, response time, error rate — with prom-client, expose them at <code>/metrics</code>, and visualise them in a Chart.js dashboard.</p>
+    <div class="hero-meta">
+      <div class="meta-chip">⏱ <strong>60 min</strong></div>
+      <div class="meta-chip">🧑‍🤝‍🧑 <strong>Pairs</strong></div>
+      <div class="meta-chip">📦 <strong>Prereq:</strong>&nbsp;Lab 9.1 complete (Winston working)</div>
+      <div class="meta-chip">🛠 <strong>Packages:</strong>&nbsp;prom-client · Chart.js (CDN)</div>
+    </div>
+  </div>
+</section>
+
+<div class="pace-guide">
+  <div class="pace-cards">
+    <div class="pace-card b">
+      <div class="pc-label">🌱 Beginner — aim for</div>
+      <div class="pc-scope">Parts 1–3. prom-client installed, metrics.js created, <code>/metrics</code> endpoint returning Prometheus text. Can explain the difference between a counter and a gauge.</div>
+    </div>
+    <div class="pace-card a">
+      <div class="pc-label">⚡ Average — aim for</div>
+      <div class="pc-scope">Full lab. Counters increment with each request. Histogram shows response time buckets. Dashboard loads with real data. Can explain what p95 response time means.</div>
+    </div>
+    <div class="pace-card adv">
+      <div class="pc-label">🚀 Advanced — aim for</div>
+      <div class="pc-scope">Full lab + challenge: error rate alert. If error rate &gt; 10% of requests in last minute, emit a <code>logger.warn()</code> alert. Can describe Prometheus + Grafana as the production-grade extension.</div>
+    </div>
+  </div>
+</div>
+
+<div style="max-width:1200px;margin:0 auto;padding:1rem 1.5rem 0;">
+  <div class="callout blue">
+    <span class="callout-icon">📋</span>
+    <div><strong>Before you start:</strong> Lab 9.1 must be complete — logger.js must exist and Winston must be writing to logs/combined.log. Run <code>docker compose ps</code> to confirm all services are Up.</div>
+  </div>
+</div>
+
+<div class="page-body">
+  <aside class="sidebar">
+    <div class="sb-title">Lab Progress</div>
+    <div class="progress-wrap">
+      <div class="prog-text">Completed: <span id="prog-count">0</span> / 13 steps</div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+    </div>
+    <ul class="sb-nav">
+      <li class="sb-section">Part 1</li>
+      <li><a href="#p1">Install</a></li>
+      <li class="sb-section">Part 2</li>
+      <li><a href="#p2">metrics.js</a></li>
+      <li class="sb-section">Part 3</li>
+      <li><a href="#p3">/metrics endpoint</a></li>
+      <li class="sb-section">Part 4</li>
+      <li><a href="#p4">Business Metrics</a></li>
+      <li class="sb-section">Part 5</li>
+      <li><a href="#p5">Dashboard</a></li>
+      <li class="sb-section">Part 6</li>
+      <li><a href="#p6">Test</a></li>
+      <li class="sb-section">Links</li>
+      <li><a href="week10_Emerging_Trends_and_Course_Wrap.html">Week 10 →</a></li>
+    </ul>
+  </aside>
+
+  <main class="lab-content">
+
+    <!-- PART 1 -->
+    <section id="p1">
+      <div class="part-head ph-blue">
+        <span class="part-pill pp-blue">Part 1</span>
+        <span class="part-title">Install prom-client</span>
+        <span class="part-time">⏱ 5 min</span>
+      </div>
+
+      <div class="ctrl-bar">
+        <span><strong style="color:var(--text)">13 steps</strong> across 6 parts</span>
+        <div class="ctrl-btns">
+          <button class="ctrl-btn" onclick="expandAll()">↓ Expand All</button>
+          <button class="ctrl-btn" onclick="collapseAll()">↑ Collapse All</button>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p1-1">
+        <div class="step-header" onclick="toggleStep('step-p1-1')">
+          <div class="step-num">1</div>
+          <div class="step-title">Navigate to user-service and install prom-client</div>
+        </div>
+        <div class="step-body">
+          <div class="level-block beginner">
+            <div class="level-block-label">🌱 Beginner — what is prom-client?</div>
+            prom-client is the Node.js library that collects metrics (counts, timings) and exposes them at a URL endpoint. Prometheus — an open-source monitoring server — reads that endpoint. We use prom-client directly without needing a full Prometheus server.
+          </div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>cd ~/cloudeats-app/services/user-service
+pwd
+npm install prom-client</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Expected</div>
+            <div class="eo-body">added 1 package ... found 0 vulnerabilities</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section id="p2">
+      <div class="part-head ph-green">
+        <span class="part-pill pp-green">Part 2</span>
+        <span class="part-title">Create config/metrics.js</span>
+        <span class="part-time">⏱ 15 min</span>
+      </div>
+
+      <div class="step open" id="step-p2-1">
+        <div class="step-header" onclick="toggleStep('step-p2-1')">
+          <div class="step-num">2</div>
+          <div class="step-title">Create the metrics configuration file</div>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>nano config/metrics.js</pre>
+          </div>
+          <p>Copy the complete metrics configuration:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">config/metrics.js</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>const promClient = require('prom-client');
+
+// Create a registry — container for all our metrics
+const register = new promClient.Registry();
+
+// Collect default Node.js metrics (CPU, memory, event loop lag)
+promClient.collectDefaultMetrics({
+  register,
+  prefix: 'cloudeats_user_'
+});
+
+// ── COUNTER: total requests (only ever increases) ──
+const httpRequestsTotal = new promClient.Counter({
+  name: 'http_requests_total',
+  help: 'Total number of HTTP requests received',
+  labelNames: ['method', 'route', 'status_code'],
+  registers: [register]
+});
+
+// ── GAUGE: active requests right now (can go up or down) ──
+const activeRequests = new promClient.Gauge({
+  name: 'http_requests_active',
+  help: 'Number of HTTP requests currently being processed',
+  registers: [register]
+});
+
+// ── HISTOGRAM: response time distribution ──
+const httpRequestDuration = new promClient.Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'HTTP request duration in seconds',
+  labelNames: ['method', 'route', 'status_code'],
+  buckets: [0.01, 0.05, 0.1, 0.3, 0.5, 1.0, 2.0, 5.0],
+  registers: [register]
+});
+
+// ── BUSINESS METRICS ──
+const userRegistrationsTotal = new promClient.Counter({
+  name: 'user_registrations_total',
+  help: 'Total user registrations',
+  registers: [register]
+});
+
+const userLoginsTotal = new promClient.Counter({
+  name: 'user_logins_total',
+  help: 'Total login attempts',
+  labelNames: ['status'],   // 'success' or 'failure'
+  registers: [register]
+});
+
+// ── MIDDLEWARE: called on every request ──
+function metricsMiddleware(req, res, next) {
+  activeRequests.inc();
+  const startTime = Date.now();
+
+  res.on('finish', () => {
+    activeRequests.dec();
+    const duration = (Date.now() - startTime) / 1000;
+    const route = req.route ? req.route.path : req.path;
+
+    httpRequestsTotal.inc({
+      method: req.method,
+      route,
+      status_code: res.statusCode
+    });
+
+    httpRequestDuration.observe(
+      { method: req.method, route, status_code: res.statusCode },
+      duration
+    );
+  });
+
+  next();
+}
+
+// ── HELPER FUNCTIONS for business events ──
+const trackRegistration = () => userRegistrationsTotal.inc();
+const trackLogin = (success) => userLoginsTotal.inc({ status: success ? 'success' : 'failure' });
+
+// ── EXPORT metrics text (Prometheus format) ──
+const getMetrics = () => register.metrics();
+
+// ── EXPORT metrics as JSON (for our dashboard) ──
+const getMetricsJSON = () => register.getMetricsAsJSON();
+
+module.exports = {
+  metricsMiddleware,
+  trackRegistration,
+  trackLogin,
+  getMetrics,
+  getMetricsJSON
+};</pre>
+          </div>
+          <div class="level-block beginner">
+            <div class="level-block-label">🌱 Beginner — three metric types explained</div>
+            <strong>Counter:</strong> like an odometer — only goes up. Total requests ever made. <br>
+            <strong>Gauge:</strong> like a fuel gauge — can go up or down. Active requests right now. <br>
+            <strong>Histogram:</strong> like a speed distribution chart — counts how many requests fell into each time bucket (under 10ms, under 50ms, under 100ms, etc.).
+          </div>
+          <div class="level-block average">
+            <div class="level-block-label">⚡ Average — labels</div>
+            Labels let you slice metrics by dimension. <code>httpRequestsTotal{method="POST", route="/api/auth/login", status_code="401"}</code> tracks failed login requests specifically. Without labels, you only know total requests — with labels, you can ask "how many POST requests to /api/auth/login returned 401 in the last minute?"
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section id="p3">
+      <div class="part-head ph-blue">
+        <span class="part-pill pp-blue">Part 3</span>
+        <span class="part-title">Add Middleware and /metrics Endpoints</span>
+        <span class="part-time">⏱ 10 min</span>
+      </div>
+
+      <div class="step open" id="step-p3-1">
+        <div class="step-header" onclick="toggleStep('step-p3-1')">
+          <div class="step-num">3</div>
+          <div class="step-title">Import metrics in server.js and register middleware</div>
+        </div>
+        <div class="step-body">
+          <p>Add the import line near the top of server.js, then add the middleware early in the middleware chain:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — imports and middleware</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>// Add with other requires:
+const { metricsMiddleware, trackRegistration, trackLogin, getMetrics, getMetricsJSON } = require('./config/metrics');
+
+// Add to middleware section BEFORE your routes (after cors and json):
+app.use(cors());
+app.use(express.json());
+app.use(morganMiddleware);
+app.use(metricsMiddleware);    // ← ADD THIS — must be before routes</pre>
+          </div>
+          <div class="callout amber">
+            <span class="callout-icon">⚠️</span>
+            <div><code>metricsMiddleware</code> must be registered with <code>app.use()</code> before any route definitions. If it comes after, some routes will not have their metrics recorded.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p3-2">
+        <div class="step-header" onclick="toggleStep('step-p3-2')">
+          <div class="step-num">4</div>
+          <div class="step-title">Add the /metrics and /metrics/json endpoints</div>
+        </div>
+        <div class="step-body">
+          <p>Add these two routes in server.js — they serve the metrics data. Place them with your other route definitions:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — metrics endpoints</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>// ── METRICS ENDPOINTS ──
+
+// Prometheus text format (what Prometheus server would scrape)
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', 'text/plain; version=0.0.4');
+  res.send(await getMetrics());
+});
+
+// JSON format (what our Chart.js dashboard uses)
+app.get('/metrics/json', async (req, res) => {
+  res.json(await getMetricsJSON());
+});</pre>
+          </div>
+          <div class="level-block advanced">
+            <div class="level-block-label">🚀 Advanced — secure the metrics endpoint</div>
+            In production, the <code>/metrics</code> endpoint should NOT be public — it exposes internal system details. Options: (1) restrict it to internal network only using a security group rule, (2) add basic auth: <code>app.get('/metrics', authenticateToken, requireRole('admin'), ...)</code>, (3) run it on a separate internal port that is not exposed outside the Docker network.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section id="p4">
+      <div class="part-head ph-amber">
+        <span class="part-pill pp-amber">Part 4</span>
+        <span class="part-title">Track Business Events</span>
+        <span class="part-time">⏱ 8 min</span>
+      </div>
+
+      <div class="step open" id="step-p4-1">
+        <div class="step-header" onclick="toggleStep('step-p4-1')">
+          <div class="step-num">5</div>
+          <div class="step-title">Call trackLogin and trackRegistration at event points</div>
+        </div>
+        <div class="step-body">
+          <p>In your login endpoint, call <code>trackLogin()</code> just before the response. In your registration endpoint, call <code>trackRegistration()</code> on success:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — login endpoint update</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>// Inside login — password verified:
+trackLogin(true);    // ← ADD before returning token
+logger.info('User login successful', { userId: user.id, email });
+return res.json({ token, user: { ... } });
+
+// Inside login — password wrong:
+trackLogin(false);   // ← ADD before returning 401
+logger.warn('Login failed - invalid password', { email, ip: req.ip });
+return res.status(401).json({ error: 'Invalid email or password' });
+
+// Inside registration — INSERT succeeded:
+trackRegistration(); // ← ADD after successful insert
+logger.info('New user registered', { userId: result.insertId, email });</pre>
+          </div>
+          <div class="why-box">
+            <strong>Why track business metrics separately?</strong> The <code>metricsMiddleware</code> tracks all HTTP requests. But it cannot tell the difference between a <em>successful</em> login and a <em>failed</em> login from the route alone — both go to <code>POST /api/auth/login</code>. Business metrics let you slice by outcome, not just by route.
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p4-2">
+        <div class="step-header" onclick="toggleStep('step-p4-2')">
+          <div class="step-num">6</div>
+          <div class="step-title">Rebuild and restart</div>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal — from ~/cloudeats-app</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>cd ~/cloudeats-app
+docker compose build user-service
+docker compose up -d user-service</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section id="p5">
+      <div class="part-head ph-purple">
+        <span class="part-pill pp-purple">Part 5</span>
+        <span class="part-title">Build the Chart.js Dashboard</span>
+        <span class="part-time">⏱ 15 min</span>
+      </div>
+
+      <div class="step open" id="step-p5-1">
+        <div class="step-header" onclick="toggleStep('step-p5-1')">
+          <div class="step-num">7</div>
+          <div class="step-title">Create the public/ directory and metrics.html</div>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>mkdir -p public
+nano public/metrics.html</pre>
+          </div>
+          <p>Copy the complete dashboard HTML below:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">public/metrics.html — full dashboard</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+&lt;meta charset="UTF-8"&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+&lt;title&gt;CloudEats Metrics Dashboard&lt;/title&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/chart.js"&gt;&lt;/script&gt;
+&lt;style&gt;
+  body{font-family:sans-serif;background:#07090f;color:#e8edf5;margin:0;padding:1.5rem;}
+  h1{font-size:1.3rem;margin-bottom:1rem;color:#00e5a0;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.75rem;margin-bottom:1.5rem;}
+  .card{background:#1a2235;border:1px solid #2a3d5a;border-radius:8px;padding:1rem;text-align:center;}
+  .card-val{font-size:1.8rem;font-weight:700;color:#00c8ff;}
+  .card-label{font-size:.75rem;color:#6b7fa0;margin-top:.25rem;}
+  .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1rem;}
+  .chart-box{background:#1a2235;border:1px solid #2a3d5a;border-radius:8px;padding:1rem;}
+  .chart-title{font-size:.85rem;font-weight:600;margin-bottom:.75rem;color:#e8edf5;}
+  .refresh-btn{background:#00c8ff;color:#000;border:none;padding:.4rem 1rem;border-radius:6px;font-weight:700;cursor:pointer;margin-bottom:1rem;}
+  .last-updated{font-size:.72rem;color:#6b7fa0;margin-left:.75rem;}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;📊 CloudEats — Live Metrics&lt;/h1&gt;
+&lt;button class="refresh-btn" onclick="loadMetrics()"&gt;↻ Refresh&lt;/button&gt;
+&lt;span class="last-updated" id="lastUpdated"&gt;&lt;/span&gt;
+
+&lt;div class="cards"&gt;
+  &lt;div class="card"&gt;&lt;div class="card-val" id="totalRequests"&gt;—&lt;/div&gt;&lt;div class="card-label"&gt;Total Requests&lt;/div&gt;&lt;/div&gt;
+  &lt;div class="card"&gt;&lt;div class="card-val" id="successRate"&gt;—&lt;/div&gt;&lt;div class="card-label"&gt;Success Rate&lt;/div&gt;&lt;/div&gt;
+  &lt;div class="card"&gt;&lt;div class="card-val" id="activeReq"&gt;—&lt;/div&gt;&lt;div class="card-label"&gt;Active Now&lt;/div&gt;&lt;/div&gt;
+  &lt;div class="card"&gt;&lt;div class="card-val" id="logins"&gt;—&lt;/div&gt;&lt;div class="card-label"&gt;Logins (success)&lt;/div&gt;&lt;/div&gt;
+  &lt;div class="card"&gt;&lt;div class="card-val" id="failedLogins"&gt;—&lt;/div&gt;&lt;div class="card-label"&gt;Failed Logins&lt;/div&gt;&lt;/div&gt;
+  &lt;div class="card"&gt;&lt;div class="card-val" id="registrations"&gt;—&lt;/div&gt;&lt;div class="card-label"&gt;Registrations&lt;/div&gt;&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="charts"&gt;
+  &lt;div class="chart-box"&gt;
+    &lt;div class="chart-title"&gt;Request Status Breakdown&lt;/div&gt;
+    &lt;canvas id="statusChart"&gt;&lt;/canvas&gt;
+  &lt;/div&gt;
+  &lt;div class="chart-box"&gt;
+    &lt;div class="chart-title"&gt;Response Time Distribution (Histogram Buckets)&lt;/div&gt;
+    &lt;canvas id="durationChart"&gt;&lt;/canvas&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+let statusChart, durationChart;
+
+async function loadMetrics() {
+  try {
+    const resp = await fetch('/metrics/json');
+    const data = await resp.json();
+    document.getElementById('lastUpdated').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+
+    let totalReq = 0, successReq = 0, errorReq = 0;
+    let loginSuccess = 0, loginFail = 0, registrations = 0;
+    const statusMap = {}, durationBuckets = {};
+
+    data.forEach(metric => {
+      if (metric.name === 'http_requests_total') {
+        metric.values.forEach(v => {
+          totalReq += v.value;
+          const sc = v.labels.status_code;
+          if (sc &lt; 400) successReq += v.value; else errorReq += v.value;
+          statusMap[sc] = (statusMap[sc] || 0) + v.value;
+        });
+      }
+      if (metric.name === 'http_requests_active') {
+        document.getElementById('activeReq').textContent = metric.values[0]?.value ?? 0;
+      }
+      if (metric.name === 'user_logins_total') {
+        metric.values.forEach(v => {
+          if (v.labels.status === 'success') loginSuccess += v.value;
+          else loginFail += v.value;
+        });
+      }
+      if (metric.name === 'user_registrations_total') {
+        registrations = metric.values[0]?.value ?? 0;
+      }
+      if (metric.name === 'http_request_duration_seconds') {
+        metric.values.forEach(v => {
+          if (v.labels.le && v.labels.le !== '+Inf') {
+            const le = v.labels.le;
+            durationBuckets[le] = (durationBuckets[le] || 0) + v.value;
+          }
+        });
+      }
+    });
+
+    document.getElementById('totalRequests').textContent = totalReq;
+    document.getElementById('successRate').textContent = totalReq > 0 ? Math.round(successReq/totalReq*100)+'%' : '—';
+    document.getElementById('logins').textContent = loginSuccess;
+    document.getElementById('failedLogins').textContent = loginFail;
+    document.getElementById('registrations').textContent = registrations;
+
+    // Status breakdown bar chart
+    const statusLabels = Object.keys(statusMap).sort();
+    const statusData = statusLabels.map(k => statusMap[k]);
+    const statusColors = statusLabels.map(k => k < 400 ? '#00e5a0' : k < 500 ? '#ffb740' : '#ff5e7a');
+    if (statusChart) statusChart.destroy();
+    statusChart = new Chart(document.getElementById('statusChart'), {
+      type: 'bar',
+      data: { labels: statusLabels, datasets: [{ label: 'Requests', data: statusData, backgroundColor: statusColors }] },
+      options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#6b7fa0' } }, y: { ticks: { color: '#6b7fa0' } } } }
+    });
+
+    // Duration histogram bar chart
+    const bucketLabels = Object.keys(durationBuckets).sort((a,b) => parseFloat(a)-parseFloat(b));
+    const bucketData = bucketLabels.map(k => durationBuckets[k]);
+    if (durationChart) durationChart.destroy();
+    durationChart = new Chart(document.getElementById('durationChart'), {
+      type: 'bar',
+      data: { labels: bucketLabels.map(l => '≤'+l+'s'), datasets: [{ label: 'Count', data: bucketData, backgroundColor: '#00c8ff' }] },
+      options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#6b7fa0' } }, y: { ticks: { color: '#6b7fa0' } } } }
+    });
+
+  } catch(e) {
+    console.error('Could not load metrics', e);
+  }
+}
+
+loadMetrics();
+setInterval(loadMetrics, 15000);   // auto-refresh every 15s
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p5-2">
+        <div class="step-header" onclick="toggleStep('step-p5-2')">
+          <div class="step-num">8</div>
+          <div class="step-title">Serve static files from server.js</div>
+        </div>
+        <div class="step-body">
+          <p>Add static file serving so the dashboard HTML is accessible in the browser:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — add after existing requires</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>const path = require('path');
+
+// ← ADD this line with your other app.use() calls:
+app.use(express.static(path.join(__dirname, 'public')));</pre>
+          </div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal — rebuild</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>cd ~/cloudeats-app
+docker compose build user-service
+docker compose up -d user-service</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 6 -->
+    <section id="p6">
+      <div class="part-head ph-green">
+        <span class="part-pill pp-green">Part 6</span>
+        <span class="part-title">Generate Traffic and Test</span>
+        <span class="part-time">⏱ 10 min</span>
+      </div>
+
+      <div class="step open" id="step-p6-1">
+        <div class="step-header" onclick="toggleStep('step-p6-1')">
+          <div class="step-num">9</div>
+          <div class="step-title">Verify /metrics returns Prometheus text</div>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>curl http://localhost:8000/metrics | head -30</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Expected — Prometheus text format</div>
+            <div class="eo-body"># HELP http_requests_total Total number of HTTP requests received
+# TYPE http_requests_total counter
+http_requests_total{method="GET",route="/metrics",status_code="200"} 1
+
+# HELP http_requests_active Number of HTTP requests currently being processed
+# TYPE http_requests_active gauge
+http_requests_active 0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p6-2">
+        <div class="step-header" onclick="toggleStep('step-p6-2')">
+          <div class="step-num">10</div>
+          <div class="step-title">Generate 20+ requests to populate the counters</div>
+        </div>
+        <div class="step-body">
+          <p>Run this loop to generate varied traffic — mix of successes, failures, and different routes:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal — traffic generator</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre># 10 successful menu requests
+for i in {1..10}; do curl -s http://localhost:8000/api/menu > /dev/null; done
+
+# 5 failed logins
+for i in {1..5}; do
+  curl -s -X POST http://localhost:8000/api/auth/login \
+    -H "Content-Type: application/json" \
+    -d '{"email":"test@test.com","password":"wrong"}' > /dev/null
+done
+
+# 5 requests to non-existent routes (404s)
+for i in {1..5}; do curl -s http://localhost:8000/api/nonexistent > /dev/null; done
+
+echo "Traffic generated. Check /metrics"</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p6-3">
+        <div class="step-header" onclick="toggleStep('step-p6-3')">
+          <div class="step-num">11</div>
+          <div class="step-title">Verify counters reflect the requests</div>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>curl -s http://localhost:8000/metrics | grep http_requests_total</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Counters should match your traffic</div>
+            <div class="eo-body">http_requests_total{method="GET",route="/api/menu",status_code="200"} 10
+http_requests_total{method="POST",route="/api/auth/login",status_code="401"} 5
+http_requests_total{method="GET",route="/api/nonexistent",status_code="404"} 5</div>
+          </div>
+          <div class="trouble">
+            <div class="trouble-header" onclick="toggleTrouble(this.closest('.trouble'),event)">⚠️ Trouble: All counts show 0 or /metrics is empty</div>
+            <div class="trouble-body">Check that <code>app.use(metricsMiddleware)</code> is in server.js BEFORE the route definitions. The middleware must be registered before the routes to intercept their requests. Rebuild after fixing.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p6-4">
+        <div class="step-header" onclick="toggleStep('step-p6-4')">
+          <div class="step-num">12</div>
+          <div class="step-title">Open the dashboard in a browser</div>
+        </div>
+        <div class="step-body">
+          <p>Open a browser on your VM (or use port-forwarding from your laptop) and navigate to:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">URL</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>http://localhost:8000/metrics.html</pre>
+          </div>
+          <p style="margin-top:.5rem;">You should see the metrics dashboard with cards showing total requests, success rate, and active requests, plus bar charts for status breakdown and response time distribution. The dashboard auto-refreshes every 15 seconds.</p>
+          <div class="level-block advanced">
+            <div class="level-block-label">🚀 Advanced — error rate alert</div>
+            Add this to server.js — a simple alert that fires when error rate exceeds 10%:<br>
+            <code style="font-size:.75rem;">setInterval(async () => { const m = await getMetricsJSON(); /* calculate error rate from http_requests_total */ if (errorRate &gt; 0.1) logger.warn('ALERT: error rate exceeded 10%', { errorRate }); }, 60000);</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p6-5">
+        <div class="step-header" onclick="toggleStep('step-p6-5')">
+          <div class="step-num">13</div>
+          <div class="step-title">Verify business metrics</div>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>curl -s http://localhost:8000/metrics | grep -E "user_logins|user_registrations"</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Expected</div>
+            <div class="eo-body">user_logins_total{status="failure"} 5
+user_logins_total{status="success"} 0
+user_registrations_total 0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="checkpoint">
+        <div class="checkpoint-label">🎯 Lab 9.2 Key Checkpoint — all must be true</div>
+        <ul>
+          <li>✅ <code>curl http://localhost:8000/metrics</code> returns Prometheus text with real values</li>
+          <li>✅ Counters match the number of requests you generated</li>
+          <li>✅ Failed login counter increments when you trigger a failed login</li>
+          <li>✅ <code>http://localhost:8000/metrics.html</code> loads and shows charts</li>
+        </ul>
+      </div>
+
+    </section>
+
+    <section style="margin-top:1.5rem;">
+      <div class="challenge-box">
+        <div class="challenge-label">🚀 Advanced Challenge Extension</div>
+        <p>The Prometheus ecosystem is the industry standard for metrics. Set up a minimal Prometheus + Grafana stack as an optional extra:</p>
+        <ol style="margin-top:.5rem;">
+          <li>Add a <code>prometheus</code> service to docker-compose.yml</li>
+          <li>Create a <code>prometheus.yml</code> config that scrapes <code>user-service:3001/metrics</code> every 15 seconds</li>
+          <li>Add a <code>grafana</code> service (port 3000), connect it to Prometheus as a data source</li>
+          <li>Import the "Node.js" dashboard template from grafana.com/grafana/dashboards</li>
+        </ol>
+        <p style="margin-top:.5rem;font-size:.8rem;color:var(--muted);">This is the full observability stack used at startups and mid-sized companies. Your prom-client code works unchanged — you just add the server-side infrastructure.</p>
+      </div>
+    </section>
+
+    <section style="margin-top:1.75rem;">
+      <div class="part-head ph-green" style="margin-bottom:1rem;">
+        <span class="part-pill pp-green">Summary</span>
+        <span class="part-title">Week 9 Observability Stack — Complete</span>
+      </div>
+      <table class="summary-table">
+        <thead><tr><th>Layer</th><th>Tool</th><th>Answers the question</th></tr></thead>
+        <tbody>
+          <tr><td>Structured logging</td><td>Winston + Morgan</td><td>What happened? When? Which user? What IP?</td></tr>
+          <tr><td>Request metrics</td><td>prom-client metricsMiddleware</td><td>How many requests? How fast? How many errors?</td></tr>
+          <tr><td>Business metrics</td><td>prom-client counters</td><td>How many logins? Registrations? Successful vs failed?</td></tr>
+          <tr><td>Visualisation</td><td>Chart.js dashboard at /metrics.html</td><td>What does performance look like over time?</td></tr>
+        </tbody>
+      </table>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.25rem;">
+        <a href="week09_lab1_application_logging.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.25);color:var(--green);padding:.4rem .9rem;border-radius:7px;text-decoration:none;">← Lab 9.1</a>
+        <a href="week09_Monitoring_Logging_and_Optimization.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;background:rgba(255,183,64,.08);border:1px solid rgba(255,183,64,.25);color:var(--amber);padding:.4rem .9rem;border-radius:7px;text-decoration:none;">Week 9 Notes</a>
+        <a href="week10_Emerging_Trends_and_Course_Wrap.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;background:rgba(180,110,245,.1);border:1px solid rgba(180,110,245,.3);color:var(--purple);padding:.4rem .9rem;border-radius:7px;text-decoration:none;">Week 10 →</a>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+let completedSteps=0;const TOTAL=13;
+function toggleStep(id,event){if(event&&!event.target.closest('.step-header'))return;const el=document.getElementById(id);if(!el)return;const wasOpen=el.classList.contains('open');el.classList.toggle('open');if(!wasOpen){completedSteps=Math.min(completedSteps+1,TOTAL);updateProgress();}}
+function toggleTrouble(el,event){if(event&&!event.target.closest('.trouble-header'))return;el.classList.toggle('open');}
+function copyCode(btn,event){if(event)event.stopPropagation();const pre=btn.closest('.code-block').querySelector('pre');navigator.clipboard.writeText(pre.innerText).then(()=>{btn.textContent='Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2000);});}
+function expandAll(){document.querySelectorAll('.step').forEach(s=>s.classList.add('open'));completedSteps=TOTAL;updateProgress();}
+function collapseAll(){document.querySelectorAll('.step').forEach(s=>s.classList.remove('open'));}
+function updateProgress(){const pct=Math.round((completedSteps/TOTAL)*100);document.getElementById('prog-fill').style.width=pct+'%';document.getElementById('prog-count').textContent=completedSteps;}
+function setPace(pace){document.body.className='pace-'+pace;document.querySelectorAll('.pace-btn').forEach(b=>b.classList.remove('active'));document.querySelector(`[data-pace="${pace}"]`).classList.add('active');if(pace==='beginner')expandAll();}
+document.addEventListener('DOMContentLoaded',()=>{expandAll();setPace('beginner');});
+</script>
+</body>
+</html>

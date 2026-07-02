@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CloudEats Academy · Introduction to Cloud Computing</title>
+<meta name="description" content="A 10-week hands-on cloud computing course built around a real food delivery app. Learn Docker, databases, microservices, DevOps, security and monitoring at your own pace.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="CloudEats Academy · Introduction to Cloud Computing">
+<meta property="og:description" content="10 weeks. 18 labs. One real app. Learn cloud computing by building CloudEats — a food delivery platform — from a single container to a fully monitored, secured, deployed system.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="assets/img/og-cover.png">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ── */
+:root {
+  --bg:       #07090f;
+  --bg2:      #0d1117;
+  --bg3:      #141b27;
+  --surface:  #1a2235;
+  --surface2: #1f2c42;
+  --border:   #2a3d5a;
+  --accent:   #00c8ff;
+  --accent2:  #7c6af5;
+  --green:    #00e5a0;
+  --amber:    #ffb740;
+  --red:      #ff5e7a;
+  --purple:   #b46ef5;
+  --text:     #e8edf5;
+  --muted:    #6b7fa0;
+  --beginner: #00e5a0;
+  --average:  #00c8ff;
+  --advanced: #b46ef5;
+  --radius:   10px;
+}
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Sora', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+
+/* ── SITE HEADER ── */
+.site-header {
+  background: linear-gradient(135deg, #050d1c 0%, #091628 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+.header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 58px;
+  gap: 1rem;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+.logo-icon {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem;
+}
+.header-links {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+.header-links a {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.22rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--muted);
+  transition: all 0.15s;
+}
+.header-links a:hover { color: var(--accent); border-color: var(--accent); }
+.header-links a.cta-link {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+  font-weight: 700;
+}
+.header-links a.cta-link:hover { opacity: 0.88; }
+
+/* ── HERO ── */
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: 5rem 2rem 4.5rem;
+  text-align: center;
+  background: linear-gradient(180deg, #060c1a 0%, var(--bg) 100%);
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -120px; left: 50%; transform: translateX(-50%);
+  width: 700px; height: 500px;
+  background: radial-gradient(ellipse, rgba(0,200,255,0.08) 0%, rgba(124,106,245,0.06) 40%, transparent 70%);
+  pointer-events: none;
+}
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(0,200,255,0.08);
+  border: 1px solid rgba(0,200,255,0.2);
+  border-radius: 20px;
+  padding: 0.3rem 0.9rem;
+  margin-bottom: 1.5rem;
+}
+.hero h1 {
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.25rem;
+  background: linear-gradient(135deg, #e8edf5 30%, var(--accent) 70%, var(--accent2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-sub {
+  font-size: clamp(0.95rem, 2vw, 1.15rem);
+  color: var(--muted);
+  max-width: 620px;
+  margin: 0 auto 2.25rem;
+  line-height: 1.65;
+}
+.hero-sub strong { color: var(--text); }
+.hero-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 3rem;
+}
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--accent);
+  color: #000;
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 0.75rem 1.6rem;
+  border-radius: 8px;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.88rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  transition: border-color 0.15s, transform 0.15s;
+}
+.btn-secondary:hover { border-color: var(--accent); transform: translateY(-1px); }
+
+/* hero stat strip */
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  max-width: 640px;
+  margin: 0 auto;
+  background: var(--surface);
+}
+.hero-stat {
+  flex: 1;
+  min-width: 110px;
+  padding: 1rem 0.75rem;
+  text-align: center;
+  border-right: 1px solid var(--border);
+}
+.hero-stat:last-child { border-right: none; }
+.hero-stat-num {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+.hero-stat-label {
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-top: 0.3rem;
+  font-weight: 500;
+}
+
+/* ── PACE EXPLAINER ── */
+.section { padding: 4rem 2rem; }
+.section-inner { max-width: 1100px; margin: 0 auto; }
+.section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+.section-heading {
+  font-size: clamp(1.25rem, 3vw, 1.8rem);
+  font-weight: 800;
+  margin-bottom: 0.6rem;
+  letter-spacing: -0.02em;
+}
+.section-sub {
+  color: var(--muted);
+  font-size: 0.9rem;
+  max-width: 540px;
+  margin-bottom: 2rem;
+  line-height: 1.65;
+}
+
+.pace-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+.pace-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.pace-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.pace-card.beginner::before { background: var(--beginner); }
+.pace-card.average::before  { background: var(--average); }
+.pace-card.advanced::before { background: var(--advanced); }
+.pace-card:hover { border-color: var(--surface2); }
+
+.pace-emoji { font-size: 1.6rem; margin-bottom: 0.65rem; }
+.pace-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+.pace-card.beginner .pace-title { color: var(--beginner); }
+.pace-card.average  .pace-title { color: var(--average); }
+.pace-card.advanced .pace-title { color: var(--advanced); }
+.pace-who {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-bottom: 0.9rem;
+  line-height: 1.5;
+}
+.pace-features {
+  list-style: none;
+  font-size: 0.8rem;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.pace-features li::before { content: '→ '; color: var(--muted); }
+
+/* ── WHAT YOU'LL BUILD ── */
+.build-section { background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.app-journey {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0;
+  margin-top: 2rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.journey-step {
+  padding: 1.25rem 1.1rem;
+  border-right: 1px solid var(--border);
+  background: var(--bg3);
+  transition: background 0.15s;
+}
+.journey-step:last-child { border-right: none; }
+.journey-step:hover { background: var(--surface); }
+.journey-num {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+}
+.journey-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+  color: var(--text);
+}
+.journey-desc {
+  font-size: 0.73rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ── CURRICULUM TABLE ── */
+.curriculum { background: var(--bg); }
+.week-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+}
+.week-row {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: start;
+  gap: 1rem;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  transition: border-color 0.15s;
+  cursor: default;
+}
+.week-row:hover { border-color: var(--surface2); }
+.week-num {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--muted);
+  padding-top: 0.15rem;
+  line-height: 1.3;
+}
+.week-num strong {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: -0.03em;
+}
+.week-body { min-width: 0; }
+.week-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+.week-desc {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-bottom: 0.6rem;
+  line-height: 1.5;
+}
+.week-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.tag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--bg3);
+}
+.tag.lecture { color: var(--accent); border-color: rgba(0,200,255,0.25); background: rgba(0,200,255,0.06); }
+.tag.lab     { color: var(--green);  border-color: rgba(0,229,160,0.25); background: rgba(0,229,160,0.06); }
+.tag.adv     { color: var(--purple); border-color: rgba(180,110,245,0.25); background: rgba(180,110,245,0.06); }
+
+.week-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+.week-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.28rem 0.65rem;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.week-link:hover { color: var(--accent); border-color: var(--accent); }
+.week-link.lecture-link { color: var(--accent); border-color: rgba(0,200,255,0.3); }
+.week-link.lecture-link:hover { background: rgba(0,200,255,0.08); }
+.week-link.lab-link { color: var(--green); border-color: rgba(0,229,160,0.3); }
+.week-link.lab-link:hover { background: rgba(0,229,160,0.08); }
+
+/* ── PRE-REQ / START HERE STRIP ── */
+.prereq-strip {
+  background: rgba(0,200,255,0.05);
+  border: 1px solid rgba(0,200,255,0.2);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.4rem;
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.prereq-icon { font-size: 1.3rem; flex-shrink: 0; }
+.prereq-text { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+.prereq-text strong { color: var(--text); }
+.prereq-text a { color: var(--accent); border-bottom: 1px solid rgba(0,200,255,0.3); }
+.prereq-text a:hover { border-bottom-color: var(--accent); }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 2rem 2rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-align: center;
+}
+footer a { color: var(--accent); }
+.footer-inner { max-width: 1100px; margin: 0 auto; }
+.footer-links {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  margin-bottom: 0.75rem;
+}
+.footer-links a { color: var(--muted); transition: color 0.15s; }
+.footer-links a:hover { color: var(--accent); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  .hero { padding: 3.5rem 1.25rem 3rem; }
+  .section { padding: 3rem 1.25rem; }
+  .week-row { grid-template-columns: 1fr; gap: 0.6rem; }
+  .week-links { flex-direction: row; align-items: flex-start; flex-wrap: wrap; }
+  .app-journey { grid-template-columns: 1fr 1fr; }
+  .journey-step { border-bottom: 1px solid var(--border); }
+  .hero-stats { border-radius: 0; border-left: none; border-right: none; max-width: 100%; }
+  .header-links .btn-cta-label { display: none; }
+}
+
+/* ── SCROLL REVEAL (lightweight) ── */
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.45s ease, transform 0.45s ease; }
+.reveal.visible { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  html { scroll-behavior: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="logo">
+      <div class="logo-icon">🍔</div>
+      CloudEats Academy
+    </a>
+    <nav class="header-links">
+      <a href="#curriculum">Curriculum</a>
+      <a href="#pacing">Who's it for</a>
+      <a href="week01/index.html" class="cta-link">Start Week 1 →</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-eyebrow">📡 Diploma · Cloud Computing · 10 Weeks</div>
+  <h1>Build a food delivery app.<br>Learn cloud computing.</h1>
+  <p class="hero-sub">
+    <strong>CloudEats Academy</strong> is a hands-on course where every concept is applied to
+    one real app — from a single Docker container in Week 1 to a fully monitored,
+    secured, and deployed system in Week 10.
+  </p>
+  <div class="hero-actions">
+    <a href="week01/index.html" class="btn-primary">Start for free → Week 1</a>
+    <a href="#curriculum" class="btn-secondary">See the full curriculum</a>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-num">10</div>
+      <div class="hero-stat-label">Weeks of content</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">18</div>
+      <div class="hero-stat-label">Hands-on labs</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">3</div>
+      <div class="hero-stat-label">Pace tracks</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">0</div>
+      <div class="hero-stat-label">Cost to start</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── WHAT YOU BUILD ── -->
+<section class="section build-section" id="build">
+  <div class="section-inner">
+    <p class="section-label reveal">The thread through every week</p>
+    <h2 class="section-heading reveal">One app, built from scratch to production</h2>
+    <p class="section-sub reveal">
+      CloudEats is a fictional food delivery platform — but every service, database,
+      pipeline, and security rule you build in the labs is real and runs on your machine.
+    </p>
+    <div class="app-journey reveal">
+      <div class="journey-step">
+        <div class="journey-num">Weeks 1–2</div>
+        <div class="journey-title">First container</div>
+        <div class="journey-desc">Docker environment, static frontend served from a container, VM networking basics</div>
+      </div>
+      <div class="journey-step">
+        <div class="journey-num">Weeks 3–4</div>
+        <div class="journey-title">Data layer</div>
+        <div class="journey-desc">MySQL schema, user registration, Redis cart, MongoDB order history</div>
+      </div>
+      <div class="journey-step">
+        <div class="journey-num">Week 5</div>
+        <div class="journey-title">Split into services</div>
+        <div class="journey-desc">Menu, order and user services with an optional API Gateway</div>
+      </div>
+      <div class="journey-step">
+        <div class="journey-num">Weeks 6–7</div>
+        <div class="journey-title">Ship automatically</div>
+        <div class="journey-desc">Git branching, automated tests, CI pipeline then full CD deployment via GitHub Actions</div>
+      </div>
+      <div class="journey-step">
+        <div class="journey-num">Week 8</div>
+        <div class="journey-title">Lock it down</div>
+        <div class="journey-desc">JWT authentication, role-based access control, secrets management</div>
+      </div>
+      <div class="journey-step">
+        <div class="journey-num">Weeks 9–10</div>
+        <div class="journey-title">Watch it run</div>
+        <div class="journey-desc">Centralised logging, Prometheus metrics, performance monitoring, cloud migration plan</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PACE TRACKS ── -->
+<section class="section" id="pacing">
+  <div class="section-inner">
+    <p class="section-label reveal">Three tracks, one course</p>
+    <h2 class="section-heading reveal">Learn at the speed that suits you</h2>
+    <p class="section-sub reveal">
+      Every lecture and lab has the same content across three pace levels.
+      Switch between them any time — no separate courses to manage.
+    </p>
+    <div class="pace-cards">
+      <div class="pace-card beginner reveal">
+        <div class="pace-emoji">🌱</div>
+        <div class="pace-title">Beginner</div>
+        <p class="pace-who">New to cloud or coming from a non-technical background. You need every step spelled out — and that's fine.</p>
+        <ul class="pace-features">
+          <li>Every step is expanded on page load</li>
+          <li>Plain-English definitions for every term</li>
+          <li>✅ Checkpoint after each section</li>
+          <li>Inline error guides next to the step that causes them</li>
+        </ul>
+      </div>
+      <div class="pace-card average reveal">
+        <div class="pace-emoji">⚡</div>
+        <div class="pace-title">Average</div>
+        <p class="pace-who">You've used a terminal before and can follow along without hand-holding. You want to understand the why, not just the what.</p>
+        <ul class="pace-features">
+          <li>Steps collapsed — expand what you need</li>
+          <li>"Why are we doing this?" callouts on key decisions</li>
+          <li>Checkpoint question at the end of each Part</li>
+          <li>Official docs linked where relevant</li>
+        </ul>
+      </div>
+      <div class="pace-card advanced reveal">
+        <div class="pace-emoji">🚀</div>
+        <div class="pace-title">Advanced</div>
+        <p class="pace-who">Comfortable with Docker and Linux. You want trade-off discussions, extension challenges, and production-grade context.</p>
+        <ul class="pace-features">
+          <li>All steps collapsed — scan headers, skip what you know</li>
+          <li>Challenge extension at the end of every lab</li>
+          <li>"What breaks if you change X?" prompts</li>
+          <li>Links to production-equivalent tooling</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CURRICULUM ── -->
+<section class="section curriculum" id="curriculum">
+  <div class="section-inner">
+    <p class="section-label reveal">Full course</p>
+    <h2 class="section-heading reveal">10-week curriculum</h2>
+    <p class="section-sub reveal">
+      Each week has a lecture page and one or two lab pages.
+      Start with the lecture, then do the labs in order.
+    </p>
+
+    <div class="week-grid">
+
+      <!-- W1 -->
+      <div class="week-row reveal">
+        <div class="week-num"><strong>01</strong>Week</div>
+        <div class="week-body">
+          <div class="week-title">Foundations of Cloud Computing</div>
+          <div class="week-desc">Cloud concepts, IaaS / PaaS / SaaS service models, major providers, and why Proxmox simulates a private cloud in the labs.</div>
+          <div class="week-tags">
+            <span class="tag lecture">📖 Lecture</span>
+            <span class="tag lab">🧪 Lab 1.1 — Dev Environment</span>
+          </div>
+        </div>
+        <div class="week-links">
+          <a href="week01/index.html" class="week-link lecture-link">📖 Lecture</a>
+          <a href="week01/lab1_dev_environment.html" class="week-link lab-link">🧪 Lab 1.1</a>
+        </div>
+      </div>
+
+      <!-- W2 -->
+      <div class="week-row reveal">
+        <div class="week-num"><strong>02</strong>Week</div>
+        <div class="week-body">
+          <div class="week-title">Core Cloud Services</div>
+          <div class="week-desc">Virtual machines vs containers, object and block storage, VPC networking, DNS, security groups and load balancing.</div>
+          <div class="week-tags">
+            <span class="tag lecture">📖 Lecture</span>
+            <span class="tag lab">🧪 Lab 2.1 — Static Menu</span>
+            <span class="tag lab">🧪 Lab 2.2 — Docker Networking</span>
+          </div>
+        </div>
+        <div class="week-links">
+          <a href="week02/index.html" class="week-link lecture-link">📖 Lecture</a>
+          <a href="week02/lab1_static_menu.html" class="week-link lab-link">🧪 Lab 2.1</a>
+          <a href="week02/lab2_docker_networking.html" class="week-link lab-link">🧪 Lab 2.2</a>
+        </div>
+      </div>
+
+      <!-- W3 -->
+      <div class="week-row reveal">
+        <div class="week-num"><strong>03</strong>Week</div>
+        <div class="week-body">
+          <div class="week-title">Databases in the Cloud</div>
+          <div class="week-desc">Relational databases, MySQL schema design, SQL fundamentals, Docker Compose multi-container setup, and basic password hashing.</div>
+          <div class="week-tags">
+            <span class="tag lecture">📖 Lecture</span>
+            <span class="tag lab">🧪 Lab 3.1 — Docker Compose + MySQL</span>
+            <span class="tag lab">🧪 Lab 3.2 — User Registration</span>
+          </div>
+        </div>
+        <div class="week-links">
+          <a href="week03/index.html" class="week-link lecture-link">📖 Lecture</a>
+          <a href="week03/lab1_docker_compose_mysql.html" class="week-link lab-link">🧪 Lab 3.1</a>
+          <a href="week03/lab2_user_registration.html" class="week-link lab-link">🧪 Lab 3.2</a>
+        </div>
+      </div>
+
+      <!-- W4 -->
+      <div class="week-row reveal">
+        <div class="week-num"><strong>04</strong>Week</div>
+        <div class="week-body">
+          <div class="week-title">Cloud-Native Applications</div>
+          <div class="week-desc">12-factor app principles, SELECT / JOIN / INSERT queries, NoSQL databases — Redis for the cart, MongoDB for order history.</div>
+          <div class="week-tags">
+            <span class="tag lecture">📖 Lecture</span>
+            <span class="tag lab">🧪 Lab 4.1 — Relational Queries</span>
+            <span class="tag lab">🧪 Lab 4.2 — NoSQL Orders</span>
+          </div>
+        </div>
+        <div class="week-links">
+          <a href="week04/index.html" class="week-link lecture-link">📖 Lecture</a>
+          <a href="week04/lab1_relational_db_queries.html" class="week-link lab-link">🧪 Lab 4.1</a>
+          <a href="week04/lab2_nosql_orders.html" class="week-link lab-link">🧪 Lab 4.2</a>
+        </div>
+      </div>
+
+      <!-- W5 -->
+      <div class="week-row reveal">
+        <div class="week-num"><strong>05</strong>Week</div>
+        <div class="week-body">
+          <div class="week-title">Microservices Architecture</div>
+          <div class="week-desc">Monolith vs microservices, defining service boundaries, inter-service communication. Advanced track adds an API Gateway layer.</div>
+          <div class="week-tags">
+            <span class="tag lecture">📖 Lecture</span>
+            <span class="tag lab">🧪 Lab 5.1 — Microservices (tiered)</span>
+            <span class="tag adv">🚀 Lab 5.2 — API Gateway (advanced)</span>
+          </div>
+        </div>
+        <div class="week-links">
+          <a href="week05/index.html" class="week-link lecture-link">📖 Lecture</a>
+          <a href="week05/lab1_microservices.html" class="week-link lab-link">🧪 Lab 5.1</a>
+          <a href="week05/lab2_api_gateway.html" class="week-link lab-link">🚀 Lab 5.2</a>
+        </div>
+      </div>
+
+      <!-- W6 -->
+      <div class="week-row reveal">
+        <div class="week-num"><strong>06</strong>Week</div>
+        <div class="week-body">
+          <div class="week-title">DevOps &amp; Version Control</div>
+          <div class="week-desc">Git branching strategies, CI/CD concepts, automated testing with Jest, and a first GitHub Actions pipeline that gates on test results.</div>
+          <div class="week-tags">
+            <span class="tag lecture">📖 Lecture</span>
+            <span class="tag lab">🧪 Lab 6.1 — Git Version Control</span>
+            <span class="tag lab">🧪 Lab 6.2 — Automated Testing (CI)</span>
+          </div>
+        </div>
+        <div class="week-links">
+          <a href="week06/index.html" class="week-link lecture-link">📖 Lecture</a>
+          <a href="week06/lab1_git_version_control.html" class="week-link lab-link">🧪 Lab 6.1</a>
+          <a href="week06/lab2_automated_testing.html" class="week-link lab-link">🧪 Lab 6.2</a>
+        </div>
+      </div>
+
+      <!-- W7 -->
+      <div class="week-row reveal">
+        <div class="week-num"><strong>07</strong>Week</div>
+        <div class="week-body">
+          <div class="week-title">CI/CD &amp; Infrastructure as Code</div>
+          <div class="week-desc">Docker Compose as IaC, full CD pipeline that deploys on push, rolling updates and rollback strategies.</div>
+          <div class="week-tags">
+            <span class="tag lecture">📖 Lecture</span>
+            <span class="tag lab">🧪 Lab 7.1 — Infrastructure as Code</span>
+            <span class="tag lab">🧪 Lab 7.2 — Deployment Automation (CD)</span>
+          </div>
+        </div>
+        <div class="week-links">
+          <a href="week07/index.html" class="week-link lecture-link">📖 Lecture</a>
+          <a href="week07/lab1_infrastructure_as_code.html" class="week-link lab-link">🧪 Lab 7.1</a>
+          <a href="week07/lab2_deployment_automation.html" class="week-link lab-link">🧪 Lab 7.2</a>
+        </div>
+      </div>
+
+      <!-- W8 -->
+      <div class="week-row reveal">
+        <div class="week-num"><strong>08</strong>Week</div>
+        <div class="week-body">
+          <div class="week-title">Cloud Security &amp; Access Control</div>
+          <div class="week-desc">Shared responsibility model, IAM, JWT authentication, role-based access control, secrets in environment variables, encryption at rest and in transit.</div>
+          <div class="week-tags">
+            <span class="tag lecture">📖 Lecture</span>
+            <span class="tag lab">🧪 Lab 8.1 — JWT Authentication</span>
+            <span class="tag lab">🧪 Lab 8.2 — RBAC Access Control</span>
+          </div>
+        </div>
+        <div class="week-links">
+          <a href="week08/index.html" class="week-link lecture-link">📖 Lecture</a>
+          <a href="week08/lab1_jwt_authentication.html" class="week-link lab-link">🧪 Lab 8.1</a>
+          <a href="week08/lab2_rbac_access_control.html" class="week-link lab-link">🧪 Lab 8.2</a>
+        </div>
+      </div>
+
+      <!-- W9 -->
+      <div class="week-row reveal">
+        <div class="week-num"><strong>09</strong>Week</div>
+        <div class="week-body">
+          <div class="week-title">Monitoring, Logging &amp; Optimisation</div>
+          <div class="week-desc">Centralised logging with Winston, Prometheus metrics, performance profiling, scaling strategies, cost optimisation and an intro to cloud migration planning.</div>
+          <div class="week-tags">
+            <span class="tag lecture">📖 Lecture</span>
+            <span class="tag lab">🧪 Lab 9.1 — Application Logging</span>
+            <span class="tag lab">🧪 Lab 9.2 — Performance Monitoring</span>
+          </div>
+        </div>
+        <div class="week-links">
+          <a href="week09/index.html" class="week-link lecture-link">📖 Lecture</a>
+          <a href="week09/lab1_application_logging.html" class="week-link lab-link">🧪 Lab 9.1</a>
+          <a href="week09/lab2_performance_monitoring.html" class="week-link lab-link">🧪 Lab 9.2</a>
+        </div>
+      </div>
+
+      <!-- W10 -->
+      <div class="week-row reveal">
+        <div class="week-num"><strong>10</strong>Week</div>
+        <div class="week-body">
+          <div class="week-title">Emerging Trends &amp; Course Wrap-up</div>
+          <div class="week-desc">Edge computing, AI/ML services in the cloud, multi-cloud vs hybrid strategies, a Proxmox-to-cloud migration demo, and your next steps after this course.</div>
+          <div class="week-tags">
+            <span class="tag lecture">📖 Lecture</span>
+            <span class="tag lab">🧪 Lab 10.1 — Cloud Migration Plan</span>
+          </div>
+        </div>
+        <div class="week-links">
+          <a href="week10/index.html" class="week-link lecture-link">📖 Lecture</a>
+          <a href="week10/lab1_cloud_migration_plan.html" class="week-link lab-link">🧪 Lab 10.1</a>
+        </div>
+      </div>
+
+    </div><!-- /week-grid -->
+
+    <!-- PRE-REQ STRIP -->
+    <div class="prereq-strip reveal">
+      <div class="prereq-icon">💡</div>
+      <div class="prereq-text">
+        <strong>What you need before Week 1:</strong> A computer that can run a virtual machine
+        (8 GB RAM recommended). No cloud account required — all labs run locally using Docker
+        and Proxmox. Full setup instructions are in
+        <a href="week01/lab1_dev_environment.html">Lab 1.1 — Dev Environment</a>.
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="week01/index.html">Week 1</a>
+      <a href="week05/index.html">Week 5</a>
+      <a href="week10/index.html">Week 10</a>
+    </div>
+    <p>CloudEats Academy · Introduction to Cloud Computing · Diploma Level</p>
+  </div>
+</footer>
+
+<script>
+/* ── Scroll reveal ── */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.08 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

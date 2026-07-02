@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 5.1 · Microservices Split · CloudEats Academy</title>
+<meta name="description" content="Decompose the CloudEats monolith into User, Menu and Order microservices — each with its own codebase, port and database. Week 5 Lab 1 of the CloudEats cloud computing diploma course.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Lab 5.1 · Microservices Split · CloudEats Academy">
+<meta property="og:description" content="Hands-on microservices decomposition — split a Node.js monolith into three independent services with isolated databases. Three pace levels.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07090f;--bg2:#0d1117;--bg3:#141b27;
+    --surface:#1a2235;--surface2:#1f2c42;--border:#2a3d5a;
+    --accent:#00c8ff;--green:#00e5a0;--amber:#ffb740;
+    --red:#ff5e7a;--purple:#b46ef5;
+    --text:#e8edf5;--muted:#6b7fa0;
+    --beginner:#00e5a0;--average:#00c8ff;--advanced:#b46ef5;
+    --lab-color:#00e5a0;--radius:10px;--code-bg:#0b1120;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;}
+
+  /* HEADER */
+  .site-header{background:linear-gradient(135deg,#050d1c,#091628);border-bottom:1px solid var(--border);padding:0 1.5rem;position:sticky;top:0;z-index:100;}
+  .header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;gap:1rem;}
+  .lab-badge{background:var(--lab-color);color:#000;font-size:.62rem;font-weight:700;letter-spacing:.1em;padding:.2rem .55rem;border-radius:4px;text-transform:uppercase;}
+  .header-title{font-size:.88rem;font-weight:600;}
+  .ghp-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.67rem;font-weight:700;padding:.18rem .55rem;background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.25);color:var(--green);border-radius:20px;}
+  .pace-switcher{display:flex;gap:.3rem;background:var(--bg3);padding:.22rem;border-radius:8px;border:1px solid var(--border);}
+  .pace-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.25rem .65rem;border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--muted);transition:all .18s;}
+  .pace-btn.active[data-pace="beginner"]{background:rgba(0,229,160,.18);color:var(--beginner);}
+  .pace-btn.active[data-pace="average"]{background:rgba(0,200,255,.18);color:var(--average);}
+  .pace-btn.active[data-pace="advanced"]{background:rgba(180,110,245,.18);color:var(--advanced);}
+
+  /* HERO */
+  .lab-hero{background:linear-gradient(160deg,#060f20,#07111e);border-bottom:1px solid var(--border);padding:2rem 1.5rem 1.75rem;position:relative;overflow:hidden;}
+  .lab-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:350px;height:350px;background:radial-gradient(ellipse,rgba(0,229,160,.06),transparent 70%);pointer-events:none;}
+  .hero-inner{max-width:1200px;margin:0 auto;}
+  .hero-crumb{font-size:.7rem;color:var(--muted);margin-bottom:.4rem;}
+  .hero-crumb a{color:var(--green);text-decoration:none;}
+  .lab-hero h1{font-size:clamp(1.25rem,2.5vw,1.75rem);font-weight:800;background:linear-gradient(135deg,#e8edf5 40%,var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.35rem;}
+  .hero-sub{color:var(--muted);font-size:.84rem;margin-bottom:.85rem;}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:.55rem;}
+  .meta-chip{display:flex;align-items:center;gap:.35rem;font-size:.74rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.22rem .6rem;color:var(--muted);}
+  .meta-chip strong{color:var(--text);}
+  .meta-chip.gh{background:rgba(0,229,160,.06);border-color:rgba(0,229,160,.2);color:var(--green);}
+
+  /* PACE GUIDE BANNER */
+  .pace-guide{max-width:1200px;margin:0 auto;padding:1rem 1.5rem 0;}
+  .pace-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin-bottom:.5rem;}
+  .pace-card{border-radius:8px;padding:.75rem;font-size:.78rem;line-height:1.5;}
+  .pace-card.b{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);}
+  .pace-card.a{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);}
+  .pace-card.adv{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);}
+  .pc-label{font-size:.65rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.3rem;}
+  .b .pc-label{color:var(--beginner);} .a .pc-label{color:var(--average);} .adv .pc-label{color:var(--advanced);}
+  .pc-scope{color:var(--muted);font-size:.76rem;}
+
+  /* LAYOUT */
+  .page-body{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 200px);}
+
+  /* SIDEBAR */
+  .sidebar{position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;padding:1.25rem .85rem 2rem;border-right:1px solid var(--border);background:var(--bg2);}
+  .sb-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.85rem;}
+  .progress-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:.65rem;margin-bottom:1rem;}
+  .prog-track{background:var(--bg2);border-radius:3px;height:5px;margin:.4rem 0;}
+  .prog-fill{height:5px;border-radius:3px;background:linear-gradient(90deg,var(--green),var(--purple));transition:width .35s;width:0%;}
+  .prog-text{font-size:.69rem;color:var(--muted);}
+  .prog-text span{color:var(--green);font-weight:600;}
+  .sb-nav{list-style:none;}
+  .sb-nav li a{display:block;font-size:.73rem;padding:.32rem .6rem;border-radius:5px;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all .13s;margin-bottom:.08rem;}
+  .sb-nav li a:hover{background:var(--surface);color:var(--text);}
+  .sb-nav li a.active{background:rgba(0,229,160,.08);color:var(--green);border-color:rgba(0,229,160,.18);}
+  .sb-section{font-size:.61rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(107,127,160,.45);padding:.6rem .6rem .18rem;}
+
+  /* CONTENT */
+  .lab-content{padding:1.75rem 1.75rem 4rem;min-width:0;}
+
+  /* PART HEADER */
+  .part-head{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;border-radius:8px;margin-bottom:1.1rem;}
+  .ph-green{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.22);border-left:4px solid var(--green);}
+  .ph-blue{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.22);border-left:4px solid var(--accent);}
+  .ph-purple{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.22);border-left:4px solid var(--purple);}
+  .ph-amber{background:rgba(255,183,64,.04);border:1px solid rgba(255,183,64,.22);border-left:4px solid var(--amber);}
+  .ph-red{background:rgba(255,94,122,.04);border:1px solid rgba(255,94,122,.22);border-left:4px solid var(--red);}
+  .part-pill{font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.16rem .5rem;border-radius:4px;white-space:nowrap;}
+  .pp-green{background:rgba(0,229,160,.15);color:var(--green);}
+  .pp-blue{background:rgba(0,200,255,.15);color:var(--accent);}
+  .pp-purple{background:rgba(180,110,245,.15);color:var(--purple);}
+  .pp-amber{background:rgba(255,183,64,.15);color:var(--amber);}
+  .pp-red{background:rgba(255,94,122,.15);color:var(--red);}
+  .part-title{font-size:.98rem;font-weight:700;}
+  .part-time{font-size:.7rem;color:var(--muted);margin-left:auto;white-space:nowrap;}
+
+  /* STEPS */
+  .step{background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:.6rem;overflow:hidden;}
+  .step-hd{display:flex;align-items:center;gap:.7rem;padding:.7rem .95rem;cursor:pointer;user-select:none;transition:background .13s;}
+  .step-hd:hover{background:var(--surface2);}
+  .step-num{width:27px;height:27px;border-radius:50%;border:2px solid rgba(0,229,160,.3);background:rgba(0,229,160,.07);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:var(--green);flex-shrink:0;}
+  .step-num.done{background:var(--green);border-color:var(--green);color:#000;}
+  .step-label{font-size:.84rem;font-weight:600;flex:1;}
+  .step-arrow{font-size:.75rem;color:var(--muted);transition:transform .18s;flex-shrink:0;}
+  .step.open .step-arrow{transform:rotate(90deg);}
+  .step-body{display:none;padding:.85rem .95rem 1rem;border-top:1px solid var(--border);}
+  .step.open .step-body{display:block;}
+
+  /* CODE */
+  code{font-family:'Fira Code',monospace;font-size:.83em;background:var(--code-bg);padding:.07rem .32rem;border-radius:3px;color:var(--green);}
+  .code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;margin:.65rem 0;overflow:hidden;}
+  .code-hd{display:flex;align-items:center;justify-content:space-between;padding:.4rem .85rem;background:rgba(0,0,0,.3);border-bottom:1px solid var(--border);}
+  .code-lang{font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+  .copy-btn{font-family:'Sora',sans-serif;font-size:.66rem;font-weight:600;padding:.16rem .5rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;transition:all .13s;}
+  .copy-btn:hover{background:var(--green);color:#000;border-color:var(--green);}
+  .copy-btn.copied{background:var(--green);color:#000;}
+  pre{font-family:'Fira Code',monospace;font-size:.77rem;line-height:1.65;padding:.85rem;overflow-x:auto;color:#c5d5ef;}
+  .ck{color:var(--accent);}.cv{color:var(--green);}.cm{color:var(--muted);font-style:italic;}.cp{color:var(--purple);}.ca{color:var(--amber);}
+
+  /* CALLOUTS */
+  .callout{border-radius:8px;padding:.7rem .95rem;margin:.65rem 0;display:flex;gap:.55rem;align-items:flex-start;font-size:.81rem;line-height:1.55;}
+  .callout.blue{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);color:#a0d8f0;}
+  .callout.green{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);color:#8ee8c4;}
+  .callout.amber{background:rgba(255,183,64,.06);border:1px solid rgba(255,183,64,.2);color:#d9c07a;}
+  .callout.purple{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);color:#c5a8f5;}
+  .callout.red{background:rgba(255,94,122,.05);border:1px solid rgba(255,94,122,.2);color:#f0a0b0;}
+
+  /* EXPECTED OUTPUT */
+  .out-label{font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:.6rem 0 .28rem;}
+  .exp-out{font-family:'Fira Code',monospace;font-size:.76rem;background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.15);border-radius:6px;padding:.6rem .85rem;color:#8ee8c4;line-height:1.6;margin-bottom:.5rem;}
+
+  /* PACE BLOCKS */
+  .pb{border-radius:7px;padding:.6rem .85rem;margin:.5rem 0;font-size:.8rem;line-height:1.55;}
+  .pb.b{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.15);border-left:3px solid var(--beginner);}
+  .pb.a{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.15);border-left:3px solid var(--average);}
+  .pb.adv{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.15);border-left:3px solid var(--advanced);}
+  .pb-label{font-size:.63rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.25rem;}
+  .pb.b .pb-label{color:var(--beginner);} .pb.a .pb-label{color:var(--average);} .pb.adv .pb-label{color:var(--advanced);}
+
+  /* IMAGE PLACEHOLDER */
+  .img-ph{border:2px dashed rgba(0,229,160,.2);border-radius:8px;background:rgba(0,229,160,.02);padding:.75rem 1rem;margin:.75rem 0;display:flex;gap:.7rem;align-items:flex-start;}
+  .img-ph-icon{font-size:1.1rem;flex-shrink:0;line-height:1.2;}
+  .img-ph-label{font-size:.64rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:.15rem;}
+  .img-ph-desc{font-size:.77rem;color:var(--muted);line-height:1.5;}
+
+  /* CHECKPOINT */
+  .checkpoint{background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.22);border-radius:8px;padding:.8rem .95rem;margin:1.1rem 0;display:flex;gap:.7rem;align-items:flex-start;font-size:.81rem;color:#8ee8c4;line-height:1.5;}
+
+  /* TROUBLE */
+  .trouble{background:rgba(255,94,122,.03);border:1px solid rgba(255,94,122,.15);border-radius:7px;margin:.6rem 0;cursor:pointer;}
+  .trouble-hd{display:flex;align-items:center;gap:.5rem;padding:.55rem .8rem;font-size:.79rem;font-weight:600;color:var(--red);}
+  .trouble-arrow{font-size:.7rem;color:var(--muted);margin-left:auto;transition:transform .18s;}
+  .trouble.open .trouble-arrow{transform:rotate(90deg);}
+  .trouble-body{display:none;padding:0 .8rem .7rem;font-size:.78rem;color:var(--muted);line-height:1.55;}
+  .trouble.open .trouble-body{display:block;}
+
+  /* WHAT HAPPENED */
+  .wh{border-radius:6px;padding:.6rem .8rem;margin:.55rem 0;font-size:.79rem;line-height:1.55;}
+  .wh.g{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.13);color:#8ee8c4;}
+  .wh.b{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.13);color:#a0d8f0;}
+  .wh.p{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.13);color:#c5a8f5;}
+  .wh-label{font-size:.63rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.28rem;}
+  .wh.g .wh-label{color:var(--green);} .wh.b .wh-label{color:var(--accent);} .wh.p .wh-label{color:var(--purple);}
+
+  /* SECTION */
+  section{margin-bottom:2.25rem;}
+  .section-divider{border:none;border-top:1px solid var(--border);margin:1.75rem 0;}
+
+  /* GH PAGES SECTION */
+  .ghp-section{background:linear-gradient(135deg,rgba(0,229,160,.04),rgba(180,110,245,.04));border:1px solid rgba(0,229,160,.2);border-radius:10px;padding:1.25rem;margin:1.5rem 0;}
+  .ghp-section-title{font-size:.9rem;font-weight:700;margin-bottom:.65rem;display:flex;align-items:center;gap:.5rem;}
+  .ghp-steps{counter-reset:ghp;list-style:none;}
+  .ghp-steps li{counter-increment:ghp;display:flex;gap:.75rem;align-items:flex-start;font-size:.81rem;color:var(--muted);padding:.4rem 0;border-bottom:1px solid rgba(42,61,90,.25);}
+  .ghp-steps li:last-child{border-bottom:none;}
+  .ghp-steps li::before{content:counter(ghp);width:22px;height:22px;border-radius:50%;background:rgba(0,229,160,.12);color:var(--green);font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+  /* COMPARE */
+  .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin:.75rem 0;}
+  .cmp{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:.9rem;}
+  .cmp.old{border-top:3px solid var(--amber);} .cmp.new{border-top:3px solid var(--green);}
+  .cmp-label{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.55rem;}
+  .cmp.old .cmp-label{color:var(--amber);} .cmp.new .cmp-label{color:var(--green);}
+  .cmp li{font-size:.79rem;color:var(--muted);padding:.22rem 0;list-style:none;display:flex;gap:.45rem;align-items:flex-start;}
+  .cmp li::before{content:'▹';color:inherit;flex-shrink:0;}
+  .cmp.old li::before{color:var(--amber);} .cmp.new li::before{color:var(--green);}
+
+  /* ADTRACK */
+  .adv-only{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.2);border-radius:8px;padding:.9rem;margin:.65rem 0;}
+  .adv-only-label{font-size:.63rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--purple);margin-bottom:.45rem;}
+
+  a{color:var(--accent);}a:hover{text-decoration:underline;}
+  strong{color:var(--text);font-weight:600;}
+  p{margin-bottom:.65rem;font-size:.84rem;line-height:1.68;}
+  p:last-child{margin-bottom:0;}
+  ::-webkit-scrollbar{width:5px;height:5px;}
+  ::-webkit-scrollbar-track{background:var(--bg2);}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+  @media(max-width:860px){
+    .page-body{grid-template-columns:1fr;}
+    .sidebar{display:none;}
+    .pace-cards{grid-template-columns:1fr;}
+    .compare-grid{grid-template-columns:1fr;}
+    .header-title{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-inner">
+    <div style="display:flex;align-items:center;gap:.65rem">
+      <span class="lab-badge">Lab 5.1</span>
+      <span class="header-title">Microservices Split · CloudEats</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:.85rem">
+      <div class="pace-switcher">
+        <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner',this)">🟢 Beginner</button>
+        <button class="pace-btn" data-pace="average" onclick="setPace('average',this)">🔵 Average</button>
+        <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced',this)">🟣 Advanced</button>
+      </div>
+      <span class="ghp-badge">🐙 GitHub Pages Ready</span>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="lab-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb"><a href="../week05/index.html">← Week 5 Lecture</a> &rsaquo; Lab 5.1</div>
+    <h1>Microservices Split — Refactoring the Monolith</h1>
+    <p class="hero-sub">Break <code>server.js</code> into three independent services: User · Menu · Order. Each service gets its own code, dependencies, and database.</p>
+    <div class="hero-meta">
+      <div class="meta-chip">⏱ <strong>60–90 min</strong></div>
+      <div class="meta-chip">🔧 <strong>Required</strong>&nbsp;All tracks</div>
+      <div class="meta-chip">✂️ <strong>Refactoring</strong>&nbsp;Split-screen technique</div>
+      <div class="meta-chip">🐳 <strong>Docker Compose</strong>&nbsp;Multi-service</div>
+      <div class="meta-chip gh">🐙 <strong>Publish to GitHub Pages</strong>&nbsp;after this lab</div>
+    </div>
+  </div>
+</div>
+
+<!-- PACE GUIDE -->
+<div class="pace-guide">
+  <div class="pace-cards">
+    <div class="pace-card b">
+      <div class="pc-label">🟢 Beginner Track (Parts 0–4)</div>
+      <div class="pc-scope">You will extract the <strong>User Service only</strong>. One service, running on its own port. Focus is on understanding <em>why</em> we split, not speed. Analogy-first explanations throughout. Allow 90 min.</div>
+    </div>
+    <div class="pace-card a">
+      <div class="pc-label">🔵 Average Track (Parts 0–7)</div>
+      <div class="pc-scope">Extract <strong>all three services</strong> and verify they run independently. Docker Compose updated to reflect new structure. All 3 health endpoints working. Allow 75 min.</div>
+    </div>
+    <div class="pace-card adv">
+      <div class="pc-label">🟣 Advanced Track (Parts 0–8)</div>
+      <div class="pc-scope">All three services + <strong>scale test</strong> + cross-service HTTP call (Order calls User). Consider attempting Lab 5.2 (API Gateway) after this. Allow 90 min.</div>
+    </div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="page-body">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="progress-wrap">
+    <div class="sb-title" style="margin-bottom:.45rem">Lab Progress</div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+    <div class="prog-text">Part <span id="prog-cur">0</span> of <span id="prog-max">8</span></div>
+  </div>
+  <div class="sb-title">Contents</div>
+  <ul class="sb-nav">
+    <li class="sb-section">Setup</li>
+    <li><a href="#p0">Part 0 · Backup &amp; Verify</a></li>
+    <li><a href="#p1">Part 1 · Annotate the Monolith</a></li>
+    <li><a href="#p2">Part 2 · Folder Structure</a></li>
+    <li class="sb-section">Services</li>
+    <li><a href="#p3">Part 3 · User Service 👤</a></li>
+    <li><a href="#p4">Part 4 · Menu Service 🍽️</a></li>
+    <li><a href="#p5">Part 5 · Order Service 📦</a></li>
+    <li class="sb-section">Deploy</li>
+    <li><a href="#p6">Part 6 · Docker Compose</a></li>
+    <li><a href="#p7">Part 7 · Verify &amp; Test</a></li>
+    <li class="sb-section">Advanced</li>
+    <li><a href="#p8">⚡ Part 8 · Scale &amp; Cross-call</a></li>
+    <li class="sb-section">Publish</li>
+    <li><a href="#ghp">🐙 GitHub Pages Deploy</a></li>
+  </ul>
+</aside>
+
+<!-- MAIN -->
+<main class="lab-content">
+
+  <!-- INTRO -->
+  <div class="callout green">
+    <span>🎯</span>
+    <div><strong>Goal of this lab:</strong> Your <code>backend/server.js</code> is a monolith — everything in one file. Today you extract it into <strong>three independently runnable services</strong>, each owning its own code, its own <code>package.json</code>, and its own database. If something breaks in one service, the others keep running.</div>
+  </div>
+
+  <!-- Before/After diagram -->
+  <svg viewBox="0 0 660 135" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin:.85rem 0 1.5rem">
+    <defs><marker id="arr" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(0,229,160,.55)"/></marker></defs>
+    <rect x="10" y="15" width="185" height="105" rx="7" fill="rgba(255,183,64,.04)" stroke="rgba(255,183,64,.4)" stroke-width="1.8"/>
+    <text x="102" y="34" font-size="8.5" font-family="Sora,sans-serif" fill="rgba(255,183,64,.8)" text-anchor="middle" font-weight="700">BEFORE: server.js</text>
+    <text x="102" y="54" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">👤 auth routes</text>
+    <text x="102" y="70" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">🍽️ menu routes</text>
+    <text x="102" y="86" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">📦 order routes</text>
+    <text x="102" y="107" font-size="7" font-family="Sora,sans-serif" fill="rgba(255,183,64,.5)" text-anchor="middle">500+ lines · 1 process · 1 port</text>
+    <line x1="197" y1="67" x2="238" y2="67" stroke="rgba(0,229,160,.6)" stroke-width="2.5" marker-end="url(#arr)"/>
+    <text x="217" y="59" font-size="7" font-family="Sora,sans-serif" fill="var(--green)" text-anchor="middle" font-weight="700">Lab 5.1</text>
+    <rect x="242" y="8" width="125" height="119" rx="6" fill="rgba(0,229,160,.04)" stroke="rgba(0,229,160,.28)" stroke-width="1.5"/>
+    <text x="304" y="28" font-size="8" font-family="Sora,sans-serif" fill="var(--green)" text-anchor="middle" font-weight="700">👤 User Service</text>
+    <text x="304" y="45" font-size="7" font-family="Fira Code,monospace" fill="rgba(0,229,160,.5)" text-anchor="middle">port 3001</text>
+    <text x="304" y="60" font-size="7.5" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">register · login · JWT</text>
+    <rect x="255" y="72" width="99" height="44" rx="4" fill="rgba(255,183,64,.06)" stroke="rgba(255,183,64,.18)" stroke-width="1"/>
+    <text x="304" y="92" font-size="7" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle">🗄️ MySQL</text>
+    <text x="304" y="108" font-size="6.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">users table</text>
+    <rect x="376" y="8" width="125" height="119" rx="6" fill="rgba(0,200,255,.04)" stroke="rgba(0,200,255,.28)" stroke-width="1.5"/>
+    <text x="438" y="28" font-size="8" font-family="Sora,sans-serif" fill="var(--accent)" text-anchor="middle" font-weight="700">🍽️ Menu Service</text>
+    <text x="438" y="45" font-size="7" font-family="Fira Code,monospace" fill="rgba(0,200,255,.5)" text-anchor="middle">port 3002</text>
+    <text x="438" y="60" font-size="7.5" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">list · filter · search</text>
+    <rect x="389" y="72" width="99" height="44" rx="4" fill="rgba(255,183,64,.06)" stroke="rgba(255,183,64,.18)" stroke-width="1"/>
+    <text x="438" y="92" font-size="7" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle">🗄️ MySQL</text>
+    <text x="438" y="108" font-size="6.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">menu_items table</text>
+    <rect x="510" y="8" width="138" height="119" rx="6" fill="rgba(180,110,245,.04)" stroke="rgba(180,110,245,.28)" stroke-width="1.5"/>
+    <text x="579" y="28" font-size="8" font-family="Sora,sans-serif" fill="var(--purple)" text-anchor="middle" font-weight="700">📦 Order Service</text>
+    <text x="579" y="45" font-size="7" font-family="Fira Code,monospace" fill="rgba(180,110,245,.5)" text-anchor="middle">port 3003</text>
+    <text x="579" y="60" font-size="7.5" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">cart · orders · history</text>
+    <rect x="520" y="72" width="57" height="44" rx="4" fill="rgba(0,229,160,.06)" stroke="rgba(0,229,160,.18)" stroke-width="1"/>
+    <text x="548" y="92" font-size="7" font-family="Sora,sans-serif" fill="var(--green)" text-anchor="middle">📦 Mongo</text>
+    <text x="548" y="107" font-size="6" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">orders</text>
+    <rect x="584" y="72" width="57" height="44" rx="4" fill="rgba(255,94,122,.06)" stroke="rgba(255,94,122,.18)" stroke-width="1"/>
+    <text x="612" y="92" font-size="7" font-family="Sora,sans-serif" fill="var(--red)" text-anchor="middle">⚡ Redis</text>
+    <text x="612" y="107" font-size="6" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">cart</text>
+  </svg>
+
+  <!-- ═══════════════════════════ PART 0 ═══════════════════════════ -->
+  <section id="p0">
+    <div class="part-head ph-amber">
+      <span class="part-pill pp-amber">Part 0</span>
+      <span class="part-title">🛡️ Backup &amp; Verify Starting State</span>
+      <span class="part-time">5 min · All tracks</span>
+    </div>
+
+    <div class="callout amber">
+      <span>⚠️</span>
+      <div><strong>Always back up before refactoring.</strong> We will keep the original monolith intact and build new files alongside it. If anything goes wrong, you restore from the backup in 10 seconds.</div>
+    </div>
+
+    <div class="step open" id="step-p0-1">
+      <div class="step-hd" onclick="toggleStep('step-p0-1')">
+        <div class="step-num">1</div>
+        <div class="step-label">Verify all 4 containers from Lab 4.2 are running</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <p>Run this from the folder containing your <code>docker-compose.yml</code> file.</p>
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre>docker compose ps</pre>
+        </div>
+        <div class="out-label">Expected — 4 containers, all Up</div>
+        <div class="exp-out">NAME                  STATUS    PORTS
+cloudeats-backend     Up        0.0.0.0:3000->3000/tcp
+cloudeats-db          Up        3306/tcp
+cloudeats-mongo       Up        0.0.0.0:27017->27017/tcp
+cloudeats-redis       Up        0.0.0.0:6379->6379/tcp</div>
+        <div class="trouble" onclick="toggleTrouble(this, event)">
+          <div class="trouble-hd"><span>🔴</span>&nbsp;Not all 4 running?<span class="trouble-arrow">▶</span></div>
+          <div class="trouble-body">Run <code>docker compose up -d</code> from your project folder. If a container keeps restarting, run <code>docker compose logs &lt;service-name&gt;</code> to read the error. Most common issue: wrong folder (check you are in the same folder as your <code>docker-compose.yml</code>).</div>
+        </div>
+        <div class="img-ph">
+          <div class="img-ph-icon">📸</div>
+          <div>
+            <div class="img-ph-label">Your Screenshot — docker compose ps showing 4 containers Up</div>
+            <div class="img-ph-desc">Open terminal, run <code>docker compose ps</code>, take a screenshot. This is your evidence that you started from a clean working state. Replace this placeholder with your screenshot.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step open" id="step-p0-2">
+      <div class="step-hd" onclick="toggleStep('step-p0-2')">
+        <div class="step-num">2</div>
+        <div class="step-label">Backup server.js before touching anything</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">bash — run from backend/ folder</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre>cd backend
+cp server.js server.js.monolith
+ls -la server.js*</pre>
+        </div>
+        <div class="out-label">Both files should appear</div>
+        <div class="exp-out">-rw-r--r--  server.js
+-rw-r--r--  server.js.monolith</div>
+        <div class="pb b">
+          <div class="pb-label">🟢 Beginner — Think of it like "Save As"</div>
+          You are not deleting anything. You are making a copy of your document with a different name — exactly like "Save As" in Microsoft Word before making big edits. If anything goes wrong, you run <code>node server.js.monolith</code> to get back to normal.
+        </div>
+        <div class="pb adv">
+          <div class="pb-label">🟣 Advanced — This is what Git does automatically</div>
+          In Week 6 you'll learn Git, which snapshots your entire project before every change. This manual <code>cp</code> is a one-file version of <code>git commit</code>. In a real team, nobody merges without committing first — the backup is your safety net.
+        </div>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <span>✅</span>
+      <div><strong>Part 0 done:</strong> 4 containers running · <code>server.js.monolith</code> created. You are ready to start.</div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ PART 1 ═══════════════════════════ -->
+  <section id="p1">
+    <div class="part-head ph-green">
+      <span class="part-pill pp-green">Part 1</span>
+      <span class="part-title">🔍 Annotate the Monolith — See the Boundaries</span>
+      <span class="part-time">10 min · All tracks</span>
+    </div>
+
+    <p>Before cutting any code, understand what moves where. Open <code>backend/server.js</code> in VS Code and add comment headers above each logical group of routes. This makes the service boundaries <em>visible</em> before you start splitting.</p>
+
+    <!-- ── EXPAND / COLLAPSE CONTROLS ── -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.85rem;padding:0.4rem 0;">
+      <span style="font-size:0.75rem;color:var(--muted)"><strong style="color:var(--text)">18 steps</strong> across 6 parts</span>
+      <div style="display:flex;gap:0.5rem">
+        <button onclick="expandAll()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--green)';this.style.borderColor='var(--green)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↓ Expand All</button>
+        <button onclick="collapseAll()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--muted)';this.style.borderColor='var(--muted)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↑ Collapse All</button>
+      </div>
+    </div>
+
+    <div class="step open" id="step-p1-1">
+      <div class="step-hd" onclick="toggleStep('step-p1-1')">
+        <div class="step-num">3</div>
+        <div class="step-label">Add zone-comment headers to server.js (read-only reference)</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <div class="callout blue">
+          <span>💡</span>
+          <div>Find each group of routes in your file and add the corresponding comment block above it. You are <strong>not deleting anything yet</strong> — just labelling zones.</div>
+        </div>
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">backend/server.js — add comment headers only</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre><span class="cm">// ════════════════════════════════════════════════════
+// 🟢 USER SERVICE ZONE  →  services/user-service/
+//    Deps: express · mysql2 · bcrypt · jsonwebtoken
+//    DB:   MySQL  (users table)
+// ════════════════════════════════════════════════════</span>
+<span class="cm">// app.post('/api/auth/register', ...)</span>
+<span class="cm">// app.post('/api/auth/login', ...)</span>
+<span class="cm">// app.get('/api/users/:id', ...)</span>
+
+<span class="cm">// ════════════════════════════════════════════════════
+// 🔵 MENU SERVICE ZONE  →  services/menu-service/
+//    Deps: express · mysql2
+//    DB:   MySQL  (menu_items table)
+// ════════════════════════════════════════════════════</span>
+<span class="cm">// app.get('/api/menu', ...)</span>
+<span class="cm">// app.get('/api/menu/:id', ...)</span>
+<span class="cm">// app.get('/api/menu/category/:cat', ...)</span>
+
+<span class="cm">// ════════════════════════════════════════════════════
+// 🟣 ORDER SERVICE ZONE  →  services/order-service/
+//    Deps: express · mongodb · redis · jsonwebtoken
+//    DB:   MongoDB (orders) + Redis (cart)
+// ════════════════════════════════════════════════════</span>
+<span class="cm">// app.get('/api/cart/:userId', ...)</span>
+<span class="cm">// app.post('/api/cart/:userId/items', ...)</span>
+<span class="cm">// app.post('/api/orders', ...)</span>
+<span class="cm">// app.get('/api/orders/user/:userId', ...)</span></pre>
+        </div>
+        <div class="wh g">
+          <div class="wh-label">🔍 Why annotate before cutting?</div>
+          Professional refactoring always starts with understanding. By labelling zones you can immediately see: (1) which <em>npm packages</em> each service needs in its own <code>package.json</code>, and (2) which database connection code moves with each service. This prevents missed dependencies when you extract.
+        </div>
+        <div class="img-ph">
+          <div class="img-ph-icon">📸</div>
+          <div>
+            <div class="img-ph-label">Your Screenshot — Annotated server.js in VS Code showing all 3 zones</div>
+            <div class="img-ph-desc">VS Code with <code>server.js</code> open showing all three comment zone headers clearly visible in the editor. The three colour-coded sections should be visually distinct. Replace this placeholder with your screenshot.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <span>✅</span>
+      <div><strong>Part 1 done:</strong> Three service zones labelled in <code>server.js</code>. You can see exactly what belongs to each service before you start moving code.</div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ PART 2 ═══════════════════════════ -->
+  <section id="p2">
+    <div class="part-head ph-green">
+      <span class="part-pill pp-green">Part 2</span>
+      <span class="part-title">📁 Create the Services Folder Structure</span>
+      <span class="part-time">5 min · All tracks</span>
+    </div>
+
+    <div class="step open" id="step-p2-1">
+      <div class="step-hd" onclick="toggleStep('step-p2-1')">
+        <div class="step-num">4</div>
+        <div class="step-label">Scaffold the services/ directory from project root</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <p>Run from the folder that contains your <code>docker-compose.yml</code> — the project root.</p>
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">bash — project root</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre>mkdir -p services/user-service/src
+mkdir -p services/menu-service/src
+mkdir -p services/order-service/src
+
+find services/ -type d</pre>
+        </div>
+        <div class="out-label">Expected output</div>
+        <div class="exp-out">services/
+services/user-service/
+services/user-service/src/
+services/menu-service/
+services/menu-service/src/
+services/order-service/
+services/order-service/src/</div>
+        <div class="pb b">
+          <div class="pb-label">🟢 Beginner — What is src/?</div>
+          Each service folder has a <code>src/</code> (source) subfolder. This keeps your application code separate from the configuration files (<code>package.json</code>, <code>Dockerfile</code>) that sit at the service root. Think of it like keeping your essay document in a <em>Documents</em> folder inside your project folder.
+        </div>
+        <div class="pb a">
+          <div class="pb-label">🔵 Average — Standard Node.js Project Convention</div>
+          The <code>src/</code> convention is widely used in professional Node.js projects. You'll see <code>src/routes/</code>, <code>src/models/</code>, <code>src/middleware/</code> inside larger services as they grow. Starting with <code>src/</code> now makes later expansion natural.
+        </div>
+        <div class="img-ph">
+          <div class="img-ph-icon">📸</div>
+          <div>
+            <div class="img-ph-label">Your Screenshot — VS Code Explorer showing services/ folder tree</div>
+            <div class="img-ph-desc">The VS Code left panel (file explorer) with the <code>services/</code> folder expanded showing <code>user-service/</code>, <code>menu-service/</code>, and <code>order-service/</code>, each with a <code>src/</code> subfolder. Replace with your screenshot.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="checkpoint">
+      <span>✅</span>
+      <div><strong>Part 2 done:</strong> Three service directories created. Ready to write service code.</div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ PART 3 ═══════════════════════════ -->
+  <section id="p3">
+    <div class="part-head ph-green">
+      <span class="part-pill pp-green">Part 3</span>
+      <span class="part-title">👤 Extract the User Service</span>
+      <span class="part-time">15 min · All tracks</span>
+    </div>
+
+    <div class="callout blue">
+      <span>🖥️</span>
+      <div><strong>Split-screen technique:</strong> In VS Code, right-click on the <code>server.js.monolith</code> tab → "Split Right". You'll have the monolith on the left and the new service file on the right. Copy routes from left to right — <strong>never delete from the left</strong>.</div>
+    </div>
+
+    <div class="step open" id="step-p3-1">
+      <div class="step-hd" onclick="toggleStep('step-p3-1')">
+        <div class="step-num">5</div>
+        <div class="step-label">Create package.json — User Service owns its own dependencies</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <p>Create a new file: <code>services/user-service/package.json</code></p>
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">services/user-service/package.json</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre>{
+  <span class="ca">"name"</span>: <span class="cv">"user-service"</span>,
+  <span class="ca">"version"</span>: <span class="cv">"1.0.0"</span>,
+  <span class="ca">"description"</span>: <span class="cv">"CloudEats User &amp; Auth Service"</span>,
+  <span class="ca">"main"</span>: <span class="cv">"src/server.js"</span>,
+  <span class="ca">"scripts"</span>: {
+    <span class="ca">"start"</span>: <span class="cv">"node src/server.js"</span>,
+    <span class="ca">"dev"</span>:   <span class="cv">"nodemon src/server.js"</span>
+  },
+  <span class="ca">"dependencies"</span>: {
+    <span class="ca">"bcrypt"</span>:        <span class="cv">"^5.1.0"</span>,
+    <span class="ca">"cors"</span>:          <span class="cv">"^2.8.5"</span>,
+    <span class="ca">"express"</span>:       <span class="cv">"^4.18.2"</span>,
+    <span class="ca">"jsonwebtoken"</span>:  <span class="cv">"^9.0.0"</span>,
+    <span class="ca">"mysql2"</span>:        <span class="cv">"^3.6.0"</span>
+  }
+}</pre>
+        </div>
+        <div class="wh g">
+          <div class="wh-label">🔍 Why no Redis or MongoDB here?</div>
+          The User Service handles only authentication — it uses MySQL only. <strong>Listing only the packages you actually need</strong> means: faster <code>npm install</code>, smaller Docker image, fewer security vulnerabilities. This is the "minimum footprint" principle in microservices.
+        </div>
+      </div>
+    </div>
+
+    <div class="step open" id="step-p3-2">
+      <div class="step-hd" onclick="toggleStep('step-p3-2')">
+        <div class="step-num">6</div>
+        <div class="step-label">Create src/server.js — copy auth routes from monolith</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <p>Create <code>services/user-service/src/server.js</code>. Use the monolith as a reference (left panel). The structure below is the scaffold — <strong>paste your actual route handler code into each placeholder comment</strong>.</p>
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">services/user-service/src/server.js</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre><span class="ck">const</span> express = require(<span class="cv">'express'</span>);
+<span class="ck">const</span> mysql   = require(<span class="cv">'mysql2/promise'</span>);
+<span class="ck">const</span> bcrypt  = require(<span class="cv">'bcrypt'</span>);
+<span class="ck">const</span> jwt     = require(<span class="cv">'jsonwebtoken'</span>);
+<span class="ck">const</span> cors    = require(<span class="cv">'cors'</span>);
+
+<span class="ck">const</span> app = express();
+app.use(cors());
+app.use(express.json());
+
+<span class="cm">// ── Health check endpoint (required for Docker Compose)</span>
+app.get(<span class="cv">'/health'</span>, (req, res) =>
+  res.json({ status: <span class="cv">'ok'</span>, service: <span class="cv">'user-service'</span>, port: <span class="cp">3001</span> })
+);
+
+<span class="cm">// ── MySQL connection (users DB only)</span>
+<span class="ck">const</span> db = mysql.createPool({
+  host:     process.env.MYSQL_HOST     || <span class="cv">'db'</span>,
+  user:     process.env.MYSQL_USER     || <span class="cv">'root'</span>,
+  password: process.env.MYSQL_PASSWORD || <span class="cv">'password'</span>,
+  database: process.env.MYSQL_DATABASE || <span class="cv">'cloudeats'</span>,
+});
+
+<span class="cm">// ── PASTE your /api/auth/register route here ──────────</span>
+app.post(<span class="cv">'/api/auth/register'</span>, async (req, res) => {
+  <span class="cm">// copy from server.js.monolith</span>
+});
+
+<span class="cm">// ── PASTE your /api/auth/login route here ─────────────</span>
+app.post(<span class="cv">'/api/auth/login'</span>, async (req, res) => {
+  <span class="cm">// copy from server.js.monolith</span>
+});
+
+<span class="cm">// ── PASTE your /api/users/:id route here ──────────────</span>
+app.get(<span class="cv">'/api/users/:id'</span>, async (req, res) => {
+  <span class="cm">// copy from server.js.monolith</span>
+});
+
+<span class="ck">const</span> PORT = process.env.PORT || <span class="cp">3001</span>;
+app.listen(PORT, () =>
+  console.log(<span class="cv">`[user-service] Running on http://localhost:${PORT}`</span>)
+);</pre>
+        </div>
+        <div class="pb b">
+          <div class="pb-label">🟢 Beginner — Step-by-step copy process</div>
+          1. Left panel: open <code>backend/server.js.monolith</code> · 2. Find your register route (search: <code>Ctrl+F</code> → type <code>/api/auth/register</code>) · 3. Select everything inside the function body · 4. Right panel: click inside the matching placeholder comment · 5. Paste. Repeat for login and get-user. <strong>Test that it still looks like valid JS</strong> — every opening <code>{</code> should have a closing <code>}</code>.
+        </div>
+        <div class="pb a">
+          <div class="pb-label">🔵 Average — Key difference from monolith</div>
+          Notice the DB connection now uses <code>process.env.MYSQL_HOST</code> instead of <code>'localhost'</code>. When running inside Docker Compose, the MySQL container is accessible by the service name <code>db</code>, not localhost. The <code>|| 'db'</code> fallback handles the Docker environment automatically.
+        </div>
+        <div class="img-ph">
+          <div class="img-ph-icon">📸</div>
+          <div>
+            <div class="img-ph-label">Your Screenshot — Split-screen: monolith left · User Service right</div>
+            <div class="img-ph-desc">VS Code split view showing <code>server.js.monolith</code> on the left and your new <code>user-service/src/server.js</code> on the right. Show both files open with at least one route partially migrated. Replace this placeholder.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step-p3-3">
+      <div class="step-hd" onclick="toggleStep('step-p3-3')">
+        <div class="step-num">7</div>
+        <div class="step-label">Install dependencies and run User Service locally to verify</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">bash — from services/user-service/</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre>cd services/user-service
+npm install
+node src/server.js</pre>
+        </div>
+        <div class="out-label">Expected startup log</div>
+        <div class="exp-out">[user-service] Running on http://localhost:3001</div>
+        <div class="callout amber">
+          <span>⚠️</span>
+          <div><strong>MySQL connection error is expected here.</strong> Running outside Docker, the service can't reach the MySQL container. That's fine — we only confirm the syntax is valid and the server starts. The real test happens in Part 7 when we run everything through Docker Compose.</div>
+        </div>
+        <div class="trouble" onclick="toggleTrouble(this, event)">
+          <div class="trouble-hd"><span>🔴</span>&nbsp;SyntaxError on startup<span class="trouble-arrow">▶</span></div>
+          <div class="trouble-body">Node.js gives you the exact line number of a syntax error. Most common: a missing <code>}</code> after pasting a route body. Open the file, go to the reported line, check that every function block is properly closed. Use VS Code's bracket matching (click on any bracket) to find the mismatched pair.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <span>✅</span>
+      <div><strong>Part 3 done:</strong> User Service has its own <code>package.json</code> and <code>src/server.js</code> with all auth routes migrated. Server starts without syntax errors.</div>
+    </div>
+    <div class="callout green" style="margin-top:.75rem">
+      <span>🟢</span>
+      <div><strong>Beginner track — well done, you're finished!</strong> Skip ahead to <a href="#p6">Part 6 (Docker Compose)</a> and run just the User Service container. Parts 4 and 5 are for Average and Advanced students.</div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ PART 4 ═══════════════════════════ -->
+  <section id="p4">
+    <div class="part-head ph-blue">
+      <span class="part-pill pp-blue">Part 4</span>
+      <span class="part-title">🍽️ Extract the Menu Service</span>
+      <span class="part-time">15 min · Average + Advanced</span>
+    </div>
+
+    <div class="step open" id="step-p4-1">
+      <div class="step-hd" onclick="toggleStep('step-p4-1')">
+        <div class="step-num">8</div>
+        <div class="step-label">Create package.json — Menu Service</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <p>Create <code>services/menu-service/package.json</code>. Menu Service reads data only — it uses MySQL and nothing else.</p>
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">services/menu-service/package.json</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre>{
+  <span class="ca">"name"</span>: <span class="cv">"menu-service"</span>,
+  <span class="ca">"version"</span>: <span class="cv">"1.0.0"</span>,
+  <span class="ca">"description"</span>: <span class="cv">"CloudEats Menu &amp; Catalogue Service"</span>,
+  <span class="ca">"main"</span>: <span class="cv">"src/server.js"</span>,
+  <span class="ca">"scripts"</span>: { <span class="ca">"start"</span>: <span class="cv">"node src/server.js"</span> },
+  <span class="ca">"dependencies"</span>: {
+    <span class="ca">"cors"</span>:    <span class="cv">"^2.8.5"</span>,
+    <span class="ca">"express"</span>: <span class="cv">"^4.18.2"</span>,
+    <span class="ca">"mysql2"</span>:  <span class="cv">"^3.6.0"</span>
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="step open" id="step-p4-2">
+      <div class="step-hd" onclick="toggleStep('step-p4-2')">
+        <div class="step-num">9</div>
+        <div class="step-label">Create src/server.js — paste menu routes from monolith</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <p>Create <code>services/menu-service/src/server.js</code></p>
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">services/menu-service/src/server.js</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre><span class="ck">const</span> express = require(<span class="cv">'express'</span>);
+<span class="ck">const</span> mysql   = require(<span class="cv">'mysql2/promise'</span>);
+<span class="ck">const</span> cors    = require(<span class="cv">'cors'</span>);
+
+<span class="ck">const</span> app = express();
+app.use(cors());
+app.use(express.json());
+
+app.get(<span class="cv">'/health'</span>, (req, res) =>
+  res.json({ status: <span class="cv">'ok'</span>, service: <span class="cv">'menu-service'</span>, port: <span class="cp">3002</span> })
+);
+
+<span class="ck">const</span> db = mysql.createPool({
+  host:     process.env.MYSQL_HOST     || <span class="cv">'db'</span>,
+  user:     process.env.MYSQL_USER     || <span class="cv">'root'</span>,
+  password: process.env.MYSQL_PASSWORD || <span class="cv">'password'</span>,
+  database: process.env.MYSQL_DATABASE || <span class="cv">'cloudeats'</span>,
+});
+
+<span class="cm">// ── PASTE your /api/menu routes here ──────────────────</span>
+app.get(<span class="cv">'/api/menu'</span>, async (req, res) => {
+  <span class="cm">// copy from server.js.monolith</span>
+});
+app.get(<span class="cv">'/api/menu/:id'</span>, async (req, res) => {
+  <span class="cm">// copy from server.js.monolith</span>
+});
+app.get(<span class="cv">'/api/menu/category/:cat'</span>, async (req, res) => {
+  <span class="cm">// copy from server.js.monolith (if exists)</span>
+});
+
+<span class="ck">const</span> PORT = process.env.PORT || <span class="cp">3002</span>;
+app.listen(PORT, () =>
+  console.log(<span class="cv">`[menu-service] Running on http://localhost:${PORT}`</span>)
+);</pre>
+        </div>
+        <div class="pb a">
+          <div class="pb-label">🔵 Average — Notice what is NOT here</div>
+          No <code>bcrypt</code>, no <code>redis</code>, no <code>mongodb</code>. The Menu Service is beautifully simple: it just reads from one MySQL table and returns JSON. This is the point of service separation — each service is focused and simple by design.
+        </div>
+        <div class="img-ph">
+          <div class="img-ph-icon">📸</div>
+          <div>
+            <div class="img-ph-label">Your Screenshot — Menu Service src/server.js with routes pasted in</div>
+            <div class="img-ph-desc">VS Code showing <code>services/menu-service/src/server.js</code> with your actual menu route handler code filled in (not the placeholder comments). Replace this placeholder with your screenshot.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="checkpoint">
+      <span>✅</span>
+      <div><strong>Part 4 done:</strong> Menu Service scaffolded with all menu routes migrated from the monolith.</div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ PART 5 ═══════════════════════════ -->
+  <section id="p5">
+    <div class="part-head ph-purple">
+      <span class="part-pill pp-purple">Part 5</span>
+      <span class="part-title">📦 Extract the Order Service</span>
+      <span class="part-time">15 min · Average + Advanced</span>
+    </div>
+    <p>Order Service is the most complex — it uses <strong>both</strong> MongoDB (for order history) and Redis (for shopping cart sessions).</p>
+
+    <div class="step open" id="step-p5-1">
+      <div class="step-hd" onclick="toggleStep('step-p5-1')">
+        <div class="step-num">10</div>
+        <div class="step-label">Create package.json — Order Service needs 3 databases</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">services/order-service/package.json</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre>{
+  <span class="ca">"name"</span>: <span class="cv">"order-service"</span>,
+  <span class="ca">"version"</span>: <span class="cv">"1.0.0"</span>,
+  <span class="ca">"description"</span>: <span class="cv">"CloudEats Cart &amp; Order Fulfilment Service"</span>,
+  <span class="ca">"main"</span>: <span class="cv">"src/server.js"</span>,
+  <span class="ca">"scripts"</span>: { <span class="ca">"start"</span>: <span class="cv">"node src/server.js"</span> },
+  <span class="ca">"dependencies"</span>: {
+    <span class="ca">"cors"</span>:          <span class="cv">"^2.8.5"</span>,
+    <span class="ca">"express"</span>:       <span class="cv">"^4.18.2"</span>,
+    <span class="ca">"jsonwebtoken"</span>:  <span class="cv">"^9.0.0"</span>,
+    <span class="ca">"mongodb"</span>:       <span class="cv">"^6.1.0"</span>,
+    <span class="ca">"redis"</span>:         <span class="cv">"^4.6.0"</span>
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="step open" id="step-p5-2">
+      <div class="step-hd" onclick="toggleStep('step-p5-2')">
+        <div class="step-num">11</div>
+        <div class="step-label">Create src/server.js — Order Service scaffold</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">services/order-service/src/server.js</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre><span class="ck">const</span> express  = require(<span class="cv">'express'</span>);
+<span class="ck">const</span> { MongoClient } = require(<span class="cv">'mongodb'</span>);
+<span class="ck">const</span> redis    = require(<span class="cv">'redis'</span>);
+<span class="ck">const</span> jwt      = require(<span class="cv">'jsonwebtoken'</span>);
+<span class="ck">const</span> cors     = require(<span class="cv">'cors'</span>);
+
+<span class="ck">const</span> app = express();
+app.use(cors());
+app.use(express.json());
+
+app.get(<span class="cv">'/health'</span>, (req, res) =>
+  res.json({ status: <span class="cv">'ok'</span>, service: <span class="cv">'order-service'</span>, port: <span class="cp">3003</span> })
+);
+
+<span class="cm">// ── MongoDB connection</span>
+<span class="ck">const</span> MONGO_URL = process.env.MONGO_URL || <span class="cv">'mongodb://mongo:27017'</span>;
+<span class="ck">const</span> mongoClient = <span class="ck">new</span> MongoClient(MONGO_URL);
+<span class="ck">let</span> ordersDb;
+mongoClient.connect().then(() => {
+  ordersDb = mongoClient.db(<span class="cv">'cloudeats'</span>);
+  console.log(<span class="cv">'[order-service] MongoDB connected'</span>);
+});
+
+<span class="cm">// ── Redis connection</span>
+<span class="ck">const</span> REDIS_URL = process.env.REDIS_URL || <span class="cv">'redis://redis:6379'</span>;
+<span class="ck">const</span> redisClient = redis.createClient({ url: REDIS_URL });
+redisClient.connect().then(() =>
+  console.log(<span class="cv">'[order-service] Redis connected'</span>)
+);
+
+<span class="cm">// ── PASTE your /api/cart routes here ─────────────────</span>
+app.get(<span class="cv">'/api/cart/:userId'</span>, async (req, res) => {
+  <span class="cm">// copy from server.js.monolith</span>
+});
+app.post(<span class="cv">'/api/cart/:userId/items'</span>, async (req, res) => {
+  <span class="cm">// copy from server.js.monolith</span>
+});
+
+<span class="cm">// ── PASTE your /api/orders routes here ───────────────</span>
+app.post(<span class="cv">'/api/orders'</span>, async (req, res) => {
+  <span class="cm">// copy from server.js.monolith</span>
+});
+app.get(<span class="cv">'/api/orders/user/:userId'</span>, async (req, res) => {
+  <span class="cm">// copy from server.js.monolith</span>
+});
+
+<span class="ck">const</span> PORT = process.env.PORT || <span class="cp">3003</span>;
+app.listen(PORT, () =>
+  console.log(<span class="cv">`[order-service] Running on http://localhost:${PORT}`</span>)
+);</pre>
+        </div>
+        <div class="pb a">
+          <div class="pb-label">🔵 Average — Two DB connections in one service</div>
+          Order Service is the only service with two database connections (MongoDB + Redis). This is fine — a service can use multiple databases as long as it <em>owns</em> them. No other service should directly read from <code>orders</code> in MongoDB or the <code>cart:*</code> keys in Redis.
+        </div>
+        <div class="pb adv">
+          <div class="pb-label">🟣 Advanced — Cross-service call when creating an order</div>
+          When a new order is placed, the Order Service should verify the user exists. Instead of querying MySQL directly, add a fetch call to the User Service: <code>await fetch(`http://user-service:3001/api/users/${userId}`)</code>. If the user is not found, return 404 before creating the order. This is the "database per service" rule in action — Order Service never touches the users table directly.
+        </div>
+        <div class="img-ph">
+          <div class="img-ph-icon">📸</div>
+          <div>
+            <div class="img-ph-label">Your Screenshot — Order Service server.js with routes populated</div>
+            <div class="img-ph-desc">VS Code showing <code>services/order-service/src/server.js</code> with your actual cart and order route handlers filled in, MongoDB and Redis connection code visible at the top. Replace with your screenshot.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="checkpoint">
+      <span>✅</span>
+      <div><strong>Part 5 done:</strong> All three service files created. Now update Docker Compose to run them as containers.</div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ PART 6 ═══════════════════════════ -->
+  <section id="p6">
+    <div class="part-head ph-blue">
+      <span class="part-pill pp-blue">Part 6</span>
+      <span class="part-title">🐳 Update docker-compose.yml — Add All 3 Services</span>
+      <span class="part-time">15 min · All tracks</span>
+    </div>
+
+    <div class="callout amber">
+      <span>⚠️</span>
+      <div><strong>Important:</strong> Keep your old <code>backend</code> service in docker-compose.yml during this step — comment it out rather than delete it. You'll uncomment it if you need to roll back. Only remove it once all 3 new services are confirmed healthy.</div>
+    </div>
+
+    <div class="step open" id="step-p6-1">
+      <div class="step-hd" onclick="toggleStep('step-p6-1')">
+        <div class="step-num">12</div>
+        <div class="step-label">Add 3 new service blocks to docker-compose.yml</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <p>Add these three service blocks to your existing <code>docker-compose.yml</code>, alongside your existing database services.</p>
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">docker-compose.yml — add inside services:</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre>  <span class="cm"># ── Keep your old backend block commented out as fallback ──</span>
+  <span class="cm"># backend:</span>
+  <span class="cm">#   build: ./backend</span>
+  <span class="cm">#   ports: ["3000:3000"]</span>
+
+  <span class="cv">user-service</span>:
+    build: ./services/user-service
+    ports:
+      - <span class="cv">"3001:3001"</span>
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=cloudeats
+      - JWT_SECRET=your_jwt_secret
+      - PORT=3001
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  <span class="cv">menu-service</span>:
+    build: ./services/menu-service
+    ports:
+      - <span class="cv">"3002:3002"</span>
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=cloudeats
+      - PORT=3002
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  <span class="cv">order-service</span>:
+    build: ./services/order-service
+    ports:
+      - <span class="cv">"3003:3003"</span>
+    environment:
+      - MONGO_URL=mongodb://mongo:27017
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your_jwt_secret
+      - PORT=3003
+    depends_on:
+      - mongo
+      - redis
+    restart: unless-stopped</pre>
+        </div>
+        <div class="pb b">
+          <div class="pb-label">🟢 Beginner — What does "depends_on" do?</div>
+          <code>depends_on: - db</code> tells Docker Compose: "start the <code>db</code> container before starting <code>user-service</code>". Without this, your service might start before the database is ready and crash on the first connection attempt.
+        </div>
+        <div class="pb a">
+          <div class="pb-label">🔵 Average — Docker service DNS names</div>
+          Notice <code>MYSQL_HOST=db</code> — this matches the service name in docker-compose.yml. Docker creates an internal DNS entry for each service name. So <code>user-service</code> can reach MySQL at the hostname <code>db</code>, MongoDB at <code>mongo</code>, and Redis at <code>redis</code> — Docker resolves these names automatically inside the shared network.
+        </div>
+      </div>
+    </div>
+
+    <div class="step open" id="step-p6-2">
+      <div class="step-hd" onclick="toggleStep('step-p6-2')">
+        <div class="step-num">13</div>
+        <div class="step-label">Add a Dockerfile to each service folder</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <p>Each service needs its own <code>Dockerfile</code> at the service root. All three use the same pattern — only the service name in the label differs.</p>
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">services/user-service/Dockerfile  (repeat for menu + order)</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre>FROM node:<span class="cp">18</span>-alpine
+
+<span class="cm"># Set working directory inside container</span>
+WORKDIR /app
+
+<span class="cm"># Copy package files first (layer caching)</span>
+COPY package*.json ./
+RUN npm install --production
+
+<span class="cm"># Copy source code</span>
+COPY src/ ./src/
+
+<span class="cm"># Expose the service port</span>
+EXPOSE <span class="cp">3001</span>
+
+<span class="cm"># Start the service</span>
+CMD [<span class="cv">"node"</span>, <span class="cv">"src/server.js"</span>]</pre>
+        </div>
+        <div class="callout blue">
+          <span>💡</span>
+          <div>Change <code>EXPOSE 3001</code> to <code>3002</code> for menu-service and <code>3003</code> for order-service. Everything else stays the same — all three services are Node.js apps.</div>
+        </div>
+        <div class="pb adv">
+          <div class="pb-label">🟣 Advanced — Layer caching explained</div>
+          Copying <code>package*.json</code> and running <code>npm install</code> <em>before</em> copying source code is intentional. Docker caches each build step. Since <code>package.json</code> rarely changes, the <code>npm install</code> layer stays cached across most rebuilds — only the <code>COPY src/</code> step re-runs when you change code. This makes iterative builds much faster.
+        </div>
+        <div class="img-ph">
+          <div class="img-ph-icon">📸</div>
+          <div>
+            <div class="img-ph-label">Your Screenshot — Updated docker-compose.yml showing all 3 new service blocks</div>
+            <div class="img-ph-desc">VS Code with <code>docker-compose.yml</code> open showing the three new service blocks (user-service, menu-service, order-service) with their ports, environment variables, and depends_on configuration. Replace with your screenshot.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="checkpoint">
+      <span>✅</span>
+      <div><strong>Part 6 done:</strong> docker-compose.yml updated with all 3 services. Dockerfiles created. Ready to deploy.</div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ PART 7 ═══════════════════════════ -->
+  <section id="p7">
+    <div class="part-head ph-green">
+      <span class="part-pill pp-green">Part 7</span>
+      <span class="part-title">🧪 Verify — All 3 Services Running Independently</span>
+      <span class="part-time">10 min · All tracks</span>
+    </div>
+
+    <div class="step open" id="step-p7-1">
+      <div class="step-hd" onclick="toggleStep('step-p7-1')">
+        <div class="step-num">14</div>
+        <div class="step-label">Rebuild and start everything</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">bash — project root</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre><span class="cm"># Stop old containers and rebuild with new services</span>
+docker compose down
+docker compose up --build -d
+
+<span class="cm"># Check all containers are Up</span>
+docker compose ps</pre>
+        </div>
+        <div class="out-label">Expected — 6+ containers all Up</div>
+        <div class="exp-out">NAME                   STATUS    PORTS
+cloudeats-db           Up        3306/tcp
+cloudeats-mongo        Up        27017/tcp
+cloudeats-redis        Up        6379/tcp
+cloudeats-user-service Up        0.0.0.0:3001->3001/tcp
+cloudeats-menu-service Up        0.0.0.0:3002->3002/tcp
+cloudeats-order-service Up       0.0.0.0:3003->3003/tcp</div>
+        <div class="trouble" onclick="toggleTrouble(this, event)">
+          <div class="trouble-hd"><span>🔴</span>&nbsp;Build fails — module not found<span class="trouble-arrow">▶</span></div>
+          <div class="trouble-body">Run <code>docker compose logs user-service</code> (or menu/order). A "Cannot find module" error means a package was imported in the code but not listed in <code>package.json</code>. Add the missing package name to the dependencies object and re-run <code>docker compose up --build -d</code>.</div>
+        </div>
+        <div class="trouble" onclick="toggleTrouble(this, event)">
+          <div class="trouble-hd"><span>🔴</span>&nbsp;Container exits immediately<span class="trouble-arrow">▶</span></div>
+          <div class="trouble-body">Run <code>docker compose logs &lt;service-name&gt;</code> to read the crash log. Most common: syntax error in your pasted route code. Fix the JavaScript error in the service's <code>src/server.js</code>, then run <code>docker compose up --build -d</code> again.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step open" id="step-p7-2">
+      <div class="step-hd" onclick="toggleStep('step-p7-2')">
+        <div class="step-num">15</div>
+        <div class="step-label">Test each health endpoint individually</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">bash — health checks for all 3 services</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre>curl http://localhost:3001/health
+curl http://localhost:3002/health
+curl http://localhost:3003/health</pre>
+        </div>
+        <div class="out-label">Expected responses</div>
+        <div class="exp-out">{"status":"ok","service":"user-service","port":3001}
+{"status":"ok","service":"menu-service","port":3002}
+{"status":"ok","service":"order-service","port":3003}</div>
+        <div class="pb b">
+          <div class="pb-label">🟢 Beginner — What is a health check endpoint?</div>
+          A health endpoint is like a "ping" — it tells you the service is alive and responding. Monitoring tools, load balancers, and Docker itself use health checks to automatically restart services that stop responding. It's good practice to add one to every service you build.
+        </div>
+      </div>
+    </div>
+
+    <div class="step open" id="step-p7-3">
+      <div class="step-hd" onclick="toggleStep('step-p7-3')">
+        <div class="step-num">16</div>
+        <div class="step-label">The independence test — stop one service, check the others</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <p>This test proves the microservices separation actually works — stopping one service must not affect the others.</p>
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre><span class="cm"># Stop order-service only</span>
+docker compose stop order-service
+
+<span class="cm"># User Service and Menu Service should still respond</span>
+curl http://localhost:3001/health   <span class="cm"># must still work</span>
+curl http://localhost:3002/health   <span class="cm"># must still work</span>
+curl http://localhost:3003/health   <span class="cm"># will fail (expected)</span>
+
+<span class="cm"># Bring it back</span>
+docker compose start order-service</pre>
+        </div>
+        <div class="wh g">
+          <div class="wh-label">🔍 This is the whole point</div>
+          In the monolith, any crash killed <em>all</em> routes. Now, Order Service going down has zero effect on user login or menu browsing. This is <strong>fault isolation</strong> — one of the core benefits of microservices. Users can still browse the menu and log in even if orders is temporarily down.
+        </div>
+        <div class="img-ph">
+          <div class="img-ph-icon">📸</div>
+          <div>
+            <div class="img-ph-label">Your Screenshot — Independence test: order-service stopped, others still healthy</div>
+            <div class="img-ph-desc">Terminal showing: <code>docker compose stop order-service</code> executed, then <code>curl localhost:3001/health</code> and <code>curl localhost:3002/health</code> still returning OK, and <code>curl localhost:3003/health</code> returning connection refused. This screenshot is your key evidence of fault isolation. Replace with your screenshot.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="checkpoint">
+      <span>✅</span>
+      <div><strong>Part 7 done:</strong> All 3 services pass health checks. Independence test confirmed — fault isolation works. Core lab complete for all tracks.</div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ PART 8 ═══════════════════════════ -->
+  <section id="p8">
+    <div class="part-head ph-purple">
+      <span class="part-pill pp-purple">Part 8 ⚡</span>
+      <span class="part-title">Scale &amp; Cross-service Call (Advanced Track)</span>
+      <span class="part-time">15 min · Advanced only</span>
+    </div>
+    <div class="adv-only">
+      <div class="adv-only-label">🟣 Advanced track only</div>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:.65rem">Beginner and Average students: this section is optional. Attempt it after Parts 0–7 are fully complete and verified.</p>
+
+      <div class="step open" id="step-p8-1">
+        <div class="step-hd" onclick="toggleStep('step-p8-1')">
+          <div class="step-num">17</div>
+          <div class="step-label">Scale Menu Service to 2 replicas</div>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-hd"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="cm"># Scale menu-service to 2 running instances</span>
+docker compose up -d --scale menu-service=2
+
+<span class="cm"># Confirm 2 menu-service containers appear</span>
+docker compose ps | grep menu</pre>
+          </div>
+          <div class="out-label">Expected — 2 menu-service containers</div>
+          <div class="exp-out">cloudeats-menu-service-1  Up   0.0.0.0:3002->3002/tcp
+cloudeats-menu-service-2  Up   (no host port — internal only)</div>
+          <div class="callout amber">
+            <span>⚠️</span>
+            <div>The second instance doesn't bind to a host port (Docker prevents two containers binding the same host port). In production, a load balancer sits in front. For now, you've proven horizontal scaling is possible — each container is stateless, so both instances serve the same data from the same MySQL database.</div>
+          </div>
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Your Screenshot — docker compose ps showing 2 menu-service containers</div>
+              <div class="img-ph-desc">Terminal showing <code>docker compose ps</code> output with two menu-service containers listed, both Up. This proves the service is stateless and horizontally scalable. Replace with your screenshot.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step" id="step-p8-2">
+        <div class="step-hd" onclick="toggleStep('step-p8-2')">
+          <div class="step-num">18</div>
+          <div class="step-label">Add a cross-service HTTP call: Order Service verifies user via User Service</div>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <p>In <code>services/order-service/src/server.js</code>, update your <code>POST /api/orders</code> handler to call the User Service before creating an order:</p>
+          <div class="code-block">
+            <div class="code-hd"><span class="code-lang">services/order-service/src/server.js — POST /api/orders</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>app.post(<span class="cv">'/api/orders'</span>, async (req, res) => {
+  <span class="ck">const</span> { userId, items } = req.body;
+
+  <span class="cm">// ── Cross-service call: verify user exists in User Service</span>
+  <span class="ck">try</span> {
+    <span class="ck">const</span> userRes = await fetch(
+      <span class="cv">`http://user-service:3001/api/users/${userId}`</span>
+    );
+    <span class="ck">if</span> (!userRes.ok) {
+      <span class="ck">return</span> res.status(<span class="cp">404</span>).json({
+        error: <span class="cv">'User not found'</span>,
+        hint: <span class="cv">'Order Service checked User Service'</span>
+      });
+    }
+  } <span class="ck">catch</span> (err) {
+    <span class="ck">return</span> res.status(<span class="cp">503</span>).json({ error: <span class="cv">'User Service unreachable'</span> });
+  }
+
+  <span class="cm">// ── Proceed with order creation in MongoDB</span>
+  <span class="cm">// ... your existing order creation code here ...</span>
+});</pre>
+          </div>
+          <div class="wh p">
+            <div class="wh-label">🔍 Database-per-service rule in action</div>
+            The Order Service does NOT query the MySQL <code>users</code> table directly — even though MySQL is accessible. Instead, it calls the User Service API over HTTP. This is the database-per-service rule enforced in code. If you later migrate users to a different database, Order Service requires zero changes.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ GH PAGES SECTION ═══════════════════════════ -->
+  <section id="ghp">
+    <hr style="border:none;border-top:1px solid var(--border);margin:1.5rem 0">
+    <div class="ghp-section">
+      <div class="ghp-section-title">🐙 Publish Your Lab Notes to GitHub Pages</div>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem">This is your experiment toward <strong>online teaching as a side hustle</strong>. Push this HTML file and your lecture notes to GitHub — anyone with the link can access your lab guide, forever free, no server needed. Here is the full workflow:</p>
+
+      <ol class="ghp-steps">
+        <li>
+          <div>
+            <strong style="color:var(--text)">Create a free GitHub account</strong> at <a href="https://github.com" target="_blank">github.com</a> if you don't have one. Use a professional username — this becomes part of your teaching URL.
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong style="color:var(--text)">Create a new public repository</strong> — suggested name: <code>cloud-computing-labs</code> or <code>cloudeats-academy</code>. Tick "Add README". This is your course hosting repo.
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong style="color:var(--text)">Push your HTML files</strong> into the repo root. Your file naming already matches: <code>week01_foundation.html</code>, <code>week02_Core_Cloud_Services.html</code> … <code>week05_Microservices_Architecture.html</code>, <code>week05_lab1_microservices.html</code>.
+            <div class="code-block" style="margin:.5rem 0 0">
+              <div class="code-hd"><span class="code-lang">bash</span></div>
+              <pre>git init
+git add *.html
+git commit -m "Add Week 1-5 lecture notes and labs"
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
+git push -u origin main</pre>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong style="color:var(--text)">Enable GitHub Pages:</strong> In your repo → Settings → Pages → Source: <em>Deploy from branch</em> → Branch: <em>main</em> → Folder: <em>/ (root)</em> → Save. GitHub will publish your site within 2 minutes.
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong style="color:var(--text)">Your course URL:</strong> <code>https://YOUR_USERNAME.github.io/YOUR_REPO/week05_Microservices_Architecture.html</code> — share this with students. The week nav bar (W1–W5 links) works automatically because all files are in the same folder.
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong style="color:var(--text)">Add a course homepage:</strong> Create <code>index.html</code> as a landing page listing all weeks, lab links, and your contact/enrolment info. Students can bookmark this as their single entry point.
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong style="color:var(--text)">Future updates are instant:</strong> Any time you add a new week or fix a typo, run <code>git add . && git commit -m "Update" && git push</code>. GitHub Pages redeploys automatically within 60 seconds. Zero server costs, zero maintenance.
+          </div>
+        </li>
+      </ol>
+
+      <div class="callout purple" style="margin-top:1rem">
+        <span>💡</span>
+        <div><strong>Scaling your reach:</strong> Once on GitHub Pages, you can share the link on LinkedIn, Reddit (r/learnprogramming, r/node), Twitter/X, and local tech communities. The dark-themed professional design builds credibility. Add a donation link (Ko-fi, Buy Me a Coffee) to monetise. Many instructors build full paid courses starting exactly this way.</div>
+      </div>
+
+      <div class="img-ph" style="margin-top:.85rem">
+        <div class="img-ph-icon">📸</div>
+        <div>
+          <div class="img-ph-label">Your Screenshot — GitHub Pages deployment live</div>
+          <div class="img-ph-desc">GitHub repository Settings → Pages showing the live URL. Or the published page open in a browser with the GitHub Pages URL (<code>*.github.io/...</code>) visible in the address bar. Replace with your screenshot when published.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LAB COMPLETION -->
+  <div class="callout green" style="margin-top:1.5rem">
+    <span>🎉</span>
+    <div>
+      <strong>Lab 5.1 Complete!</strong><br>
+      You have refactored a monolith into three independently deployable microservices. Each service has its own code, dependencies, and database. Fault isolation verified. Next: <strong><a href="../week05/lab2_api_gateway.html">Lab 5.2 — API Gateway</a></strong> (Advanced track) or review the Week 5 lecture summary.
+    </div>
+  </div>
+
+</main><!-- /main -->
+</div><!-- /page-body -->
+
+<footer style="border-top:1px solid var(--border);padding:1.25rem 1.5rem;text-align:center;color:var(--muted);font-size:.76rem;max-width:1200px;margin:0 auto">
+  Cloud Computing · Lab 5.1 · Microservices Split &nbsp;|&nbsp; CloudEats Academy &nbsp;|&nbsp;
+  <a href="../week05/index.html" style="color:var(--muted);text-decoration:none">← Lecture Notes</a>
+  &nbsp;|&nbsp;<span class="ghp-badge">🐙 GitHub Pages Ready</span>&nbsp;|&nbsp;
+  <a href="../week05/lab2_api_gateway.html" style="color:var(--muted);text-decoration:none">Lab 5.2 →</a>
+</footer>
+
+<script>
+function toggleStep(id){
+  const s=document.getElementById(id);
+  s.classList.toggle('open');
+  updateProgress();
+}
+function toggleTrouble(el, event){
+  if(event && !event.target.closest('.trouble-hd')) return;
+  el.classList.toggle('open');
+}
+function expandAll(){
+  document.querySelectorAll('.step').forEach(s=>s.classList.add('open'));
+  updateProgress();
+}
+function collapseAll(){
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('open'));
+  updateProgress();
+}
+function copyCode(btn,event){
+  if(event) event.stopPropagation();
+  const pre=btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    btn.textContent='Copied!';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2000);
+  });
+}
+function updateProgress(){
+  const total=document.querySelectorAll('.step').length;
+  const open=document.querySelectorAll('.step.open').length;
+  const pct=Math.round((open/total)*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-cur').textContent=open;
+  document.getElementById('prog-max').textContent=total;
+}
+const trackLabels={
+  beginner:'<span class="track-pill b">🟢 Parts 0–4 · User Service</span>',
+  average:'<span class="track-pill a">🔵 Parts 0–7 · All 3 Services</span>',
+  advanced:'<span class="track-pill adv">🟣 Parts 0–8 · All + Scale</span>'
+};
+function setPace(pace,btn){
+  document.querySelectorAll('.pace-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const td=document.querySelector('#prog-fill');
+  if(pace==='beginner') expandAll();
+  updateProgress();
+}
+// Add track-pill CSS inline for sidebar
+const style=document.createElement('style');
+style.textContent='.track-pill{display:inline-flex;align-items:center;gap:.3rem;font-size:.71rem;font-weight:600;padding:.2rem .5rem;border-radius:4px;margin:.15rem 0;display:block;}.track-pill.b{background:rgba(0,229,160,.1);color:var(--beginner);border:1px solid rgba(0,229,160,.2);}.track-pill.a{background:rgba(0,200,255,.1);color:var(--average);border:1px solid rgba(0,200,255,.2);}.track-pill.adv{background:rgba(180,110,245,.1);color:var(--advanced);border:1px solid rgba(180,110,245,.2);}';
+document.head.appendChild(style);
+// Sidebar active on scroll
+window.addEventListener('scroll',()=>{
+  const sections=document.querySelectorAll('section[id]');
+  const links=document.querySelectorAll('.sb-nav a');
+  let cur='';
+  sections.forEach(s=>{if(s.getBoundingClientRect().top<120)cur=s.id;});
+  links.forEach(l=>{l.classList.remove('active');if(l.getAttribute('href')==='#'+cur)l.classList.add('active');});
+});
+updateProgress();
+/* Default pace — expand all steps on first load */
+document.addEventListener('DOMContentLoaded', ()=>{ expandAll(); });
+</body>
+</html>

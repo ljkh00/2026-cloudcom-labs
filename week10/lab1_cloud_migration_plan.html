@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 10.1 · Cloud Migration Plan · CloudEats Academy</title>
+<meta name="description" content="Map every CloudEats component to its cloud equivalent, identify migration blockers, and write a structured one-page migration plan. No new code — pure architecture and planning.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Lab 10.1 · Cloud Migration Plan · CloudEats Academy">
+<meta property="og:description" content="The capstone lab. Map Docker containers to cloud services, prioritise migration blockers, and produce a migration plan a non-technical manager can approve.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090f;--bg2:#0d1117;--bg3:#141b27;
+  --surface:#1a2235;--surface2:#1f2c42;--border:#2a3d5a;
+  --accent:#00c8ff;--green:#00e5a0;--amber:#ffb740;
+  --red:#ff5e7a;--purple:#b46ef5;
+  --text:#e8edf5;--muted:#6b7fa0;
+  --beginner:#00e5a0;--average:#00c8ff;--advanced:#b46ef5;
+  --lab-color:#b46ef5;--radius:10px;--code-bg:#0b1120;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;}
+.site-header{background:linear-gradient(135deg,#050d1c,#091628);border-bottom:1px solid var(--border);padding:0 1.5rem;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;gap:1rem;}
+.lab-badge{background:var(--lab-color);color:#fff;font-size:.62rem;font-weight:700;letter-spacing:.1em;padding:.2rem .55rem;border-radius:4px;text-transform:uppercase;}
+.header-title{font-size:.88rem;font-weight:600;}
+.pace-switcher{display:flex;gap:.3rem;background:var(--bg3);padding:.22rem;border-radius:8px;border:1px solid var(--border);}
+.pace-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.25rem .65rem;border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--muted);transition:all .18s;}
+.pace-btn.active[data-pace="beginner"]{background:rgba(0,229,160,.18);color:var(--beginner);}
+.pace-btn.active[data-pace="average"]{background:rgba(0,200,255,.18);color:var(--average);}
+.pace-btn.active[data-pace="advanced"]{background:rgba(180,110,245,.18);color:var(--advanced);}
+.lab-hero{background:linear-gradient(160deg,#060f20,#07111e);border-bottom:1px solid var(--border);padding:2rem 1.5rem 1.75rem;position:relative;overflow:hidden;}
+.lab-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:350px;height:350px;background:radial-gradient(ellipse,rgba(180,110,245,.06),transparent 70%);pointer-events:none;}
+.hero-inner{max-width:1200px;margin:0 auto;}
+.hero-crumb{font-size:.7rem;color:var(--muted);margin-bottom:.4rem;}
+.hero-crumb a{color:var(--purple);text-decoration:none;}
+.lab-hero h1{font-size:clamp(1.25rem,2.5vw,1.75rem);font-weight:800;background:linear-gradient(135deg,#e8edf5 40%,var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.35rem;}
+.hero-sub{color:var(--muted);font-size:.84rem;margin-bottom:.85rem;}
+.hero-meta{display:flex;flex-wrap:wrap;gap:.55rem;}
+.meta-chip{display:flex;align-items:center;gap:.35rem;font-size:.74rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.22rem .6rem;color:var(--muted);}
+.meta-chip strong{color:var(--text);}
+.pace-guide{max-width:1200px;margin:0 auto;padding:1rem 1.5rem 0;}
+.pace-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.65rem;margin-bottom:.5rem;}
+.pace-card{border-radius:8px;padding:.75rem;font-size:.78rem;line-height:1.5;}
+.pace-card.b{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);}
+.pace-card.a{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);}
+.pace-card.adv{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);}
+.pc-label{font-size:.65rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.3rem;}
+.b .pc-label{color:var(--beginner);}.a .pc-label{color:var(--average);}.adv .pc-label{color:var(--advanced);}
+.pc-scope{color:var(--muted);font-size:.76rem;}
+.page-body{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 200px);}
+.sidebar{position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;padding:1.25rem .85rem 2rem;border-right:1px solid var(--border);background:var(--bg2);}
+.sb-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.85rem;}
+.progress-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:.65rem;margin-bottom:1rem;}
+.prog-track{background:var(--bg2);border-radius:3px;height:5px;margin:.4rem 0;}
+.prog-fill{height:5px;border-radius:3px;background:linear-gradient(90deg,var(--purple),var(--accent));transition:width .35s;width:0%;}
+.prog-text{font-size:.69rem;color:var(--muted);}
+.prog-text span{color:var(--purple);font-weight:600;}
+.sb-nav{list-style:none;}
+.sb-nav li a{display:block;font-size:.73rem;padding:.32rem .6rem;border-radius:5px;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all .13s;margin-bottom:.08rem;}
+.sb-nav li a:hover{background:var(--surface);color:var(--text);}
+.sb-nav li a.active{background:rgba(180,110,245,.08);color:var(--purple);border-color:rgba(180,110,245,.18);}
+.sb-section{font-size:.61rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(107,127,160,.45);padding:.6rem .6rem .18rem;list-style:none;}
+.lab-content{padding:1.75rem 1.75rem 4rem;min-width:0;}
+.part-head{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;border-radius:8px;margin-bottom:1.1rem;}
+.ph-purple{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.22);border-left:4px solid var(--purple);}
+.ph-green{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.22);border-left:4px solid var(--green);}
+.ph-amber{background:rgba(255,183,64,.04);border:1px solid rgba(255,183,64,.22);border-left:4px solid var(--amber);}
+.ph-blue{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.22);border-left:4px solid var(--accent);}
+.ph-red{background:rgba(255,94,122,.04);border:1px solid rgba(255,94,122,.22);border-left:4px solid var(--red);}
+.part-pill{font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.16rem .5rem;border-radius:4px;white-space:nowrap;}
+.pp-purple{background:rgba(180,110,245,.15);color:var(--purple);}
+.pp-green{background:rgba(0,229,160,.15);color:var(--green);}
+.pp-amber{background:rgba(255,183,64,.15);color:var(--amber);}
+.pp-blue{background:rgba(0,200,255,.15);color:var(--accent);}
+.part-title{font-size:.98rem;font-weight:700;}
+.part-time{font-size:.71rem;color:var(--muted);margin-left:auto;white-space:nowrap;}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:.85rem;overflow:hidden;}
+.step-header{display:flex;align-items:center;gap:.75rem;padding:.85rem 1rem;cursor:pointer;user-select:none;transition:background .13s;}
+.step-header:hover{background:var(--surface2);}
+.step-num{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;color:var(--muted);}
+.step.open .step-num{border-color:var(--purple);color:var(--purple);}
+.step-title{font-size:.86rem;font-weight:600;}
+.step-body{display:none;padding:1rem 1rem 1.1rem;border-top:1px solid var(--border);}
+.step.open .step-body{display:block;}
+.step:not(.open) .step-header::after{content:'click to expand';font-size:.62rem;color:var(--muted);opacity:.5;margin-left:auto;letter-spacing:.04em;pointer-events:none;}
+.step.open .step-header::after{content:'';}
+p{margin-bottom:.75rem;font-size:.86rem;line-height:1.7;}
+p:last-child{margin-bottom:0;}
+strong{color:var(--text);font-weight:600;}
+a{color:var(--accent);}a:hover{text-decoration:underline;}
+ul,ol{padding-left:1.4rem;margin-bottom:.75rem;font-size:.85rem;line-height:1.75;}
+li{margin-bottom:.2rem;}
+h3{font-size:.9rem;font-weight:700;margin:1.1rem 0 .5rem;color:var(--text);}
+code{font-family:'Fira Code',monospace;font-size:.84em;background:var(--code-bg);padding:.08rem .35rem;border-radius:3px;color:var(--green);}
+.callout{border-radius:8px;padding:.75rem 1rem;margin:.75rem 0;display:flex;gap:.6rem;align-items:flex-start;font-size:.82rem;line-height:1.55;}
+.callout.blue{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);color:#a0d8f0;}
+.callout.green{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);color:#8ee8c4;}
+.callout.amber{background:rgba(255,183,64,.06);border:1px solid rgba(255,183,64,.2);color:#d9c07a;}
+.callout.red{background:rgba(255,94,122,.05);border:1px solid rgba(255,94,122,.2);color:#f0a0b0;}
+.callout.purple{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);color:#c5a8f5;}
+.callout-icon{font-size:1rem;flex-shrink:0;line-height:1.4;}
+.expected-output{background:#060d18;border:1px solid rgba(0,229,160,.2);border-left:3px solid var(--green);border-radius:6px;padding:.65rem .9rem;margin:.65rem 0;}
+.eo-label{font-size:.62rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:.35rem;}
+.eo-body{font-family:'Fira Code',monospace;font-size:.77rem;color:#8ee8c4;line-height:1.6;white-space:pre-wrap;}
+.trouble{background:rgba(255,94,122,.03);border:1px solid rgba(255,94,122,.2);border-radius:8px;margin:.75rem 0;overflow:hidden;}
+.trouble-header{display:flex;align-items:center;gap:.6rem;padding:.6rem .9rem;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--red);}
+.trouble-body{display:none;padding:.75rem .9rem;border-top:1px solid rgba(255,94,122,.15);font-size:.8rem;line-height:1.6;}
+.trouble.open .trouble-body{display:block;}
+.why-box{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.2);border-left:3px solid var(--accent);border-radius:6px;padding:.7rem 1rem;margin:.75rem 0;font-size:.81rem;color:#a0d8f0;}
+.why-box strong{color:var(--accent);}
+.checkpoint{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.25);border-radius:8px;padding:.85rem 1rem;margin:1.25rem 0;}
+.checkpoint-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-bottom:.4rem;}
+.level-block{border-radius:8px;padding:.65rem .9rem;margin:.55rem 0;font-size:.8rem;line-height:1.55;}
+.level-block.beginner{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.18);border-left:3px solid var(--beginner);}
+.level-block.average{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.18);border-left:3px solid var(--average);}
+.level-block.advanced{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.18);border-left:3px solid var(--advanced);}
+.level-block-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem;}
+.level-block.beginner .level-block-label{color:var(--beginner);}
+.level-block.average .level-block-label{color:var(--average);}
+.level-block.advanced .level-block-label{color:var(--advanced);}
+.worksheet-table{width:100%;border-collapse:collapse;font-size:.78rem;margin:.85rem 0;}
+.worksheet-table th{background:var(--bg3);padding:.5rem .7rem;text-align:left;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:2px solid var(--border);}
+.worksheet-table td{padding:.55rem .7rem;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.45;}
+.worksheet-table tr:last-child td{border-bottom:none;}
+.worksheet-table .fill-cell{background:rgba(255,255,255,.015);border-left:2px dashed var(--border);color:var(--muted);font-style:italic;font-size:.74rem;}
+.badge{display:inline-block;font-size:.68rem;font-weight:700;padding:.14rem .45rem;border-radius:4px;}
+.badge.high{background:rgba(255,94,122,.15);color:var(--red);}
+.badge.med{background:rgba(255,183,64,.15);color:var(--amber);}
+.badge.low{background:rgba(0,229,160,.15);color:var(--green);}
+.plan-section{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1.25rem;margin:.85rem 0;}
+.plan-section-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-bottom:.6rem;}
+.plan-field{background:var(--bg2);border:1px dashed var(--border);border-radius:6px;padding:.6rem .85rem;margin:.4rem 0;font-size:.8rem;color:var(--muted);font-style:italic;line-height:1.5;}
+.journey-wrap{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin:.85rem 0;font-family:'Fira Code',monospace;font-size:.77rem;color:#c5d5ef;line-height:1.65;}
+.nav-footer{display:flex;justify-content:space-between;align-items:center;padding:1.25rem 0 0;border-top:1px solid var(--border);margin-top:2rem;flex-wrap:wrap;gap:.75rem;}
+.nav-link{display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;padding:.4rem .9rem;border-radius:7px;text-decoration:none;transition:all .18s;border:1px solid var(--border);color:var(--muted);}
+.nav-link:hover{color:var(--text);border-color:var(--muted);}
+.nav-link.finish{background:rgba(180,110,245,.1);border-color:rgba(180,110,245,.3);color:var(--purple);}
+.nav-link.finish:hover{background:rgba(180,110,245,.2);}
+@media(max-width:768px){.page-body{grid-template-columns:1fr;}.sidebar{display:none;}}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <span class="lab-badge">Lab 10.1</span>
+      <span class="header-title">Cloud Migration Plan</span>
+    </div>
+    <div class="pace-switcher">
+      <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner')">🌱</button>
+      <button class="pace-btn" data-pace="average" onclick="setPace('average')">⚡</button>
+      <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced')">🚀</button>
+    </div>
+  </div>
+</header>
+
+<section class="lab-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb"><a href="../week10/index.html">Week 10</a> &rsaquo; Lab 10.1</div>
+    <h1>🗺️ Lab 10.1 · Cloud Migration Plan</h1>
+    <p class="hero-sub">Map your CloudEats stack to the cloud, identify what needs to change, and write a migration plan a manager can approve. No new code — this is architecture and planning.</p>
+    <div class="hero-meta">
+      <div class="meta-chip">⏱ <strong>60 min</strong></div>
+      <div class="meta-chip">📐 <strong>4 parts</strong></div>
+      <div class="meta-chip">⚙️ <strong>Prereq:</strong>&nbsp;Labs 1.1 – 9.2 complete</div>
+      <div class="meta-chip">🎯 <strong>No new code</strong>&nbsp;written</div>
+      <div class="meta-chip">📄 <strong>Deliverable:</strong>&nbsp;Mapping worksheet + Migration plan</div>
+    </div>
+  </div>
+</section>
+
+<div class="pace-guide">
+  <div class="pace-cards">
+    <div class="pace-card b">
+      <div class="pc-label">🌱 Beginner</div>
+      <div class="pc-scope">All steps expanded. Every table row explained. Hints provided for worksheet cells. Focus on completing all deliverables.</div>
+    </div>
+    <div class="pace-card a">
+      <div class="pc-label">⚡ Average</div>
+      <div class="pc-scope">Complete the tables independently first. Check your reasoning against the why-boxes. Write your own migration plan paragraph in Part 4.</div>
+    </div>
+    <div class="pace-card adv">
+      <div class="pc-label">🚀 Advanced</div>
+      <div class="pc-scope">Skip the filled examples — complete blank versions. Add a cost estimate in the extension. Research one provider's managed service limits and document trade-offs.</div>
+    </div>
+  </div>
+</div>
+
+<div class="page-body">
+  <aside class="sidebar">
+    <div class="sb-title">Lab Progress</div>
+    <div class="progress-wrap">
+      <div class="prog-text">Completed: <span id="prog-count">0</span> / 4 parts</div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+    </div>
+    <ul class="sb-nav">
+      <li class="sb-section">Parts</li>
+      <li><a href="#part1">Part 1 · Proxmox Demo</a></li>
+      <li><a href="#part2">Part 2 · Mapping Worksheet</a></li>
+      <li><a href="#part3">Part 3 · Blockers</a></li>
+      <li><a href="#part4">Part 4 · Migration Plan</a></li>
+      <li class="sb-section">Extras</li>
+      <li><a href="#journey">Journey Recap</a></li>
+      <li><a href="#extension">Extension</a></li>
+    </ul>
+  </aside>
+
+  <main class="lab-content">
+
+    <!-- ── SCENARIO ── -->
+    <div class="callout purple" style="margin-bottom:1.5rem;">
+      <span class="callout-icon">📞</span>
+      <div>
+        <strong>Your scenario:</strong> Your manager has just called. The investors loved the CloudEats demo. They want it live on a real cloud provider by next quarter. You look at your <code>docker-compose.yml</code>. Everything runs on Proxmox — a single physical server in the classroom. Moving to the cloud is not just copying files. It is a deliberate, planned process. <strong>Your job today: build the plan.</strong>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         PART 1 — DEMO OBSERVATION
+    ═════════════════════════════════ -->
+    <div id="part1">
+      <div class="part-head ph-purple">
+        <span class="part-pill pp-purple">Part 1</span>
+        <span class="part-title">Instructor Demo — CloudEats on Proxmox</span>
+        <span class="part-time">⏱ 15 min</span>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;padding:.4rem 0;">
+        <span style="font-size:.75rem;color:var(--muted)"><strong style="color:var(--text)">2 steps</strong> in Part 1</span>
+        <div style="display:flex;gap:.5rem">
+          <button onclick="expandAll()" style="font-family:'Sora',sans-serif;font-size:.7rem;font-weight:600;padding:.25rem .75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↓ Expand All</button>
+          <button onclick="collapseAll()" style="font-family:'Sora',sans-serif;font-size:.7rem;font-weight:600;padding:.25rem .75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;" onmouseover="this.style.color='var(--muted)';this.style.borderColor='var(--muted)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↑ Collapse All</button>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p1-1">
+        <div class="step-header" onclick="toggleStep('step-p1-1')">
+          <div class="step-num">1</div>
+          <div class="step-title">Watch the demo and fill in the observation table</div>
+        </div>
+        <div class="step-body">
+          <p>The instructor will deploy CloudEats on a fresh Proxmox VM. Watch carefully and fill in the table below. You are looking for moments where a manual step in Proxmox would be <strong>different — or removed entirely</strong> in a cloud deployment.</p>
+
+          <div class="level-block beginner">
+            <div class="level-block-label">🌱 Beginner — what to watch for</div>
+            When the instructor does something manually (e.g. "install Docker"), ask yourself: "Would I have to do this myself on AWS too, or does AWS handle it for me?" That difference is the whole point of managed cloud services.
+          </div>
+
+          <p><strong>Demo sequence:</strong> Create VM → SSH in → install Docker → clone repo → copy .env → <code>docker compose up -d</code> → confirm services running → show logs.</p>
+
+          <table class="worksheet-table">
+            <thead><tr><th>#</th><th>What the instructor did</th><th>Your observation (one sentence)</th><th>Question this raises for the cloud</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Chose VM size (CPU/RAM)</td><td class="fill-cell">Write what you saw here…</td><td class="fill-cell">How does the cloud let you change VM size without rebuilding?</td></tr>
+              <tr><td>2</td><td>Installed Docker manually with apt</td><td class="fill-cell">Write what you saw here…</td><td class="fill-cell">Does cloud container hosting require you to install Docker yourself?</td></tr>
+              <tr><td>3</td><td>Copied the .env file with passwords</td><td class="fill-cell">Write what you saw here…</td><td class="fill-cell">How does the cloud handle secrets without copying files?</td></tr>
+              <tr><td>4</td><td>Ran docker compose up — waited for pull</td><td class="fill-cell">Write what you saw here…</td><td class="fill-cell">How fast does a cloud-managed service start vs a fresh container pull?</td></tr>
+              <tr><td>5</td><td>Data volumes stored on this one VM</td><td class="fill-cell">Write what you saw here…</td><td class="fill-cell">What happens to this data if the VM is deleted or the disk fails?</td></tr>
+              <tr><td>6</td><td>Entire app runs on one machine</td><td class="fill-cell">Write what you saw here…</td><td class="fill-cell">How does the cloud prevent a single machine failure from taking down everything?</td></tr>
+              <tr><td>7</td><td>To update: SSH in and re-run compose</td><td class="fill-cell">Write what you saw here…</td><td class="fill-cell">How does the CI/CD pipeline deploy to cloud without manual SSH?</td></tr>
+            </tbody>
+          </table>
+
+          <div class="callout amber">
+            <span class="callout-icon">⚠️</span>
+            <div><strong>The single point of failure problem:</strong> All seven CloudEats services run on <em>one physical machine</em>. If the Proxmox server loses power, the hard drive fails, or traffic triples during a lunch rush — there is no fallback. Cloud infrastructure solves this with multiple availability zones, managed databases with automatic failover, and auto-scaling. This is the core motivation for cloud migration.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p1-2">
+        <div class="step-header" onclick="toggleStep('step-p1-2')">
+          <div class="step-num">2</div>
+          <div class="step-title">Understand what "managed service" means</div>
+        </div>
+        <div class="step-body">
+          <p>The most important concept in this lab. A <strong>managed service</strong> is one where the cloud provider handles the operational work — installation, patching, backups, failover — so you only think about configuration and data.</p>
+
+          <div class="level-block beginner">
+            <div class="level-block-label">🌱 Beginner — concrete example</div>
+            When you ran MySQL in Docker, you were responsible for: installing MySQL, configuring it, running backups, applying security patches, and restarting it if it crashed. A managed MySQL service (like AWS RDS) does all of that automatically. You just connect to it like any other database — using the same connection string you already know.
+          </div>
+
+          <table class="worksheet-table">
+            <thead><tr><th>Task</th><th>Self-managed (Docker on VM)</th><th>Managed cloud service</th></tr></thead>
+            <tbody>
+              <tr><td>Installation</td><td>You install MySQL manually</td><td>Already running — you just connect</td></tr>
+              <tr><td>Security patches</td><td>You schedule and apply updates</td><td>Provider patches automatically in maintenance window</td></tr>
+              <tr><td>Backups</td><td>You write and schedule backup scripts</td><td>Automatic daily backups with point-in-time recovery</td></tr>
+              <tr><td>Failover</td><td>If the container crashes, you restart it</td><td>Automatic promotion of a standby replica in seconds</td></tr>
+              <tr><td>Scaling storage</td><td>You resize the disk, migrate data</td><td>Storage auto-grows to a configured maximum</td></tr>
+              <tr><td>Monitoring</td><td>You set up your own alerts</td><td>Built-in metrics, alerts, slow query logs</td></tr>
+            </tbody>
+          </table>
+
+          <div class="checkpoint">
+            <div class="checkpoint-label">✅ Part 1 checkpoint</div>
+            Before moving on: make sure you have written at least one sentence in each row of the observation table in Step 1. Your answers do not have to be perfect — the act of noticing the manual steps is the learning objective.
+          </div>
+        </div>
+      </div>
+    </div><!-- /part1 -->
+
+    <!-- ════════════════════════════════
+         PART 2 — MAPPING WORKSHEET
+    ═════════════════════════════════ -->
+    <div id="part2" style="margin-top:2rem;">
+      <div class="part-head ph-green">
+        <span class="part-pill pp-green">Part 2</span>
+        <span class="part-title">Migration Mapping Worksheet</span>
+        <span class="part-time">⏱ 20 min</span>
+      </div>
+
+      <div class="step open" id="step-p2-1">
+        <div class="step-header" onclick="toggleStep('step-p2-1')">
+          <div class="step-num">3</div>
+          <div class="step-title">Map every CloudEats component to its cloud equivalent</div>
+        </div>
+        <div class="step-body">
+          <p>For each local component, identify: the cloud service category it maps to, one specific cloud product example, and why the managed version is better than running it yourself. Use the reference table after the worksheet.</p>
+
+          <div class="level-block beginner">
+            <div class="level-block-label">🌱 Beginner — how to fill this in</div>
+            For the "Why managed is better" column, always ask: "What manual work disappears when the cloud provider manages this for me?" The Step 2 table above is your cheat sheet for this column.
+          </div>
+
+          <div class="level-block average">
+            <div class="level-block-label">⚡ Average — try it yourself first</div>
+            Cover the reference table below and complete the worksheet from memory. Then check your answers against the reference. The goal is not to copy — it is to see which ones you already understand.
+          </div>
+
+          <table class="worksheet-table">
+            <thead><tr><th>Local component</th><th>Cloud service category</th><th>Cloud example (AWS / Azure / GCP)</th><th>Why managed is better</th></tr></thead>
+            <tbody>
+              <tr><td><code>user-service</code> Node.js container</td><td>Container hosting service</td><td class="fill-cell">e.g. AWS ECS / Azure Container Apps / Cloud Run</td><td class="fill-cell">No host OS to manage; auto-restart on crash; pay only when running</td></tr>
+              <tr><td><code>menu-service</code> Node.js container</td><td>Container hosting service</td><td class="fill-cell">Write your answer…</td><td class="fill-cell">Write your reasoning…</td></tr>
+              <tr><td><code>order-service</code> Node.js container</td><td>Container hosting service</td><td class="fill-cell">Write your answer…</td><td class="fill-cell">Write your reasoning…</td></tr>
+              <tr><td><code>api-gateway</code> Node.js container</td><td>Managed API Gateway</td><td class="fill-cell">AWS API Gateway / Azure API Mgmt / Cloud Endpoints</td><td class="fill-cell">Built-in auth, rate limiting, logging, TLS — no code needed</td></tr>
+              <tr><td><code>mysql</code> Docker container</td><td>Managed relational database</td><td class="fill-cell">Write your answer…</td><td class="fill-cell">Write your reasoning…</td></tr>
+              <tr><td><code>redis</code> Docker container</td><td>Managed in-memory cache</td><td class="fill-cell">Write your answer…</td><td class="fill-cell">Write your reasoning…</td></tr>
+              <tr><td><code>mongodb</code> Docker container</td><td>Managed document database</td><td class="fill-cell">Write your answer…</td><td class="fill-cell">Write your reasoning…</td></tr>
+              <tr><td><code>cloudeats-network</code> (Docker)</td><td>Virtual Private Cloud / VNet</td><td class="fill-cell">AWS VPC / Azure VNet / GCP VPC</td><td class="fill-cell">Services communicate privately; traffic never leaves cloud network</td></tr>
+              <tr><td><code>.env</code> file (on disk)</td><td>Cloud secret management</td><td class="fill-cell">Write your answer…</td><td class="fill-cell">Write your reasoning…</td></tr>
+              <tr><td><code>GitHub Actions → Proxmox SSH</code></td><td>Cloud CI/CD pipeline</td><td class="fill-cell">Write your answer…</td><td class="fill-cell">Write your reasoning…</td></tr>
+              <tr><td><code>Winston</code> log files (container disk)</td><td>Cloud log aggregation</td><td class="fill-cell">Write your answer…</td><td class="fill-cell">Write your reasoning…</td></tr>
+              <tr><td><code>prom-client</code> /metrics endpoint</td><td>Cloud monitoring &amp; alerting</td><td class="fill-cell">Write your answer…</td><td class="fill-cell">Write your reasoning…</td></tr>
+              <tr><td>Proxmox VM (single host)</td><td>Cloud VM or container platform</td><td class="fill-cell">AWS EC2 / Azure VM / GCP Compute Engine</td><td class="fill-cell">Redundancy across zones; auto-restart; no hardware maintenance</td></tr>
+            </tbody>
+          </table>
+
+          <h3>Provider Reference — Cloud Equivalents</h3>
+          <p style="font-size:.8rem;color:var(--muted);">Use this to check or complete the worksheet above. The concept column is what matters — provider names change, concepts do not.</p>
+
+          <table class="worksheet-table">
+            <thead><tr><th>Service category</th><th>AWS</th><th>Azure</th><th>GCP</th></tr></thead>
+            <tbody>
+              <tr><td>Container hosting</td><td>ECS / App Runner</td><td>Container Apps</td><td>Cloud Run</td></tr>
+              <tr><td>Managed API Gateway</td><td>API Gateway</td><td>API Management</td><td>Cloud Endpoints / Apigee</td></tr>
+              <tr><td>Managed relational DB</td><td>RDS for MySQL</td><td>Azure DB for MySQL</td><td>Cloud SQL</td></tr>
+              <tr><td>Managed in-memory cache</td><td>ElastiCache (Redis)</td><td>Azure Cache for Redis</td><td>Memorystore</td></tr>
+              <tr><td>Managed document DB</td><td>DocumentDB</td><td>Cosmos DB</td><td>Firestore / Atlas on GCP</td></tr>
+              <tr><td>Virtual Private Cloud</td><td>VPC</td><td>Virtual Network (VNet)</td><td>VPC</td></tr>
+              <tr><td>Secret management</td><td>Secrets Manager</td><td>Key Vault</td><td>Secret Manager</td></tr>
+              <tr><td>CI/CD pipeline</td><td>CodePipeline</td><td>Azure DevOps</td><td>Cloud Build</td></tr>
+              <tr><td>Log aggregation</td><td>CloudWatch Logs</td><td>Azure Monitor / Log Analytics</td><td>Cloud Logging</td></tr>
+              <tr><td>Monitoring &amp; alerting</td><td>CloudWatch Metrics</td><td>Azure Monitor</td><td>Cloud Monitoring</td></tr>
+              <tr><td>Virtual machine</td><td>EC2</td><td>Azure VM</td><td>Compute Engine</td></tr>
+            </tbody>
+          </table>
+
+          <div class="why-box">
+            <strong>Vendor-neutral principle:</strong> This course does not teach one provider. It teaches the <em>concepts</em> — container hosting, managed databases, secret management. Once you understand the concept, the specific provider is just a different name for the same idea. Pick any one provider for your worksheet answers and use it consistently.
+          </div>
+
+          <div class="checkpoint">
+            <div class="checkpoint-label">✅ Part 2 checkpoint</div>
+            You should have filled in all 13 rows of the mapping table. The "Why managed is better" column is the most important — it shows you understand the value, not just the name.
+          </div>
+        </div>
+      </div>
+    </div><!-- /part2 -->
+
+    <!-- ════════════════════════════════
+         PART 3 — BLOCKERS
+    ═════════════════════════════════ -->
+    <div id="part3" style="margin-top:2rem;">
+      <div class="part-head ph-amber">
+        <span class="part-pill pp-amber">Part 3</span>
+        <span class="part-title">Identify Migration Blockers</span>
+        <span class="part-time">⏱ 15 min</span>
+      </div>
+
+      <div class="step open" id="step-p3-1">
+        <div class="step-header" onclick="toggleStep('step-p3-1')">
+          <div class="step-num">4</div>
+          <div class="step-title">Find what needs to change before CloudEats is cloud-ready</div>
+        </div>
+        <div class="step-body">
+          <p>Moving the containers is the easy part. Several things in the current setup would <strong>break or create security risks</strong> in a cloud environment. These are your blockers — they must be fixed before or during migration.</p>
+
+          <div class="level-block beginner">
+            <div class="level-block-label">🌱 Beginner — what is a blocker?</div>
+            A blocker is anything that stops you from migrating successfully. Think about: credentials that are stored in an unsafe way, services that assume they are on the same machine, and features that require a public internet address to work properly.
+          </div>
+
+          <table class="worksheet-table">
+            <thead><tr><th>Blocker</th><th>Why it is a problem</th><th>How to fix it</th><th>Priority</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Credentials in .env file</strong></td>
+                <td>The .env file is copied to the server by hand. In the cloud, secrets must be stored in a secret manager — never on disk or in environment files that could be committed to Git.</td>
+                <td>Store all secrets in AWS Secrets Manager / Azure Key Vault. Inject at runtime via the container platform's secret injection feature.</td>
+                <td><span class="badge high">High</span></td>
+              </tr>
+              <tr>
+                <td><strong>No HTTPS / SSL certificate</strong></td>
+                <td>The app currently runs on HTTP. A cloud deployment needs HTTPS — browsers block mixed content and users should never send passwords over unencrypted connections.</td>
+                <td>Attach a TLS certificate to the load balancer or managed gateway. AWS Certificate Manager and Azure App Service provide free certificates.</td>
+                <td><span class="badge high">High</span></td>
+              </tr>
+              <tr>
+                <td><strong>Database data migration</strong></td>
+                <td>The MySQL, MongoDB, and Redis data lives inside Docker volumes on the Proxmox VM. This data must be exported and imported into the managed cloud databases — it will not move itself.</td>
+                <td>Dump MySQL with mysqldump, MongoDB with mongodump. Import into managed services. Test thoroughly before cutting over.</td>
+                <td><span class="badge high">High</span></td>
+              </tr>
+              <tr>
+                <td><strong>Hardcoded service URLs</strong><br><em>(e.g. localhost:3001)</em></td>
+                <td>Services probably reference each other by localhost or a fixed IP. In the cloud, each service has its own URL or DNS name — these references will break.</td>
+                <td class="fill-cell">Write your fix here… (Hint: use environment variables for service URLs)</td>
+                <td><span class="badge med">Medium</span></td>
+              </tr>
+              <tr>
+                <td><strong>No health check routes</strong></td>
+                <td>Cloud load balancers require a <code>/health</code> endpoint to confirm a service is ready to receive traffic. Without it, the load balancer cannot verify the service started successfully.</td>
+                <td class="fill-cell">Write your fix here… (Hint: a simple GET /health returning 200 is enough)</td>
+                <td><span class="badge med">Medium</span></td>
+              </tr>
+              <tr>
+                <td><strong>GitHub Actions SSH deploy script</strong></td>
+                <td>The current CI/CD pipeline SSHs into the Proxmox VM. After migration, it needs to deploy to the cloud platform instead — a different target with a different authentication method.</td>
+                <td class="fill-cell">Write your fix here… (Hint: replace the SSH step with the provider's CLI deploy command)</td>
+                <td><span class="badge med">Medium</span></td>
+              </tr>
+              <tr>
+                <td><strong>No domain name</strong></td>
+                <td>Currently accessed by IP address. A production app needs a domain name with DNS pointing to the cloud load balancer.</td>
+                <td>Register a domain name. Create a DNS A record pointing to the cloud load balancer's IP. Configure the managed gateway or load balancer to handle the domain.</td>
+                <td><span class="badge low">Low</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="level-block advanced">
+            <div class="level-block-label">🚀 Advanced — what else breaks?</div>
+            The Redis shopping cart stores session state in memory. In a horizontally-scaled deployment, a request could hit any container instance — they do not share memory. Session state must be externalised to the managed Redis service (which you already have). But the connection string must point to the cloud Redis, not localhost. This is a subtle bug that only appears under load — the classic stateful service problem.
+          </div>
+
+          <div class="checkpoint">
+            <div class="checkpoint-label">✅ Part 3 checkpoint</div>
+            You should have completed the "How to fix it" cells for the Medium priority blockers. The High priority rows are pre-filled — make sure you understand <em>why</em> each is high priority before moving on.
+          </div>
+        </div>
+      </div>
+    </div><!-- /part3 -->
+
+    <!-- ════════════════════════════════
+         PART 4 — MIGRATION PLAN
+    ═════════════════════════════════ -->
+    <div id="part4" style="margin-top:2rem;">
+      <div class="part-head ph-blue">
+        <span class="part-pill pp-blue">Part 4</span>
+        <span class="part-title">Write the One-Page Migration Plan</span>
+        <span class="part-time">⏱ 10 min</span>
+      </div>
+
+      <div class="step open" id="step-p4-1">
+        <div class="step-header" onclick="toggleStep('step-p4-1')">
+          <div class="step-num">5</div>
+          <div class="step-title">Fill in the migration plan template</div>
+        </div>
+        <div class="step-body">
+          <p>A migration plan is a document written for a non-technical decision-maker — your manager, a client, or an investor. It should tell them: what we are migrating, which cloud provider, how long each phase takes, what risks exist, and how we know when we are done.</p>
+
+          <div class="level-block beginner">
+            <div class="level-block-label">🌱 Beginner — who is this document for?</div>
+            Write as if your reader knows what a website is but has never used Docker or a cloud console. Avoid jargon. If you must use a technical term, define it in one sentence. The test: could your parents read this and understand what you are proposing to do?
+          </div>
+
+          <div class="plan-section">
+            <div class="plan-section-label">1. Executive Summary</div>
+            <p style="font-size:.8rem;color:var(--muted);margin-bottom:.4rem;">Two to three sentences. What is being migrated, why, and what the business benefit is. Write this last — it is easier once you have completed the rest.</p>
+            <div class="plan-field">CloudEats is currently running on a single on-premises server (Proxmox). This plan describes the migration of all seven application services and their databases to [choose: AWS / Azure / GCP]. After migration, CloudEats will be more reliable, able to scale during peak hours, and no longer dependent on a single physical machine that is a single point of failure.</div>
+          </div>
+
+          <div class="plan-section">
+            <div class="plan-section-label">2. Cloud Provider Chosen</div>
+            <div class="plan-field">Write your choice here and give one reason why: e.g. "AWS — most widely used provider; largest free tier for learning; team already has experience with it."</div>
+          </div>
+
+          <div class="plan-section">
+            <div class="plan-section-label">3. What We Are Migrating</div>
+            <p style="font-size:.8rem;color:var(--muted);margin-bottom:.4rem;">List the seven services and their data. Reference your completed mapping table from Part 2.</p>
+            <div class="plan-field">
+              Services: user-service, menu-service, order-service, api-gateway<br>
+              Databases: MySQL (users + menu data), MongoDB (order documents), Redis (shopping cart cache)<br>
+              Supporting: CI/CD pipeline, logging infrastructure, monitoring dashboards
+            </div>
+          </div>
+
+          <div class="plan-section">
+            <div class="plan-section-label">4. Migration Phases</div>
+
+            <table class="worksheet-table">
+              <thead><tr><th>Phase</th><th>What happens</th><th>Estimated time</th><th>Done when…</th></tr></thead>
+              <tbody>
+                <tr><td>Phase 1 — Preparation</td><td>Fix all High and Medium blockers from Part 3. Move secrets to cloud secret manager. Add health check routes. Update service URLs.</td><td>1 week</td><td class="fill-cell">Write your success condition…</td></tr>
+                <tr><td>Phase 2 — Databases first</td><td>Provision managed MySQL, MongoDB, Redis on cloud. Migrate data using export/import. Test reads and writes against cloud databases while Proxmox services still run.</td><td>2–3 days</td><td class="fill-cell">Write your success condition…</td></tr>
+                <tr><td>Phase 3 — Container services</td><td>Deploy all four Node.js services to cloud container hosting. Connect to cloud databases. Run smoke tests against cloud URLs in parallel with Proxmox.</td><td>3–5 days</td><td class="fill-cell">Write your success condition…</td></tr>
+                <tr><td>Phase 4 — DNS and HTTPS</td><td>Point domain to cloud. Activate SSL certificate. Route a small percentage of live traffic to cloud (canary deployment).</td><td>1 day</td><td class="fill-cell">Write your success condition…</td></tr>
+                <tr><td>Phase 5 — Monitoring</td><td>Connect Winston logs and prom-client metrics to cloud monitoring dashboard. Set up alerts for error rate and response time.</td><td>1–2 days</td><td class="fill-cell">Write your success condition…</td></tr>
+                <tr><td>Phase 6 — Cutover</td><td>Switch 100% of live traffic to cloud. Decommission Proxmox environment after 7-day verification period.</td><td>1 day + 7 days monitoring</td><td class="fill-cell">Write your success condition…</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="plan-section">
+            <div class="plan-section-label">5. Risks and Mitigations</div>
+
+            <table class="worksheet-table">
+              <thead><tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th></tr></thead>
+              <tbody>
+                <tr><td>Data loss during database migration</td><td><span class="badge low">Low</span></td><td><span class="badge high">High</span></td><td>Test on a database copy first. Keep Proxmox running until cloud is verified for 7 days.</td></tr>
+                <tr><td>Downtime during cutover</td><td><span class="badge med">Medium</span></td><td><span class="badge high">High</span></td><td>Reduce DNS TTL 24 hours before cutover. Use parallel deployment: Proxmox and cloud both live until switch confirmed.</td></tr>
+                <tr><td>Unexpected cost overrun</td><td><span class="badge med">Medium</span></td><td><span class="badge med">Medium</span></td><td>Set cloud budget alert at 120% of estimate. Start with smallest instance sizes. Scale up after verifying performance.</td></tr>
+                <tr><td class="fill-cell">Add your own risk here…</td><td class="fill-cell">Low / Medium / High</td><td class="fill-cell">Low / Medium / High</td><td class="fill-cell">Write your mitigation…</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="plan-section">
+            <div class="plan-section-label">6. Success Criteria</div>
+            <p style="font-size:.8rem;color:var(--muted);margin-bottom:.4rem;">The migration is complete when all of these are true. Add your own checks.</p>
+            <div class="plan-field">
+              ☐ All API endpoints return correct responses via the cloud domain URL<br>
+              ☐ All databases running on managed services with automated backups enabled<br>
+              ☐ Logs visible and searchable in the cloud logging dashboard<br>
+              ☐ Monitoring alerts configured for error rate &gt; 1% and response time &gt; 500ms<br>
+              ☐ The CI/CD pipeline deploys successfully to the cloud environment on every push to main<br>
+              ☐ Proxmox VM is no longer needed and can be decommissioned<br>
+              ☐ [Add your own…]
+            </div>
+          </div>
+
+          <div class="level-block average">
+            <div class="level-block-label">⚡ Average — checkpoint question</div>
+            <strong>Q:</strong> A colleague says "let's do the cutover on a Friday evening." What is wrong with this plan, and when would you schedule it instead? (Think about when traffic is lowest and who is available to fix problems.)
+          </div>
+
+          <div class="level-block advanced">
+            <div class="level-block-label">🚀 Advanced — what is missing from this plan?</div>
+            A real enterprise migration plan would also include: a rollback procedure (how do you undo the migration if it fails?), a data consistency verification step (how do you confirm no records were lost or corrupted?), a performance baseline (what response time are you trying to match or beat?), and stakeholder sign-off. Write one paragraph for the rollback procedure as an advanced challenge.
+          </div>
+
+          <div class="checkpoint">
+            <div class="checkpoint-label">✅ Part 4 complete — Lab 10.1 deliverables</div>
+            You have produced three real engineering artefacts:
+            <ul style="margin-top:.5rem;font-size:.8rem;">
+              <li><strong>Mapping worksheet</strong> (Part 2) — shows you understand the full stack</li>
+              <li><strong>Blocker priority matrix</strong> (Part 3) — shows you can identify what needs to change</li>
+              <li><strong>One-page migration plan</strong> (Part 4) — shows you can communicate a technical plan to a non-technical audience</li>
+            </ul>
+            These are the artefacts a cloud engineer produces before any migration begins.
+          </div>
+        </div>
+      </div>
+    </div><!-- /part4 -->
+
+    <!-- ════════════════ JOURNEY ═══════════════ -->
+    <div id="journey" style="margin-top:2rem;">
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:.85rem;">🗺️ The Full CloudEats Journey — 10 Weeks</h3>
+      <div class="journey-wrap">Week 1  — Static HTML menu on a Python web server
+Week 2  — Containerised with Docker; port mapping; Docker networks
+Week 3  — MySQL database; Docker Compose; user registration
+Week 4  — SQL queries; NoSQL with MongoDB and Redis
+Week 5  — Monolith split into three microservices + API Gateway
+Week 6  — Git branching; automated tests; first CI pipeline
+Week 7  — Infrastructure as Code; automated deployment on push
+Week 8  — JWT authentication; RBAC; secrets in environment variables
+Week 9  — Winston logging; Prometheus metrics; performance monitoring
+Week 10 — Cloud migration plan  ← YOU ARE HERE</div>
+
+      <div class="callout green">
+        <span class="callout-icon">✅</span>
+        <div>You are not starting from zero when you open the AWS console for the first time. You are translating what you already know. Docker container → Cloud container service. Docker network → VPC. .env file → Secret Manager. Every concept maps directly.</div>
+      </div>
+    </div>
+
+    <!-- ════════════════ EXTENSION ═══════════════ -->
+    <div id="extension" style="margin-top:2rem;">
+      <div class="part-head ph-red">
+        <span class="part-pill" style="background:rgba(255,94,122,.15);color:var(--red);">Optional</span>
+        <span class="part-title">Extension — Cost Estimation (15 min)</span>
+        <span class="part-time">⏱ +15 min</span>
+      </div>
+
+      <div class="step" id="step-ext-1">
+        <div class="step-header" onclick="toggleStep('step-ext-1')">
+          <div class="step-num">⭐</div>
+          <div class="step-title">Estimate the monthly cloud cost for CloudEats at low traffic</div>
+        </div>
+        <div class="step-body">
+          <p>Use the pricing page of your chosen cloud provider (or their cost calculator) to estimate monthly costs for 100 users per day. Pick the smallest available instance size for each service.</p>
+
+          <div class="callout blue">
+            <span class="callout-icon">💡</span>
+            <div><strong>AWS Free Tier tip:</strong> Many AWS services offer free usage for the first 12 months. Mark any qualifying service with ✓. Your actual first-year cost may be much lower than the table shows — but understand what happens <em>after</em> the free tier expires.</div>
+          </div>
+
+          <table class="worksheet-table">
+            <thead><tr><th>Component</th><th>Cloud service chosen</th><th>Instance / tier size</th><th>Est. monthly cost (USD)</th></tr></thead>
+            <tbody>
+              <tr><td>user-service container</td><td class="fill-cell"></td><td>Smallest available</td><td class="fill-cell">$</td></tr>
+              <tr><td>menu-service container</td><td class="fill-cell"></td><td>Smallest available</td><td class="fill-cell">$</td></tr>
+              <tr><td>order-service container</td><td class="fill-cell"></td><td>Smallest available</td><td class="fill-cell">$</td></tr>
+              <tr><td>api-gateway</td><td class="fill-cell"></td><td>Basic / free tier</td><td class="fill-cell">$</td></tr>
+              <tr><td>MySQL managed DB</td><td class="fill-cell"></td><td>Smallest available</td><td class="fill-cell">$</td></tr>
+              <tr><td>Redis managed cache</td><td class="fill-cell"></td><td>Smallest available</td><td class="fill-cell">$</td></tr>
+              <tr><td>MongoDB managed DB</td><td class="fill-cell"></td><td>Free tier if available</td><td class="fill-cell">$</td></tr>
+              <tr><td>Outbound data transfer</td><td class="fill-cell">N/A</td><td>Est. 5 GB/month</td><td class="fill-cell">$</td></tr>
+              <tr><td><strong>TOTAL</strong></td><td></td><td></td><td class="fill-cell"><strong>$</strong></td></tr>
+            </tbody>
+          </table>
+
+          <div class="level-block advanced">
+            <div class="level-block-label">🚀 Advanced — think beyond the table</div>
+            Cloud costs are not just the services you deploy. Add: data egress fees (often the surprise bill), NAT gateway costs if services are in private subnets, load balancer costs, and monitoring/logging costs. Run the same estimate for 10,000 users/day and see how the cost scales. Is it linear? Which services become the dominant cost at high scale?
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Troubleshooting -->
+    <div style="margin-top:2rem;">
+      <h3 style="font-size:.92rem;font-weight:700;margin-bottom:.85rem;">🔧 Troubleshooting</h3>
+      <div class="trouble" id="tr1">
+        <div class="trouble-header" onclick="toggleTrouble(this.closest('.trouble'), event)">⚠️ "I cannot see the Proxmox demo interface clearly"</div>
+        <div class="trouble-body">Note what you missed and ask the instructor to replay that step. The worksheet can be completed using the architecture diagrams and your knowledge of the stack from previous weeks — the observation table is the only part that strictly requires watching the demo.</div>
+      </div>
+      <div class="trouble" id="tr2">
+        <div class="trouble-header" onclick="toggleTrouble(this.closest('.trouble'), event)">⚠️ "I do not know which cloud provider to use for the worksheet"</div>
+        <div class="trouble-body">Pick AWS and use it consistently throughout. It has the most widely-documented service equivalents and the most examples online. The concepts are identical across providers — only the product names differ. If you already have experience with Azure or GCP, use that instead.</div>
+      </div>
+      <div class="trouble" id="tr3">
+        <div class="trouble-header" onclick="toggleTrouble(this.closest('.trouble'), event)">⚠️ "I cannot think of what to write for 'Why managed is better'"</div>
+        <div class="trouble-body">Go back to the Step 2 self-managed vs managed table. For each component, ask: "What would I have to do myself if I ran this in a Docker container on a VM?" The answer to that question is what the managed service eliminates. Backups, patching, restart on crash, failover — these disappear.</div>
+      </div>
+      <div class="trouble" id="tr4">
+        <div class="trouble-header" onclick="toggleTrouble(this.closest('.trouble'), event)">⚠️ "My migration plan feels too short"</div>
+        <div class="trouble-body">A migration plan should contain enough detail for a decision-maker to understand the scope and approve the work. If your success criteria column is empty, fill it in — that is the most commonly missed part. If your risk table only has one row, add at least one more. One page is a guideline, not a hard limit.</div>
+      </div>
+    </div>
+
+    <!-- Footer nav -->
+    <div class="nav-footer">
+      <a href="../week10/index.html" class="nav-link">← Week 10 Content</a>
+      <a href="index.html" class="nav-link finish">🎓 Course Complete — View Index</a>
+    </div>
+
+  </main>
+</div><!-- /page-body -->
+
+<script>
+/* ── Step toggle ── */
+function toggleStep(id) {
+  document.getElementById(id).classList.toggle('open');
+  updateProgress();
+}
+/* ── Trouble toggle ── */
+function toggleTrouble(el, event) {
+  if (event && !event.target.closest('.trouble-header')) return;
+  el.classList.toggle('open');
+}
+/* ── Expand / Collapse All ── */
+function expandAll() {
+  document.querySelectorAll('.step').forEach(s => s.classList.add('open'));
+  updateProgress();
+}
+function collapseAll() {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('open'));
+  updateProgress();
+}
+/* ── Progress bar ── */
+function updateProgress() {
+  const parts = ['step-p1-1','step-p2-1','step-p3-1','step-p4-1'];
+  let done = parts.filter(id => document.getElementById(id)?.classList.contains('open')).length;
+  document.getElementById('prog-count').textContent = done;
+  document.getElementById('prog-fill').style.width = (done / 4 * 100) + '%';
+}
+/* ── Pace setter ── */
+function setPace(pace) {
+  document.body.className = 'pace-' + pace;
+  document.querySelectorAll('.pace-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-pace="${pace}"]`).classList.add('active');
+  if (pace === 'beginner') expandAll();
+}
+/* ── Sidebar active link ── */
+function updateSidebarActive() {
+  const anchors = ['part1','part2','part3','part4','journey','extension'];
+  let active = anchors[0];
+  anchors.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top < 100) active = id;
+  });
+  document.querySelectorAll('.sb-nav li a').forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + active);
+  });
+}
+window.addEventListener('scroll', updateSidebarActive);
+document.addEventListener('DOMContentLoaded', () => {
+  setPace('beginner');
+  updateProgress();
+  updateSidebarActive();
+});
+</script>
+</body>
+</html>

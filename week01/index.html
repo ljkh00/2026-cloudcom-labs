@@ -1,0 +1,3090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 1 · Foundations of Cloud Computing · CloudEats Academy</title>
+<meta name="description" content="Week 1 lecture content: What is cloud computing, IaaS vs PaaS vs SaaS service models, major cloud providers, interactive activities. Beginner to advanced pacing. CloudEats diploma course.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Week 1 · Foundations of Cloud Computing · CloudEats Academy">
+<meta property="og:description" content="Interactive cloud computing fundamentals — service models, provider comparison, cost simulator, architecture roadmap. Three pace levels: Beginner, Average, Advanced.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07090f;
+    --bg2: #0d1117;
+    --bg3: #141b27;
+    --surface: #1a2235;
+    --surface2: #1f2c42;
+    --border: #2a3d5a;
+    --accent: #00c8ff;
+    --accent2: #7c6af5;
+    --green: #00e5a0;
+    --amber: #ffb740;
+    --red: #ff5e7a;
+    --text: #e8edf5;
+    --muted: #6b7fa0;
+    --beginner: #00e5a0;
+    --average: #00c8ff;
+    --advanced: #b46ef5;
+    --radius: 10px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  .site-header {
+    background: linear-gradient(135deg, #0a1628 0%, #0d1f3c 50%, #0a1628 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    gap: 1rem;
+  }
+  .header-left { display: flex; align-items: center; gap: 0.75rem; }
+  .week-badge {
+    background: var(--accent);
+    color: #000;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .header-title { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+
+  /* ── PACE SELECTOR ── */
+  .pace-bar {
+    display: flex;
+    gap: 0.4rem;
+    background: var(--bg3);
+    padding: 0.3rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .pace-btn {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.3rem 0.85rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+    color: var(--muted);
+  }
+  .pace-btn:hover { color: var(--text); }
+  .pace-btn.active[data-pace="beginner"] { background: var(--beginner); color: #000; }
+  .pace-btn.active[data-pace="average"] { background: var(--average); color: #000; }
+  .pace-btn.active[data-pace="advanced"] { background: var(--advanced); color: #fff; }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(160deg, #091428 0%, #0d1f3c 40%, #091428 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 3.5rem 2rem 2.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -100px; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 300px;
+    background: radial-gradient(ellipse, rgba(0,200,255,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-label {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+  }
+  .hero h1 {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #e8edf5 30%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.75rem;
+  }
+  .hero p { color: var(--muted); font-size: 0.95rem; max-width: 560px; margin: 0 auto 1.5rem; }
+  .hero-meta {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .hero-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .hero-chip span:first-child { font-size: 1rem; }
+
+  /* ── PACE CONTEXT BANNER ── */
+  .pace-banner {
+    max-width: 1100px;
+    margin: 1.5rem auto 0;
+    padding: 0 2rem;
+    display: none;
+  }
+  .pace-banner.show { display: block; }
+  .pace-notice {
+    border-radius: var(--radius);
+    padding: 0.75rem 1.1rem;
+    font-size: 0.82rem;
+    font-weight: 500;
+    border-left: 3px solid;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .pace-notice.beginner { background: rgba(0,229,160,0.08); border-color: var(--beginner); color: var(--beginner); }
+  .pace-notice.average  { background: rgba(0,200,255,0.08); border-color: var(--average); color: var(--average); }
+  .pace-notice.advanced { background: rgba(180,110,245,0.08); border-color: var(--advanced); color: var(--advanced); }
+
+  /* ── NAV TABS ── */
+  .nav-wrapper {
+    max-width: 1100px;
+    margin: 2rem auto 0;
+    padding: 0 2rem;
+  }
+  .tab-nav {
+    display: flex;
+    gap: 0.25rem;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.35rem;
+    overflow-x: auto;
+  }
+  .tab-btn {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.55rem 1.1rem;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+    white-space: nowrap;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .tab-btn:hover { color: var(--text); background: var(--surface); }
+  .tab-btn.active { background: var(--accent); color: #000; font-weight: 700; }
+
+  /* ── MAIN CONTENT ── */
+  .content-area {
+    max-width: 1100px;
+    margin: 1.5rem auto 4rem;
+    padding: 0 2rem;
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; animation: fadeUp 0.3s ease; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .card-icon {
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+  .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.2rem; }
+  .card-sub { font-size: 0.78rem; color: var(--muted); }
+
+  /* ── PACE TIERS ── */
+  .tier {
+    border-radius: 8px;
+    padding: 1rem 1.1rem;
+    margin-top: 0.75rem;
+    font-size: 0.87rem;
+    line-height: 1.65;
+    border-left: 3px solid;
+    display: none;
+  }
+  .tier.beginner { background: rgba(0,229,160,0.06); border-color: var(--beginner); }
+  .tier.average  { background: rgba(0,200,255,0.06); border-color: var(--average); }
+  .tier.advanced { background: rgba(180,110,245,0.06); border-color: var(--advanced); }
+  .tier-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .tier.beginner .tier-label { color: var(--beginner); }
+  .tier.average  .tier-label { color: var(--average); }
+  .tier.advanced .tier-label { color: var(--advanced); }
+
+  body.pace-beginner .tier.beginner,
+  body.pace-average  .tier.average,
+  body.pace-advanced .tier.advanced { display: block; }
+
+  /* ── ANALOGY BOX ── */
+  .analogy {
+    background: linear-gradient(135deg, rgba(255,183,64,0.06), rgba(255,183,64,0.03));
+    border: 1px solid rgba(255,183,64,0.25);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.25rem;
+    margin: 1rem 0;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+  .analogy-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 0.1rem; }
+  .analogy-body { font-size: 0.88rem; color: #d9c07a; line-height: 1.65; }
+  .analogy-body strong { color: var(--amber); }
+
+  /* ── SERVICE MODEL CARDS ── */
+  .service-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .service-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+    cursor: pointer;
+  }
+  .service-card:hover { transform: translateY(-2px); }
+  .service-card.selected { border-color: var(--accent); }
+  .sc-header {
+    padding: 1.1rem 1.25rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .sc-badge {
+    display: inline-block;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+  }
+  .iaas .sc-badge { background: rgba(0,229,160,0.15); color: var(--green); }
+  .paas .sc-badge { background: rgba(0,200,255,0.15); color: var(--accent); }
+  .saas .sc-badge { background: rgba(180,110,245,0.15); color: var(--advanced); }
+  .sc-name { font-size: 1rem; font-weight: 700; }
+  .sc-full { font-size: 0.75rem; color: var(--muted); }
+  .sc-body { padding: 1.1rem 1.25rem; }
+  .sc-tagline { font-size: 0.88rem; font-weight: 600; margin-bottom: 0.75rem; }
+  .sc-list { list-style: none; }
+  .sc-list li {
+    font-size: 0.82rem;
+    color: var(--muted);
+    padding: 0.3rem 0;
+    border-bottom: 1px solid rgba(42,61,90,0.5);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .sc-list li::before { content: '→'; color: var(--accent); flex-shrink: 0; }
+  .sc-list li:last-child { border-bottom: none; }
+
+  /* ── COMPARISON TABLE ── */
+  .compare-wrap { overflow-x: auto; margin-top: 1.5rem; }
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    min-width: 520px;
+  }
+  .compare-table th {
+    background: var(--surface2);
+    padding: 0.7rem 1rem;
+    text-align: left;
+    font-weight: 700;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+  .compare-table th:first-child { color: var(--muted); font-weight: 500; }
+  .compare-table td {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid rgba(42,61,90,0.5);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .compare-table tr:hover td { background: rgba(42,61,90,0.2); }
+  .check-yes { color: var(--green); font-size: 1rem; }
+  .check-no  { color: var(--muted); font-size: 1rem; }
+  .check-partial { color: var(--amber); font-size: 1rem; }
+
+  /* ── PROVIDER CARDS ── */
+  .provider-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .provider-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    transition: transform 0.2s;
+  }
+  .provider-card:hover { transform: translateY(-2px); }
+  .provider-logo {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+  .provider-name { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .provider-tagline { font-size: 0.78rem; color: var(--muted); margin-bottom: 0.75rem; }
+  .provider-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+  .chip {
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    background: var(--surface2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  /* ── KEY POINTS ── */
+  .key-points {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.75rem;
+    margin: 1rem 0;
+  }
+  .kp {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+  }
+  .kp-icon { font-size: 1.5rem; margin-bottom: 0.4rem; }
+  .kp-label { font-size: 0.75rem; font-weight: 700; margin-bottom: 0.25rem; }
+  .kp-desc { font-size: 0.72rem; color: var(--muted); line-height: 1.45; }
+
+  /* ── ACTIVITIES ── */
+  .activity-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 0.9rem;
+    overflow: hidden;
+  }
+  .activity-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .activity-header:hover { background: var(--surface2); }
+  /* Subtle affordance label on collapsed activities */
+  .activity-card:not(.open) .activity-header::after {
+    content: 'click to expand';
+    font-size: 0.6rem;
+    color: var(--muted);
+    opacity: 0.5;
+    margin-left: 0.25rem;
+    letter-spacing: 0.04em;
+    pointer-events: none;
+  }
+  .activity-card.open .activity-header::after { content: ''; }
+  .activity-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #000;
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .activity-title { font-size: 0.9rem; font-weight: 600; flex: 1; }
+  .activity-tags { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+  .tag {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .tag-beginner  { background: rgba(0,229,160,0.15); color: var(--beginner); }
+  .tag-average   { background: rgba(0,200,255,0.15); color: var(--average); }
+  .tag-advanced  { background: rgba(180,110,245,0.15); color: var(--advanced); }
+  .tag-group     { background: rgba(255,183,64,0.12); color: var(--amber); }
+  .tag-solo      { background: rgba(255,94,122,0.12); color: var(--red); }
+  .activity-chevron { color: var(--muted); transition: transform 0.2s; font-size: 0.9rem; }
+  .activity-card.open .activity-chevron { transform: rotate(90deg); }
+  .activity-body {
+    display: none;
+    padding: 0 1.25rem 1.25rem;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: #c2cfe0;
+    border-top: 1px solid var(--border);
+  }
+  .activity-card.open .activity-body { display: block; }
+  .activity-body ul { padding-left: 1.25rem; margin-top: 0.5rem; }
+  .activity-body li { margin-bottom: 0.35rem; }
+  .activity-body .tier { margin-top: 0.75rem; }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .section-desc { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.6; }
+
+  /* ── INFO CALLOUT ── */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem;
+    margin: 1rem 0;
+    font-size: 0.84rem;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    line-height: 1.65;
+  }
+  .callout-info { background: rgba(0,200,255,0.07); border: 1px solid rgba(0,200,255,0.2); color: #a0d8f0; }
+  .callout-tip  { background: rgba(0,229,160,0.07); border: 1px solid rgba(0,229,160,0.2); color: #8ee8c4; }
+  .callout-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 0.05rem; }
+
+  /* ── FOOTER ── */
+  .page-footer {
+    border-top: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 600px) {
+    .header-title { display: none; }
+    .hero { padding: 2rem 1.5rem; }
+    .content-area, .nav-wrapper, .pace-banner { padding: 0 1rem; }
+    .service-grid, .provider-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body class="pace-beginner">
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <span class="week-badge">Week 1</span>
+      <span class="header-title">Foundations of Cloud Computing</span>
+    </div>
+    <div class="pace-bar">
+      <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner')">🌱 Beginner</button>
+      <button class="pace-btn" data-pace="average" onclick="setPace('average')">⚡ Average</button>
+      <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced')">🚀 Advanced</button>
+    </div>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <span class="hero-label">Cloud Computing · Week 1</span>
+  <h1>Foundations of<br>Cloud Computing</h1>
+  <p>Understand what cloud computing is, explore service models, compare major providers, and see how it all connects to real-world applications.</p>
+  <div class="hero-meta">
+    <span class="hero-chip"><span>📚</span> 4 Topics</span>
+    <span class="hero-chip"><span>🎯</span> 5 Activities</span>
+    <span class="hero-chip"><span>🕐</span> Week 1</span>
+    <span class="hero-chip"><span>⚖️</span> 3 Pace Levels</span>
+  </div>
+</section>
+
+<!-- ── PACE BANNER ── -->
+<div class="pace-banner show" id="paceBanner">
+  <div class="pace-notice beginner" id="paceNotice">
+    <span>🌱</span>
+    <span><strong>Beginner mode:</strong> Focus on key concepts and real-world analogies. No prior IT knowledge assumed. Take it one idea at a time.</span>
+  </div>
+</div>
+
+<!-- ── NAV TABS ── -->
+<div class="nav-wrapper">
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="showTab('intro', this)">☁️ Introduction</button>
+    <button class="tab-btn" onclick="showTab('models', this)">🔧 Service Models</button>
+    <button class="tab-btn" onclick="showTab('providers', this)">🌐 Cloud Providers</button>
+    <button class="tab-btn" onclick="showTab('activities', this)">🎯 Activities</button>
+  </div>
+</div>
+
+<!-- ── CONTENT ── -->
+<main class="content-area">
+
+  <!-- TAB 1: INTRODUCTION -->
+  <section class="tab-panel active" id="tab-intro">
+    <div class="section-title">☁️ What is Cloud Computing?</div>
+    <p class="section-desc">Before diving into technical details, let's build an intuition for what cloud computing actually means — and why everyone's talking about it.</p>
+
+    <!-- ═══ MEDIA 2: Cloud Request Flow Animation ═══ -->
+    <style>
+    #media-flow { margin-bottom: 1.25rem; }
+    #media-flow .flw-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem;
+    }
+    #media-flow .flw-title { font-size: 1.05rem; font-weight: 700; color: var(--text); }
+    #media-flow .flw-sub   { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
+    #media-flow .flw-speeds {
+      display: flex; align-items: center; gap: 0.4rem;
+      font-size: 0.72rem; color: var(--muted);
+    }
+    #media-flow .flw-spd {
+      font-family: 'Sora', sans-serif; font-size: 0.68rem; font-weight: 600;
+      padding: 0.2rem 0.6rem; border-radius: 5px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--muted); cursor: pointer; transition: all 0.15s;
+    }
+    #media-flow .flw-spd:hover { color: var(--text); border-color: var(--muted); }
+    #media-flow .flw-spd.on   { background: rgba(0,200,255,0.12); border-color: var(--accent); color: var(--accent); }
+    #media-flow .flw-stage {
+      padding: 1.25rem 0.5rem 0.75rem;
+      overflow-x: auto;
+    }
+    #media-flow .flw-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0; min-width: 480px;
+    }
+    #media-flow .flw-node {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0.35rem; width: 96px; flex-shrink: 0;
+      padding: 0.75rem 0.5rem; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--surface2);
+      transition: border-color 0.3s, background 0.3s; position: relative;
+      cursor: default;
+    }
+    #media-flow .flw-node.active {
+      border-color: var(--accent); background: rgba(0,200,255,0.07);
+    }
+    #media-flow .flw-node.done {
+      border-color: rgba(0,229,160,0.5); background: rgba(0,229,160,0.05);
+    }
+    #media-flow .flw-icon {
+      font-size: 1.6rem; line-height: 1;
+      transition: transform 0.25s;
+    }
+    #media-flow .flw-node.active .flw-icon {
+      animation: flwBounce 0.35s ease-out;
+    }
+    @keyframes flwBounce {
+      0%   { transform: scale(1); }
+      45%  { transform: scale(1.25); }
+      100% { transform: scale(1); }
+    }
+    #media-flow .flw-nlabel {
+      font-size: 0.7rem; font-weight: 600; color: var(--muted);
+      text-align: center; line-height: 1.3; transition: color 0.3s;
+    }
+    #media-flow .flw-node.active .flw-nlabel { color: var(--accent); }
+    #media-flow .flw-node.done  .flw-nlabel { color: var(--green); }
+    #media-flow .flw-check {
+      position: absolute; top: 4px; right: 6px;
+      font-size: 0.65rem; font-weight: 700; color: var(--green);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    #media-flow .flw-node.done .flw-check { opacity: 1; }
+    #media-flow .flw-conn {
+      flex: 1; height: 2px; position: relative;
+      background: var(--border); overflow: visible; min-width: 20px;
+    }
+    #media-flow .flw-conn::after {
+      content: ''; display: block;
+      position: absolute; top: -4px; right: -5px;
+      width: 0; height: 0;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      border-left: 7px solid var(--border);
+      transition: border-left-color 0.3s;
+    }
+    #media-flow .flw-conn.done::after { border-left-color: var(--green); }
+    #media-flow .flw-pulse {
+      position: absolute; top: 0; left: 0;
+      height: 100%; width: 100%;
+      background: var(--accent);
+      transform: scaleX(0); transform-origin: left center;
+    }
+    #media-flow .flw-conn.running .flw-pulse {
+      animation: flwLine var(--dur, 0.4s) ease-out forwards;
+    }
+    #media-flow .flw-conn.done .flw-pulse {
+      transform: scaleX(1);
+      background: var(--green);
+    }
+    @keyframes flwLine {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+    #media-flow .flw-dots {
+      display: flex; gap: 0.5rem; justify-content: center;
+      align-items: center; margin: 0.75rem 0 0.5rem;
+    }
+    #media-flow .flw-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--border); transition: background 0.3s, transform 0.3s;
+    }
+    #media-flow .flw-dot.active  { background: var(--accent); transform: scale(1.3); }
+    #media-flow .flw-dot.done    { background: var(--green); }
+    #media-flow .flw-step-lbl {
+      font-size: 0.72rem; color: var(--muted); text-align: center;
+    }
+    #media-flow .flw-detail {
+      display: none; margin-top: 0.85rem;
+      background: rgba(0,200,255,0.05);
+      border: 1px solid rgba(0,200,255,0.15);
+      border-radius: 10px; padding: 0.9rem 1.1rem;
+      animation: flwFadeIn 0.25s ease;
+    }
+    #media-flow .flw-detail.show { display: flex; gap: 0.85rem; align-items: flex-start; }
+    @keyframes flwFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    #media-flow .flw-d-icon { font-size: 1.8rem; flex-shrink: 0; }
+    #media-flow .flw-d-title {
+      font-size: 0.92rem; font-weight: 700; color: var(--accent);
+      margin-bottom: 0.35rem;
+    }
+    #media-flow .flw-d-text {
+      font-size: 0.84rem; color: #c2cfe0; line-height: 1.65;
+    }
+    #media-flow .flw-d-code {
+      display: inline-block; margin-top: 0.45rem;
+      font-family: 'Fira Code', monospace; font-size: 0.72rem;
+      background: rgba(0,0,0,0.3); color: var(--accent);
+      padding: 0.15rem 0.5rem; border-radius: 4px;
+    }
+    #media-flow .flw-ctrls {
+      display: flex; gap: 0.65rem; margin-top: 1rem; justify-content: center;
+    }
+    #media-flow .flw-btn {
+      font-family: 'Sora', sans-serif; font-size: 0.8rem; font-weight: 600;
+      padding: 0.45rem 1.25rem; border-radius: 7px;
+      border: 1px solid var(--border); background: var(--surface2);
+      color: var(--text); cursor: pointer; transition: all 0.15s;
+    }
+    #media-flow .flw-btn:hover { border-color: var(--accent); color: var(--accent); }
+    #media-flow .flw-btn.primary {
+      background: rgba(0,200,255,0.12); border-color: var(--accent); color: var(--accent);
+    }
+    </style>
+
+    <div id="media-flow" class="card">
+      <div class="flw-header">
+        <div>
+          <div class="flw-title">How the cloud actually works</div>
+          <div class="flw-sub">Watch what happens when you open CloudEats — step by step</div>
+        </div>
+        <div class="flw-speeds">
+          Speed:
+          <button class="flw-spd" id="flwSpdSlow" onclick="flwSetSpeed(this,900)">Slow</button>
+          <button class="flw-spd on" id="flwSpdNorm" onclick="flwSetSpeed(this,480)">Normal</button>
+          <button class="flw-spd" id="flwSpdFast" onclick="flwSetSpeed(this,200)">Fast</button>
+        </div>
+      </div>
+
+      <div class="flw-stage">
+        <div class="flw-row" id="flwRow">
+          <div class="flw-node" id="flwN0"><div class="flw-icon">📱</div><div class="flw-nlabel">Your Phone</div><div class="flw-check">✓</div></div>
+          <div class="flw-conn" id="flwC0"><div class="flw-pulse"></div></div>
+          <div class="flw-node" id="flwN1"><div class="flw-icon">🌐</div><div class="flw-nlabel">Internet</div><div class="flw-check">✓</div></div>
+          <div class="flw-conn" id="flwC1"><div class="flw-pulse"></div></div>
+          <div class="flw-node" id="flwN2"><div class="flw-icon">☁️</div><div class="flw-nlabel">Cloud Servers</div><div class="flw-check">✓</div></div>
+          <div class="flw-conn" id="flwC2"><div class="flw-pulse"></div></div>
+          <div class="flw-node" id="flwN3"><div class="flw-icon">🗄️</div><div class="flw-nlabel">Database</div><div class="flw-check">✓</div></div>
+          <div class="flw-conn" id="flwC3"><div class="flw-pulse"></div></div>
+          <div class="flw-node" id="flwN4"><div class="flw-icon">🍔</div><div class="flw-nlabel">Food Menu!</div><div class="flw-check">✓</div></div>
+        </div>
+      </div>
+
+      <div class="flw-dots">
+        <div class="flw-dot" id="flwD0"></div>
+        <div class="flw-dot" id="flwD1"></div>
+        <div class="flw-dot" id="flwD2"></div>
+        <div class="flw-dot" id="flwD3"></div>
+        <div class="flw-dot" id="flwD4"></div>
+        <div class="flw-step-lbl" id="flwStepLbl">&nbsp;</div>
+      </div>
+
+      <div class="flw-detail" id="flwDetail">
+        <div class="flw-d-icon" id="flwDIcon"></div>
+        <div>
+          <div class="flw-d-title" id="flwDTitle"></div>
+          <div class="flw-d-text"  id="flwDText"></div>
+          <div class="flw-d-code"  id="flwDCode"></div>
+        </div>
+      </div>
+
+      <div class="flw-ctrls">
+        <button class="flw-btn primary" id="flwPlayBtn" onclick="flwPlayPause()">▶ Play</button>
+        <button class="flw-btn" id="flwReplayBtn" style="display:none" onclick="flwReplay()">↺ Replay</button>
+      </div>
+    </div>
+
+    <script>
+    (function(){
+      const steps = [
+        {
+          icon:'📱', node:'Your Phone', title:'You open CloudEats',
+          b:'Your phone sends a message over the internet asking for the food menu.',
+          a:'Browser sends an HTTP GET request to api.cloudeats.com/menu',
+          x:'TCP/TLS handshake → HTTP/2 GET /api/v1/menu — auth token in headers'
+        },
+        {
+          icon:'🌐', node:'Internet', title:'Request travels the network',
+          b:'Your request zips through cables and wireless towers to reach the cloud.',
+          a:'DNS resolves the domain → routes through your ISP → reaches the CDN edge',
+          x:'BGP selects optimal path → CDN PoP → origin pull with TLS termination'
+        },
+        {
+          icon:'☁️', node:'Cloud Servers', title:'Cloud receives and processes',
+          b:'Cloud servers handle your request — more can appear instantly if many people are ordering.',
+          a:'Load balancer routes to an app server → business logic runs → DB query prepared',
+          x:'AWS ALB → ECS container (auto-scaled) → Node.js handler → connection pool'
+        },
+        {
+          icon:'🗄️', node:'Database', title:'Database answers the query',
+          b:'All the menu items are stored here — the database finds and sends them back.',
+          a:"SQL: SELECT * FROM menu_items WHERE active=1 → results returned as JSON",
+          x:'MySQL read replica → cache miss → Redis write-through → ~12ms query'
+        },
+        {
+          icon:'🍔', node:'Food Menu!', title:'Your menu appears',
+          b:'The menu data travels back and shows on your screen — in under 1 second!',
+          a:'JSON response → browser parses data → DOM updated with menu cards',
+          x:'HTTP 200 → JSON.parse → React state update → vDOM diff → render ~340ms total'
+        }
+      ];
+
+      let flwCurStep = -1;
+      let flwRunning = false;
+      let flwSpeed   = 480;
+      let flwTimer   = null;
+      let flwPaused  = false;
+
+      window.flwSetSpeed = function(btn, ms) {
+        flwSpeed = ms;
+        document.querySelectorAll('.flw-spd').forEach(b => b.classList.remove('on'));
+        btn.classList.add('on');
+      };
+
+      function flwGetPace() {
+        if (document.body.classList.contains('pace-advanced')) return 'x';
+        if (document.body.classList.contains('pace-average'))  return 'a';
+        return 'b';
+      }
+
+      function flwActivateNode(i) {
+        const prev = document.getElementById('flwN' + (i-1));
+        if (prev) { prev.classList.remove('active'); prev.classList.add('done'); }
+        const prev2 = document.getElementById('flwD' + (i-1));
+        if (prev2) { prev2.classList.remove('active'); prev2.classList.add('done'); }
+
+        const node = document.getElementById('flwN' + i);
+        const dot  = document.getElementById('flwD' + i);
+        if (node) node.classList.add('active');
+        if (dot)  dot.classList.add('active');
+
+        const s = steps[i];
+        const pace = flwGetPace();
+        const detail = document.getElementById('flwDetail');
+        document.getElementById('flwDIcon').textContent  = s.icon;
+        document.getElementById('flwDTitle').textContent = s.title;
+        document.getElementById('flwDText').textContent  = s[pace];
+        const codeEl = document.getElementById('flwDCode');
+        if (pace !== 'b') { codeEl.textContent = s[pace === 'a' ? 'a' : 'x']; codeEl.style.display = 'inline-block'; }
+        else { codeEl.style.display = 'none'; }
+        detail.classList.add('show');
+
+        document.getElementById('flwStepLbl').textContent = 'Step ' + (i+1) + ' of 5';
+      }
+
+      function flwAnimateConnector(i, cb) {
+        const conn = document.getElementById('flwC' + i);
+        if (!conn) { cb(); return; }
+        const dur = Math.round(flwSpeed * 0.75);
+        conn.querySelector('.flw-pulse').style.animationDuration = dur + 'ms';
+        conn.style.setProperty('--dur', dur + 'ms');
+        conn.classList.add('running');
+        setTimeout(() => {
+          conn.classList.remove('running');
+          conn.classList.add('done');
+          cb();
+        }, dur);
+      }
+
+      function flwRunStep() {
+        if (!flwRunning) return;
+        flwCurStep++;
+
+        if (flwCurStep >= steps.length) {
+          // finalize last node to done state
+          const last = document.getElementById('flwN' + (steps.length-1));
+          const lastd = document.getElementById('flwD' + (steps.length-1));
+          if (last) { last.classList.remove('active'); last.classList.add('done'); }
+          if (lastd){ lastd.classList.remove('active'); lastd.classList.add('done'); }
+          document.getElementById('flwStepLbl').textContent = 'Complete — menu loaded!';
+          flwRunning = false;
+          document.getElementById('flwPlayBtn').style.display  = 'none';
+          document.getElementById('flwReplayBtn').style.display = 'inline-block';
+          return;
+        }
+
+        flwActivateNode(flwCurStep);
+
+        if (flwCurStep < steps.length - 1) {
+          flwTimer = setTimeout(() => {
+            flwAnimateConnector(flwCurStep, () => {
+              flwTimer = setTimeout(flwRunStep, flwSpeed * 0.25);
+            });
+          }, flwSpeed);
+        } else {
+          flwTimer = setTimeout(flwRunStep, flwSpeed * 1.2);
+        }
+      }
+
+      window.flwPlayPause = function() {
+        const btn = document.getElementById('flwPlayBtn');
+        if (!flwRunning && flwCurStep === -1) {
+          flwRunning = true;
+          btn.textContent = '⏸ Pause';
+          flwRunStep();
+        } else if (flwRunning) {
+          flwRunning = false;
+          clearTimeout(flwTimer);
+          btn.textContent = '▶ Resume';
+        } else {
+          flwRunning = true;
+          btn.textContent = '⏸ Pause';
+          flwRunStep();
+        }
+      };
+
+      window.flwReplay = function() {
+        clearTimeout(flwTimer);
+        flwCurStep = -1;
+        flwRunning = false;
+        for (let i=0; i<5; i++) {
+          const n = document.getElementById('flwN'+i);
+          const d = document.getElementById('flwD'+i);
+          if (n) n.classList.remove('active','done');
+          if (d) d.classList.remove('active','done');
+        }
+        for (let i=0; i<4; i++) {
+          const c = document.getElementById('flwC'+i);
+          if (c) {
+            c.classList.remove('running','done');
+            const p = c.querySelector('.flw-pulse');
+            if (p) { p.style.animationDuration=''; p.style.transform=''; }
+          }
+        }
+        document.getElementById('flwDetail').classList.remove('show');
+        document.getElementById('flwStepLbl').innerHTML = '&nbsp;';
+        document.getElementById('flwReplayBtn').style.display = 'none';
+        const btn = document.getElementById('flwPlayBtn');
+        btn.style.display = 'inline-block';
+        btn.textContent = '▶ Play';
+      };
+    })();
+    </script>
+    <!-- ═══ END MEDIA 2 ═══ -->
+
+    <div class="analogy">
+      <span class="analogy-icon">💡</span>
+      <div class="analogy-body">
+        <strong>The Electricity Analogy:</strong> You don't generate your own electricity at home — you plug into a shared grid and pay for what you use. Cloud computing works the same way. Instead of owning and managing your own servers, you access shared computing resources (power, storage, software) over the internet, on demand, and pay only for what you consume.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(0,200,255,0.1)">☁️</div>
+        <div>
+          <div class="card-title">Cloud Computing Defined</div>
+          <div class="card-sub">The core idea</div>
+        </div>
+      </div>
+
+      <div class="tier beginner">
+        <div class="tier-label">🌱 Beginner</div>
+        Cloud computing means using other people's computers (servers) over the internet. Instead of buying expensive hardware, you <em>rent</em> computing power when you need it and pay only for what you use — like renting a car instead of buying one. The three key ideas are: <strong>on-demand access</strong> (available anytime), <strong>scalability</strong> (get more or less as needed), and <strong>pay-as-you-go</strong> (no large upfront costs).
+      </div>
+
+      <div class="tier average">
+        <div class="tier-label">⚡ Average</div>
+        Cloud computing is the delivery of computing services — servers, storage, databases, networking, software — over the internet ("the cloud"). The key characteristics are: <strong>on-demand self-service</strong> (provision resources without human interaction), <strong>broad network access</strong> (available over the internet from any device), <strong>resource pooling</strong> (shared among multiple users), <strong>rapid elasticity</strong> (scale up/down quickly), and <strong>measured service</strong> (pay for what you use). These are the NIST 5 essential characteristics.
+      </div>
+
+      <div class="tier advanced">
+        <div class="tier-label">🚀 Advanced</div>
+        Cloud computing follows the NIST SP 800-145 definition. Beyond consumption, understand the economic driver: CapEx (capital expenditure) shifts to OpEx (operational expenditure), enabling businesses to avoid the depreciation cycle of on-premises hardware. The elasticity model enables both horizontal scaling (more instances) and vertical scaling (larger instances). Consider also the shared responsibility model — the provider manages infrastructure, while tenants manage configuration and data. Critically evaluate trade-offs: vendor lock-in, latency, compliance (GDPR, PDPA), and data sovereignty issues.
+      </div>
+    </div>
+
+    <div class="key-points">
+      <div class="kp">
+        <div class="kp-icon">📱</div>
+        <div class="kp-label">On-Demand</div>
+        <div class="kp-desc">Resources available instantly, any time you need them</div>
+      </div>
+      <div class="kp">
+        <div class="kp-icon">📈</div>
+        <div class="kp-label">Scalability</div>
+        <div class="kp-desc">Grow or shrink resources as your needs change</div>
+      </div>
+      <div class="kp">
+        <div class="kp-icon">💳</div>
+        <div class="kp-label">Pay-as-you-go</div>
+        <div class="kp-desc">Only pay for what you actually use — no waste</div>
+      </div>
+      <div class="kp">
+        <div class="kp-icon">🌍</div>
+        <div class="kp-label">Global Access</div>
+        <div class="kp-desc">Access your resources from anywhere in the world</div>
+      </div>
+    </div>
+
+    <!-- ═══ MEDIA 3: Cloud vs Traditional IT Scaling Simulation ═══ -->
+    <style>
+    #media-scale { margin-bottom: 1.25rem; }
+    #media-scale .scl-sub { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
+
+    #media-scale .scl-slider-wrap { margin: 1.25rem 0 1rem; }
+    #media-scale .scl-slider-top {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 0.5rem;
+    }
+    #media-scale .scl-slider-label { font-size: 0.78rem; color: var(--muted); }
+    #media-scale .scl-user-count {
+      font-size: 1.4rem; font-weight: 700; color: var(--text);
+      transition: color 0.3s;
+    }
+    #media-scale .scl-user-count.danger { color: var(--red); }
+    #media-scale .scl-user-unit { font-size: 0.75rem; color: var(--muted); margin-left: 3px; }
+    #media-scale input[type=range] { width: 100%; }
+    #media-scale .scl-ticks {
+      display: flex; justify-content: space-between;
+      padding: 0 2px; margin-top: 0.3rem;
+    }
+    #media-scale .scl-tick {
+      font-size: 0.62rem; color: var(--muted); text-align: center; min-width: 28px;
+    }
+    #media-scale .scl-tick.active { color: var(--accent); font-weight: 600; }
+
+    #media-scale .scl-panels {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;
+    }
+    #media-scale .scl-panel {
+      border: 1px solid var(--border); border-radius: 10px;
+      background: var(--surface2); overflow: hidden;
+      transition: border-color 0.4s;
+    }
+    #media-scale .scl-panel.danger { border-color: rgba(255,94,122,0.5); }
+    #media-scale .scl-panel-head {
+      padding: 0.6rem 0.85rem; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    #media-scale .scl-pname { font-size: 0.8rem; font-weight: 700; color: var(--text); }
+    #media-scale .scl-ptag {
+      font-size: 0.62rem; font-weight: 600; padding: 0.1rem 0.45rem;
+      border-radius: 20px; letter-spacing: 0.05em; text-transform: uppercase;
+      margin-left: auto;
+    }
+    #media-scale .scl-ptag.fixed { background: rgba(107,127,160,0.15); color: var(--muted); border: 1px solid rgba(107,127,160,0.2); }
+    #media-scale .scl-ptag.elastic { background: rgba(0,229,160,0.12); color: var(--green); border: 1px solid rgba(0,229,160,0.25); }
+
+    #media-scale .scl-servers-area {
+      padding: 0.75rem; min-height: 90px;
+      display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;
+    }
+    #media-scale .scl-srv {
+      width: 34px; height: 46px; border-radius: 5px; border: 1.5px solid;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: flex-start; padding-top: 7px; gap: 5px;
+      transition: border-color 0.35s, background 0.35s;
+      position: relative;
+    }
+    #media-scale .scl-srv-led {
+      width: 7px; height: 7px; border-radius: 50%; transition: background 0.35s;
+    }
+    #media-scale .scl-srv-lines {
+      display: flex; flex-direction: column; gap: 3px; width: 20px;
+    }
+    #media-scale .scl-srv-line {
+      height: 2px; border-radius: 1px; opacity: 0.5; transition: background 0.35s;
+    }
+
+    #media-scale .scl-srv.s-ok     { border-color: rgba(0,229,160,0.4); background: rgba(0,229,160,0.06); }
+    #media-scale .scl-srv.s-ok .scl-srv-led   { background: var(--green); }
+    #media-scale .scl-srv.s-ok .scl-srv-line  { background: var(--green); }
+
+    #media-scale .scl-srv.s-strain  { border-color: rgba(255,183,64,0.5); background: rgba(255,183,64,0.07); }
+    #media-scale .scl-srv.s-strain .scl-srv-led  { background: var(--amber); }
+    #media-scale .scl-srv.s-strain .scl-srv-line { background: var(--amber); }
+
+    #media-scale .scl-srv.s-warn    { border-color: rgba(255,130,0,0.5); background: rgba(255,130,0,0.07); }
+    #media-scale .scl-srv.s-warn .scl-srv-led   { background: #ff8200; }
+    #media-scale .scl-srv.s-warn .scl-srv-line  { background: #ff8200; }
+
+    #media-scale .scl-srv.s-over    { border-color: rgba(255,94,122,0.6); background: rgba(255,94,122,0.09); }
+    #media-scale .scl-srv.s-over .scl-srv-led   { background: var(--red); }
+    #media-scale .scl-srv.s-over .scl-srv-line  { background: var(--red); }
+
+    #media-scale .scl-srv.s-crash   { border-color: rgba(255,94,122,0.8); background: rgba(255,94,122,0.14); opacity: 0.6; }
+    #media-scale .scl-srv.s-crash .scl-srv-led  { background: var(--red); }
+    #media-scale .scl-srv.s-crash .scl-srv-line { background: var(--red); }
+
+    #media-scale .scl-srv.s-cloud   { border-color: rgba(0,200,255,0.45); background: rgba(0,200,255,0.07); }
+    #media-scale .scl-srv.s-cloud .scl-srv-led  { background: var(--accent); }
+    #media-scale .scl-srv.s-cloud .scl-srv-line { background: var(--accent); }
+
+    @keyframes sclPopin  { from { transform: scale(0.1); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    @keyframes sclPopout { from { transform: scale(1);   opacity: 1; } to { transform: scale(0.1); opacity: 0; } }
+    @keyframes sclShake  { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-4px)} 40%{transform:translateX(4px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+    #media-scale .scl-srv.new    { animation: sclPopin 0.25s ease-out; }
+    #media-scale .scl-panel.shaking .scl-servers-area { animation: sclShake 0.45s ease-in-out; }
+
+    #media-scale .scl-stats {
+      padding: 0.55rem 0.85rem; border-top: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 0.3rem;
+    }
+    #media-scale .scl-stat-row { display: flex; justify-content: space-between; align-items: center; }
+    #media-scale .scl-stat-key { font-size: 0.72rem; color: var(--muted); }
+    #media-scale .scl-stat-val {
+      font-size: 0.75rem; font-weight: 600; color: var(--text);
+      font-family: 'Fira Code', monospace; transition: color 0.3s;
+    }
+    #media-scale .scl-stat-val.bad { color: var(--red); }
+    #media-scale .scl-stat-val.good { color: var(--green); }
+
+    #media-scale .scl-status-bar {
+      padding: 0.45rem 0.85rem; border-top: 1px solid var(--border);
+      font-size: 0.74rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem;
+      transition: color 0.3s; min-height: 34px;
+    }
+    #media-scale .scl-status-bar.st-ok     { color: var(--green); }
+    #media-scale .scl-status-bar.st-strain { color: var(--amber); }
+    #media-scale .scl-status-bar.st-warn   { color: #ff8200; }
+    #media-scale .scl-status-bar.st-over   { color: var(--red); }
+    #media-scale .scl-status-bar.st-crash  { color: var(--red); }
+    #media-scale .scl-status-bar.st-cloud  { color: var(--green); }
+
+    #media-scale .scl-insight {
+      border-radius: 8px; padding: 0.7rem 0.9rem;
+      font-size: 0.82rem; line-height: 1.6; margin-bottom: 0.75rem;
+      border-left: 3px solid; display: none;
+    }
+    #media-scale .scl-insight.show { display: block; }
+    #media-scale .scl-insight.ok      { background: rgba(0,229,160,0.06); border-color: var(--green); color: #8ee8c4; }
+    #media-scale .scl-insight.warn    { background: rgba(255,183,64,0.07); border-color: var(--amber); color: #d9c07a; }
+    #media-scale .scl-insight.danger  { background: rgba(255,94,122,0.07); border-color: var(--red);   color: #f09090; }
+
+    #media-scale .scl-pace-note {
+      font-size: 0.82rem; line-height: 1.65; padding: 0.7rem 0.9rem;
+      border-radius: 8px; border-left: 3px solid; margin-top: 0.75rem; display: none;
+    }
+    #media-scale .scl-pace-note.beginner { display: block; background: rgba(0,229,160,0.06); border-color: var(--beginner); color: #8ee8c4; }
+    body.pace-average  #media-scale .scl-pace-note.beginner { display: none; }
+    body.pace-advanced #media-scale .scl-pace-note.beginner { display: none; }
+    body.pace-average  #media-scale .scl-pace-note.average  { display: block; background: rgba(0,200,255,0.06); border-color: var(--average);  color: #a0d8f0; }
+    body.pace-advanced #media-scale .scl-pace-note.advanced { display: block; background: rgba(180,110,245,0.06); border-color: var(--advanced); color: #c5a8f5; }
+
+    #media-scale .scl-advanced-row {
+      display: none; gap: 1rem; margin-top: 0.5rem; padding-top: 0.5rem;
+      border-top: 1px solid var(--border);
+    }
+    body.pace-advanced #media-scale .scl-advanced-row { display: grid; grid-template-columns: 1fr 1fr; }
+    #media-scale .scl-adv-cell { font-size: 0.75rem; }
+    #media-scale .scl-adv-label { color: var(--muted); margin-bottom: 0.25rem; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+    #media-scale .scl-adv-val { font-family: 'Fira Code', monospace; color: var(--text); font-size: 0.73rem; }
+    #media-scale .scl-adv-val.red  { color: var(--red); }
+    #media-scale .scl-adv-val.teal { color: var(--accent); }
+
+    @media (max-width: 560px) {
+      #media-scale .scl-panels { grid-template-columns: 1fr; }
+      body.pace-advanced #media-scale .scl-advanced-row { grid-template-columns: 1fr; }
+    }
+    </style>
+
+    <div id="media-scale" class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(0,229,160,0.1)">🏢</div>
+        <div>
+          <div class="card-title">Cloud vs Traditional IT</div>
+          <div class="card-sub scl-sub">Drag the slider — watch what happens when traffic spikes</div>
+        </div>
+      </div>
+
+      <div class="scl-slider-wrap">
+        <div class="scl-slider-top">
+          <span class="scl-slider-label">Concurrent users</span>
+          <span><span class="scl-user-count" id="sclUserCount">10</span><span class="scl-user-unit">users</span></span>
+        </div>
+        <input type="range" min="0" max="5" step="1" value="0" id="sclSlider" oninput="sclUpdate(this.value)">
+        <div class="scl-ticks">
+          <span class="scl-tick active" id="sclTick0">10</span>
+          <span class="scl-tick" id="sclTick1">50</span>
+          <span class="scl-tick" id="sclTick2">100</span>
+          <span class="scl-tick" id="sclTick3">200</span>
+          <span class="scl-tick" id="sclTick4">500</span>
+          <span class="scl-tick" id="sclTick5">1,000</span>
+        </div>
+      </div>
+
+      <div class="scl-panels">
+        <!-- Traditional -->
+        <div class="scl-panel" id="sclTradPanel">
+          <div class="scl-panel-head">
+            <span class="scl-pname">Traditional IT</span>
+            <span class="scl-ptag fixed">Fixed capacity</span>
+          </div>
+          <div class="scl-servers-area" id="sclTradServers"></div>
+          <div class="scl-status-bar st-ok" id="sclTradStatus">● Handling requests fine</div>
+          <div class="scl-stats">
+            <div class="scl-stat-row">
+              <span class="scl-stat-key">Response time</span>
+              <span class="scl-stat-val good" id="sclTradMs">80 ms</span>
+            </div>
+            <div class="scl-stat-row">
+              <span class="scl-stat-key">Monthly cost (fixed)</span>
+              <span class="scl-stat-val" id="sclTradCost">$40 / mo</span>
+            </div>
+            <div class="scl-advanced-row">
+              <div class="scl-adv-cell">
+                <div class="scl-adv-label">Add a server</div>
+                <div class="scl-adv-val red" id="sclTradProvision">4–6 weeks + budget approval</div>
+              </div>
+              <div class="scl-adv-cell">
+                <div class="scl-adv-label">Idle cost</div>
+                <div class="scl-adv-val red">Paying 100% even at 0 load</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cloud -->
+        <div class="scl-panel" id="sclCloudPanel">
+          <div class="scl-panel-head">
+            <span class="scl-pname">Cloud (Auto-scale)</span>
+            <span class="scl-ptag elastic">Elastic</span>
+          </div>
+          <div class="scl-servers-area" id="sclCloudServers"></div>
+          <div class="scl-status-bar st-cloud" id="sclCloudStatus">● Scaled — all requests served</div>
+          <div class="scl-stats">
+            <div class="scl-stat-row">
+              <span class="scl-stat-key">Response time</span>
+              <span class="scl-stat-val good" id="sclCloudMs">80 ms</span>
+            </div>
+            <div class="scl-stat-row">
+              <span class="scl-stat-key">Cost right now</span>
+              <span class="scl-stat-val good" id="sclCloudCost">$0.03 / hr</span>
+            </div>
+            <div class="scl-advanced-row">
+              <div class="scl-adv-cell">
+                <div class="scl-adv-label">Add a server</div>
+                <div class="scl-adv-val teal">Automatic — &lt; 30 seconds</div>
+              </div>
+              <div class="scl-adv-cell">
+                <div class="scl-adv-label">Idle cost</div>
+                <div class="scl-adv-val teal">Near zero when quiet</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scl-insight ok show" id="sclInsight">
+        At 10 users both systems cope fine. The difference becomes clear as traffic grows — drag the slider right.
+      </div>
+
+      <div class="scl-pace-note beginner">
+        🌱 <strong>Traditional IT</strong> is like buying a car — you own it, you maintain it, it costs the same whether you drive it or not. <strong>Cloud</strong> is like Grab — you only pay for the rides you actually take, and you can book ten cars at once if you need them.
+      </div>
+      <div class="scl-pace-note average">
+        ⚡ This demonstrates <strong>elasticity</strong> — one of the five NIST cloud characteristics. Traditional infrastructure is statically provisioned for peak load (wasteful), while cloud resources scale horizontally on demand. The cost model shifts from CapEx (buy upfront) to OpEx (pay per use).
+      </div>
+      <div class="scl-pace-note advanced">
+        🚀 Auto-scaling policies (CPU threshold, request rate, custom CloudWatch metrics) trigger scale-out events. AWS EC2 Auto Scaling Groups use launch templates + target tracking to provision instances in &lt;60s. The TCO comparison here ignores egress costs, reserved instance discounts, and the operational overhead of managing scaling policies — evaluate those before drawing conclusions.
+      </div>
+    </div>
+
+    <script>
+    (function(){
+      const rows = [
+        { users:10,   tSrv:2, tSt:'ok',     tMsg:'● Handling requests fine',      tMs:'80 ms',   tCost:'$40 / mo', cSrv:1, cMs:'80 ms',  cCost:'$0.03 / hr' },
+        { users:50,   tSrv:2, tSt:'ok',     tMsg:'● Handling fine',               tMs:'150 ms',  tCost:'$40 / mo', cSrv:1, cMs:'90 ms',  cCost:'$0.04 / hr' },
+        { users:100,  tSrv:2, tSt:'strain', tMsg:'⚠ Slowing down...',             tMs:'420 ms',  tCost:'$40 / mo', cSrv:2, cMs:'95 ms',  cCost:'$0.08 / hr' },
+        { users:200,  tSrv:2, tSt:'warn',   tMsg:'⚠ Response degrading',          tMs:'900 ms',  tCost:'$40 / mo', cSrv:3, cMs:'100 ms', cCost:'$0.12 / hr' },
+        { users:500,  tSrv:2, tSt:'over',   tMsg:'✕ OVERLOADED — users see errors', tMs:'TIMEOUT', tCost:'$40 / mo', cSrv:5, cMs:'105 ms', cCost:'$0.20 / hr' },
+        { users:1000, tSrv:2, tSt:'crash',  tMsg:'✕ CRASHED — service down',      tMs:'FAILED',  tCost:'$40 / mo', cSrv:8, cMs:'110 ms', cCost:'$0.32 / hr' },
+      ];
+
+      const insights = [
+        { cls:'ok',     msg:'At 10 users both systems cope fine. The difference becomes clear as traffic grows — drag the slider right.' },
+        { cls:'ok',     msg:'Still manageable at 50 users. Traditional IT is coping — but the gap starts to open under heavier load.' },
+        { cls:'warn',   msg:'At 100 users the traditional server starts slowing down. Cloud spins up a second server automatically.' },
+        { cls:'warn',   msg:'200 users — traditional response time is nearly 1 second. Users are frustrated. Cloud quietly added a third server.' },
+        { cls:'danger', msg:'500 users — traditional server is completely overloaded. Users are seeing error pages. Cloud handled it with 5 servers.' },
+        { cls:'danger', msg:'1,000 users — traditional IT crashed. Cloud scaled to 8 servers and is still responding normally. This is elasticity.' },
+      ];
+
+      let prevCloudCount = 0;
+
+      function makeSrv(type, isNew) {
+        const d = document.createElement('div');
+        d.className = 'scl-srv s-' + type + (isNew ? ' new' : '');
+        d.innerHTML = '<div class="scl-srv-led"></div><div class="scl-srv-lines"><div class="scl-srv-line"></div><div class="scl-srv-line"></div></div>';
+        return d;
+      }
+
+      function renderServers(containerId, count, type, oldCount) {
+        const box = document.getElementById(containerId);
+        const existing = box.querySelectorAll('.scl-srv');
+        // update existing
+        existing.forEach(s => { s.className = 'scl-srv s-' + type; });
+        // add new
+        for (let i = existing.length; i < count; i++) {
+          box.appendChild(makeSrv(type, true));
+        }
+        // remove excess (animate out then remove)
+        for (let i = existing.length - 1; i >= count; i--) {
+          existing[i].style.animation = 'sclPopout 0.2s ease-in forwards';
+          const el = existing[i];
+          setTimeout(() => el.remove(), 220);
+        }
+      }
+
+      window.sclUpdate = function(val) {
+        const i  = parseInt(val);
+        const r  = rows[i];
+        const ins = insights[i];
+
+        // ticks
+        for (let t = 0; t <= 5; t++) {
+          const el = document.getElementById('sclTick' + t);
+          el.classList.toggle('active', t === i);
+        }
+
+        // user count display
+        const uc = document.getElementById('sclUserCount');
+        uc.textContent = r.users.toLocaleString();
+        uc.classList.toggle('danger', i >= 4);
+
+        // traditional panel
+        const tp = document.getElementById('sclTradPanel');
+        tp.classList.toggle('danger', i >= 4);
+        renderServers('sclTradServers', r.tSrv, r.tSt, 2);
+
+        const tStatus = document.getElementById('sclTradStatus');
+        tStatus.textContent = r.tMsg;
+        tStatus.className = 'scl-status-bar st-' + r.tSt;
+
+        const tMs = document.getElementById('sclTradMs');
+        tMs.textContent = r.tMs;
+        tMs.classList.toggle('bad', i >= 4);
+        tMs.classList.toggle('good', i < 2);
+
+        // shake on overload
+        if (i >= 4) {
+          tp.classList.remove('shaking');
+          void tp.offsetWidth;
+          tp.classList.add('shaking');
+          setTimeout(() => tp.classList.remove('shaking'), 500);
+        }
+
+        // cloud panel
+        renderServers('sclCloudServers', r.cSrv, 'cloud', prevCloudCount);
+        prevCloudCount = r.cSrv;
+
+        document.getElementById('sclCloudMs').textContent = r.cMs;
+        document.getElementById('sclCloudCost').textContent = r.cCost;
+        document.getElementById('sclCloudStatus').textContent =
+          '● ' + r.cSrv + ' server' + (r.cSrv > 1 ? 's' : '') + ' — all requests served';
+
+        // insight
+        const insEl = document.getElementById('sclInsight');
+        insEl.className = 'scl-insight show ' + ins.cls;
+        insEl.textContent = ins.msg;
+      };
+
+      // initialise at value 0
+      sclUpdate(0);
+    })();
+    </script>
+    <!-- ═══ END MEDIA 3 ═══ -->
+
+    <!-- ═══ MEDIA 4: CloudEats Architecture Evolution Roadmap ═══ -->
+    <style>
+    #media-road { margin-bottom: 1.25rem; }
+    #media-road .road-sub { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
+    #media-road .road-weeks {
+      display: flex; gap: 0.3rem; overflow-x: auto; padding-bottom: 0.35rem;
+      margin: 1.1rem 0 0.6rem; scrollbar-width: none;
+    }
+    #media-road .road-weeks::-webkit-scrollbar { display: none; }
+    #media-road .road-wk {
+      font-family: 'Sora', sans-serif; font-size: 0.7rem; font-weight: 700;
+      padding: 0.3rem 0.65rem; border-radius: 6px; white-space: nowrap;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--muted); cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+    }
+    #media-road .road-wk:hover { color: var(--text); border-color: var(--muted); }
+    #media-road .road-wk.active { background: rgba(0,200,255,0.12); border-color: var(--accent); color: var(--accent); }
+    #media-road .road-wk.done   { border-color: rgba(0,229,160,0.35); color: var(--green); background: rgba(0,229,160,0.05); }
+    #media-road .road-prog-wrap {
+      height: 4px; background: var(--bg3); border-radius: 2px; margin-bottom: 1rem; overflow: hidden;
+    }
+    #media-road .road-prog-bar {
+      height: 4px; background: linear-gradient(90deg, var(--green), var(--accent));
+      border-radius: 2px; transition: width 0.4s ease;
+    }
+    #media-road .road-detail {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;
+    }
+    #media-road .road-info {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0.9rem 1rem;
+    }
+    #media-road .road-week-label {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 0.35rem;
+    }
+    #media-road .road-week-title {
+      font-size: 1rem; font-weight: 700; color: var(--text);
+      margin-bottom: 0.15rem; display: flex; align-items: center; gap: 0.4rem;
+    }
+    #media-road .road-concept {
+      font-size: 0.73rem; color: var(--accent); font-weight: 600; margin-bottom: 0.6rem;
+    }
+    #media-road .road-desc { font-size: 0.82rem; color: #c2cfe0; line-height: 1.65; }
+    #media-road .road-added-title {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;
+    }
+    #media-road .road-added-list { list-style: none; display: flex; flex-direction: column; gap: 0.3rem; }
+    #media-road .road-added-list li {
+      font-size: 0.8rem; color: var(--text);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    #media-road .road-added-list li::before {
+      content: '+'; display: inline-flex; width: 16px; height: 16px;
+      border-radius: 50%; background: rgba(0,229,160,0.15); color: var(--green);
+      font-size: 0.75rem; font-weight: 700; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    #media-road .road-comps {
+      display: flex; flex-wrap: wrap; gap: 0.4rem;
+      padding: 0.9rem; background: var(--bg3); border-radius: 10px;
+      border: 1px solid var(--border); align-content: flex-start;
+    }
+    #media-road .road-comp {
+      display: flex; align-items: center; gap: 0.3rem;
+      font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.55rem;
+      border-radius: 6px; border: 1px solid; transition: all 0.3s;
+      white-space: nowrap;
+    }
+    #media-road .road-comp.rd-future {
+      opacity: 0.25; border-color: var(--border);
+      background: transparent; color: var(--muted);
+    }
+    #media-road .road-comp.rd-done {
+      opacity: 0.7; border-color: rgba(0,229,160,0.3);
+      background: rgba(0,229,160,0.06); color: var(--green);
+    }
+    #media-road .road-comp.rd-current {
+      opacity: 1; border-color: var(--accent);
+      background: rgba(0,200,255,0.1); color: var(--accent);
+      animation: rdPop 0.3s ease-out;
+    }
+    @keyframes rdPop { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    #media-road .road-comp-ico { font-size: 0.85rem; }
+    #media-road .road-comps-label {
+      width: 100%; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 0.25rem;
+    }
+    #media-road .road-final-note {
+      font-size: 0.78rem; color: var(--muted); line-height: 1.6;
+      padding: 0.6rem 0.85rem; border-radius: 8px; margin-top: 0.5rem;
+      border: 1px solid var(--border); background: var(--bg3);
+      font-family: 'Fira Code', monospace; font-size: 0.72rem;
+    }
+    @media (max-width: 560px) {
+      #media-road .road-detail { grid-template-columns: 1fr; }
+    }
+    </style>
+
+    <div id="media-road" class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(124,106,245,0.12)">🗺️</div>
+        <div>
+          <div class="card-title">What you will build — week by week</div>
+          <div class="road-sub">One food ordering app. Ten weeks. Select any week to see what gets added to CloudEats.</div>
+        </div>
+      </div>
+
+      <div class="road-weeks" id="rdWeeks"></div>
+
+      <div class="road-prog-wrap">
+        <div class="road-prog-bar" id="rdProgBar" style="width:10%"></div>
+      </div>
+
+      <div class="road-detail">
+        <div class="road-info">
+          <div class="road-week-label" id="rdWkLabel">Week 1 of 10</div>
+          <div class="road-week-title"><span id="rdWkEmoji">🖥️</span><span id="rdWkTitle">Foundation Setup</span></div>
+          <div class="road-concept" id="rdConcept">Cloud basics · dev environment</div>
+          <div class="road-desc" id="rdDesc">Set up a virtual machine running Ubuntu — this simulates your cloud server, locally. Install VS Code, Docker, Node.js, and build the project folder structure for CloudEats.</div>
+        </div>
+        <div class="road-info">
+          <div class="road-added-title" id="rdAddedTitle">Added this week</div>
+          <ul class="road-added-list" id="rdAdded"></ul>
+        </div>
+      </div>
+
+      <div class="road-comps" id="rdComps">
+        <div class="road-comps-label">System components — accumulated over 10 weeks</div>
+      </div>
+
+      <div class="road-final-note" id="rdFinalNote"></div>
+    </div>
+
+    <script>
+    (function(){
+      const weeks = [
+        { n:1,  e:'🖥️', t:'Foundation Setup',        c:'Cloud basics — dev environment',             d:'Set up a virtual machine running Ubuntu — your local cloud server. Install VS Code, Docker (ready for later), Node.js, Git. Build the CloudEats project folder structure.',   added:['Proxmox VM / VirtualBox','Dev toolchain — Node.js, Git, VS Code','Docker installed (will use Week 2)'],     comps:['c-vm','c-devtools'] },
+        { n:2,  e:'🐳', t:'Containers & Static Menu', c:'Docker, nginx, storage, networking basics',  d:'Run the first Docker container. Serve the static HTML food menu via nginx. Learn port mapping, Docker volumes, and basic container networking.',                                added:['Docker containers in use','nginx serving static menu','Docker networks & volumes'],                           comps:['c-docker','c-nginx'] },
+        { n:3,  e:'🗄️', t:'Databases in the Cloud',  c:'MySQL, SQL, Docker Compose, user auth',      d:'Add a MySQL database container. Use Docker Compose to manage nginx + MySQL together. Build user registration with hashed passwords stored in the database.',                  added:['MySQL database container','Docker Compose (multi-service)','User registration & login'],                      comps:['c-mysql','c-compose'] },
+        { n:4,  e:'📦', t:'Cloud-Native Application', c:'NoSQL, polyglot persistence, Redis cache',  d:'Add MongoDB for order storage and Redis for the shopping cart. Different data problems use different databases — this is polyglot persistence, core to cloud-native design.', added:['MongoDB (order storage)','Redis (shopping cart cache)','NoSQL query patterns'],                               comps:['c-mongo','c-redis'] },
+        { n:5,  e:'🔀', t:'Microservices',            c:'Service decomposition, API Gateway, REST',   d:'Split the monolith into three independent services. Add an API Gateway as the single entry point. Each service owns its own database — the database-per-service rule.',       added:['API Gateway :8000','User Service :3001','Menu Service :3002','Order Service :3003'],                          comps:['c-gateway','c-svc-u','c-svc-m','c-svc-o'] },
+        { n:6,  e:'📂', t:'DevOps & Version Control', c:'Git workflow, CI pipeline, automated tests', d:'Set up a professional Git branching workflow. Build a CI pipeline with GitHub Actions that runs automated tests on every push. Code quality becomes systematic.',             added:['Git branching strategy','GitHub Actions CI pipeline','Automated unit & integration tests'],                  comps:['c-git','c-ci'] },
+        { n:7,  e:'🚀', t:'CI/CD & Infrastructure as Code', c:'Deployment automation, IaC, zero-downtime', d:'Extend CI to full CI/CD: every green build deploys automatically to the Proxmox server via SSH. Docker Compose becomes Infrastructure as Code — declarative deployments.', added:['SSH automated deployment','Full CD pipeline','Docker Compose as IaC'],                                     comps:['c-cd','c-iac'] },
+        { n:8,  e:'🔐', t:'Security & Access Control','c':'JWT, RBAC, shared responsibility model',   d:'Add JWT tokens to the API Gateway. Implement role-based access control (admin vs customer). Store secrets in environment variables — never in code. Security becomes a layer.', added:['JWT authentication middleware','RBAC (role-based access)','Secrets in .env files'],                         comps:['c-jwt','c-rbac'] },
+        { n:9,  e:'📊', t:'Monitoring & Optimisation', c:'Observability, structured logging, metrics', d:'Add Winston for structured JSON logging and prom-client for Prometheus metrics. Every service emits observable signals — you can detect problems before users do.',             added:['Winston structured logging','Prometheus metrics endpoint','Performance optimisation'],                       comps:['c-log','c-metrics'] },
+        { n:10, e:'☁️', t:'Cloud Migration & Wrap',   c:'Local → cloud mapping, managed services',    d:'Map every component to its cloud equivalent. Your VM → EC2, MySQL → RDS, MongoDB → DocumentDB, CI/CD → GitHub Actions + cloud deploy. CloudEats is now cloud-ready.',         added:['Cloud migration plan','Managed service mapping','Full cloud deployment path'],                              comps:['c-cloud'] },
+      ];
+
+      const allComps = [
+        { id:'c-vm',     lbl:'VM',          e:'🖥️', w:1  }, { id:'c-devtools',lbl:'Dev Tools',   e:'⚙️', w:1  },
+        { id:'c-docker', lbl:'Docker',      e:'🐳', w:2  }, { id:'c-nginx',   lbl:'nginx',        e:'🌐', w:2  },
+        { id:'c-mysql',  lbl:'MySQL',       e:'🗄️', w:3  }, { id:'c-compose', lbl:'Compose',      e:'🔧', w:3  },
+        { id:'c-mongo',  lbl:'MongoDB',     e:'📦', w:4  }, { id:'c-redis',   lbl:'Redis',         e:'⚡', w:4  },
+        { id:'c-gateway',lbl:'API Gateway', e:'🔀', w:5  }, { id:'c-svc-u',   lbl:'User Svc',      e:'👤', w:5  },
+        { id:'c-svc-m',  lbl:'Menu Svc',    e:'🍔', w:5  }, { id:'c-svc-o',   lbl:'Order Svc',     e:'🛒', w:5  },
+        { id:'c-git',    lbl:'Git',         e:'📂', w:6  }, { id:'c-ci',      lbl:'CI Pipeline',   e:'✅', w:6  },
+        { id:'c-cd',     lbl:'CD Pipeline', e:'🚀', w:7  }, { id:'c-iac',     lbl:'IaC',           e:'📋', w:7  },
+        { id:'c-jwt',    lbl:'JWT Auth',    e:'🔐', w:8  }, { id:'c-rbac',    lbl:'RBAC',          e:'👮', w:8  },
+        { id:'c-log',    lbl:'Logging',     e:'📊', w:9  }, { id:'c-metrics', lbl:'Metrics',       e:'📈', w:9  },
+        { id:'c-cloud',  lbl:'Cloud Deploy',e:'☁️', w:10 },
+      ];
+
+      const finalNote = 'Final CloudEats: [API Gateway :8000] → [User :3001][Menu :3002][Order :3003] → [MySQL][MySQL][MongoDB+Redis] — with JWT auth, CI/CD, Winston logging, prom-client metrics';
+
+      let rdCurrent = 1;
+
+      function rdRender(w) {
+        rdCurrent = w;
+        const wk = weeks[w - 1];
+
+        // week buttons
+        document.querySelectorAll('.road-wk').forEach((btn, i) => {
+          const n = i + 1;
+          btn.classList.toggle('active', n === w);
+          btn.classList.toggle('done', n < w);
+          btn.classList.remove('done');
+          if (n < w)  btn.className = 'road-wk done';
+          if (n === w) btn.className = 'road-wk active';
+          if (n > w)  btn.className = 'road-wk';
+        });
+
+        // progress bar
+        document.getElementById('rdProgBar').style.width = (w * 10) + '%';
+
+        // detail panel
+        document.getElementById('rdWkLabel').textContent  = 'Week ' + w + ' of 10';
+        document.getElementById('rdWkEmoji').textContent  = wk.e;
+        document.getElementById('rdWkTitle').textContent  = wk.t;
+        document.getElementById('rdConcept').textContent  = wk.c;
+        document.getElementById('rdDesc').textContent     = wk.d;
+
+        const addedEl = document.getElementById('rdAdded');
+        addedEl.innerHTML = wk.added.map(a => '<li>' + a + '</li>').join('');
+
+        // component badges
+        const compsEl = document.getElementById('rdComps');
+        compsEl.innerHTML = '<div class="road-comps-label">System components — accumulated over 10 weeks</div>';
+        allComps.forEach(comp => {
+          const div = document.createElement('div');
+          let cls = 'road-comp ';
+          if (comp.w < w)  cls += 'rd-done';
+          else if (comp.w === w) cls += 'rd-current';
+          else              cls += 'rd-future';
+          div.className = cls;
+          div.innerHTML = '<span class="road-comp-ico">' + comp.e + '</span>' + comp.lbl;
+          compsEl.appendChild(div);
+        });
+
+        // final note
+        const fn = document.getElementById('rdFinalNote');
+        if (w === 10) {
+          fn.textContent = finalNote;
+          fn.style.display = 'block';
+        } else {
+          fn.style.display = 'none';
+        }
+      }
+
+      // build week buttons
+      const weeksEl = document.getElementById('rdWeeks');
+      weeks.forEach(wk => {
+        const btn = document.createElement('button');
+        btn.className = 'road-wk';
+        btn.textContent = 'W' + wk.n;
+        btn.title = wk.t;
+        btn.onclick = () => rdRender(wk.n);
+        weeksEl.appendChild(btn);
+      });
+
+      rdRender(1);
+    })();
+    </script>
+    <!-- ═══ END MEDIA 4 ═══ -->
+
+    <div class="callout callout-tip">
+      <span class="callout-icon">💡</span>
+      <span><strong>Why this matters for you:</strong> Every modern app — food delivery, e-commerce, social media — runs on cloud infrastructure. This course builds the skills to design, build, and deploy such systems.</span>
+    </div>
+  </section>
+
+  <!-- TAB 2: SERVICE MODELS -->
+  <section class="tab-panel" id="tab-models">
+    <div class="section-title">🔧 Cloud Service Models</div>
+    <p class="section-desc">Cloud services come in three main flavours. The key difference is how much you manage versus how much the provider manages.</p>
+
+    <div class="analogy">
+      <span class="analogy-icon">🍱</span>
+      <div class="analogy-body">
+        <strong>The Meal Analogy:</strong> Think about how you can get a meal — you can buy raw ingredients and cook everything yourself (IaaS), use a meal kit where ingredients are prepared but you still cook (PaaS), or just order takeout where everything is done for you (SaaS). More control = more responsibility.
+      </div>
+    </div>
+
+    <div class="service-grid">
+      <!-- IaaS -->
+      <div class="service-card iaas" onclick="toggleCard(this)">
+        <div class="sc-header">
+          <div class="sc-badge">IaaS</div>
+          <div class="sc-name">Infrastructure as a Service</div>
+          <div class="sc-full">Raw infrastructure — you manage the OS and above</div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-tagline">🥩 "You buy the raw ingredients"</div>
+          <ul class="sc-list">
+            <li>Virtual machines, storage, networking</li>
+            <li>You manage: OS, runtime, middleware, data, apps</li>
+            <li>Provider manages: servers, storage, networking hardware</li>
+            <li>Example: AWS EC2, Azure VMs, Google Compute Engine</li>
+            <li>Best for: Custom environments, legacy app migration</li>
+          </ul>
+        </div>
+      </div>
+      <!-- PaaS -->
+      <div class="service-card paas" onclick="toggleCard(this)">
+        <div class="sc-header">
+          <div class="sc-badge">PaaS</div>
+          <div class="sc-name">Platform as a Service</div>
+          <div class="sc-full">A platform to build on — focus on your code, not the OS</div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-tagline">🍱 "Meal kit — ingredients provided"</div>
+          <ul class="sc-list">
+            <li>Managed runtime, middleware, databases</li>
+            <li>You manage: Applications and data only</li>
+            <li>Provider manages: OS, runtime, middleware, servers</li>
+            <li>Example: Heroku, AWS Elastic Beanstalk, Google App Engine</li>
+            <li>Best for: Developers who want to focus on code, not infra</li>
+          </ul>
+        </div>
+      </div>
+      <!-- SaaS -->
+      <div class="service-card saas" onclick="toggleCard(this)">
+        <div class="sc-header">
+          <div class="sc-badge">SaaS</div>
+          <div class="sc-name">Software as a Service</div>
+          <div class="sc-full">Ready-to-use software — just sign in and use it</div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-tagline">🚗 "Takeout — everything done for you"</div>
+          <ul class="sc-list">
+            <li>Complete applications delivered via browser</li>
+            <li>You manage: Your own data and user settings only</li>
+            <li>Provider manages: Everything else</li>
+            <li>Example: Gmail, Microsoft 365, Salesforce, Dropbox</li>
+            <li>Best for: End users, businesses wanting zero IT overhead</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ MEDIA 1: Interactive Responsibility Stack ═══ -->
+    <style>
+    #media-stack { margin-bottom: 1.25rem; }
+    #media-stack .stk-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem;
+    }
+    #media-stack .stk-title { font-size: 1.05rem; font-weight: 700; color: var(--text); }
+    #media-stack .stk-subtitle { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
+    #media-stack .stk-controls { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    #media-stack .stk-legend {
+      display: flex; gap: 0.85rem; align-items: center;
+      font-size: 0.73rem; color: var(--muted);
+    }
+    #media-stack .stk-legend span { display: flex; align-items: center; gap: 0.3rem; }
+    #media-stack .leg-dot {
+      width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+    }
+    #media-stack .stk-faas-btn {
+      font-family: 'Sora', sans-serif; font-size: 0.7rem; font-weight: 600;
+      padding: 0.25rem 0.7rem; border-radius: 6px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--muted); cursor: pointer; transition: all 0.2s;
+    }
+    #media-stack .stk-faas-btn:hover { color: var(--advanced); border-color: var(--advanced); }
+    #media-stack .stk-faas-btn.on {
+      background: rgba(180,110,245,0.12); border-color: var(--advanced); color: var(--advanced);
+    }
+    #media-stack .stk-pace-note {
+      font-size: 0.78rem; line-height: 1.6;
+      padding: 0.65rem 0.9rem; border-radius: 8px;
+      margin-bottom: 1rem; border-left: 3px solid;
+      display: none;
+    }
+    #media-stack .stk-pace-note.beginner { display: block; background: rgba(0,229,160,0.06); border-color: var(--beginner); color: #8ee8c4; }
+    body.pace-average  #media-stack .stk-pace-note.beginner { display: none; }
+    body.pace-advanced #media-stack .stk-pace-note.beginner { display: none; }
+    body.pace-average  #media-stack .stk-pace-note.average  { display: block; background: rgba(0,200,255,0.06); border-color: var(--average);  color: #a0d8f0; }
+    body.pace-advanced #media-stack .stk-pace-note.advanced { display: block; background: rgba(180,110,245,0.06); border-color: var(--advanced); color: #c5a8f5; }
+    #media-stack .stk-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+    #media-stack table {
+      width: 100%; border-collapse: collapse;
+      table-layout: fixed; min-width: 480px;
+    }
+    #media-stack thead th {
+      background: var(--surface2); padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid var(--border); border-right: 1px solid var(--border);
+      text-align: center; vertical-align: middle;
+    }
+    #media-stack thead th:first-child { text-align: left; width: 140px; }
+    #media-stack thead th:last-child { border-right: none; }
+    #media-stack .stk-th-name {
+      display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.15rem;
+    }
+    #media-stack .stk-th-sub {
+      display: block; font-size: 0.62rem; font-weight: 600;
+      letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted);
+    }
+    #media-stack .col-iaas { color: var(--green); }
+    #media-stack .col-paas { color: var(--accent); }
+    #media-stack .col-saas { color: var(--advanced); }
+    #media-stack .col-faas { color: var(--amber); }
+    #media-stack tr.stk-data { cursor: pointer; transition: background 0.15s; }
+    #media-stack tr.stk-data:hover { background: rgba(255,255,255,0.02); }
+    #media-stack tr.stk-data.active { background: rgba(0,200,255,0.04); }
+    #media-stack td {
+      padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border); text-align: center; vertical-align: middle;
+    }
+    #media-stack td:first-child { text-align: left; }
+    #media-stack td:last-child { border-right: none; }
+    #media-stack .stk-layer {
+      display: flex; align-items: center; gap: 0.45rem;
+      font-size: 0.83rem; font-weight: 600; color: var(--text);
+    }
+    #media-stack .stk-layer-ico { font-size: 0.95rem; flex-shrink: 0; }
+    #media-stack .stk-chev {
+      margin-left: auto; font-size: 0.8rem; color: var(--muted);
+      transition: transform 0.2s; flex-shrink: 0;
+    }
+    #media-stack tr.stk-data.active .stk-chev { transform: rotate(90deg); }
+    #media-stack .pill {
+      display: inline-block; font-size: 0.66rem; font-weight: 700;
+      padding: 0.18rem 0.55rem; border-radius: 20px;
+      letter-spacing: 0.04em; text-transform: uppercase; user-select: none;
+    }
+    #media-stack .pill-you    { background: rgba(0,229,160,0.15); color: var(--green);   border: 1px solid rgba(0,229,160,0.3); }
+    #media-stack .pill-prov   { background: rgba(107,127,160,0.12); color: var(--muted); border: 1px solid rgba(107,127,160,0.2); }
+    #media-stack .pill-shared { background: rgba(255,183,64,0.12); color: var(--amber);  border: 1px solid rgba(255,183,64,0.25); }
+    #media-stack tr.stk-detail { display: none; }
+    #media-stack tr.stk-data.active + tr.stk-detail { display: table-row; }
+    #media-stack .stk-detail-inner {
+      padding: 0.85rem 0.9rem;
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid var(--border);
+    }
+    #media-stack .stk-detail-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0.65rem;
+    }
+    #media-stack.faas-on .stk-detail-grid { grid-template-columns: repeat(4, 1fr); }
+    #media-stack .stk-dc {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 7px; padding: 0.65rem 0.75rem;
+    }
+    #media-stack .stk-dc-label {
+      font-size: 0.63rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; margin-bottom: 0.35rem;
+    }
+    #media-stack .stk-dc-text {
+      font-size: 0.77rem; color: var(--muted); line-height: 1.55; margin-bottom: 0.4rem;
+    }
+    #media-stack .stk-dc-eg {
+      font-family: 'Fira Code', monospace; font-size: 0.67rem;
+      background: rgba(0,0,0,0.25); color: var(--accent);
+      padding: 0.12rem 0.4rem; border-radius: 4px; display: inline-block;
+    }
+    #media-stack .stk-faas-col { display: none; }
+    #media-stack.faas-on .stk-faas-col { display: table-cell; }
+    #media-stack .stk-faas-dc  { display: none; }
+    #media-stack.faas-on .stk-faas-dc  { display: block; }
+    #media-stack tbody tr:last-child td { border-bottom: none; }
+    @media (max-width: 580px) {
+      #media-stack thead th:first-child { width: 90px; }
+      #media-stack .stk-layer { font-size: 0.74rem; gap: 0.3rem; }
+      #media-stack .stk-layer-ico { display: none; }
+      #media-stack .stk-detail-grid { grid-template-columns: 1fr 1fr; }
+    }
+    </style>
+
+    <div id="media-stack" class="card">
+      <div class="stk-header">
+        <div>
+          <div class="stk-title">Shared Responsibility Stack</div>
+          <div class="stk-subtitle">Click any layer to see exactly what you manage — and what the provider handles</div>
+        </div>
+        <div class="stk-controls">
+          <div class="stk-legend">
+            <span><span class="leg-dot" style="background:var(--green)"></span>You manage</span>
+            <span><span class="leg-dot" style="background:var(--muted)"></span>Provider manages</span>
+            <span><span class="leg-dot" style="background:var(--amber)"></span>Shared</span>
+          </div>
+          <button class="stk-faas-btn" id="stkFaasBtn" onclick="stkToggleFaas()">+ Serverless</button>
+        </div>
+      </div>
+
+      <div class="stk-pace-note beginner">🌱 Focus on the green vs grey pattern: the higher the layer, the more likely <em>you</em> manage it. IaaS = most work, SaaS = least work.</div>
+      <div class="stk-pace-note average">⚡ This is the shared responsibility model — a key framework in cloud security and certification exams. Each layer transferred to the provider is a layer you no longer patch, monitor, or secure.</div>
+      <div class="stk-pace-note advanced">🚀 Note how FaaS (Serverless) reduces your responsibility to Application + Data only — even Runtime is managed. This is the extreme end of the trade-off: maximum abstraction, minimum control, per-invocation pricing, cold-start latency as the hidden cost.</div>
+
+      <div class="stk-wrap">
+        <table id="stkTable">
+          <thead>
+            <tr>
+              <th>Layer</th>
+              <th><span class="stk-th-name col-iaas">IaaS</span><span class="stk-th-sub">Infrastructure</span></th>
+              <th><span class="stk-th-name col-paas">PaaS</span><span class="stk-th-sub">Platform</span></th>
+              <th><span class="stk-th-name col-saas">SaaS</span><span class="stk-th-sub">Software</span></th>
+              <th class="stk-faas-col"><span class="stk-th-name col-faas">FaaS</span><span class="stk-th-sub">Serverless</span></th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <!-- Application -->
+            <tr class="stk-data" onclick="stkToggle(this)">
+              <td><div class="stk-layer"><span class="stk-layer-ico">📱</span>Application<span class="stk-chev">›</span></div></td>
+              <td><span class="pill pill-you">You</span></td>
+              <td><span class="pill pill-you">You</span></td>
+              <td><span class="pill pill-prov">Provider</span></td>
+              <td class="stk-faas-col"><span class="pill pill-you">You</span></td>
+            </tr>
+            <tr class="stk-detail"><td colspan="5"><div class="stk-detail-inner"><div class="stk-detail-grid">
+              <div class="stk-dc"><div class="stk-dc-label col-iaas">IaaS</div><div class="stk-dc-text">You deploy your full app — web server, process manager, all code.</div><span class="stk-dc-eg">nginx + Node.js on EC2</span></div>
+              <div class="stk-dc"><div class="stk-dc-label col-paas">PaaS</div><div class="stk-dc-text">Push your code — platform builds, deploys and runs it for you.</div><span class="stk-dc-eg">git push heroku main</span></div>
+              <div class="stk-dc"><div class="stk-dc-label col-saas">SaaS</div><div class="stk-dc-text">The app is already built — you just sign in and use it.</div><span class="stk-dc-eg">Gmail, Salesforce</span></div>
+              <div class="stk-dc stk-faas-dc"><div class="stk-dc-label col-faas">FaaS</div><div class="stk-dc-text">You write individual event-driven functions — not a full running app.</div><span class="stk-dc-eg">AWS Lambda handler</span></div>
+            </div></div></td></tr>
+
+            <!-- Data -->
+            <tr class="stk-data" onclick="stkToggle(this)">
+              <td><div class="stk-layer"><span class="stk-layer-ico">🗄️</span>Data<span class="stk-chev">›</span></div></td>
+              <td><span class="pill pill-you">You</span></td>
+              <td><span class="pill pill-you">You</span></td>
+              <td><span class="pill pill-shared">Shared</span></td>
+              <td class="stk-faas-col"><span class="pill pill-you">You</span></td>
+            </tr>
+            <tr class="stk-detail"><td colspan="5"><div class="stk-detail-inner"><div class="stk-detail-grid">
+              <div class="stk-dc"><div class="stk-dc-label col-iaas">IaaS</div><div class="stk-dc-text">Your database, your schema, your backups — full control and full responsibility.</div><span class="stk-dc-eg">MySQL on EC2 EBS</span></div>
+              <div class="stk-dc"><div class="stk-dc-label col-paas">PaaS</div><div class="stk-dc-text">Your data is yours. Provider manages the database engine and patches.</div><span class="stk-dc-eg">AWS RDS — you own the data</span></div>
+              <div class="stk-dc"><div class="stk-dc-label col-saas">SaaS</div><div class="stk-dc-text">Your data lives inside the provider's system. Export options vary.</div><span class="stk-dc-eg">Google Docs files</span></div>
+              <div class="stk-dc stk-faas-dc"><div class="stk-dc-label col-faas">FaaS</div><div class="stk-dc-text">Functions are stateless — your data lives in external storage you connect to.</div><span class="stk-dc-eg">Lambda + DynamoDB</span></div>
+            </div></div></td></tr>
+
+            <!-- Runtime -->
+            <tr class="stk-data" onclick="stkToggle(this)">
+              <td><div class="stk-layer"><span class="stk-layer-ico">⚙️</span>Runtime<span class="stk-chev">›</span></div></td>
+              <td><span class="pill pill-you">You</span></td>
+              <td><span class="pill pill-prov">Provider</span></td>
+              <td><span class="pill pill-prov">Provider</span></td>
+              <td class="stk-faas-col"><span class="pill pill-prov">Provider</span></td>
+            </tr>
+            <tr class="stk-detail"><td colspan="5"><div class="stk-detail-inner"><div class="stk-detail-grid">
+              <div class="stk-dc"><div class="stk-dc-label col-iaas">IaaS</div><div class="stk-dc-text">You install and update your own runtime — Node.js, Python, nginx.</div><span class="stk-dc-eg">sudo apt install nodejs</span></div>
+              <div class="stk-dc"><div class="stk-dc-label col-paas">PaaS</div><div class="stk-dc-text">You select a runtime version — provider installs and patches it.</div><span class="stk-dc-eg">Heroku buildpack: Node 20</span></div>
+              <div class="stk-dc"><div class="stk-dc-label col-saas">SaaS</div><div class="stk-dc-text">Completely invisible — the app just runs in your browser.</div><span class="stk-dc-eg">No access at all</span></div>
+              <div class="stk-dc stk-faas-dc"><div class="stk-dc-label col-faas">FaaS</div><div class="stk-dc-text">Choose a runtime version — provider handles all patching automatically.</div><span class="stk-dc-eg">Lambda: Node.js 20.x</span></div>
+            </div></div></td></tr>
+
+            <!-- OS -->
+            <tr class="stk-data" onclick="stkToggle(this)">
+              <td><div class="stk-layer"><span class="stk-layer-ico">🐧</span>Operating System<span class="stk-chev">›</span></div></td>
+              <td><span class="pill pill-you">You</span></td>
+              <td><span class="pill pill-prov">Provider</span></td>
+              <td><span class="pill pill-prov">Provider</span></td>
+              <td class="stk-faas-col"><span class="pill pill-prov">Provider</span></td>
+            </tr>
+            <tr class="stk-detail"><td colspan="5"><div class="stk-detail-inner"><div class="stk-detail-grid">
+              <div class="stk-dc"><div class="stk-dc-label col-iaas">IaaS</div><div class="stk-dc-text">You choose, install, and patch the OS. Security patches are your job.</div><span class="stk-dc-eg">Ubuntu 22.04 on EC2</span></div>
+              <div class="stk-dc"><div class="stk-dc-label col-paas">PaaS</div><div class="stk-dc-text">Provider manages the OS entirely — you never get SSH access to it.</div><span class="stk-dc-eg">No SSH to Heroku base</span></div>
+              <div class="stk-dc"><div class="stk-dc-label col-saas">SaaS</div><div class="stk-dc-text">OS is completely invisible — you never interact with infrastructure.</div><span class="stk-dc-eg">No access</span></div>
+              <div class="stk-dc stk-faas-dc"><div class="stk-dc-label col-faas">FaaS</div><div class="stk-dc-text">No OS management ever. You never see or touch the underlying system.</div><span class="stk-dc-eg">Fully abstracted away</span></div>
+            </div></div></td></tr>
+
+            <!-- Virtualisation -->
+            <tr class="stk-data" onclick="stkToggle(this)">
+              <td><div class="stk-layer"><span class="stk-layer-ico">🖥️</span>Virtualisation<span class="stk-chev">›</span></div></td>
+              <td><span class="pill pill-prov">Provider</span></td>
+              <td><span class="pill pill-prov">Provider</span></td>
+              <td><span class="pill pill-prov">Provider</span></td>
+              <td class="stk-faas-col"><span class="pill pill-prov">Provider</span></td>
+            </tr>
+            <tr class="stk-detail"><td colspan="5"><div class="stk-detail-inner"><div class="stk-detail-grid">
+              <div class="stk-dc"><div class="stk-dc-label col-iaas">IaaS</div><div class="stk-dc-text">Provider runs the hypervisor. You choose your VM size (vCPU, RAM).</div><span class="stk-dc-eg">EC2 t3.medium — 2 vCPU, 4GB</span></div>
+              <div class="stk-dc"><div class="stk-dc-label col-paas">PaaS</div><div class="stk-dc-text">Fully managed. You may pick a "dyno size" but never interact with VMs.</div><span class="stk-dc-eg">Heroku dyno sizes</span></div>
+              <div class="stk-dc"><div class="stk-dc-label col-saas">SaaS</div><div class="stk-dc-text">Completely invisible to users.</div><span class="stk-dc-eg">No visibility</span></div>
+              <div class="stk-dc stk-faas-dc"><div class="stk-dc-label col-faas">FaaS</div><div class="stk-dc-text">Functions run in microVMs (Firecracker on AWS). Invisible to you.</div><span class="stk-dc-eg">AWS Firecracker microVM</span></div>
+            </div></div></td></tr>
+
+            <!-- Servers & Storage -->
+            <tr class="stk-data" onclick="stkToggle(this)">
+              <td><div class="stk-layer"><span class="stk-layer-ico">💾</span>Servers &amp; Storage<span class="stk-chev">›</span></div></td>
+              <td><span class="pill pill-prov">Provider</span></td>
+              <td><span class="pill pill-prov">Provider</span></td>
+              <td><span class="pill pill-prov">Provider</span></td>
+              <td class="stk-faas-col"><span class="pill pill-prov">Provider</span></td>
+            </tr>
+            <tr class="stk-detail"><td colspan="5"><div class="stk-detail-inner"><div class="stk-detail-grid">
+              <div class="stk-dc"><div class="stk-dc-label col-iaas">IaaS</div><div class="stk-dc-text">Provider owns the physical hardware. You configure and attach storage volumes.</div><span class="stk-dc-eg">EC2 + EBS volume (50GB)</span></div>
+              <div class="stk-dc"><div class="stk-dc-label col-paas">PaaS</div><div class="stk-dc-text">Provider manages all hardware. Use object storage for persistent files.</div><span class="stk-dc-eg">Heroku + S3 for files</span></div>
+              <div class="stk-dc"><div class="stk-dc-label col-saas">SaaS</div><div class="stk-dc-text">Hardware is entirely managed by the provider across their global fleet.</div><span class="stk-dc-eg">No visibility</span></div>
+              <div class="stk-dc stk-faas-dc"><div class="stk-dc-label col-faas">FaaS</div><div class="stk-dc-text">Serverless by design — no server to manage. All storage is external.</div><span class="stk-dc-eg">Lambda + S3 + DynamoDB</span></div>
+            </div></div></td></tr>
+
+            <!-- Networking -->
+            <tr class="stk-data" onclick="stkToggle(this)">
+              <td><div class="stk-layer"><span class="stk-layer-ico">🌐</span>Networking<span class="stk-chev">›</span></div></td>
+              <td><span class="pill pill-you">You</span></td>
+              <td><span class="pill pill-prov">Provider</span></td>
+              <td><span class="pill pill-prov">Provider</span></td>
+              <td class="stk-faas-col"><span class="pill pill-prov">Provider</span></td>
+            </tr>
+            <tr class="stk-detail"><td colspan="5"><div class="stk-detail-inner"><div class="stk-detail-grid">
+              <div class="stk-dc"><div class="stk-dc-label col-iaas">IaaS</div><div class="stk-dc-text">You configure VPC, subnets, security groups, firewall rules — networking is yours.</div><span class="stk-dc-eg">AWS VPC + Security Groups</span></div>
+              <div class="stk-dc"><div class="stk-dc-label col-paas">PaaS</div><div class="stk-dc-text">Provider manages networking. You only set app-level settings (ports, domains).</div><span class="stk-dc-eg">Heroku: just set PORT</span></div>
+              <div class="stk-dc"><div class="stk-dc-label col-saas">SaaS</div><div class="stk-dc-text">Fully managed. You just open the URL in your browser.</div><span class="stk-dc-eg">Just open the URL</span></div>
+              <div class="stk-dc stk-faas-dc"><div class="stk-dc-label col-faas">FaaS</div><div class="stk-dc-text">Provider manages networking. You configure triggers and event sources.</div><span class="stk-dc-eg">API Gateway → Lambda</span></div>
+            </div></div></td></tr>
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+    function stkToggle(row) {
+      const wasActive = row.classList.contains('active');
+      document.querySelectorAll('#media-stack tr.stk-data.active').forEach(r => r.classList.remove('active'));
+      if (!wasActive) row.classList.add('active');
+    }
+    function stkToggleFaas() {
+      const el = document.getElementById('media-stack');
+      const btn = document.getElementById('stkFaasBtn');
+      const on = el.classList.toggle('faas-on');
+      btn.classList.toggle('on', on);
+      btn.textContent = on ? '− Serverless' : '+ Serverless';
+    }
+    </script>
+    <!-- ═══ END MEDIA 1 ═══ -->
+
+    <div class="callout callout-info">
+      <span class="callout-icon">ℹ️</span>
+      <span><strong>CloudEats context:</strong> In this course, you'll mostly work at the IaaS level (managing VMs and containers) with PaaS elements (managed databases). By Week 10, you'll be deploying your full app to a real cloud environment.</span>
+    </div>
+  </section>
+
+  <!-- TAB 3: PROVIDERS -->
+  <section class="tab-panel" id="tab-providers">
+    <div class="section-title">🌐 Major Cloud Providers</div>
+    <p class="section-desc">The "big three" cloud providers dominate the market. While they offer similar core services, each has strengths, pricing quirks, and a distinct ecosystem. The concepts you learn apply across all of them.</p>
+
+    <div class="callout callout-tip">
+      <span class="callout-icon">💡</span>
+      <span><strong>Vendor-neutral learning:</strong> This course teaches cloud <em>concepts</em>, not a specific vendor. The skills you build — Docker, APIs, CI/CD — are transferable to AWS, Azure, GCP, or any provider.</span>
+    </div>
+
+    <div class="provider-grid">
+      <div class="provider-card">
+        <span class="provider-logo">🟠</span>
+        <div class="provider-name">Amazon Web Services (AWS)</div>
+        <div class="provider-tagline">Largest market share · First mover advantage</div>
+        <div class="provider-chips">
+          <span class="chip">EC2 (VMs)</span>
+          <span class="chip">S3 (Storage)</span>
+          <span class="chip">RDS (Database)</span>
+          <span class="chip">Lambda (Serverless)</span>
+          <span class="chip">~33% market share</span>
+        </div>
+      </div>
+      <div class="provider-card">
+        <span class="provider-logo">🔵</span>
+        <div class="provider-name">Microsoft Azure</div>
+        <div class="provider-tagline">Enterprise-friendly · Strong Microsoft integration</div>
+        <div class="provider-chips">
+          <span class="chip">Azure VMs</span>
+          <span class="chip">Blob Storage</span>
+          <span class="chip">Azure SQL</span>
+          <span class="chip">Azure Functions</span>
+          <span class="chip">~22% market share</span>
+        </div>
+      </div>
+      <div class="provider-card">
+        <span class="provider-logo">🟢</span>
+        <div class="provider-name">Google Cloud (GCP)</div>
+        <div class="provider-tagline">AI/ML strength · Kubernetes creator</div>
+        <div class="provider-chips">
+          <span class="chip">Compute Engine</span>
+          <span class="chip">Cloud Storage</span>
+          <span class="chip">BigQuery</span>
+          <span class="chip">Cloud Run</span>
+          <span class="chip">~11% market share</span>
+        </div>
+      </div>
+      <div class="provider-card">
+        <span class="provider-logo">🌸</span>
+        <div class="provider-name">Others</div>
+        <div class="provider-tagline">Alibaba Cloud · IBM · Oracle · DigitalOcean</div>
+        <div class="provider-chips">
+          <span class="chip">Regional leaders</span>
+          <span class="chip">Niche specialisations</span>
+          <span class="chip">Dev-friendly options</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ MEDIA 8: SEA / APAC Region Map ═══ -->
+    <style>
+    #media-map { margin: 1.25rem 0; }
+    #media-map .map-sub { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
+    #media-map .map-toggles {
+      display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 1rem 0 0.75rem;
+    }
+    #media-map .map-tog {
+      font-family: 'Sora', sans-serif; font-size: 0.72rem; font-weight: 700;
+      padding: 0.28rem 0.85rem; border-radius: 6px; cursor: pointer;
+      border: 1.5px solid; transition: all 0.15s; letter-spacing: 0.03em;
+    }
+    #media-map .map-tog.aws  { border-color: #ff9900; color: #ff9900; background: rgba(255,153,0,0.08); }
+    #media-map .map-tog.azr  { border-color: #50b2f5; color: #50b2f5; background: rgba(80,178,245,0.08); }
+    #media-map .map-tog.gcp  { border-color: #4ee68a; color: #4ee68a; background: rgba(78,230,138,0.08); }
+    #media-map .map-tog.off  { opacity: 0.3; }
+    #media-map .map-tog:hover { opacity: 1; }
+    #media-map .map-wrap {
+      position: relative; border-radius: 10px; overflow: hidden;
+      border: 1px solid var(--border); background: #07111e;
+    }
+    #media-map #mapSvg { width: 100%; height: auto; display: block; }
+    #media-map .map-loading {
+      position: absolute; inset: 0; display: flex; align-items: center;
+      justify-content: center; font-size: 0.8rem; color: var(--muted);
+      background: #07111e; z-index: 2; transition: opacity 0.3s;
+    }
+    #media-map .map-loading.done { opacity: 0; pointer-events: none; }
+    #media-map #mapTip {
+      position: absolute; pointer-events: none; display: none;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.55rem 0.75rem; font-size: 0.75rem;
+      line-height: 1.55; z-index: 10; max-width: 200px; color: var(--text);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+    #media-map #mapTip .tip-name { font-weight: 700; margin-bottom: 0.2rem; }
+    #media-map #mapTip .tip-svc  { color: var(--muted); font-size: 0.7rem; }
+    #media-map #mapTip .tip-home { color: var(--green); font-size: 0.68rem; font-weight: 600; margin-top: 0.2rem; }
+    #media-map .map-legend {
+      display: flex; flex-wrap: wrap; gap: 0.85rem; margin-top: 0.75rem;
+      font-size: 0.72rem; color: var(--muted); align-items: center;
+    }
+    #media-map .map-legend span { display: flex; align-items: center; gap: 0.3rem; }
+    #media-map .leg-circle {
+      width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; display: inline-block;
+    }
+    #media-map .map-note {
+      font-size: 0.75rem; color: var(--muted); margin-top: 0.6rem; line-height: 1.55;
+    }
+    #media-map .map-note strong { color: var(--text); }
+    @keyframes mapPing {
+      0%   { r: 9;  opacity: 0.7; }
+      100% { r: 20; opacity: 0; }
+    }
+    </style>
+
+    <div id="media-map" class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(0,200,255,0.08)">🌏</div>
+        <div>
+          <div class="card-title">Cloud Provider Regions — Southeast &amp; East Asia</div>
+          <div class="map-sub">Toggle providers to compare coverage. Hover any dot for region details. Malaysia highlighted as your nearest region.</div>
+        </div>
+      </div>
+
+      <div class="map-toggles">
+        <button class="map-tog aws" id="togAws" onclick="mapToggle('aws')">🟠 AWS</button>
+        <button class="map-tog azr" id="togAzr" onclick="mapToggle('azr')">🔵 Azure</button>
+        <button class="map-tog gcp" id="togGcp" onclick="mapToggle('gcp')">🟢 GCP</button>
+      </div>
+
+      <div class="map-wrap">
+        <svg id="mapSvg" viewBox="0 0 680 380" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="map-loading" id="mapLoading">⏳ Loading map…</div>
+        <div id="mapTip"></div>
+      </div>
+
+      <div class="map-legend">
+        <span><span class="leg-circle" style="background:#ff9900"></span>AWS region</span>
+        <span><span class="leg-circle" style="background:#50b2f5"></span>Azure region</span>
+        <span><span class="leg-circle" style="background:#4ee68a"></span>GCP region</span>
+        <span><span class="leg-circle" style="background:#fff;border:1.5px solid #00e5a0;box-sizing:border-box"></span>Your nearest (MY / SG)</span>
+        <span><span class="leg-circle" style="background:transparent;border:2px dashed #ffb740;box-sizing:border-box"></span>Planned / announced</span>
+      </div>
+      <p class="map-note">
+        <strong>Why this matters:</strong> Closer region = lower latency for Malaysian users. Singapore (≈350 km) is currently the closest full-service cluster. Azure has a <strong>Malaysia West</strong> region in KL. AWS has announced a Malaysia region. Always choose the nearest region that meets your compliance requirements.
+      </p>
+    </div>
+
+    <script>
+    (function(){
+      const OFF = { aws:false, azr:false, gcp:false };   // false = ON (visible)
+
+      const DATA = {
+        aws: [
+          { id:'ap-se-1',  label:'Singapore',       lat:1.35,  lon:103.82, svc:'EC2 · RDS · S3 · Lambda',    home:true  },
+          { id:'ap-se-3',  label:'Jakarta',          lat:-6.21, lon:106.85, svc:'EC2 · S3 · Lambda',          home:false },
+          { id:'ap-s-1',   label:'Mumbai',           lat:19.08, lon:72.88,  svc:'EC2 · RDS · S3 · Lambda',    home:false },
+          { id:'ap-ne-1',  label:'Tokyo',            lat:35.68, lon:139.65, svc:'EC2 · RDS · S3 · Lambda',    home:false },
+          { id:'ap-ne-2',  label:'Seoul',            lat:37.57, lon:126.98, svc:'EC2 · RDS · S3',             home:false },
+          { id:'ap-e-1',   label:'Hong Kong',        lat:22.32, lon:114.17, svc:'EC2 · S3',                   home:false },
+          { id:'ap-se-5p', label:'Malaysia (planned)',lat:3.14, lon:101.25, svc:'Announced — details TBC',    home:true, planned:true },
+        ],
+        azr: [
+          { id:'azr-sea',  label:'Singapore (SE Asia)',lat:1.35, lon:104.10,svc:'VMs · Azure SQL · Functions', home:true  },
+          { id:'azr-my',   label:'Malaysia West (KL)', lat:3.14, lon:101.69,svc:'VMs · SQL · Cosmos DB',      home:true  },
+          { id:'azr-ea',   label:'Hong Kong (E Asia)', lat:22.32,lon:114.40,svc:'VMs · Storage',              home:false },
+          { id:'azr-je',   label:'Tokyo (Japan East)', lat:35.68,lon:139.85,svc:'VMs · SQL · Functions',      home:false },
+          { id:'azr-kc',   label:'Seoul (Korea Central)',lat:37.57,lon:127.18,svc:'VMs · SQL',               home:false },
+          { id:'azr-ci',   label:'Pune (Central India)',lat:18.52,lon:73.86, svc:'VMs · SQL',                home:false },
+          { id:'azr-si',   label:'Chennai (S India)',  lat:13.08,lon:80.50,  svc:'VMs',                      home:false },
+        ],
+        gcp: [
+          { id:'gcp-se1',  label:'Singapore (se1)',   lat:1.35,  lon:103.55, svc:'Compute · Cloud SQL · GKE', home:true  },
+          { id:'gcp-se2',  label:'Jakarta (se2)',     lat:-6.21, lon:106.55, svc:'Compute · Cloud SQL',       home:false },
+          { id:'gcp-ea1',  label:'Taiwan (ea1)',      lat:24.05, lon:120.52, svc:'Compute · Cloud SQL · GKE', home:false },
+          { id:'gcp-ea2',  label:'Hong Kong (ea2)',   lat:22.32, lon:113.90, svc:'Compute',                   home:false },
+          { id:'gcp-ne1',  label:'Tokyo (ne1)',       lat:35.68, lon:139.45, svc:'Compute · Cloud SQL · GKE', home:false },
+          { id:'gcp-ne3',  label:'Seoul (ne3)',       lat:37.57, lon:126.78, svc:'Compute',                   home:false },
+          { id:'gcp-s1',   label:'Mumbai (s1)',       lat:19.08, lon:72.68,  svc:'Compute · Cloud SQL',       home:false },
+        ],
+      };
+
+      const COLORS = { aws:'#ff9900', azr:'#50b2f5', gcp:'#4ee68a' };
+
+      let svgEl, pathFn, projFn, mapReady = false, dotGroup;
+
+      function loadScript(url) {
+        return new Promise((resolve, reject) => {
+          if (document.querySelector('script[src="'+url+'"]')) { resolve(); return; }
+          const s = document.createElement('script');
+          s.src = url; s.onload = resolve; s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+
+      async function mapInit() {
+        if (mapReady) return;
+        mapReady = true;
+        const loadEl = document.getElementById('mapLoading');
+        try {
+          loadEl.textContent = '⏳ Loading D3…';
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js');
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js');
+          loadEl.textContent = '🌍 Loading world data…';
+          const world = await d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+          buildMap(world);
+          loadEl.classList.add('done');
+        } catch(e) {
+          loadEl.textContent = '⚠ Map unavailable offline — provider data shown in table below.';
+        }
+      }
+
+      function buildMap(world) {
+        svgEl = d3.select('#mapSvg');
+        const W = 680, H = 380;
+
+        // Projection: fit APAC bounding box
+        const bbox = { type:'Feature', geometry:{ type:'Polygon',
+          coordinates:[[[62,-15],[155,-15],[155,44],[62,44],[62,-15]]] }};
+        projFn = d3.geoMercator().fitExtent([[18,18],[W-18,H-18]], bbox);
+        pathFn = d3.geoPath(projFn);
+
+        // Ocean background
+        svgEl.append('rect').attr('width',W).attr('height',H).attr('fill','#07111e');
+
+        // Countries
+        const countries = topojson.feature(world, world.objects.countries);
+        svgEl.append('g').attr('class','map-countries')
+          .selectAll('path').data(countries.features).join('path')
+          .attr('d', pathFn)
+          .attr('fill','#0e1e33')
+          .attr('stroke','#1e3252')
+          .attr('stroke-width', 0.6);
+
+        // Graticule (subtle grid)
+        const graticule = d3.geoGraticule().step([15,15]);
+        svgEl.append('path').datum(graticule())
+          .attr('d', pathFn)
+          .attr('fill','none')
+          .attr('stroke','rgba(30,50,82,0.5)')
+          .attr('stroke-width', 0.4);
+
+        // Equator highlight
+        svgEl.append('path')
+          .datum({type:'LineString', coordinates:[[-180,0],[180,0]]})
+          .attr('d', pathFn)
+          .attr('fill','none').attr('stroke','rgba(0,200,255,0.12)').attr('stroke-width',0.8);
+
+        // Dot group
+        dotGroup = svgEl.append('g').attr('class','map-dots');
+
+        // Home region pulse rings
+        const homeRegions = [
+          {lat:1.35, lon:103.82}, // Singapore
+          {lat:3.14, lon:101.69}, // KL
+        ];
+        const pulseG = svgEl.append('g').attr('class','map-pulse');
+        homeRegions.forEach(r => {
+          const [px, py] = projFn([r.lon, r.lat]);
+          const ring = pulseG.append('circle')
+            .attr('cx', px).attr('cy', py).attr('r', 9)
+            .attr('fill', 'none').attr('stroke', '#00e5a0').attr('stroke-width', 1.5)
+            .attr('opacity', 0);
+          (function pulse() {
+            ring.attr('r', 9).attr('opacity', 0.7)
+              .transition().duration(1800).ease(d3.easeLinear)
+              .attr('r', 22).attr('opacity', 0)
+              .on('end', pulse);
+          })();
+        });
+
+        // Label: "Your nearest region"
+        const [kx, ky] = projFn([101.69, 3.14]);
+        svgEl.append('text')
+          .attr('x', kx - 6).attr('y', ky - 14)
+          .attr('text-anchor','end')
+          .attr('font-family','Sora,sans-serif').attr('font-size', 9.5)
+          .attr('fill','#00e5a0').attr('font-weight','600')
+          .text('← Your nearest');
+
+        renderDots();
+
+        // Tooltip
+        const tipEl = document.getElementById('mapTip');
+        svgEl.selectAll('.map-dot').on('mousemove', function(evt, d) {
+          const rect = document.getElementById('mapSvg').getBoundingClientRect();
+          const wrap = document.querySelector('.map-wrap').getBoundingClientRect();
+          const scale = rect.width / 680;
+          const [ox, oy] = projFn([d.lon, d.lat]);
+          const tx = ox * scale + (rect.left - wrap.left);
+          const ty = oy * scale + (rect.top - wrap.top);
+          tipEl.style.display = 'block';
+          tipEl.style.left = Math.min(tx + 14, wrap.width - 210) + 'px';
+          tipEl.style.top  = Math.max(ty - 50, 4) + 'px';
+          tipEl.innerHTML =
+            '<div class="tip-name">' + d.label + '</div>' +
+            '<div class="tip-svc">' + d.svc + '</div>' +
+            (d.home ? '<div class="tip-home">📍 Nearest to Malaysia</div>' : '') +
+            (d.planned ? '<div class="tip-home" style="color:var(--amber)">🔄 Planned / announced</div>' : '');
+        }).on('mouseleave', function() {
+          tipEl.style.display = 'none';
+        });
+      }
+
+      function renderDots() {
+        if (!dotGroup) return;
+        dotGroup.selectAll('*').remove();
+
+        ['aws','azr','gcp'].forEach(prov => {
+          if (OFF[prov]) return;
+          DATA[prov].forEach(r => {
+            const [px, py] = projFn([r.lon, r.lat]);
+            const g = dotGroup.append('g').datum(r).attr('class','map-dot');
+
+            if (r.planned) {
+              // Dashed circle for planned regions
+              g.append('circle')
+                .attr('cx', px).attr('cy', py).attr('r', 6)
+                .attr('fill','rgba(255,183,64,0.15)')
+                .attr('stroke', '#ffb740').attr('stroke-width', 1.5)
+                .attr('stroke-dasharray','3 2');
+            } else {
+              g.append('circle')
+                .attr('cx', px).attr('cy', py).attr('r', r.home ? 8 : 6)
+                .attr('fill', COLORS[prov])
+                .attr('fill-opacity', r.home ? 0.95 : 0.75)
+                .attr('stroke', r.home ? '#fff' : 'rgba(0,0,0,0.3)')
+                .attr('stroke-width', r.home ? 1.5 : 0.8);
+            }
+          });
+        });
+      }
+
+      window.mapToggle = function(prov) {
+        OFF[prov] = !OFF[prov];
+        const btn = document.getElementById('tog' + prov.charAt(0).toUpperCase() + prov.slice(1));
+        btn.classList.toggle('off', OFF[prov]);
+        renderDots();
+      };
+
+      // Observe Providers tab activation
+      const tabEl = document.getElementById('tab-providers');
+      if (tabEl) {
+        if (tabEl.classList.contains('active')) mapInit();
+        new MutationObserver(() => {
+          if (tabEl.classList.contains('active')) mapInit();
+        }).observe(tabEl, {attributes: true, attributeFilter: ['class']});
+      }
+    })();
+    </script>
+    <!-- ═══ END MEDIA 8 ═══ -->
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(180,110,245,0.1)">🔍</div>
+        <div>
+          <div class="card-title">How to Compare Providers</div>
+          <div class="card-sub">A framework for decision-making</div>
+        </div>
+      </div>
+
+      <div class="tier beginner">
+        <div class="tier-label">🌱 Beginner</div>
+        At this stage, you don't need to worry about which is "best." They all offer similar fundamental services. Think of them like mobile networks — different pricing plans, different coverage, but they all let you make calls. Focus on learning the <em>concepts</em>; the specific provider you use later is just syntax.
+      </div>
+      <div class="tier average">
+        <div class="tier-label">⚡ Average</div>
+        When comparing providers, evaluate: <strong>service breadth</strong> (how many managed services?), <strong>pricing model</strong> (compute per second vs per hour, free tier limits), <strong>geographic regions</strong> (important for latency and data residency), <strong>ecosystem lock-in risk</strong>, and <strong>certifications available</strong> (AWS SAA, Azure AZ-900, GCP ACE). For Malaysia/Southeast Asia context, all three have Singapore regions, with Alibaba Cloud offering a KL region.
+      </div>
+      <div class="tier advanced">
+        <div class="tier-label">🚀 Advanced</div>
+        Analyse provider selection through multiple lenses: <strong>technical</strong> (does the managed service meet your SLA requirements?), <strong>financial</strong> (Reserved vs Spot vs On-demand pricing; compare egress costs), <strong>compliance</strong> (PCI DSS, HIPAA, PDPA alignment), and <strong>strategic</strong> (avoid single-vendor lock-in via Kubernetes + Terraform abstraction). Multi-cloud architectures using IaC tools like Terraform allow workload portability. Evaluate WAF (Well-Architected Framework) equivalents across providers: AWS WAF, Azure Well-Architected, GCP Cloud Architecture Framework.
+      </div>
+
+      <div class="compare-wrap" style="margin-top:1rem">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Criteria</th>
+              <th>🟠 AWS</th>
+              <th>🔵 Azure</th>
+              <th>🟢 GCP</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Market Share</td><td>~33% (largest)</td><td>~22% (2nd)</td><td>~11% (3rd)</td></tr>
+            <tr><td>Strength</td><td>Breadth of services</td><td>Enterprise / Microsoft</td><td>AI/ML, Data, K8s</td></tr>
+            <tr><td>Free Tier</td><td>12 months + always-free</td><td>12 months + always-free</td><td>$300 credit + always-free</td></tr>
+            <tr><td>SE Asia Region</td><td>Singapore, Jakarta</td><td>Singapore, Malaysia</td><td>Singapore</td></tr>
+            <tr><td>Best For</td><td>General purpose, startups</td><td>Enterprise, .NET dev</td><td>Data analytics, ML</td></tr>
+            <tr><td>Kubernetes</td><td>EKS (managed)</td><td>AKS (managed)</td><td>GKE (managed, creator)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ MEDIA 5: Proxmox → Cloud Equivalent Mapping ═══ -->
+    <style>
+    #media-proxmap { margin-top: 1.25rem; }
+    #media-proxmap .px-intro {
+      font-size: 0.82rem; color: var(--muted); line-height: 1.65;
+      margin-bottom: 1.1rem;
+    }
+    #media-proxmap .px-intro strong { color: var(--text); }
+    #media-proxmap .px-row {
+      display: flex; align-items: stretch; gap: 0;
+      border: 1px solid var(--border); border-radius: 9px;
+      margin-bottom: 0; overflow: hidden; cursor: pointer;
+      transition: border-color 0.2s; background: var(--surface);
+    }
+    #media-proxmap .px-row + .px-row { border-top: none; border-radius: 0; }
+    #media-proxmap .px-row:first-of-type { border-radius: 9px 9px 0 0; }
+    #media-proxmap .px-row:last-of-type  { border-radius: 0 0 9px 9px; }
+    #media-proxmap .px-row.solo          { border-radius: 9px; }
+    #media-proxmap .px-row:hover  { background: var(--surface2); }
+    #media-proxmap .px-row.active { border-color: var(--accent); background: rgba(0,200,255,0.04); }
+    #media-proxmap .px-side {
+      flex: 1; padding: 0.65rem 0.85rem; display: flex;
+      flex-direction: column; justify-content: center; gap: 0.2rem;
+    }
+    #media-proxmap .px-local { border-left: 3px solid var(--amber); }
+    #media-proxmap .px-cloud { border-left: 2px solid rgba(0,200,255,0.3); }
+    #media-proxmap .px-row.active .px-cloud { border-left-color: var(--accent); }
+    #media-proxmap .px-badge {
+      display: inline-block; font-size: 0.6rem; font-weight: 700;
+      letter-spacing: 0.07em; text-transform: uppercase;
+      padding: 0.1rem 0.45rem; border-radius: 4px; margin-bottom: 0.15rem;
+      align-self: flex-start;
+    }
+    #media-proxmap .bd-compute  { background: rgba(255,183,64,0.12); color: var(--amber); }
+    #media-proxmap .bd-os       { background: rgba(107,127,160,0.12); color: var(--muted); }
+    #media-proxmap .bd-container{ background: rgba(0,229,160,0.12); color: var(--green); }
+    #media-proxmap .bd-orch     { background: rgba(180,110,245,0.12); color: var(--advanced); }
+    #media-proxmap .bd-db       { background: rgba(0,200,255,0.12); color: var(--accent); }
+    #media-proxmap .bd-nosql    { background: rgba(180,110,245,0.12); color: var(--advanced); }
+    #media-proxmap .bd-net      { background: rgba(0,229,160,0.12); color: var(--green); }
+    #media-proxmap .bd-cicd     { background: rgba(255,183,64,0.12); color: var(--amber); }
+    #media-proxmap .px-name {
+      font-size: 0.84rem; font-weight: 700; color: var(--text); line-height: 1.25;
+    }
+    #media-proxmap .px-sub { font-size: 0.7rem; color: var(--muted); }
+    #media-proxmap .px-mid {
+      width: 88px; flex-shrink: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 0.2rem; border-left: 1px solid var(--border); border-right: 1px solid var(--border);
+      padding: 0.4rem;
+    }
+    #media-proxmap .px-eq {
+      font-size: 1.1rem; font-weight: 700; color: var(--muted); line-height: 1;
+    }
+    #media-proxmap .px-concept {
+      font-size: 0.62rem; font-weight: 700; color: var(--muted);
+      text-align: center; letter-spacing: 0.04em; line-height: 1.3;
+    }
+    #media-proxmap .px-row.active .px-eq      { color: var(--accent); }
+    #media-proxmap .px-row.active .px-concept { color: var(--accent); }
+    #media-proxmap .px-chev {
+      width: 28px; flex-shrink: 0; display: flex; align-items: center;
+      justify-content: center; font-size: 0.8rem; color: var(--muted);
+      transition: transform 0.2s;
+    }
+    #media-proxmap .px-row.active .px-chev { transform: rotate(90deg); color: var(--accent); }
+    #media-proxmap .px-detail {
+      display: none; padding: 0.75rem 1rem;
+      background: rgba(0,0,0,0.18); border: 1px solid var(--border);
+      border-top: none; border-radius: 0 0 9px 9px;
+      font-size: 0.82rem; line-height: 1.65; color: #c2cfe0;
+      animation: pxFade 0.2s ease;
+    }
+    @keyframes pxFade { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+    #media-proxmap .px-detail.show { display: block; }
+    #media-proxmap .px-detail-text { margin-bottom: 0.5rem; }
+    #media-proxmap .px-detail-text:last-child { margin-bottom: 0; }
+    #media-proxmap .px-dt-b { display: none; }
+    #media-proxmap .px-dt-a { display: none; }
+    #media-proxmap .px-dt-x { display: none; }
+    body.pace-beginner #media-proxmap .px-dt-b { display: block; }
+    body.pace-average  #media-proxmap .px-dt-a { display: block; }
+    body.pace-advanced #media-proxmap .px-dt-x { display: block; }
+    #media-proxmap .px-insight {
+      font-family: 'Fira Code', monospace; font-size: 0.71rem; color: var(--accent);
+      background: rgba(0,200,255,0.07); border: 1px solid rgba(0,200,255,0.15);
+      border-radius: 5px; padding: 0.3rem 0.6rem; margin-top: 0.45rem;
+      display: inline-block; line-height: 1.5;
+    }
+    @media (max-width: 560px) {
+      #media-proxmap .px-mid { width: 56px; }
+      #media-proxmap .px-concept { display: none; }
+    }
+    </style>
+
+    <div id="media-proxmap" class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(255,183,64,0.1)">🔗</div>
+        <div>
+          <div class="card-title">Your classroom → Industry cloud</div>
+          <div class="card-sub">Every tool you use in this course has a direct cloud equivalent. Click any row to see how they connect.</div>
+        </div>
+      </div>
+
+      <p class="px-intro">This course uses <strong>Proxmox / VirtualBox</strong> instead of a real cloud account — but everything you build maps directly to AWS, Azure, or GCP. When you encounter these services on the job, you'll already understand the concepts behind them.</p>
+
+      <div id="pxTable"></div>
+    </div>
+
+    <script>
+    (function(){
+      const rows = [
+        { cat:'Compute',     catCls:'bd-compute',
+          loc:'Proxmox VM / VirtualBox', locS:'Ubuntu Server 22.04',
+          concept:'Virtual Machine',
+          cld:'AWS EC2',                 cldS:'Elastic Compute Cloud',
+          b: 'Your VirtualBox VM is a simulated server — it runs Ubuntu, has its own IP address, and behaves exactly like a real server in a data centre. Every Linux command you learn here works on EC2.',
+          a: 'EC2 is the same concept but provisioned in 60 seconds via API. You choose the OS (AMI), CPU, RAM, and storage independently. 750 hours/month free on t2.micro.',
+          x: 'EC2 uses the Nitro hypervisor — a dedicated chip that offloads networking and storage, approaching bare-metal performance. Your VirtualBox uses a software Type-2 hypervisor. Key implication: nested virtualisation on EC2 requires metal instances.',
+          tip:'Your VM = EC2; your VM\'s IP = Elastic IP; your VM\'s disk = EBS volume' },
+
+        { cat:'OS Image',    catCls:'bd-os',
+          loc:'Ubuntu ISO + manual install', locS:'Configured by hand',
+          concept:'Machine Image',
+          cld:'Amazon AMI',               cldS:'Amazon Machine Image',
+          b: 'You spent time installing Ubuntu and configuring tools. An AMI is a pre-packaged snapshot — launch a new EC2 and it\'s already configured, in about 60 seconds.',
+          a: 'Golden AMI strategy: bake your OS + packages + config into an AMI. Every new server launches identically. No manual setup, no configuration drift.',
+          x: 'AMI = EBS snapshot + launch permissions + block device mapping. Immutable infrastructure: never SSH to patch a running instance — bake a new AMI (Packer) and replace. This is what large-scale cloud deployments do.',
+          tip:'Ubuntu 22.04 ISO ≈ ubuntu-22.04-server AMI (ami-0xxxxx)' },
+
+        { cat:'Container',   catCls:'bd-container',
+          loc:'Docker Container',         locS:'docker run on your VM',
+          concept:'Containerisation',
+          cld:'AWS ECS / Fargate',        cldS:'Elastic Container Service',
+          b: 'You run docker run nginx or docker run mysql on your VM. ECS does the same on cloud infrastructure, adding health checks and auto-restart when containers crash.',
+          a: 'ECS Fargate = serverless containers. Provide a task definition (JSON equivalent of docker run flags) and AWS provisions compute invisibly — no EC2 instances to manage.',
+          x: 'Fargate uses Firecracker microVMs for isolation — lightweight (125ms cold start, 5MB overhead) vs full VMs. Billing: per-vCPU-second + per-GB-second. ECS vs EKS: ECS is simpler and AWS-native; EKS is Kubernetes for portability.',
+          tip:'docker run nginx → ECS task running nginx:alpine' },
+
+        { cat:'Orchestration',catCls:'bd-orch',
+          loc:'Docker Compose',           locS:'docker-compose.yml',
+          concept:'Container Orchestration',
+          cld:'ECS Task Definition',      cldS:'Or Docker Compose on ECS',
+          b: 'Your docker-compose.yml defines nginx + MySQL + Redis in one file and starts them all together. A Task Definition does exactly the same in the cloud.',
+          a: 'AWS supports Docker Compose directly via the ECS Compose CLI. Your docker-compose.yml can deploy to ECS with near-zero changes — direct classroom-to-cloud portability.',
+          x: 'Compose→ECS mapping: services→tasks, ports→ALB target groups, volumes→EFS mounts, networks→VPC subnets. Not all Compose fields are supported — depends/on and build: are not. For production, use CDK or Terraform for full control.',
+          tip:'docker-compose.yml → ecs-cli compose up (deploys to ECS)' },
+
+        { cat:'Database',    catCls:'bd-db',
+          loc:'MySQL on Docker',          locS:'Container on your VM',
+          concept:'Managed Relational DB',
+          cld:'Amazon RDS',               cldS:'Relational Database Service',
+          b: 'Your MySQL container runs on your VM — you manage updates, backups, and crashes yourself. RDS handles all of that automatically. You just connect and run queries.',
+          a: 'RDS gives you: automated backups (point-in-time recovery to 5min), Multi-AZ failover (<60s), read replicas, automated patching, and Performance Insights — none of which you get from a container.',
+          x: 'RDS vs Aurora: Aurora is AWS-native, 5× throughput, auto-scaling storage to 128TB. Aurora Serverless v2 scales from 0.5 ACU — near-zero cost when idle. For CloudEats at scale, Aurora Serverless > RDS > MySQL on EC2.',
+          tip:'mysql://developer@localhost:3306 → mysql://cloudeats.xxxxx.rds.amazonaws.com:3306' },
+
+        { cat:'NoSQL',       catCls:'bd-nosql',
+          loc:'MongoDB on Docker',        locS:'Container on your VM',
+          concept:'Managed NoSQL DB',
+          cld:'Amazon DocumentDB',        cldS:'MongoDB-compatible',
+          b: 'Your MongoDB container stores orders. DocumentDB uses the same code — your mongoose driver connects unchanged. AWS manages backups and scaling.',
+          a: 'DocumentDB is MongoDB 4.0-compatible at the wire protocol level. 99.99% SLA, 6-way replication across 3 AZs, encryption at rest. Note: not all MongoDB aggregation operators are supported.',
+          x: 'DocumentDB vs MongoDB Atlas: Atlas is native MongoDB on AWS/Azure/GCP with better compatibility; DocumentDB is a re-implementation with tighter AWS IAM/VPC integration. For pure AWS shops: DocumentDB. For multi-cloud: Atlas. ElastiCache for Redis maps directly from your Redis container.',
+          tip:'mongoose.connect("mongodb://localhost:27017") → "mongodb://docdb.cluster.amazonaws.com:27017"' },
+
+        { cat:'Network',     catCls:'bd-net',
+          loc:'nginx reverse proxy',      locS:'Port routing on your VM',
+          concept:'Load Balancing',
+          cld:'AWS ALB',                  cldS:'Application Load Balancer',
+          b: 'nginx routes HTTP requests to your services. ALB does the same but across many servers, with health checks — if a server fails, ALB stops sending it traffic.',
+          a: 'ALB adds: TLS termination (free SSL via ACM), path-based routing (/api/* → API Gateway, /* → S3 static site), sticky sessions, WebSocket support, and WAF integration.',
+          x: 'ALB (Layer 7) vs NLB (Layer 4, TCP/UDP, ultra-low latency) vs CloudFront (CDN + edge cache). For CloudEats: ALB in front of ECS services + CloudFront in front of ALB for global users. ALB alone handles 1M+ requests/sec.',
+          tip:'nginx location /api/ → ALB listener rule: path /api/* → target group' },
+
+        { cat:'CI/CD',       catCls:'bd-cicd',
+          loc:'GitHub Actions',           locS:'Deploying to Proxmox via SSH',
+          concept:'CI/CD Pipeline',
+          cld:'GitHub Actions + AWS',     cldS:'Same tool — different target',
+          b: 'Your GitHub Actions pipeline tests and deploys your app via SSH. The exact same pipeline works for AWS — just swap the SSH target from your Proxmox VM to an EC2 instance or ECS.',
+          a: 'GitHub Actions to AWS: use aws-actions/configure-aws-credentials + amazon-ecs-deploy-task-definition. Your workflow.yml changes by about 10 lines. The conceptual model is identical.',
+          x: 'This mapping is nearly 1:1 — GitHub Actions is already the industry standard for CI/CD. Deployment targets: EC2 via SSH (what you do now) → ECS rolling update → Lambda → CloudFormation stack. AWS CodePipeline is AWS-native but significantly more complex.',
+          tip:'ssh developer@proxmox-vm → aws ecs update-service --force-new-deployment' },
+      ];
+
+      const tbl = document.getElementById('pxTable');
+      let active = -1;
+
+      rows.forEach(function(r, i) {
+        // row
+        const row = document.createElement('div');
+        row.className = 'px-row' + (rows.length === 1 ? ' solo' : '');
+        row.innerHTML =
+          '<div class="px-side px-local">' +
+            '<span class="px-badge ' + r.catCls + '">' + r.cat + '</span>' +
+            '<div class="px-name">' + r.loc + '</div>' +
+            '<div class="px-sub">' + r.locS + '</div>' +
+          '</div>' +
+          '<div class="px-mid">' +
+            '<div class="px-eq">=</div>' +
+            '<div class="px-concept">' + r.concept + '</div>' +
+          '</div>' +
+          '<div class="px-side px-cloud">' +
+            '<div class="px-name">' + r.cld + '</div>' +
+            '<div class="px-sub">' + r.cldS + '</div>' +
+          '</div>' +
+          '<div class="px-chev">›</div>';
+
+        // detail
+        const det = document.createElement('div');
+        det.className = 'px-detail';
+        det.innerHTML =
+          '<div class="px-detail-text px-dt-b">🌱 ' + r.b + '</div>' +
+          '<div class="px-detail-text px-dt-a">⚡ ' + r.a + '</div>' +
+          '<div class="px-detail-text px-dt-x">🚀 ' + r.x + '</div>' +
+          '<div class="px-insight">' + r.tip + '</div>';
+
+        row.onclick = function() {
+          if (active === i) {
+            row.classList.remove('active');
+            det.classList.remove('show');
+            active = -1;
+          } else {
+            if (active >= 0) {
+              tbl.children[active * 2].classList.remove('active');
+              tbl.children[active * 2 + 1].classList.remove('show');
+            }
+            row.classList.add('active');
+            det.classList.add('show');
+            active = i;
+          }
+        };
+
+        tbl.appendChild(row);
+        tbl.appendChild(det);
+      });
+    })();
+    </script>
+    <!-- ═══ END MEDIA 5 ═══ -->
+  </section>
+
+  <!-- TAB 4: ACTIVITIES -->
+  <section class="tab-panel" id="tab-activities">
+    <div class="section-title">🎯 Hands-On Activities</div>
+    <p class="section-desc">Click any activity to expand it and see the full instructions. Activities are labelled by pace level and group format.</p>
+
+    <!-- ── ACTIVITY CONTROLS ── -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;padding:0.4rem 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:0.75rem;color:var(--muted)"><strong style="color:var(--text)">5 activities</strong> — click header to open</span>
+      <div style="display:flex;gap:0.5rem">
+        <button onclick="expandActivities()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--green)';this.style.borderColor='var(--green)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↓ Expand All</button>
+        <button onclick="collapseActivities()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--muted)';this.style.borderColor='var(--muted)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↑ Collapse All</button>
+      </div>
+    </div>
+
+    <!-- ═══ MEDIA 6: Resource Allocation Cost Simulator ═══ -->
+    <!-- Activity 1 -->
+    <style>
+    #media-cost .cst-scenario {
+      font-size: 0.82rem; color: var(--muted); line-height: 1.6;
+      margin-bottom: 1rem; padding: 0.65rem 0.85rem;
+      background: var(--bg3); border-radius: 8px; border: 1px solid var(--border);
+    }
+    #media-cost .cst-scenario strong { color: var(--text); }
+    #media-cost .cst-slider-row {
+      display: flex; align-items: center; gap: 0.85rem;
+      margin-bottom: 0.65rem; flex-wrap: wrap;
+    }
+    #media-cost .cst-slider-label { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+    #media-cost .cst-hrs-display {
+      font-size: 1.4rem; font-weight: 700; color: var(--text); line-height: 1;
+      min-width: 40px; text-align: right;
+    }
+    #media-cost .cst-hrs-unit { font-size: 0.72rem; color: var(--muted); }
+    #media-cost input[type=range] { flex: 1; min-width: 180px; }
+    #media-cost .cst-breakeven-note {
+      font-size: 0.7rem; color: var(--muted); text-align: right; margin-bottom: 0.75rem;
+    }
+    #media-cost .cst-breakeven-note span { color: var(--amber); font-weight: 600; }
+    #media-cost .cst-chart-wrap {
+      position: relative; height: 220px; margin-bottom: 1rem;
+      background: var(--bg3); border-radius: 8px; border: 1px solid var(--border); padding: 8px;
+    }
+    #media-cost .cst-boxes {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.65rem; margin-bottom: 0.85rem;
+    }
+    #media-cost .cst-box {
+      border-radius: 9px; padding: 0.75rem; border: 1px solid var(--border);
+      background: var(--surface2); text-align: center;
+      transition: border-color 0.3s; position: relative; overflow: hidden;
+    }
+    #media-cost .cst-box.best { border-color: var(--green); }
+    #media-cost .cst-box.best::before {
+      content: 'BEST'; position: absolute; top: 5px; right: 6px;
+      font-size: 0.55rem; font-weight: 700; letter-spacing: 0.08em;
+      color: var(--green); background: rgba(0,229,160,0.12);
+      padding: 1px 5px; border-radius: 3px;
+    }
+    #media-cost .cst-box-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.3rem; }
+    #media-cost .cst-box-usd {
+      font-size: 1.3rem; font-weight: 700; line-height: 1.1;
+      transition: color 0.3s;
+    }
+    #media-cost .cst-box-myr { font-size: 0.68rem; color: var(--muted); margin-top: 0.15rem; }
+    #media-cost .cst-box-sub { font-size: 0.65rem; color: var(--muted); margin-top: 0.2rem; line-height: 1.3; }
+    #media-cost .cst-box.trad .cst-box-usd { color: #ff8c7a; }
+    #media-cost .cst-box.odem .cst-box-usd { color: var(--accent); }
+    #media-cost .cst-box.resv .cst-box-usd { color: var(--green); }
+    #media-cost .cst-verdict {
+      border-radius: 9px; padding: 0.75rem 0.9rem;
+      font-size: 0.82rem; line-height: 1.65; margin-bottom: 1rem;
+      border-left: 3px solid; transition: border-color 0.3s, background 0.3s;
+    }
+    #media-cost .cst-verdict.v-low  { background: rgba(0,200,255,0.06); border-color: var(--accent); color: #a0d8f0; }
+    #media-cost .cst-verdict.v-mid  { background: rgba(255,183,64,0.06); border-color: var(--amber); color: #d9c07a; }
+    #media-cost .cst-verdict.v-high { background: rgba(0,229,160,0.06); border-color: var(--green); color: #8ee8c4; }
+    #media-cost .cst-savings { font-weight: 700; color: var(--green); }
+    #media-cost .cst-divider {
+      border: none; border-top: 1px solid var(--border); margin: 1rem 0;
+    }
+    @media (max-width: 500px) {
+      #media-cost .cst-boxes { grid-template-columns: 1fr; }
+    }
+    </style>
+
+    <div class="activity-card" id="media-cost" onclick="toggleActivity(this, event); if(this.classList.contains('open')) cstInit()">
+      <div class="activity-header">
+        <div class="activity-num">1</div>
+        <div class="activity-title">Cloud Resource Allocation — Live Cost Simulator</div>
+        <div class="activity-tags">
+          <span class="tag tag-beginner">Beginner</span>
+          <span class="tag tag-average">Average</span>
+          <span class="tag tag-advanced">Advanced</span>
+          <span class="tag tag-solo">Solo</span>
+        </div>
+        <span class="activity-chevron">›</span>
+      </div>
+      <div class="activity-body">
+
+        <div class="cst-scenario">
+          <strong>Scenario:</strong> CloudEats needs <strong>3 virtual servers</strong> — web, API, and database. You're deciding whether to buy physical servers or rent from the cloud. Drag the slider to see how usage hours change the cost picture.
+        </div>
+
+        <div class="cst-slider-row">
+          <span class="cst-slider-label">Hours running per day</span>
+          <span class="cst-hrs-display" id="cstHrsNum">8</span>
+          <span class="cst-hrs-unit">hrs / day</span>
+          <input type="range" min="0" max="24" step="1" value="8" id="cstSlider" oninput="cstUpdate(+this.value)">
+        </div>
+        <div class="cst-breakeven-note">Break-even: on-demand vs reserved at <span>≈ 15 hrs/day</span></div>
+
+        <div class="cst-chart-wrap">
+          <canvas id="cstChart"></canvas>
+        </div>
+
+        <div class="cst-boxes">
+          <div class="cst-box trad" id="cstBoxTrad">
+            <div class="cst-box-label">Traditional IT</div>
+            <div class="cst-box-usd" id="cstTradUsd">$458</div>
+            <div class="cst-box-myr" id="cstTradMyr">≈ RM 2,153</div>
+            <div class="cst-box-sub">Fixed — same cost<br>regardless of usage</div>
+          </div>
+          <div class="cst-box odem" id="cstBoxOdem">
+            <div class="cst-box-label">Cloud On-Demand</div>
+            <div class="cst-box-usd" id="cstOdemUsd">$34</div>
+            <div class="cst-box-myr" id="cstOdemMyr">≈ RM 160</div>
+            <div class="cst-box-sub">Pay per hour<br>zero when off</div>
+          </div>
+          <div class="cst-box resv best" id="cstBoxResv">
+            <div class="cst-box-label">Cloud Reserved</div>
+            <div class="cst-box-usd" id="cstResvUsd">$65</div>
+            <div class="cst-box-myr" id="cstResvMyr">≈ RM 306</div>
+            <div class="cst-box-sub">1-yr commitment<br>always-on discount</div>
+          </div>
+        </div>
+
+        <div class="cst-verdict v-low" id="cstVerdict">
+          Loading...
+        </div>
+
+        <hr class="cst-divider">
+
+        <div class="tier beginner">
+          <div class="tier-label">🌱 Beginner exercise</div>
+          Use the slider above. Try three positions: 2 hrs/day, 12 hrs/day, and 24 hrs/day. Write down the monthly cost for each option at each position. Which option wins at each usage level? Why does the "best" option change?
+        </div>
+        <div class="tier average">
+          <div class="tier-label">⚡ Average exercise</div>
+          Find the exact break-even point between on-demand and reserved (drag until they're closest in cost). Then use the <a href="https://calculator.aws/pricing/2/homescreen" style="color:var(--accent)" target="_blank">AWS Pricing Calculator</a> to verify with real EC2 t3.medium pricing. How accurate is this simulator? What costs are missing from the model?
+        </div>
+        <div class="tier advanced">
+          <div class="tier-label">🚀 Advanced exercise</div>
+          The simulator uses simplified numbers. Build a more accurate TCO model: add egress costs ($0.09/GB, assume 1TB/month), RDS managed DB ($80/mo), S3 storage (500GB × $0.023), and CloudFront CDN ($0.0085/GB). Compare the same model across AWS, Azure, and GCP. Which provider is cheapest for CloudEats in Singapore? Does the answer change at 10× scale?
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══ END MEDIA 6 ═══ -->
+
+    <script>
+    (function(){
+      const MYR_RATE   = 4.70;
+      const TRAD_MO    = 458;          // fixed $/month (3-server on-prem)
+      const ODEM_RATE  = 0.047;        // $/hr per VM (t3.medium-equiv, on-demand)
+      const RESV_RATE  = 0.0298;       // $/hr per VM (1-yr reserved, no upfront)
+      const NUM_VMS    = 3;
+      const DAYS_MO    = 30.44;
+
+      function odem(h)  { return +(NUM_VMS * ODEM_RATE * h * DAYS_MO).toFixed(2); }
+      function resv()   { return +(NUM_VMS * RESV_RATE * 730).toFixed(2); }
+      const RESV_MO     = resv(); // flat $65.26/mo
+
+      const hrs = Array.from({length:25},(_,i)=>i);
+      let chart = null;
+      let curHr = 8;
+
+      window.cstInit = function() {
+        if (chart) return;
+        if (!window.Chart) {
+          const s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+          s.onload = buildChart;
+          document.head.appendChild(s);
+        } else { buildChart(); }
+      };
+
+      function ptR(h) {
+        return hrs.map(i => i === h ? 5 : 0);
+      }
+
+      function buildChart() {
+        const ctx = document.getElementById('cstChart');
+        if (!ctx) return;
+        const tradData = hrs.map(() => TRAD_MO);
+        const odemData = hrs.map(h => odem(h));
+        const resvData = hrs.map(() => RESV_MO);
+        chart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: hrs.map(h => h + 'h'),
+            datasets: [
+              { label:'Traditional (Fixed $458/mo)', data:tradData,
+                borderColor:'#6b7fa0', borderWidth:2, borderDash:[6,4],
+                pointRadius:0, tension:0, fill:false },
+              { label:'Cloud On-Demand', data:odemData,
+                borderColor:'#00c8ff', borderWidth:2.5,
+                pointRadius:ptR(curHr), pointBackgroundColor:'#00c8ff',
+                tension:0, fill:false },
+              { label:'Cloud Reserved ($65/mo)', data:resvData,
+                borderColor:'#00e5a0', borderWidth:2.5, borderDash:[4,3],
+                pointRadius:ptR(curHr), pointBackgroundColor:'#00e5a0',
+                tension:0, fill:false },
+            ]
+          },
+          options: {
+            responsive:true, maintainAspectRatio:false,
+            interaction:{ mode:'index', intersect:false },
+            scales:{
+              x:{ ticks:{ color:'#6b7fa0', maxRotation:0,
+                    callback:(v,i)=> i%4===0 ? hrs[i]+'h' : '' },
+                  grid:{ color:'rgba(42,61,90,0.6)' } },
+              y:{ ticks:{ color:'#6b7fa0',
+                    callback:(v)=>'$'+v },
+                  grid:{ color:'rgba(42,61,90,0.6)' },
+                  max:500 }
+            },
+            plugins:{
+              legend:{ labels:{ color:'#6b7fa0', font:{size:11}, boxWidth:18, padding:12 } },
+              tooltip:{ callbacks:{ label:(c)=> c.dataset.label.split(' (')[0]+': $'+c.parsed.y.toFixed(0)+'/mo' } }
+            },
+            animation:{ duration:150 }
+          }
+        });
+        cstUpdate(curHr);
+      }
+
+      window.cstUpdate = function(h) {
+        curHr = h;
+        document.getElementById('cstHrsNum').textContent = h;
+        document.getElementById('cstSlider').value = h;
+
+        const oDemCost = odem(h);
+        const costs = { trad:TRAD_MO, odem:oDemCost, resv:RESV_MO };
+        const bestCost = Math.min(TRAD_MO, oDemCost, RESV_MO);
+
+        // update boxes
+        function setBox(id, val, boxEl) {
+          document.getElementById(id+'Usd').textContent = '$' + val.toFixed(0);
+          document.getElementById(id+'Myr').textContent = '≈ RM ' + (val * MYR_RATE).toFixed(0);
+          boxEl.classList.toggle('best', val === bestCost);
+        }
+        setBox('cstTrad', TRAD_MO,   document.getElementById('cstBoxTrad'));
+        setBox('cstOdem', oDemCost,  document.getElementById('cstBoxOdem'));
+        setBox('cstResv', RESV_MO,   document.getElementById('cstBoxResv'));
+
+        // verdict
+        const saved = (TRAD_MO - bestCost).toFixed(0);
+        const vEl = document.getElementById('cstVerdict');
+        let vClass, vMsg;
+        if (h === 0) {
+          vClass='v-low';
+          vMsg='At 0 hours — cloud on-demand costs <strong class="cst-savings">$0/month</strong>. Traditional IT still costs $458 even when nobody is using it. This is the CapEx trap.';
+        } else if (oDemCost <= RESV_MO) {
+          vClass='v-low';
+          vMsg=`At ${h} hrs/day — on-demand (<span class="cst-savings">$${oDemCost.toFixed(0)}/mo</span>) beats reserved. Best for variable workloads. You save <span class="cst-savings">$${saved}/mo</span> vs traditional.`;
+        } else {
+          vClass='v-high';
+          vMsg=`At ${h} hrs/day — reserved (<span class="cst-savings">$${RESV_MO.toFixed(0)}/mo</span>) beats on-demand. Commit to 1 year and save $${(oDemCost-RESV_MO).toFixed(0)}/mo over on-demand. Saves <span class="cst-savings">$${saved}/mo</span> vs traditional.`;
+        }
+        vEl.className = 'cst-verdict ' + vClass;
+        vEl.innerHTML = vMsg;
+
+        // update chart point markers
+        if (chart) {
+          chart.data.datasets[1].pointRadius = ptR(h);
+          chart.data.datasets[2].pointRadius = ptR(h);
+          chart.update('none');
+        }
+      };
+    })();
+    </script>
+
+    <!-- Activity 2 -->
+    <div class="activity-card" onclick="toggleActivity(this, event)">
+      <div class="activity-header">
+        <div class="activity-num">2</div>
+        <div class="activity-title">Service Model Role-Play</div>
+        <div class="activity-tags">
+          <span class="tag tag-beginner">Beginner</span>
+          <span class="tag tag-average">Average</span>
+          <span class="tag tag-group">Group</span>
+        </div>
+        <span class="activity-chevron">›</span>
+      </div>
+      <div class="activity-body">
+        <p>Divide into 3 groups — each represents IaaS, PaaS, or SaaS. Given a scenario (hosting the CloudEats food ordering site), act out your role's responsibilities.</p>
+        <div class="tier beginner">
+          <div class="tier-label">🌱 Beginner</div>
+          Each group answers: What do you provide? What does the customer do? What do you NOT provide? Present in 2 minutes with a simple diagram on the whiteboard. Use the meal analogy to explain your model to the class.
+        </div>
+        <div class="tier average">
+          <div class="tier-label">⚡ Average</div>
+          Each group must also: identify a real product example, describe a realistic customer (who would choose your model?), and name one key advantage and one limitation of your model. Groups then compare answers — where do the boundaries blur?
+        </div>
+        <div class="tier advanced">
+          <div class="tier-label">🚀 Advanced</div>
+          Assign the "CloudEats CTO" role to one student. The three groups pitch their model: cost, control, security, and time-to-market. CTO must ask tough questions (e.g., "What happens if your database goes down at 8pm? Who is responsible?"). Discuss how a real architecture might combine multiple models.
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity 3 -->
+    <div class="activity-card" onclick="toggleActivity(this, event)">
+      <div class="activity-header">
+        <div class="activity-num">3</div>
+        <div class="activity-title">Local Cloud-Like Environment Demo</div>
+        <div class="activity-tags">
+          <span class="tag tag-beginner">Beginner</span>
+          <span class="tag tag-average">Average</span>
+          <span class="tag tag-group">Group</span>
+        </div>
+        <span class="activity-chevron">›</span>
+      </div>
+      <div class="activity-body">
+        <p>Using the local VirtualBox / Proxmox environment, observe how a virtual machine is created — similar to how cloud VMs are provisioned.</p>
+        <div class="tier beginner">
+          <div class="tier-label">🌱 Beginner</div>
+          Observe the instructor spin up a VM. Take notes on: What resources were selected? How long did it take? What did the OS look like once booted? Connect this to the "on-demand" characteristic of cloud computing.
+        </div>
+        <div class="tier average">
+          <div class="tier-label">⚡ Average</div>
+          After the demo, answer: How does this simulate IaaS? What would the PaaS equivalent remove from this process? What would you still need to install to run a web app on this VM? Compare the local VM experience to what you'd expect from AWS EC2.
+        </div>
+        <div class="tier advanced">
+          <div class="tier-label">🚀 Advanced</div>
+          Analyse the differences between a local hypervisor (VirtualBox/Proxmox) and cloud hypervisors (Xen, KVM, Nitro). What enables cloud elasticity that a local VM cannot replicate? Discuss resource overcommitment, live migration, and how cloud providers achieve multi-tenancy securely. Reference the Spectre/Meltdown vulnerabilities as a case study for cross-tenant risks.
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity 4 -->
+    <div class="activity-card" onclick="toggleActivity(this, event)">
+      <div class="activity-header">
+        <div class="activity-num">4</div>
+        <div class="activity-title">Cloud Provider Comparison Chart</div>
+        <div class="activity-tags">
+          <span class="tag tag-average">Average</span>
+          <span class="tag tag-advanced">Advanced</span>
+          <span class="tag tag-solo">Solo</span>
+        </div>
+        <span class="activity-chevron">›</span>
+      </div>
+      <div class="activity-body">
+        <p>Research and build a comparison chart of major cloud providers, focusing on services relevant to the IaaS / PaaS / SaaS models.</p>
+        <div class="tier average">
+          <div class="tier-label">⚡ Average</div>
+          Create a table comparing AWS, Azure, and GCP across: compute (VM), object storage, managed SQL database, serverless compute, and Kubernetes service. Use official documentation. Note the service name, price tier, and one standout feature for each. Present your chart to a partner.
+        </div>
+        <div class="tier advanced">
+          <div class="tier-label">🚀 Advanced</div>
+          Include a 4th column for Alibaba Cloud. Add criteria: compliance certifications, Malaysia/SEA data residency, free tier limits, and pricing model (per-second vs per-minute billing). Evaluate which provider you'd choose for a Malaysian startup launching a food delivery platform. Justify with at least 3 technical reasons.
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity 5 -->
+    <div class="activity-card" onclick="toggleActivity(this, event)">
+      <div class="activity-header">
+        <div class="activity-num">5</div>
+        <div class="activity-title">Cloud Benefit Analysis — Case Study</div>
+        <div class="activity-tags">
+          <span class="tag tag-beginner">Beginner</span>
+          <span class="tag tag-average">Average</span>
+          <span class="tag tag-advanced">Advanced</span>
+          <span class="tag tag-group">Group</span>
+        </div>
+        <span class="activity-chevron">›</span>
+      </div>
+      <div class="activity-body">
+        <p><strong>Scenario:</strong> A small restaurant in KL wants to launch an online food ordering app. They have: 1 part-time IT person, RM 5,000/month IT budget, peak traffic at lunch and dinner, slow off-peak hours.</p>
+        <div class="tier beginner">
+          <div class="tier-label">🌱 Beginner</div>
+          Discuss: What problems might they face if they buy their own server? How could the cloud help? List 3 benefits of using cloud for this restaurant. Which service model (IaaS, PaaS, SaaS) makes most sense for a team with limited IT skills? Why?
+        </div>
+        <div class="tier average">
+          <div class="tier-label">⚡ Average</div>
+          Map each cloud benefit (scalability, cost, reliability, global reach) to a specific restaurant pain point. Identify which parts of the app (website, database, payment) map to which cloud service model. Estimate rough monthly costs using a free-tier provider. What risks does cloud introduce, and how would you mitigate them?
+        </div>
+        <div class="tier advanced">
+          <div class="tier-label">🚀 Advanced</div>
+          Design a cloud architecture proposal: which services (by name), which provider, estimated cost breakdown, auto-scaling strategy for peak hours, and a disaster recovery plan. Address the shared responsibility model — what security obligations does the restaurant retain? Present as a 5-minute pitch to a non-technical owner.
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="page-footer">
+  Cloud Computing Course · Week 1 · Foundations of Cloud Computing &nbsp;|&nbsp; Use the pace selector above to adjust depth
+</footer>
+
+<script>
+  function setPace(pace) {
+    document.body.className = 'pace-' + pace;
+    document.querySelectorAll('.pace-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-pace="${pace}"]`).classList.add('active');
+
+    const messages = {
+      beginner: { cls: 'beginner', text: '<strong>Beginner mode:</strong> Focus on key concepts and real-world analogies. No prior IT knowledge assumed. Take it one idea at a time.' },
+      average:  { cls: 'average',  text: '<strong>Average mode:</strong> Standard diploma level. Understand the concepts, terminology, and how systems connect. Relates theory to practice.' },
+      advanced: { cls: 'advanced', text: '<strong>Advanced mode:</strong> Deeper technical detail, trade-offs, and industry context. Suitable if you have prior networking or programming experience.' }
+    };
+    const m = messages[pace];
+    const el = document.getElementById('paceNotice');
+    el.className = 'pace-notice ' + m.cls;
+    el.innerHTML = '<span>' + (pace === 'beginner' ? '🌱' : pace === 'average' ? '⚡' : '🚀') + '</span><span>' + m.text + '</span>';
+    document.getElementById('paceBanner').classList.add('show');
+
+    /* Beginners get all activities open — they benefit from seeing everything
+       without needing to click to discover content */
+    if (pace === 'beginner') {
+      document.querySelectorAll('.activity-card').forEach(c => c.classList.add('open'));
+    }
+  }
+
+  function showTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  function toggleActivity(card, event) {
+    /* Only toggle when the click is on the header — prevents closing when
+       students interact with sliders, inputs, or text inside the activity body */
+    if (event && !event.target.closest('.activity-header')) return;
+    card.classList.toggle('open');
+  }
+
+  function toggleCard(card) {
+    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+  }
+
+  function expandActivities() {
+    document.querySelectorAll('.activity-card').forEach(c => c.classList.add('open'));
+    if (typeof cstInit === 'function') cstInit();
+  }
+  function collapseActivities() {
+    document.querySelectorAll('.activity-card').forEach(c => c.classList.remove('open'));
+  }
+</script>
+</body>
+</html>

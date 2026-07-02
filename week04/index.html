@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 4 · Cloud-Native Applications · CloudEats</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07090f; --bg2: #0d1117; --bg3: #141b27;
+    --surface: #1a2235; --surface2: #1f2c42; --border: #2a3d5a;
+    --accent: #00c8ff; --green: #00e5a0; --amber: #ffb740;
+    --red: #ff5e7a; --purple: #b46ef5;
+    --text: #e8edf5; --muted: #6b7fa0;
+    --beginner: #00e5a0; --average: #00c8ff; --advanced: #b46ef5;
+    --week-color: #ffb740;
+    --radius: 10px; --code-bg: #0b1120;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+
+  /* ── HEADER ── */
+  .site-header { background: linear-gradient(135deg, #050d1c, #091628); border-bottom: 1px solid var(--border); padding: 0 2rem; position: sticky; top: 0; z-index: 100; }
+  .header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 58px; gap: 1rem; }
+  .header-left { display: flex; align-items: center; gap: 0.75rem; }
+  .week-badge { background: var(--amber); color: #000; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; padding: 0.2rem 0.55rem; border-radius: 4px; text-transform: uppercase; }
+  .header-title { font-size: 0.9rem; font-weight: 600; }
+  .ghp-badge { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.68rem; font-weight: 700; padding: 0.2rem 0.6rem; background: rgba(255,183,64,0.1); border: 1px solid rgba(255,183,64,0.3); color: var(--amber); border-radius: 20px; }
+  .week-nav { display: flex; gap: 0.4rem; align-items: center; }
+  .week-nav a { font-size: 0.68rem; font-weight: 600; padding: 0.2rem 0.55rem; border: 1px solid var(--border); border-radius: 4px; color: var(--muted); text-decoration: none; transition: all 0.15s; }
+  .week-nav a:hover { color: var(--accent); border-color: var(--accent); }
+  .week-nav a.current { background: rgba(255,183,64,0.1); color: var(--amber); border-color: rgba(255,183,64,0.3); }
+
+  /* ── HERO ── */
+  .page-hero { background: linear-gradient(160deg, #0a0e18, #0e1420); border-bottom: 1px solid var(--border); padding: 2.5rem 2rem 2rem; position: relative; overflow: hidden; }
+  .page-hero::before { content: ''; position: absolute; top: -80px; right: -80px; width: 400px; height: 400px; background: radial-gradient(ellipse, rgba(255,183,64,0.07), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; }
+  .hero-crumb { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.5rem; }
+  .hero-crumb span { color: var(--amber); }
+  .page-hero h1 { font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 800; background: linear-gradient(135deg, #e8edf5 40%, var(--amber)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.5rem; }
+  .hero-sub { color: var(--muted); font-size: 0.88rem; margin-top: 0.3rem; margin-bottom: 0; }
+  .hero-meta { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
+  .meta-chip { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.28rem 0.7rem; color: var(--muted); }
+  .meta-chip strong { color: var(--text); }
+
+  /* ── LEVEL PILLS & BLOCKS ── */
+  .level-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.75rem 0; }
+  .level-pill { font-size: 0.64rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.15rem 0.5rem; border-radius: 20px; white-space: nowrap; }
+  .level-pill.beginner { background: rgba(0,229,160,0.12); color: var(--beginner); border: 1px solid rgba(0,229,160,0.3); }
+  .level-pill.average  { background: rgba(0,200,255,0.12); color: var(--average);  border: 1px solid rgba(0,200,255,0.3); }
+  .level-pill.advanced { background: rgba(180,110,245,0.12); color: var(--advanced); border: 1px solid rgba(180,110,245,0.3); }
+  .level-block { border-radius: 8px; padding: 0.75rem 1rem; margin: 0.6rem 0; font-size: 0.82rem; line-height: 1.55; }
+  .level-block.beginner { background: rgba(0,229,160,0.04); border: 1px solid rgba(0,229,160,0.18); border-left: 3px solid var(--beginner); }
+  .level-block.average  { background: rgba(0,200,255,0.04); border: 1px solid rgba(0,200,255,0.18); border-left: 3px solid var(--average); }
+  .level-block.advanced { background: rgba(180,110,245,0.04); border: 1px solid rgba(180,110,245,0.18); border-left: 3px solid var(--advanced); }
+  .level-block-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.3rem; }
+  .level-block.beginner .level-block-label { color: var(--beginner); }
+  .level-block.average  .level-block-label { color: var(--average); }
+  .level-block.advanced .level-block-label { color: var(--advanced); }
+
+  /* ── TABS ── */
+  .tab-nav { max-width: 1100px; margin: 0 auto; padding: 1.5rem 2rem 0; display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .tab-btn { font-family: 'Sora', sans-serif; font-size: 0.78rem; font-weight: 600; padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 8px 8px 0 0; background: var(--bg3); color: var(--muted); cursor: pointer; transition: all 0.15s; border-bottom: none; }
+  .tab-btn:hover { color: var(--text); background: var(--surface); }
+  .tab-btn.active { background: var(--surface); color: var(--amber); border-color: var(--border); border-bottom: 1px solid var(--surface); position: relative; z-index: 1; }
+  .tab-content { max-width: 1100px; margin: 0 auto; padding: 0 2rem 4rem; }
+  .tab-panel { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 0 var(--radius) var(--radius) var(--radius); padding: 2rem; margin-top: -1px; }
+  .tab-panel.active { display: block; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ── SECTION HEADERS ── */
+  .sec-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border); }
+  .sec-pill { font-size: 0.67rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.18rem 0.55rem; border-radius: 20px; white-space: nowrap; }
+  .sec-pill.blue   { background: rgba(0,200,255,0.1);  color: var(--accent); border: 1px solid rgba(0,200,255,0.2); }
+  .sec-pill.green  { background: rgba(0,229,160,0.1);  color: var(--green);  border: 1px solid rgba(0,229,160,0.2); }
+  .sec-pill.amber  { background: rgba(255,183,64,0.1); color: var(--amber);  border: 1px solid rgba(255,183,64,0.2); }
+  .sec-pill.purple { background: rgba(180,110,245,0.1);color: var(--purple); border: 1px solid rgba(180,110,245,0.2); }
+  .sec-pill.red    { background: rgba(255,94,122,0.1); color: var(--red);    border: 1px solid rgba(255,94,122,0.2); }
+  .sec-title { font-size: 1.1rem; font-weight: 700; }
+  .sec-time  { font-size: 0.73rem; color: var(--muted); margin-left: auto; }
+
+  /* ── CONCEPT CARDS ── */
+  .card-grid { display: grid; gap: 0.85rem; margin: 0.85rem 0; }
+  .card-grid.cols2 { grid-template-columns: repeat(2, 1fr); }
+  .card-grid.cols3 { grid-template-columns: repeat(3, 1fr); }
+  .card-grid.cols4 { grid-template-columns: repeat(4, 1fr); }
+  .concept-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+  .concept-card.highlight-blue   { border-color: rgba(0,200,255,0.35);  background: rgba(0,200,255,0.04); }
+  .concept-card.highlight-green  { border-color: rgba(0,229,160,0.35);  background: rgba(0,229,160,0.04); }
+  .concept-card.highlight-amber  { border-color: rgba(255,183,64,0.35); background: rgba(255,183,64,0.04); }
+  .concept-card.highlight-purple { border-color: rgba(180,110,245,0.35);background: rgba(180,110,245,0.04); }
+  .concept-card.highlight-red    { border-color: rgba(255,94,122,0.35); background: rgba(255,94,122,0.04); }
+  .cc-icon  { font-size: 1.6rem; margin-bottom: 0.4rem; display: block; }
+  .cc-title { font-size: 0.88rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .cc-body  { font-size: 0.79rem; color: var(--muted); line-height: 1.55; }
+  .cc-tag   { display: inline-block; font-size: 0.68rem; font-weight: 600; padding: 0.1rem 0.45rem; border-radius: 4px; margin-top: 0.5rem; }
+  .cc-tag.blue   { background: rgba(0,200,255,0.1); color: var(--accent); }
+  .cc-tag.green  { background: rgba(0,229,160,0.1); color: var(--green); }
+  .cc-tag.amber  { background: rgba(255,183,64,0.1); color: var(--amber); }
+  .cc-tag.purple { background: rgba(180,110,245,0.1); color: var(--purple); }
+
+  /* ── COMPARE GRID ── */
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 0.85rem 0; }
+  .compare-side { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+  .compare-side.left  { border-top: 3px solid var(--amber); }
+  .compare-side.right { border-top: 3px solid var(--green); }
+  .compare-side.bad   { border-top: 3px solid var(--red); }
+  .compare-side.good  { border-top: 3px solid var(--green); }
+  .cs-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.65rem; }
+  .cs-label.amber  { color: var(--amber); }
+  .cs-label.green  { color: var(--green); }
+  .cs-label.red    { color: var(--red); }
+  .cs-item  { display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.8rem; margin-bottom: 0.45rem; color: var(--muted); }
+  .cs-item:last-child { margin-bottom: 0; }
+  .cs-dot   { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 0.4rem; }
+  .dot-amber { background: var(--amber); } .dot-green { background: var(--green); }
+  .dot-red   { background: var(--red); }  .dot-blue  { background: var(--accent); }
+  .dot-purple{ background: var(--purple); }
+
+  /* ── CODE ── */
+  code { font-family: 'Fira Code', monospace; font-size: 0.84em; background: var(--code-bg); padding: 0.08rem 0.35rem; border-radius: 3px; color: var(--green); }
+  .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; margin: 0.75rem 0; overflow: hidden; }
+  .code-header { display: flex; align-items: center; justify-content: space-between; padding: 0.45rem 0.9rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); }
+  .code-lang  { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .copy-btn   { font-family: 'Sora', sans-serif; font-size: 0.68rem; font-weight: 600; padding: 0.18rem 0.55rem; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 4px; cursor: pointer; transition: all 0.15s; }
+  .copy-btn:hover { background: var(--amber); color: #000; border-color: var(--amber); }
+  .copy-btn.copied { background: var(--green); color: #000; border-color: var(--green); }
+  pre { font-family: 'Fira Code', monospace; font-size: 0.79rem; line-height: 1.65; padding: 0.9rem; overflow-x: auto; color: #c5d5ef; white-space: pre; }
+  /* SQL syntax colours */
+  .ck  { color: var(--accent); }       /* keyword  */
+  .cv  { color: var(--green); }        /* value/string */
+  .cc  { color: var(--amber); }        /* column name */
+  .cn  { color: #ff8fab; }             /* number */
+  .cm  { color: var(--muted); font-style: italic; } /* comment */
+  .ct  { color: var(--purple); }       /* table name */
+
+  /* ── CALLOUT BOXES ── */
+  .callout { border-radius: 8px; padding: 0.75rem 1rem; margin: 0.75rem 0; display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.82rem; line-height: 1.55; }
+  .callout.blue   { background: rgba(0,200,255,0.05);  border: 1px solid rgba(0,200,255,0.2);  color: #a0d8f0; }
+  .callout.green  { background: rgba(0,229,160,0.05);  border: 1px solid rgba(0,229,160,0.2);  color: #8ee8c4; }
+  .callout.amber  { background: rgba(255,183,64,0.06); border: 1px solid rgba(255,183,64,0.2); color: #d9c07a; }
+  .callout.purple { background: rgba(180,110,245,0.05);border: 1px solid rgba(180,110,245,0.2);color: #c5a8f5; }
+  .callout.red    { background: rgba(255,94,122,0.05); border: 1px solid rgba(255,94,122,0.2); color: #f0a0b0; }
+
+  /* ── IMAGE PLACEHOLDER ── */
+  .img-ph { border: 2px dashed rgba(255,183,64,0.25); border-radius: 8px; background: rgba(255,183,64,0.025); padding: 0.8rem 1.1rem; margin: 0.85rem 0; display: flex; gap: 0.75rem; align-items: flex-start; }
+  .img-ph-icon  { font-size: 1.2rem; flex-shrink: 0; line-height: 1.2; }
+  .img-ph-label { font-size: 0.67rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--amber); margin-bottom: 0.18rem; }
+  .img-ph-desc  { font-size: 0.79rem; color: var(--muted); line-height: 1.5; }
+
+  /* ── KNOWLEDGE CHECK ── */
+  .kc-question { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 0.85rem; }
+  .kc-q { font-size: 0.88rem; font-weight: 600; margin-bottom: 0.7rem; }
+  .kc-options { list-style: none; }
+  .kc-options li { display: flex; align-items: center; gap: 0.55rem; font-size: 0.81rem; padding: 0.4rem 0.7rem; border-radius: 6px; cursor: pointer; transition: background 0.15s; margin-bottom: 0.25rem; border: 1px solid transparent; }
+  .kc-options li:hover { background: var(--surface2); }
+  .kc-options li.correct { background: rgba(0,229,160,0.1); border-color: rgba(0,229,160,0.3); color: var(--green); }
+  .kc-options li.wrong   { background: rgba(255,94,122,0.08); border-color: rgba(255,94,122,0.25); color: var(--red); }
+  .kc-radio { width:14px; height:14px; border:2px solid var(--border); border-radius:50%; flex-shrink:0; transition:all 0.15s; }
+  .kc-options li.correct .kc-radio { background: var(--green); border-color: var(--green); }
+  .kc-options li.wrong   .kc-radio { background: var(--red);   border-color: var(--red); }
+
+  /* ── TABLES ── */
+  .summary-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin: 0.85rem 0; }
+  .summary-table th { padding: 0.5rem 0.85rem; background: var(--bg3); color: var(--muted); font-size: 0.69rem; letter-spacing: 0.07em; text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--border); }
+  .summary-table td { padding: 0.5rem 0.85rem; border-bottom: 1px solid rgba(42,61,90,0.3); vertical-align: top; }
+  .summary-table tr:last-child td { border-bottom: none; }
+  .summary-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 0.79rem; margin: 0.6rem 0; font-family: 'Fira Code', monospace; }
+  .data-table th { padding: 0.35rem 0.75rem; background: var(--bg2); color: var(--amber); font-size: 0.72rem; text-align: left; border: 1px solid var(--border); }
+  .data-table td { padding: 0.32rem 0.75rem; border: 1px solid rgba(42,61,90,0.5); color: var(--text); }
+  .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .pk-cell { color: var(--amber); font-weight: 700; }
+
+  /* ── TERM LIST ── */
+  .term-list { list-style: none; margin: 0.75rem 0; }
+  .term-list li { display: flex; gap: 0.75rem; align-items: baseline; padding: 0.45rem 0; border-bottom: 1px solid rgba(42,61,90,0.35); font-size: 0.84rem; }
+  .term-list li:last-child { border-bottom: none; }
+  .term-key { font-family: 'Fira Code', monospace; font-size: 0.8rem; font-weight: 500; color: var(--amber); white-space: nowrap; flex-shrink: 0; min-width: 120px; }
+  .term-val { color: var(--muted); line-height: 1.5; }
+
+  /* ── FLOW ROW ── */
+  .flow-row { display: flex; align-items: center; gap: 0; margin: 0.85rem 0; flex-wrap: wrap; }
+  .flow-box { background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; padding: 0.6rem 0.9rem; font-size: 0.79rem; text-align: center; min-width: 90px; }
+  .flow-box.active { border-color: rgba(255,183,64,0.4); background: rgba(255,183,64,0.06); color: var(--amber); }
+  .flow-arrow { font-size: 1rem; color: var(--muted); padding: 0 0.3rem; flex-shrink: 0; }
+
+  /* ── LAB CARD ── */
+  .lab-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
+  .lab-card-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+  .lab-num-g { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.18rem 0.55rem; background: rgba(0,229,160,0.12); color: var(--green); border: 1px solid rgba(0,229,160,0.25); border-radius: 20px; }
+  .lab-num-b { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.18rem 0.55rem; background: rgba(0,200,255,0.12); color: var(--accent); border: 1px solid rgba(0,200,255,0.25); border-radius: 20px; }
+  .lab-title { font-size: 1rem; font-weight: 700; }
+  .lab-duration { font-size: 0.72rem; color: var(--muted); margin-left: auto; }
+  .checklist { list-style: none; margin: 0.5rem 0; }
+  .checklist li { display: flex; gap: 0.55rem; font-size: 0.81rem; color: var(--muted); padding: 0.25rem 0; }
+  .checklist li::before { content: '▹'; color: var(--green); flex-shrink: 0; }
+
+  /* ── STEP QUERY BUILDER ── */
+  .qb-step { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0.65rem; overflow: hidden; }
+  .qb-header { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 1rem; cursor: pointer; user-select: none; }
+  .qb-header:hover { background: var(--surface2); }
+  .qb-num { width: 26px; height: 26px; border-radius: 50%; border: 2px solid rgba(255,183,64,0.3); background: rgba(255,183,64,0.08); display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; color: var(--amber); flex-shrink: 0; }
+  .qb-label { font-size: 0.85rem; font-weight: 600; flex: 1; }
+  .qb-clause { font-family: 'Fira Code', monospace; font-size: 0.75rem; color: var(--accent); }
+  .qb-toggle { font-size: 0.8rem; color: var(--muted); transition: transform 0.2s; }
+  .qb-step.open .qb-toggle { transform: rotate(90deg); }
+  .qb-body { display: none; padding: 0 1rem 1rem; border-top: 1px solid var(--border); }
+  .qb-step.open .qb-body { display: block; }
+
+  /* ── SECTION DIVIDER ── */
+  .section-divider { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+  /* ── DECISION BOX ── */
+  .decision-flow { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.75rem; margin: 0.85rem 0; }
+  .dec-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem; }
+  .dec-q { font-size: 0.78rem; color: var(--muted); margin-bottom: 0.4rem; }
+  .dec-a { font-size: 0.84rem; font-weight: 700; }
+  .dec-a.mysql  { color: var(--amber); }
+  .dec-a.redis  { color: var(--red); }
+  .dec-a.mongo  { color: var(--green); }
+
+  a { color: var(--accent); } a:hover { text-decoration: underline; }
+  strong { color: var(--text); font-weight: 600; }
+  p { margin-bottom: 0.75rem; font-size: 0.86rem; line-height: 1.7; }
+  p:last-child { margin-bottom: 0; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 768px) {
+    .tab-content { padding: 0 1rem 3rem; }
+    .tab-panel { padding: 1.25rem; }
+    .card-grid.cols2, .card-grid.cols3, .card-grid.cols4 { grid-template-columns: 1fr; }
+    .compare-grid, .decision-flow { grid-template-columns: 1fr; }
+    .flow-row { flex-direction: column; align-items: flex-start; }
+    .week-nav { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <span class="week-badge">Week 4</span>
+      <span class="header-title">Cloud-Native Application Development</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem">
+      <nav class="week-nav">
+        <a href="../week01/index.html">W1</a>
+        <a href="../week02/index.html">W2</a>
+        <a href="../week03/index.html">W3</a>
+        <a class="current" href="#">W4</a>
+      </nav>
+      <span class="ghp-badge">🐙 GitHub Pages Ready</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<div class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb">CloudEats Academy &rsaquo; <span>Week 4</span></div>
+    <h1>Cloud-Native Application Development</h1>
+    <p class="hero-sub">SQL Queries &middot; Redis Key-Value &middot; MongoDB Documents &middot; Polyglot Persistence</p>
+    <div class="hero-meta">
+      <div class="meta-chip">⏱ <strong>4 hours</strong>&nbsp;Contact</div>
+      <div class="meta-chip">🔬 <strong>Labs 4.1 &amp; 4.2</strong>&nbsp;This Week</div>
+      <div class="meta-chip">🗄️ <strong>3 Databases</strong>&nbsp;MySQL · Redis · MongoDB</div>
+      <div class="meta-chip">🛒 <strong>Shopping Cart</strong>&nbsp;Redis TTL introduced</div>
+      <div class="meta-chip">📦 <strong>Orders</strong>&nbsp;MongoDB documents</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TAB NAV ── -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('h1',this)">🗃️ Hour 1 · SQL Queries</button>
+  <button class="tab-btn" onclick="showTab('h2',this)">⚡ Hour 2 · Redis &amp; MongoDB</button>
+  <button class="tab-btn" onclick="showTab('labs',this)">🔬 Labs This Week</button>
+  <button class="tab-btn" onclick="showTab('quiz',this)">🧠 Quiz Prep</button>
+</div>
+
+<div class="tab-content">
+
+<!-- ══════════════════════════════════════════════════
+     HOUR 1: SQL QUERIES IN PRACTICE
+═══════════════════════════════════════════════════ -->
+<div class="tab-panel active" id="panel-h1">
+
+  <!-- 1.1 From Schema to Queries -->
+  <div class="sec-header">
+    <span class="sec-pill amber">1.1</span>
+    <span class="sec-title">From Schema to Queries</span>
+    <span class="sec-time">15 min</span>
+  </div>
+
+  <p>Last week we <em>designed</em> the database — creating tables and defining their structure. This week we <em>use</em> it — writing queries to retrieve and work with real data.</p>
+
+  <!-- Evolution SVG -->
+  <svg viewBox="0 0 680 90" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin:0.85rem 0">
+    <defs><marker id="arw" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(255,183,64,0.6)"/></marker></defs>
+    <!-- W3 box -->
+    <rect x="12" y="14" width="168" height="62" rx="7" fill="rgba(107,127,160,0.06)" stroke="rgba(107,127,160,0.25)" stroke-width="1.5"/>
+    <text x="96" y="33" font-size="8.5" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle" font-weight="700">Week 3 (Last Week)</text>
+    <text x="96" y="50" font-size="11" text-anchor="middle">🏗️</text>
+    <text x="96" y="63" font-size="8" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">Designed schema · Created tables</text>
+    <text x="96" y="72" font-size="7.5" font-family="Fira Code,monospace" fill="rgba(107,127,160,0.6)" text-anchor="middle">CREATE TABLE menu_items (...)</text>
+    <!-- Arrow 1 -->
+    <line x1="183" y1="45" x2="213" y2="45" stroke="rgba(255,183,64,0.5)" stroke-width="1.8" marker-end="url(#arw)"/>
+    <text x="198" y="40" font-size="7" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">Lab 4.1</text>
+    <!-- W4 Lab 4.1 box -->
+    <rect x="216" y="14" width="180" height="62" rx="7" fill="rgba(255,183,64,0.06)" stroke="rgba(255,183,64,0.35)" stroke-width="1.5"/>
+    <text x="306" y="33" font-size="8.5" font-family="Sora,sans-serif" fill="rgba(255,183,64,0.85)" text-anchor="middle" font-weight="700">Week 4 · Lab 4.1</text>
+    <text x="306" y="50" font-size="11" text-anchor="middle">🔍</text>
+    <text x="306" y="63" font-size="8" font-family="Sora,sans-serif" fill="var(--text)" text-anchor="middle" font-weight="600">Query the data · SQL in the shell</text>
+    <text x="306" y="72" font-size="7.5" font-family="Fira Code,monospace" fill="rgba(255,183,64,0.6)" text-anchor="middle">SELECT · WHERE · JOIN · INSERT</text>
+    <!-- Arrow 2 -->
+    <line x1="399" y1="45" x2="429" y2="45" stroke="rgba(0,200,255,0.5)" stroke-width="1.8" marker-end="url(#arw)"/>
+    <text x="414" y="40" font-size="7" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">Lab 4.2</text>
+    <!-- W4 Lab 4.2 box -->
+    <rect x="432" y="14" width="238" height="62" rx="7" fill="rgba(0,200,255,0.06)" stroke="rgba(0,200,255,0.3)" stroke-width="1.5"/>
+    <text x="551" y="33" font-size="8.5" font-family="Sora,sans-serif" fill="rgba(0,200,255,0.85)" text-anchor="middle" font-weight="700">Week 4 · Lab 4.2</text>
+    <text x="523" y="52" font-size="13" text-anchor="middle">⚡</text>
+    <text x="551" y="52" font-size="13" text-anchor="middle">📦</text>
+    <text x="551" y="63" font-size="8" font-family="Sora,sans-serif" fill="var(--text)" text-anchor="middle" font-weight="600">Add Redis + MongoDB to the stack</text>
+    <text x="551" y="72" font-size="7.5" font-family="Fira Code,monospace" fill="rgba(0,200,255,0.6)" text-anchor="middle">Cart in Redis · Orders in MongoDB</text>
+  </svg>
+
+  <!-- CRUD 4 cards -->
+  <div class="card-grid cols4">
+    <div class="concept-card highlight-blue">
+      <span class="cc-icon">📖</span>
+      <div class="cc-title">SELECT</div>
+      <div class="cc-body">Read rows from a table. The most-used SQL command.</div>
+      <span class="cc-tag blue">Read</span>
+    </div>
+    <div class="concept-card highlight-green">
+      <span class="cc-icon">➕</span>
+      <div class="cc-title">INSERT</div>
+      <div class="cc-body">Add a new row into a table.</div>
+      <span class="cc-tag green">Create</span>
+    </div>
+    <div class="concept-card highlight-amber">
+      <span class="cc-icon">✏️</span>
+      <div class="cc-title">UPDATE</div>
+      <div class="cc-body">Change values in an existing row.</div>
+      <span class="cc-tag amber">Update</span>
+    </div>
+    <div class="concept-card highlight-red">
+      <span class="cc-icon">🗑️</span>
+      <div class="cc-title">DELETE</div>
+      <div class="cc-body">Remove a row permanently.</div>
+      <span class="cc-tag" style="background:rgba(255,94,122,0.1);color:var(--red)">Delete</span>
+    </div>
+  </div>
+
+  <div class="callout amber">
+    <span>💡</span>
+    <div>These four operations are called <strong>CRUD</strong> — Create, Read, Update, Delete. Every app you've ever used performs these exact four operations on a database.</div>
+  </div>
+
+  <div class="level-row">
+    <span class="level-pill beginner">🟢 Beginner</span>
+    <span class="level-pill average">🔵 Average</span>
+    <span class="level-pill advanced">🟣 Advanced</span>
+  </div>
+  <div class="level-block beginner">
+    <div class="level-block-label">🟢 Beginner Focus</div>
+    Think of SQL as asking questions to a spreadsheet. <em>"Show me all breakfast items"</em> becomes a SELECT query. You're not coding — you're asking in a specific language.
+  </div>
+  <div class="level-block average">
+    <div class="level-block-label">🔵 Average Focus</div>
+    Every button click in CloudEats triggers one of these operations. "Browse menu" = SELECT. "Register" = INSERT. "Update profile" = UPDATE. "Cancel account" = DELETE.
+  </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">🟣 Advanced Focus</div>
+    CRUD maps to HTTP verbs: GET=SELECT, POST=INSERT, PUT/PATCH=UPDATE, DELETE=DELETE. This is how REST APIs are designed — you'll implement this in Week 5.
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- 1.2 SELECT -->
+  <div class="sec-header">
+    <span class="sec-pill amber">1.2</span>
+    <span class="sec-title">SELECT — Reading Data</span>
+    <span class="sec-time">25 min</span>
+  </div>
+
+  <p>We build a SELECT query one clause at a time. Each step adds one new piece. Watch the query grow — you will type these in Lab 4.1.</p>
+
+  <!-- Query builder steps -->
+  <div class="qb-step open" onclick="toggleQB(this)">
+    <div class="qb-header">
+      <div class="qb-num">1</div>
+      <div class="qb-label">All rows, all columns</div>
+      <div class="qb-clause">SELECT *</div>
+      <div class="qb-toggle">▶</div>
+    </div>
+    <div class="qb-body">
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ck">SELECT</span> * <span class="ck">FROM</span> <span class="ct">menu_items</span>;</pre>
+      </div>
+      <p style="font-size:0.81rem;color:var(--muted);margin:0.4rem 0 0">The <code>*</code> means "give me every column". This returns the full table — all rows, all fields.</p>
+    </div>
+  </div>
+
+  <div class="qb-step" onclick="toggleQB(this)">
+    <div class="qb-header">
+      <div class="qb-num">2</div>
+      <div class="qb-label">Pick specific columns</div>
+      <div class="qb-clause">SELECT name, price</div>
+      <div class="qb-toggle">▶</div>
+    </div>
+    <div class="qb-body">
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ck">SELECT</span> <span class="cc">name</span>, <span class="cc">price</span> <span class="ck">FROM</span> <span class="ct">menu_items</span>;</pre>
+      </div>
+      <p style="font-size:0.81rem;color:var(--muted);margin:0.4rem 0 0">Only the <code>name</code> and <code>price</code> columns are returned. Reduces data transferred — useful when a table has 20+ columns.</p>
+    </div>
+  </div>
+
+  <div class="qb-step" onclick="toggleQB(this)">
+    <div class="qb-header">
+      <div class="qb-num">3</div>
+      <div class="qb-label">Filter rows with WHERE</div>
+      <div class="qb-clause">WHERE category = 'Breakfast'</div>
+      <div class="qb-toggle">▶</div>
+    </div>
+    <div class="qb-body">
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ck">SELECT</span> <span class="cc">name</span>, <span class="cc">price</span>
+<span class="ck">FROM</span>   <span class="ct">menu_items</span>
+<span class="ck">WHERE</span>  <span class="cc">category</span> = <span class="cv">'Breakfast'</span>;</pre>
+      </div>
+      <p style="font-size:0.81rem;color:var(--muted);margin:0.4rem 0 0"><code>WHERE</code> is a filter. Only rows where the condition is <strong>true</strong> are returned. All other rows are ignored.</p>
+
+      <!-- Result table preview -->
+      <div style="margin-top:0.75rem">
+        <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.35rem">Result preview</div>
+        <table class="data-table">
+          <thead><tr><th>name</th><th>price</th></tr></thead>
+          <tbody>
+            <tr><td>Nasi Lemak</td><td>8.00</td></tr>
+            <tr><td>Roti Canai</td><td>3.50</td></tr>
+            <tr><td>Teh Tarik</td><td>3.00</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="qb-step" onclick="toggleQB(this)">
+    <div class="qb-header">
+      <div class="qb-num">4</div>
+      <div class="qb-label">Add a second condition with AND</div>
+      <div class="qb-clause">AND price &lt; 10</div>
+      <div class="qb-toggle">▶</div>
+    </div>
+    <div class="qb-body">
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ck">SELECT</span> <span class="cc">name</span>, <span class="cc">price</span>
+<span class="ck">FROM</span>   <span class="ct">menu_items</span>
+<span class="ck">WHERE</span>  <span class="cc">category</span> = <span class="cv">'Breakfast'</span>
+<span class="ck">AND</span>    <span class="cc">price</span> &lt; <span class="cn">10</span>;</pre>
+      </div>
+      <p style="font-size:0.81rem;color:var(--muted);margin:0.4rem 0 0">Both conditions must be true. Use <code>OR</code> if either condition is enough.</p>
+    </div>
+  </div>
+
+  <div class="qb-step" onclick="toggleQB(this)">
+    <div class="qb-header">
+      <div class="qb-num">5</div>
+      <div class="qb-label">Sort and limit results</div>
+      <div class="qb-clause">ORDER BY price DESC · LIMIT 3</div>
+      <div class="qb-toggle">▶</div>
+    </div>
+    <div class="qb-body">
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ck">SELECT</span>   <span class="cc">name</span>, <span class="cc">price</span>
+<span class="ck">FROM</span>     <span class="ct">menu_items</span>
+<span class="ck">ORDER BY</span> <span class="cc">price</span> <span class="ck">DESC</span>
+<span class="ck">LIMIT</span>    <span class="cn">3</span>;</pre>
+      </div>
+      <p style="font-size:0.81rem;color:var(--muted);margin:0.4rem 0 0"><code>ORDER BY price DESC</code> = most expensive first. <code>ASC</code> = cheapest first. <code>LIMIT 3</code> = only return the first 3 rows after sorting.</p>
+    </div>
+  </div>
+
+  <div class="qb-step" onclick="toggleQB(this)">
+    <div class="qb-header">
+      <div class="qb-num">6</div>
+      <div class="qb-label">Partial text search with LIKE</div>
+      <div class="qb-clause">LIKE '%Nasi%'</div>
+      <div class="qb-toggle">▶</div>
+    </div>
+    <div class="qb-body">
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ck">SELECT</span> <span class="cc">name</span>
+<span class="ck">FROM</span>   <span class="ct">menu_items</span>
+<span class="ck">WHERE</span>  <span class="cc">name</span> <span class="ck">LIKE</span> <span class="cv">'%Nasi%'</span>;</pre>
+      </div>
+      <p style="font-size:0.81rem;color:var(--muted);margin:0.4rem 0 0">The <code>%</code> symbol is a wildcard — it means "any characters here". <code>'%Nasi%'</code> matches <em>Nasi Lemak</em>, <em>Nasi Goreng</em>, <em>Nasi Ayam</em> — anything with "Nasi" anywhere in the name.</p>
+      <div class="callout green" style="margin-top:0.5rem;margin-bottom:0">
+        <span>🔎</span>
+        <div>This is how a search bar works. When you type "Nasi" into CloudEats, the API runs a query like this in the background.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="img-ph">
+    <div class="img-ph-icon">📸</div>
+    <div>
+      <div class="img-ph-label">Instructor Screenshot · MySQL Shell — SELECT Results</div>
+      <div class="img-ph-desc">Show the MySQL container terminal after running <code>SELECT name, price FROM menu_items WHERE category = 'Breakfast';</code> — the table result printed in the shell. Highlight the column headers and row count at the bottom.</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- 1.3 JOIN -->
+  <div class="sec-header">
+    <span class="sec-pill amber">1.3</span>
+    <span class="sec-title">JOIN — Combining Two Tables</span>
+    <span class="sec-time">20 min</span>
+  </div>
+
+  <p>Our data is spread across two tables — <code>users</code> and <code>orders</code>. A JOIN lets us read from both at once, matching rows that belong together.</p>
+
+  <!-- JOIN visual SVG -->
+  <svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin:0.85rem 0">
+    <defs>
+      <marker id="jarw" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(255,183,64,0.7)"/></marker>
+    </defs>
+
+    <!-- users table -->
+    <rect x="12" y="18" width="200" height="150" rx="7" fill="rgba(0,200,255,0.04)" stroke="rgba(0,200,255,0.25)" stroke-width="1.5"/>
+    <text x="112" y="38" font-size="9" font-family="Sora,sans-serif" fill="rgba(0,200,255,0.85)" text-anchor="middle" font-weight="700">users</text>
+    <!-- header row -->
+    <rect x="12" y="42" width="200" height="18" fill="rgba(0,0,0,0.25)"/>
+    <text x="40"  y="54" font-size="8" font-family="Fira Code,monospace" fill="var(--amber)" font-weight="700">id</text>
+    <text x="80"  y="54" font-size="8" font-family="Fira Code,monospace" fill="var(--accent)">full_name</text>
+    <!-- rows -->
+    <text x="40" y="72" font-size="8" font-family="Fira Code,monospace" fill="var(--amber)">1</text>
+    <text x="80" y="72" font-size="8" font-family="Fira Code,monospace" fill="var(--text)">Ali Hassan</text>
+    <text x="40" y="90" font-size="8" font-family="Fira Code,monospace" fill="var(--amber)">2</text>
+    <text x="80" y="90" font-size="8" font-family="Fira Code,monospace" fill="var(--text)">Siti Aminah</text>
+    <text x="40" y="108" font-size="8" font-family="Fira Code,monospace" fill="var(--amber)">3</text>
+    <text x="80" y="108" font-size="8" font-family="Fira Code,monospace" fill="var(--text)">Rajan Kumar</text>
+    <!-- Dividers -->
+    <line x1="12" y1="78" x2="212" y2="78" stroke="rgba(42,61,90,0.5)" stroke-width="0.8"/>
+    <line x1="12" y1="96" x2="212" y2="96" stroke="rgba(42,61,90,0.5)" stroke-width="0.8"/>
+    <line x1="12" y1="114" x2="212" y2="114" stroke="rgba(42,61,90,0.5)" stroke-width="0.8"/>
+
+    <!-- JOIN label in centre -->
+    <rect x="246" y="80" width="100" height="40" rx="6" fill="rgba(255,183,64,0.1)" stroke="rgba(255,183,64,0.35)" stroke-width="1.5"/>
+    <text x="296" y="97" font-size="9" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle" font-weight="700">JOIN</text>
+    <text x="296" y="110" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">ON user_id = id</text>
+    <!-- Arrows -->
+    <line x1="212" y1="100" x2="246" y2="100" stroke="rgba(255,183,64,0.6)" stroke-width="1.5" marker-end="url(#jarw)"/>
+    <line x1="350" y1="100" x2="384" y2="100" stroke="rgba(255,183,64,0.6)" stroke-width="1.5" marker-end="url(#jarw)"/>
+
+    <!-- orders table -->
+    <rect x="387" y="18" width="280" height="168" rx="7" fill="rgba(180,110,245,0.04)" stroke="rgba(180,110,245,0.25)" stroke-width="1.5"/>
+    <text x="527" y="38" font-size="9" font-family="Sora,sans-serif" fill="rgba(180,110,245,0.85)" text-anchor="middle" font-weight="700">orders</text>
+    <rect x="387" y="42" width="280" height="18" fill="rgba(0,0,0,0.25)"/>
+    <text x="408" y="54" font-size="8" font-family="Fira Code,monospace" fill="var(--amber)">id</text>
+    <text x="435" y="54" font-size="8" font-family="Fira Code,monospace" fill="var(--purple)">user_id</text>
+    <text x="500" y="54" font-size="8" font-family="Fira Code,monospace" fill="var(--accent)">total</text>
+    <text x="560" y="54" font-size="8" font-family="Fira Code,monospace" fill="var(--accent)">status</text>
+    <!-- rows -->
+    <text x="408" y="72" font-size="8" font-family="Fira Code,monospace" fill="var(--amber)">101</text>
+    <text x="435" y="72" font-size="8" font-family="Fira Code,monospace" fill="var(--purple)">1</text>
+    <text x="500" y="72" font-size="8" font-family="Fira Code,monospace" fill="var(--text)">26.00</text>
+    <text x="560" y="72" font-size="8" font-family="Fira Code,monospace" fill="var(--green)">delivered</text>
+    <text x="408" y="90" font-size="8" font-family="Fira Code,monospace" fill="var(--amber)">102</text>
+    <text x="435" y="90" font-size="8" font-family="Fira Code,monospace" fill="var(--purple)">1</text>
+    <text x="500" y="90" font-size="8" font-family="Fira Code,monospace" fill="var(--text)">14.00</text>
+    <text x="560" y="90" font-size="8" font-family="Fira Code,monospace" fill="var(--amber)">pending</text>
+    <text x="408" y="108" font-size="8" font-family="Fira Code,monospace" fill="var(--amber)">103</text>
+    <text x="435" y="108" font-size="8" font-family="Fira Code,monospace" fill="var(--purple)">2</text>
+    <text x="500" y="108" font-size="8" font-family="Fira Code,monospace" fill="var(--text)">12.00</text>
+    <text x="560" y="108" font-size="8" font-family="Fira Code,monospace" fill="var(--accent)">confirmed</text>
+    <line x1="387" y1="78"  x2="667" y2="78"  stroke="rgba(42,61,90,0.5)" stroke-width="0.8"/>
+    <line x1="387" y1="96"  x2="667" y2="96"  stroke="rgba(42,61,90,0.5)" stroke-width="0.8"/>
+    <line x1="387" y1="114" x2="667" y2="114" stroke="rgba(42,61,90,0.5)" stroke-width="0.8"/>
+
+    <!-- Bottom result label -->
+    <text x="340" y="160" font-size="8" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">Result: Ali Hassan · RM26.00 · delivered</text>
+    <text x="340" y="175" font-size="8" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">Result: Ali Hassan · RM14.00 · pending</text>
+    <text x="340" y="190" font-size="8" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">Result: Siti Aminah · RM12.00 · confirmed</text>
+    <rect x="10" y="148" width="656" height="50" rx="5" fill="rgba(255,183,64,0.03)" stroke="rgba(255,183,64,0.15)" stroke-width="1"/>
+    <text x="340" y="162" font-size="8.5" font-family="Sora,sans-serif" fill="rgba(255,183,64,0.7)" text-anchor="middle" font-weight="700">← Joined result rows →</text>
+    <text x="340" y="175" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">Ali Hassan | 26.00 | delivered</text>
+    <text x="340" y="188" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">Ali Hassan | 14.00 | pending    &nbsp; Siti Aminah | 12.00 | confirmed</text>
+  </svg>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">SQL — JOIN query</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+    <pre><span class="ck">SELECT</span>   <span class="ct">users</span>.<span class="cc">full_name</span>, <span class="ct">orders</span>.<span class="cc">total_amount</span>, <span class="ct">orders</span>.<span class="cc">status</span>
+<span class="ck">FROM</span>     <span class="ct">orders</span>
+<span class="ck">JOIN</span>     <span class="ct">users</span> <span class="ck">ON</span> <span class="ct">orders</span>.<span class="cc">user_id</span> = <span class="ct">users</span>.<span class="cc">id</span>;</pre>
+  </div>
+
+  <p style="font-size:0.83rem;color:var(--muted)">Read it aloud: <em>"Start with the orders table. Bring in the users table. Match each order to the user whose id equals the order's user_id. Return the name, total, and status."</em></p>
+
+  <!-- INNER vs LEFT comparison -->
+  <div class="compare-grid" style="margin-top:1.25rem">
+    <div class="compare-side" style="border-top:3px solid var(--accent)">
+      <div class="cs-label" style="color:var(--accent)">INNER JOIN</div>
+      <div class="cs-item"><div class="cs-dot dot-blue"></div>Only returns rows where a match exists in <em>both</em> tables</div>
+      <div class="cs-item"><div class="cs-dot dot-blue"></div>A user with no orders? <strong>Not shown</strong></div>
+      <div class="cs-item"><div class="cs-dot dot-blue"></div>Use when: you need complete pairs only</div>
+      <div class="cs-item"><div class="cs-dot dot-blue"></div>Example: <em>"Show all orders with the customer name"</em></div>
+    </div>
+    <div class="compare-side right">
+      <div class="cs-label green">LEFT JOIN</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Returns <em>all</em> rows from the left table, match or not</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>A user with no orders? <strong>Shown, with NULL for order columns</strong></div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Use when: you want everything, with related data if it exists</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Example: <em>"Show all users, and their orders if they have any"</em></div>
+    </div>
+  </div>
+
+  <div class="callout blue">
+    <span>🧠</span>
+    <div><strong>Rule of thumb:</strong> Not sure which to use? Start with <code>LEFT JOIN</code>. You'll see all your data, and NULL values tell you where there's no match. You can always tighten to INNER JOIN once you understand your data.</div>
+  </div>
+
+  <div class="level-row">
+    <span class="level-pill beginner">🟢 Beginner</span>
+    <span class="level-pill average">🔵 Average</span>
+    <span class="level-pill advanced">🟣 Advanced</span>
+  </div>
+  <div class="level-block beginner">
+    <div class="level-block-label">🟢 Beginner Focus</div>
+    A JOIN is like a VLOOKUP in Excel — you're looking up a value from another sheet using a shared ID number. The difference is the database does it for thousands of rows instantly.
+  </div>
+  <div class="level-block average">
+    <div class="level-block-label">🔵 Average Focus</div>
+    This is why we designed the <code>user_id</code> foreign key in Week 3. Without it, we'd have to store the customer's full name in every order row — wasteful and error-prone if the name changes.
+  </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">🟣 Advanced Focus</div>
+    Performance note: JOINs on non-indexed columns are slow on large tables. The <code>ON orders.user_id = users.id</code> is fast because <code>users.id</code> is a primary key (auto-indexed) and you should add an index on <code>orders.user_id</code>.
+  </div>
+
+  <div class="img-ph">
+    <div class="img-ph-icon">📸</div>
+    <div>
+      <div class="img-ph-label">Instructor Screenshot · JOIN result in MySQL shell</div>
+      <div class="img-ph-desc">Run the JOIN query above and capture the terminal output showing the result table with <code>full_name | total_amount | status</code> columns. Optionally highlight one user appearing in multiple rows (they placed two orders).</div>
+    </div>
+  </div>
+
+</div><!-- /panel-h1 -->
+
+
+<!-- ══════════════════════════════════════════════════
+     HOUR 2: NOSQL — REDIS & MONGODB
+═══════════════════════════════════════════════════ -->
+<div class="tab-panel" id="panel-h2">
+
+  <!-- 2.1 Why Not Just MySQL? -->
+  <div class="sec-header">
+    <span class="sec-pill amber">2.1</span>
+    <span class="sec-title">Why Not Just Use MySQL for Everything?</span>
+    <span class="sec-time">10 min</span>
+  </div>
+
+  <p>MySQL is excellent at what it does. But not all data fits neatly into tables. Two specific problems arise in CloudEats:</p>
+
+  <div class="card-grid cols2">
+    <div class="concept-card highlight-red">
+      <span class="cc-icon">🛒</span>
+      <div class="cc-title">Problem 1 — Speed</div>
+      <div class="cc-body">A shopping cart is checked on every page load, every time an item is added, and on checkout. Writing to MySQL for every interaction adds delay. We need something faster — much faster.</div>
+      <span class="cc-tag" style="background:rgba(255,94,122,0.1);color:var(--red)">Latency issue</span>
+    </div>
+    <div class="concept-card highlight-amber">
+      <span class="cc-icon">📋</span>
+      <div class="cc-title">Problem 2 — Flexible structure</div>
+      <div class="cc-body">An order has a variable number of items. Order 101 has 2 items. Order 102 has 5. Storing this in MySQL requires an extra table and complex joins just to read one order.</div>
+      <span class="cc-tag amber">Schema rigidity</span>
+    </div>
+  </div>
+
+  <div class="callout amber">
+    <span>💡</span>
+    <div><strong>Key idea:</strong> <em>"NoSQL"</em> does not mean "no SQL language." It means <em>"Not Only SQL"</em> — we use the right database for each type of problem. This is called <strong>polyglot persistence</strong>.</div>
+  </div>
+
+  <!-- CloudEats 3-DB architecture SVG -->
+  <svg viewBox="0 0 680 155" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin:0.85rem 0">
+    <defs><marker id="a3" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(107,127,160,0.5)"/></marker></defs>
+    <!-- Browser -->
+    <rect x="10" y="50" width="90" height="55" rx="7" fill="rgba(107,127,160,0.06)" stroke="rgba(107,127,160,0.25)" stroke-width="1.5"/>
+    <text x="55" y="72" font-size="18" text-anchor="middle">🌐</text>
+    <text x="55" y="88" font-size="8" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle" font-weight="600">Browser</text>
+    <text x="55" y="99" font-size="7" font-family="Sora,sans-serif" fill="rgba(107,127,160,0.55)" text-anchor="middle">Customer</text>
+    <!-- Arrow to API -->
+    <line x1="100" y1="77" x2="130" y2="77" stroke="rgba(107,127,160,0.4)" stroke-width="1.5" marker-end="url(#a3)"/>
+    <!-- API Gateway -->
+    <rect x="133" y="38" width="110" height="80" rx="7" fill="rgba(255,183,64,0.06)" stroke="rgba(255,183,64,0.3)" stroke-width="1.5"/>
+    <text x="188" y="63" font-size="14" text-anchor="middle">⚙️</text>
+    <text x="188" y="78" font-size="8.5" font-family="Sora,sans-serif" fill="rgba(255,183,64,0.85)" text-anchor="middle" font-weight="700">Node.js API</text>
+    <text x="188" y="90" font-size="7" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">CloudEats backend</text>
+    <text x="188" y="102" font-size="7" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">port 3000</text>
+    <!-- Three arrows to DBs -->
+    <line x1="243" y1="62" x2="310" y2="42" stroke="rgba(255,183,64,0.4)" stroke-width="1.5" marker-end="url(#a3)"/>
+    <line x1="243" y1="77" x2="310" y2="77" stroke="rgba(255,94,122,0.4)" stroke-width="1.5" marker-end="url(#a3)"/>
+    <line x1="243" y1="92" x2="310" y2="115" stroke="rgba(0,229,160,0.4)" stroke-width="1.5" marker-end="url(#a3)"/>
+    <!-- MySQL box -->
+    <rect x="313" y="14" width="175" height="55" rx="7" fill="rgba(255,183,64,0.06)" stroke="rgba(255,183,64,0.3)" stroke-width="1.5"/>
+    <text x="400" y="35" font-size="12" text-anchor="middle">🗄️</text>
+    <text x="400" y="48" font-size="8.5" font-family="Sora,sans-serif" fill="rgba(255,183,64,0.9)" text-anchor="middle" font-weight="700">MySQL</text>
+    <text x="400" y="60" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">Users · Menu Items · Orders (structured)</text>
+    <!-- Redis box -->
+    <rect x="313" y="52" width="175" height="52" rx="7" fill="rgba(255,94,122,0.06)" stroke="rgba(255,94,122,0.3)" stroke-width="1.5"/>
+    <text x="400" y="72" font-size="12" text-anchor="middle">⚡</text>
+    <text x="400" y="85" font-size="8.5" font-family="Sora,sans-serif" fill="rgba(255,94,122,0.9)" text-anchor="middle" font-weight="700">Redis</text>
+    <text x="400" y="97" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">Shopping Cart · Sessions (temporary)</text>
+    <!-- MongoDB box -->
+    <rect x="313" y="90" width="175" height="52" rx="7" fill="rgba(0,229,160,0.06)" stroke="rgba(0,229,160,0.3)" stroke-width="1.5"/>
+    <text x="400" y="112" font-size="12" text-anchor="middle">📦</text>
+    <text x="400" y="124" font-size="8.5" font-family="Sora,sans-serif" fill="rgba(0,229,160,0.9)" text-anchor="middle" font-weight="700">MongoDB</text>
+    <text x="400" y="135" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">Order History (nested documents)</text>
+    <!-- Cloud labels -->
+    <text x="540" y="28" font-size="7" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">Cloud: AWS RDS</text>
+    <text x="540" y="79" font-size="7" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">Cloud: AWS ElastiCache</text>
+    <text x="540" y="116" font-size="7" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">Cloud: MongoDB Atlas</text>
+    <!-- Cloud bracket -->
+    <line x1="490" y1="14" x2="660" y2="14" stroke="rgba(107,127,160,0.2)" stroke-width="1"/>
+    <line x1="490" y1="142" x2="660" y2="142" stroke="rgba(107,127,160,0.2)" stroke-width="1"/>
+    <line x1="660" y1="14" x2="660" y2="142" stroke="rgba(107,127,160,0.2)" stroke-width="1"/>
+    <text x="667" y="82" font-size="7" font-family="Sora,sans-serif" fill="rgba(107,127,160,0.4)" transform="rotate(90,667,82)">Production Cloud Equivalent</text>
+  </svg>
+
+  <hr class="section-divider">
+
+  <!-- 2.2 Redis -->
+  <div class="sec-header">
+    <span class="sec-pill red" style="background:rgba(255,94,122,0.1);color:var(--red);border-color:rgba(255,94,122,0.2)">2.2</span>
+    <span class="sec-title">Redis — Key-Value Store</span>
+    <span class="sec-time">20 min</span>
+  </div>
+
+  <div class="callout" style="background:rgba(255,94,122,0.05);border:1px solid rgba(255,94,122,0.2);color:#f0a0b0">
+    <span>🎯</span>
+    <div><strong>One-sentence definition:</strong> Redis stores data in RAM (not on disk), so reads and writes happen in under 1 millisecond — thousands of times faster than a regular database.</div>
+  </div>
+
+  <!-- Redis whiteboard metaphor SVG -->
+  <svg viewBox="0 0 680 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin:0.85rem 0">
+    <!-- Whiteboard frame -->
+    <rect x="10" y="10" width="660" height="140" rx="8" fill="rgba(255,94,122,0.03)" stroke="rgba(255,94,122,0.25)" stroke-width="1.5"/>
+    <rect x="10" y="10" width="660" height="24" rx="8" fill="rgba(255,94,122,0.1)"/>
+    <text x="340" y="26" font-size="9" font-family="Sora,sans-serif" fill="rgba(255,94,122,0.9)" text-anchor="middle" font-weight="700">Redis — Think of it as a whiteboard in RAM</text>
+
+    <!-- Key-value pairs as sticky notes -->
+    <!-- Note 1 -->
+    <rect x="28" y="44" width="190" height="96" rx="5" fill="rgba(255,94,122,0.07)" stroke="rgba(255,94,122,0.25)" stroke-width="1"/>
+    <text x="123" y="60" font-size="8" font-family="Sora,sans-serif" fill="rgba(255,94,122,0.7)" text-anchor="middle" font-weight="700">KEY</text>
+    <text x="123" y="74" font-size="8.5" font-family="Fira Code,monospace" fill="var(--text)" text-anchor="middle">cart:user123</text>
+    <line x1="28" y1="80" x2="218" y2="80" stroke="rgba(255,94,122,0.2)" stroke-width="0.8"/>
+    <text x="123" y="92" font-size="8" font-family="Sora,sans-serif" fill="rgba(255,94,122,0.7)" text-anchor="middle" font-weight="700">VALUE</text>
+    <text x="123" y="105" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">{"items":[{"name":</text>
+    <text x="123" y="117" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">"Nasi Lemak","qty":2}]</text>
+    <text x="123" y="130" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">"total":24.00}</text>
+
+    <!-- Note 2 -->
+    <rect x="238" y="44" width="165" height="96" rx="5" fill="rgba(255,183,64,0.06)" stroke="rgba(255,183,64,0.2)" stroke-width="1"/>
+    <text x="320" y="60" font-size="8" font-family="Sora,sans-serif" fill="rgba(255,183,64,0.7)" text-anchor="middle" font-weight="700">KEY</text>
+    <text x="320" y="74" font-size="8.5" font-family="Fira Code,monospace" fill="var(--text)" text-anchor="middle">session:abc123</text>
+    <line x1="238" y1="80" x2="403" y2="80" stroke="rgba(255,183,64,0.2)" stroke-width="0.8"/>
+    <text x="320" y="92" font-size="8" font-family="Sora,sans-serif" fill="rgba(255,183,64,0.7)" text-anchor="middle" font-weight="700">VALUE</text>
+    <text x="320" y="106" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">{"userId":1,</text>
+    <text x="320" y="118" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">"loggedIn":true}</text>
+    <text x="320" y="132" font-size="7" font-family="Sora,sans-serif" fill="rgba(255,183,64,0.5)" text-anchor="middle">TTL: 3600s</text>
+
+    <!-- TTL eraser metaphor -->
+    <rect x="423" y="44" width="242" height="96" rx="5" fill="rgba(0,200,255,0.04)" stroke="rgba(0,200,255,0.2)" stroke-width="1"/>
+    <text x="544" y="62" font-size="8.5" font-family="Sora,sans-serif" fill="rgba(0,200,255,0.8)" text-anchor="middle" font-weight="700">TTL — Time To Live</text>
+    <text x="544" y="78" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">SET cart:user123 '...' EX 3600</text>
+    <text x="544" y="94" font-size="8" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">Expires in 3600 seconds (1 hour)</text>
+    <text x="544" y="108" font-size="8" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">Abandoned cart? Redis erases it</text>
+    <text x="544" y="122" font-size="8" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">automatically. No cleanup code</text>
+    <text x="544" y="135" font-size="8" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">needed.</text>
+  </svg>
+
+  <p>The three core Redis commands used in CloudEats:</p>
+  <ul class="term-list">
+    <li><span class="term-key">SET key value</span><span class="term-val">Store a value. Optionally add <code>EX seconds</code> to set expiry.</span></li>
+    <li><span class="term-key">GET key</span><span class="term-val">Retrieve a value by its key. Returns the value or nothing if it doesn't exist.</span></li>
+    <li><span class="term-key">DEL key</span><span class="term-val">Delete a key-value pair. Used when a customer checks out — cart is cleared.</span></li>
+  </ul>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Redis Shell (redis-cli)</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+    <pre><span class="cm"># Store the shopping cart for user 1 (expires in 1 hour)</span>
+<span class="ck">SET</span> cart:user1 <span class="cv">'{"items":[{"id":1,"name":"Nasi Lemak","qty":2}],"total":16.00}'</span> <span class="ck">EX</span> <span class="cn">3600</span>
+
+<span class="cm"># Read it back</span>
+<span class="ck">GET</span> cart:user1
+
+<span class="cm"># Delete on checkout</span>
+<span class="ck">DEL</span> cart:user1
+
+<span class="cm"># Check how many seconds remain before expiry</span>
+<span class="ck">TTL</span> cart:user1</pre>
+  </div>
+
+  <div class="compare-grid">
+    <div class="compare-side good">
+      <div class="cs-label green">✅ Use Redis when</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Data is temporary (carts, sessions)</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Speed matters more than persistence</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Auto-expiry is useful (abandoned carts)</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Caching slow database query results</div>
+    </div>
+    <div class="compare-side bad">
+      <div class="cs-label red">❌ Don't use Redis when</div>
+      <div class="cs-item"><div class="cs-dot dot-red"></div>Data must survive a server restart</div>
+      <div class="cs-item"><div class="cs-dot dot-red"></div>You need to query across many records</div>
+      <div class="cs-item"><div class="cs-dot dot-red"></div>Data has complex relationships</div>
+      <div class="cs-item"><div class="cs-dot dot-red"></div>You're storing large files</div>
+    </div>
+  </div>
+
+  <div class="level-row">
+    <span class="level-pill beginner">🟢 Beginner</span>
+    <span class="level-pill average">🔵 Average</span>
+    <span class="level-pill advanced">🟣 Advanced</span>
+  </div>
+  <div class="level-block beginner">
+    <div class="level-block-label">🟢 Beginner Focus</div>
+    Think of Redis as a whiteboard. You write on it quickly, read it quickly, and wipe it when done. It's not for permanent records — it's for things that need to be fast and temporary.
+  </div>
+  <div class="level-block average">
+    <div class="level-block-label">🔵 Average Focus</div>
+    When Ali adds Nasi Lemak to his cart, it takes under 1ms for Redis to store it. If he abandons the cart, the TTL automatically deletes it after an hour — no orphaned data, no cleanup job.
+  </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">🟣 Advanced Focus</div>
+    By default, Redis stores everything in RAM only. If the server crashes, data is lost. For production carts, you'd enable <code>appendonly yes</code> (AOF persistence) or use AWS ElastiCache with Multi-AZ. The trade-off: persistence adds a small write overhead.
+  </div>
+
+  <div class="img-ph">
+    <div class="img-ph-icon">📸</div>
+    <div>
+      <div class="img-ph-label">Instructor Screenshot · Redis Shell in Action</div>
+      <div class="img-ph-desc">Terminal showing: (1) <code>docker exec -it [redis_container] redis-cli</code> to enter the shell, (2) <code>SET cart:user1 '...' EX 3600</code> and the reply <code>OK</code>, (3) <code>GET cart:user1</code> returning the JSON string, (4) <code>TTL cart:user1</code> showing a countdown number like <code>3598</code>.</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- 2.3 MongoDB -->
+  <div class="sec-header">
+    <span class="sec-pill green">2.3</span>
+    <span class="sec-title">MongoDB — Document Database</span>
+    <span class="sec-time">20 min</span>
+  </div>
+
+  <div class="callout green">
+    <span>🎯</span>
+    <div><strong>One-sentence definition:</strong> MongoDB stores each record as a self-contained JSON document — no fixed columns, no join required to get all the details of one order.</div>
+  </div>
+
+  <!-- MySQL rows vs MongoDB document comparison SVG -->
+  <svg viewBox="0 0 680 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin:0.85rem 0">
+    <!-- Left panel: MySQL approach -->
+    <rect x="10" y="10" width="305" height="192" rx="7" fill="rgba(255,183,64,0.04)" stroke="rgba(255,183,64,0.25)" stroke-width="1.5"/>
+    <text x="162" y="30" font-size="9" font-family="Sora,sans-serif" fill="rgba(255,183,64,0.85)" text-anchor="middle" font-weight="700">MySQL approach — 2 tables + JOIN needed</text>
+    <!-- orders table mini -->
+    <text x="25" y="48" font-size="8" font-family="Sora,sans-serif" fill="var(--muted)" font-weight="700">orders</text>
+    <rect x="15" y="52" width="290" height="18" fill="rgba(0,0,0,0.25)"/>
+    <text x="25" y="64" font-size="7.5" font-family="Fira Code,monospace" fill="var(--amber)">id</text>
+    <text x="60" y="64" font-size="7.5" font-family="Fira Code,monospace" fill="var(--accent)">user_id</text>
+    <text x="120" y="64" font-size="7.5" font-family="Fira Code,monospace" fill="var(--accent)">total</text>
+    <text x="180" y="64" font-size="7.5" font-family="Fira Code,monospace" fill="var(--accent)">status</text>
+    <text x="25" y="80" font-size="7.5" font-family="Fira Code,monospace" fill="var(--text)">101</text>
+    <text x="60" y="80" font-size="7.5" font-family="Fira Code,monospace" fill="var(--text)">1</text>
+    <text x="120" y="80" font-size="7.5" font-family="Fira Code,monospace" fill="var(--text)">30.00</text>
+    <text x="180" y="80" font-size="7.5" font-family="Fira Code,monospace" fill="var(--green)">preparing</text>
+    <line x1="15" y1="86" x2="305" y2="86" stroke="rgba(42,61,90,0.5)" stroke-width="0.7"/>
+    <!-- order_items table mini -->
+    <text x="25" y="105" font-size="8" font-family="Sora,sans-serif" fill="var(--muted)" font-weight="700">order_items (separate table!)</text>
+    <rect x="15" y="109" width="290" height="18" fill="rgba(0,0,0,0.25)"/>
+    <text x="25" y="121" font-size="7.5" font-family="Fira Code,monospace" fill="var(--amber)">id</text>
+    <text x="60" y="121" font-size="7.5" font-family="Fira Code,monospace" fill="var(--accent)">order_id</text>
+    <text x="120" y="121" font-size="7.5" font-family="Fira Code,monospace" fill="var(--accent)">item_name</text>
+    <text x="220" y="121" font-size="7.5" font-family="Fira Code,monospace" fill="var(--accent)">qty</text>
+    <text x="25" y="137" font-size="7.5" font-family="Fira Code,monospace" fill="var(--text)">1</text>
+    <text x="60" y="137" font-size="7.5" font-family="Fira Code,monospace" fill="var(--text)">101</text>
+    <text x="120" y="137" font-size="7.5" font-family="Fira Code,monospace" fill="var(--text)">Nasi Goreng</text>
+    <text x="220" y="137" font-size="7.5" font-family="Fira Code,monospace" fill="var(--text)">2</text>
+    <text x="25" y="153" font-size="7.5" font-family="Fira Code,monospace" fill="var(--text)">2</text>
+    <text x="60" y="153" font-size="7.5" font-family="Fira Code,monospace" fill="var(--text)">101</text>
+    <text x="120" y="153" font-size="7.5" font-family="Fira Code,monospace" fill="var(--text)">Teh Tarik</text>
+    <text x="220" y="153" font-size="7.5" font-family="Fira Code,monospace" fill="var(--text)">1</text>
+    <text x="162" y="192" font-size="8" font-family="Sora,sans-serif" fill="rgba(255,183,64,0.6)" text-anchor="middle">Requires JOIN to read one full order</text>
+
+    <!-- VS divider -->
+    <text x="340" y="110" font-size="11" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle" font-weight="700">VS</text>
+
+    <!-- Right panel: MongoDB approach -->
+    <rect x="365" y="10" width="305" height="192" rx="7" fill="rgba(0,229,160,0.04)" stroke="rgba(0,229,160,0.25)" stroke-width="1.5"/>
+    <text x="517" y="30" font-size="9" font-family="Sora,sans-serif" fill="rgba(0,229,160,0.85)" text-anchor="middle" font-weight="700">MongoDB — one document, all data</text>
+    <text x="380" y="50" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)">{</text>
+    <text x="392" y="64" font-size="7.5" font-family="Fira Code,monospace" fill="var(--accent)">"_id"</text><text x="430" y="64" font-size="7.5" font-family="Fira Code,monospace" fill="var(--text)">: ObjectId("abc"),</text>
+    <text x="392" y="78" font-size="7.5" font-family="Fira Code,monospace" fill="var(--accent)">"userId"</text><text x="437" y="78" font-size="7.5" font-family="Fira Code,monospace" fill="var(--text)">: 1,</text>
+    <text x="392" y="92" font-size="7.5" font-family="Fira Code,monospace" fill="var(--accent)">"total"</text><text x="435" y="92" font-size="7.5" font-family="Fira Code,monospace" fill="var(--text)">: 30.00,</text>
+    <text x="392" y="106" font-size="7.5" font-family="Fira Code,monospace" fill="var(--accent)">"status"</text><text x="438" y="106" font-size="7.5" font-family="Fira Code,monospace" fill="var(--green)">: "preparing",</text>
+    <text x="392" y="120" font-size="7.5" font-family="Fira Code,monospace" fill="var(--accent)">"items"</text><text x="436" y="120" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)">: [</text>
+    <text x="408" y="134" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)">  { "name":<text><tspan font-size="7.5" fill="var(--green)">"Nasi Goreng"</tspan><tspan fill="var(--muted)">, "qty":2 },</tspan></text>
+    <text x="408" y="148" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)">  { "name":<text><tspan font-size="7.5" fill="var(--green)">"Teh Tarik"</tspan><tspan fill="var(--muted)">, "qty":1 }</tspan></text>
+    <text x="392" y="162" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)">  ],</text>
+    <text x="380" y="176" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)">}</text>
+    <text x="517" y="194" font-size="8" font-family="Sora,sans-serif" fill="rgba(0,229,160,0.6)" text-anchor="middle">One read = full order. No JOIN needed.</text>
+  </svg>
+
+  <p>The four MongoDB shell commands students use in Lab 4.2:</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">MongoDB Shell (mongosh)</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+    <pre><span class="cm">// Insert one order document</span>
+db.orders.insertOne({
+  userId: <span class="cn">1</span>,
+  items: [{ name: <span class="cv">"Nasi Goreng"</span>, qty: <span class="cn">2</span>, price: <span class="cn">12.00</span> }],
+  total: <span class="cn">12.00</span>,
+  status: <span class="cv">"pending"</span>
+})
+
+<span class="cm">// Find all orders for user 1</span>
+db.orders.find({ userId: <span class="cn">1</span> })
+
+<span class="cm">// Update an order's status</span>
+db.orders.updateOne(
+  { _id: orderId },
+  { <span class="ck">$set</span>: { status: <span class="cv">"confirmed"</span> } }
+)
+
+<span class="cm">// Add a history entry to the status log</span>
+db.orders.updateOne(
+  { _id: orderId },
+  { <span class="ck">$push</span>: { statusHistory: { status: <span class="cv">"confirmed"</span>, timestamp: <span class="ck">new</span> Date() } } }
+)</pre>
+  </div>
+
+  <ul class="term-list">
+    <li><span class="term-key">Document</span><span class="term-val">One record in MongoDB. Like a row in MySQL, but it can contain nested arrays and objects. No fixed columns.</span></li>
+    <li><span class="term-key">Collection</span><span class="term-val">A group of documents. Like a table in MySQL, but documents in the same collection can have different fields.</span></li>
+    <li><span class="term-key">_id</span><span class="term-val">Auto-generated unique ID for every document. Similar to <code>INT AUTO_INCREMENT</code> in MySQL.</span></li>
+    <li><span class="term-key">$set</span><span class="term-val">MongoDB update operator — changes a specific field without touching the rest of the document.</span></li>
+    <li><span class="term-key">$push</span><span class="term-val">MongoDB update operator — appends a new item to an array inside a document.</span></li>
+  </ul>
+
+  <div class="level-row">
+    <span class="level-pill beginner">🟢 Beginner</span>
+    <span class="level-pill average">🔵 Average</span>
+    <span class="level-pill advanced">🟣 Advanced</span>
+  </div>
+  <div class="level-block beginner">
+    <div class="level-block-label">🟢 Beginner Focus</div>
+    A MongoDB document is like a WhatsApp message thread — all the messages (order items) are stored together under one conversation (order). You don't need to look in another folder to find them.
+  </div>
+  <div class="level-block average">
+    <div class="level-block-label">🔵 Average Focus</div>
+    The <code>statusHistory</code> array inside the document grows every time the order status changes. In MySQL, this would require a separate <code>order_status_history</code> table and a JOIN. In MongoDB, it's just <code>$push</code> — one operation, data stays in one place.
+  </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">🟣 Advanced Focus</div>
+    MongoDB's flexible schema is powerful but has risks: if one document stores <code>"status": "PENDING"</code> and another stores <code>"status": "pending"</code>, queries break. In production, you'd use schema validation rules (<code>$jsonSchema</code>) or an ODM like Mongoose to enforce consistency.
+  </div>
+
+  <div class="img-ph">
+    <div class="img-ph-icon">📸</div>
+    <div>
+      <div class="img-ph-label">Instructor Screenshot · MongoDB Shell — insertOne + find</div>
+      <div class="img-ph-desc">Terminal showing: (1) <code>mongosh</code> session inside the MongoDB container, (2) <code>db.orders.insertOne({...})</code> returning the new ObjectId, (3) <code>db.orders.find().pretty()</code> showing the full nested document with the items array visible. Highlight that all order data is in one document.</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- 2.4 Choosing the Right DB -->
+  <div class="sec-header">
+    <span class="sec-pill amber">2.4</span>
+    <span class="sec-title">Choosing the Right Database</span>
+    <span class="sec-time">10 min</span>
+  </div>
+
+  <p>Not a rigid rule — a conversation. Ask these questions about your data:</p>
+
+  <div class="decision-flow">
+    <div class="dec-card">
+      <div class="dec-q">Is the data highly structured with consistent fields?</div>
+      <div class="dec-a mysql">→ MySQL (Relational)</div>
+      <div style="font-size:0.75rem;color:var(--muted);margin-top:0.3rem">Examples: users, menu items, payment records</div>
+    </div>
+    <div class="dec-card">
+      <div class="dec-q">Is the data temporary and accessed very frequently?</div>
+      <div class="dec-a redis">→ Redis (Key-Value)</div>
+      <div style="font-size:0.75rem;color:var(--muted);margin-top:0.3rem">Examples: shopping carts, login sessions, API rate limits</div>
+    </div>
+    <div class="dec-card">
+      <div class="dec-q">Is the data document-like, nested, or evolving in structure?</div>
+      <div class="dec-a mongo">→ MongoDB (Document)</div>
+      <div style="font-size:0.75rem;color:var(--muted);margin-top:0.3rem">Examples: orders with items, blog posts with comments</div>
+    </div>
+    <div class="dec-card">
+      <div class="dec-q">Not sure? Ask: will this data exist in 6 months?</div>
+      <div class="dec-a" style="color:var(--accent)">→ If yes → MySQL or MongoDB.<br>If no → Redis.</div>
+    </div>
+  </div>
+
+  <div class="callout purple">
+    <span>🔮</span>
+    <div><strong>Polyglot persistence</strong> — using multiple database types in one application. CloudEats uses MySQL + Redis + MongoDB deliberately. Real-world apps like Grab, Netflix, and Shopee use 4–6 different database technologies. The skill is knowing which tool fits which problem.</div>
+  </div>
+
+  <!-- Week 4 summary table -->
+  <table class="summary-table" style="margin-top:1.25rem">
+    <thead><tr><th>Database</th><th>Type</th><th>Stores what in CloudEats</th><th>Why this one</th></tr></thead>
+    <tbody>
+      <tr><td><strong>MySQL</strong></td><td>Relational</td><td>Users, menu items, structured orders</td><td>Consistent structure, relationships between data</td></tr>
+      <tr><td><strong>Redis</strong></td><td>Key-Value (in-memory)</td><td>Shopping carts, sessions</td><td>Sub-millisecond speed, TTL auto-expiry</td></tr>
+      <tr><td><strong>MongoDB</strong></td><td>Document</td><td>Order history with nested items</td><td>Variable number of items per order, one read = full data</td></tr>
+    </tbody>
+  </table>
+
+</div><!-- /panel-h2 -->
+
+
+<!-- ══════════════════════════════════════════════════
+     LABS THIS WEEK
+═══════════════════════════════════════════════════ -->
+<div class="tab-panel" id="panel-labs">
+
+  <div class="sec-header">
+    <span class="sec-pill green">Labs</span>
+    <span class="sec-title">Labs This Week — Week 4</span>
+  </div>
+
+  <div class="callout amber">
+    <span>⚠️</span>
+    <div><strong>Prerequisites:</strong> Week 3 Lab 3.2 must be completed. Your Docker Compose stack must be running with the <code>db</code> container up, and the <code>menu_items</code>, <code>users</code>, and <code>orders</code> tables must be populated.</div>
+  </div>
+
+  <!-- Lab 4.1 card -->
+  <div class="lab-card">
+    <div class="lab-card-header">
+      <span class="lab-num-g">Lab 4.1</span>
+      <span class="lab-title">Relational DB Queries — SQL in the Shell</span>
+      <span class="lab-duration">60 min</span>
+    </div>
+    <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.75rem">Connect directly to the live MySQL container and write SQL queries. No application code today — only SQL in the shell. You're the analyst pulling reports for the CloudEats manager.</p>
+
+    <div class="compare-grid">
+      <div>
+        <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem">Parts covered</div>
+        <ul class="checklist">
+          <li>Part 1 · Connect to MySQL container (10 min)</li>
+          <li>Part 2 · Explore schema with DESCRIBE (10 min)</li>
+          <li>Part 3 · SELECT with WHERE, ORDER BY, LIKE (15 min)</li>
+          <li>Part 4 · JOIN users and orders tables (15 min)</li>
+          <li>Part 5 · INSERT a new menu item (10 min)</li>
+          <li style="color:var(--purple)">⚡ Extension · UPDATE, DELETE (Advanced)</li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--green);margin-bottom:0.5rem">What you'll be able to do</div>
+        <ul class="checklist">
+          <li>Filter menu items by category and price</li>
+          <li>Find which customer placed each order</li>
+          <li>Add Laksa Sarawak to the menu</li>
+          <li>See query results as a live table in the terminal</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout green" style="margin-top:0.75rem;margin-bottom:0">
+      <span>✅</span>
+      <div><strong>Success checkpoint:</strong> You can run <code>SELECT users.full_name, orders.total_amount FROM orders JOIN users ON orders.user_id = users.id;</code> and see customer names next to their order amounts.</div>
+    </div>
+  </div>
+
+  <!-- Lab 4.2 card -->
+  <div class="lab-card" style="border-color:rgba(0,200,255,0.25)">
+    <div class="lab-card-header">
+      <span class="lab-num-b">Lab 4.2</span>
+      <span class="lab-title">NoSQL Orders — Redis Cart &amp; MongoDB History</span>
+      <span class="lab-duration">60 min</span>
+    </div>
+    <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.75rem">Add Redis and MongoDB to the Docker Compose stack. Practice key-value operations in the Redis shell and document operations in the MongoDB shell. See how the same order data lives in two different databases for two different purposes.</p>
+
+    <div class="compare-grid">
+      <div>
+        <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:0.5rem">Parts covered</div>
+        <ul class="checklist">
+          <li>Part 1 · Add Redis + MongoDB to docker-compose.yml (10 min)</li>
+          <li>Part 2 · Redis shell — SET / GET / TTL / DEL (15 min)</li>
+          <li>Part 3 · MongoDB shell — insertOne / find / updateOne (15 min)</li>
+          <li>Part 4 · Simulate a customer order flow end-to-end (15 min)</li>
+          <li>Part 5 · Compare: what's in Redis vs MongoDB and why (5 min)</li>
+          <li style="color:var(--purple)">⚡ Extension · Add TTL to cart, count abandoned carts (Advanced)</li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:0.5rem">What you'll be able to do</div>
+        <ul class="checklist">
+          <li>Add items to a cart using Redis SET</li>
+          <li>Watch the cart disappear after TTL expires</li>
+          <li>Place an order as a MongoDB document</li>
+          <li>Update order status with $set operator</li>
+          <li>Explain why two databases are used for one order</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout blue" style="margin-top:0.75rem;margin-bottom:0">
+      <span>✅</span>
+      <div><strong>Success checkpoint:</strong> Run <code>redis-cli GET cart:user1</code> and see your cart data. Then run <code>db.orders.find().pretty()</code> in mongosh and see your placed order with the items array nested inside one document.</div>
+    </div>
+  </div>
+
+  <!-- Architecture progress -->
+  <div class="sec-header" style="margin-top:1.5rem">
+    <span class="sec-pill amber">Progress</span>
+    <span class="sec-title">CloudEats Architecture — Where We Are</span>
+  </div>
+
+  <svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin:0.85rem 0">
+    <defs><marker id="pa" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(107,127,160,0.5)"/></marker></defs>
+    <!-- W1 -->
+    <rect x="10" y="28" width="95" height="64" rx="6" fill="rgba(107,127,160,0.06)" stroke="rgba(107,127,160,0.25)" stroke-width="1.5"/>
+    <text x="57" y="50" font-size="7.5" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle" font-weight="700">Week 1–2</text>
+    <text x="57" y="65" font-size="10" text-anchor="middle">🐳</text>
+    <text x="57" y="79" font-size="7.5" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">Docker + Static</text>
+    <text x="57" y="88" font-size="6.5" font-family="Fira Code,monospace" fill="rgba(107,127,160,0.5)" text-anchor="middle">HTML menu</text>
+    <!-- Arrow -->
+    <line x1="107" y1="60" x2="130" y2="60" stroke="rgba(107,127,160,0.35)" stroke-width="1.5" marker-end="url(#pa)"/>
+    <!-- W3 -->
+    <rect x="133" y="14" width="120" height="92" rx="6" fill="rgba(107,127,160,0.06)" stroke="rgba(107,127,160,0.25)" stroke-width="1.5"/>
+    <text x="193" y="34" font-size="7.5" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle" font-weight="700">Week 3</text>
+    <text x="175" y="56" font-size="10" text-anchor="middle">🌐</text>
+    <text x="210" y="56" font-size="10" text-anchor="middle">🗄️</text>
+    <text x="193" y="71" font-size="7.5" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">Node.js + MySQL</text>
+    <text x="193" y="83" font-size="6.5" font-family="Fira Code,monospace" fill="rgba(107,127,160,0.5)" text-anchor="middle">Docker Compose</text>
+    <text x="193" y="94" font-size="6.5" font-family="Fira Code,monospace" fill="rgba(107,127,160,0.5)" text-anchor="middle">bcrypt · schema</text>
+    <!-- Arrow -->
+    <line x1="255" y1="60" x2="278" y2="60" stroke="rgba(255,183,64,0.5)" stroke-width="1.8" marker-end="url(#pa)"/>
+    <!-- W4 CURRENT -->
+    <rect x="281" y="6" width="182" height="108" rx="6" fill="rgba(255,183,64,0.06)" stroke="rgba(255,183,64,0.4)" stroke-width="2"/>
+    <text x="372" y="25" font-size="8.5" font-family="Sora,sans-serif" fill="rgba(255,183,64,0.9)" text-anchor="middle" font-weight="700">Week 4 ← You are here</text>
+    <text x="340" y="50" font-size="10" text-anchor="middle">🗄️</text>
+    <text x="372" y="50" font-size="10" text-anchor="middle">⚡</text>
+    <text x="404" y="50" font-size="10" text-anchor="middle">📦</text>
+    <text x="372" y="65" font-size="7.5" font-family="Sora,sans-serif" fill="var(--text)" text-anchor="middle" font-weight="600">MySQL + Redis + MongoDB</text>
+    <text x="372" y="78" font-size="6.5" font-family="Fira Code,monospace" fill="rgba(255,183,64,0.6)" text-anchor="middle">SQL queries · cart TTL</text>
+    <text x="372" y="90" font-size="6.5" font-family="Fira Code,monospace" fill="rgba(255,183,64,0.6)" text-anchor="middle">document orders · JOIN</text>
+    <text x="372" y="104" font-size="6.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">polyglot persistence</text>
+    <!-- Arrow -->
+    <line x1="463" y1="60" x2="487" y2="60" stroke="rgba(107,127,160,0.3)" stroke-width="1.5" marker-end="url(#pa)"/>
+    <!-- W5 ahead -->
+    <rect x="490" y="28" width="180" height="64" rx="6" fill="rgba(107,127,160,0.03)" stroke="rgba(107,127,160,0.15)" stroke-dasharray="4,3" stroke-width="1.5"/>
+    <text x="580" y="50" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(107,127,160,0.45)" text-anchor="middle" font-weight="700">Week 5 (Next)</text>
+    <text x="580" y="64" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(107,127,160,0.35)" text-anchor="middle">Microservices — split into</text>
+    <text x="580" y="76" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(107,127,160,0.35)" text-anchor="middle">separate services, each</text>
+    <text x="580" y="88" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(107,127,160,0.35)" text-anchor="middle">owning its own database</text>
+  </svg>
+
+</div><!-- /panel-labs -->
+
+
+<!-- ══════════════════════════════════════════════════
+     QUIZ PREP
+═══════════════════════════════════════════════════ -->
+<div class="tab-panel" id="panel-quiz">
+
+  <div class="sec-header">
+    <span class="sec-pill amber">Quiz</span>
+    <span class="sec-title">Quiz Preparation — Week 4 Topics</span>
+  </div>
+
+  <div class="callout amber" style="margin-bottom:1.25rem">
+    <span>📋</span>
+    <div>These question types are based on the Week 4 learning objectives. Click an answer to check it — the correct answer is revealed after you choose.</div>
+  </div>
+
+  <!-- Q1 -->
+  <div class="kc-question">
+    <div class="kc-q">1. You want to find all menu items in the 'Drinks' category with a price below RM 5. Which query is correct?</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div><code>SELECT * FROM menu_items WHERE category = 'Drinks' OR price &lt; 5;</code></li>
+      <li onclick="checkAnswer(this,true)"><div class="kc-radio"></div><code>SELECT * FROM menu_items WHERE category = 'Drinks' AND price &lt; 5;</code></li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div><code>SELECT * FROM menu_items LIMIT 5 WHERE category = 'Drinks';</code></li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div><code>SELECT menu_items WHERE category = 'Drinks' AND price &lt; 5;</code></li>
+    </ul>
+  </div>
+
+  <!-- Q2 -->
+  <div class="kc-question">
+    <div class="kc-q">2. What is the difference between INNER JOIN and LEFT JOIN?</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>INNER JOIN is faster than LEFT JOIN on all databases</li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>LEFT JOIN returns only rows from the right table; INNER JOIN returns both</li>
+      <li onclick="checkAnswer(this,true)"><div class="kc-radio"></div>INNER JOIN returns only rows where a match exists in both tables. LEFT JOIN returns all rows from the left table, with NULL in the right-side columns if there is no match.</li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>They are identical — just different syntax for the same result</li>
+    </ul>
+  </div>
+
+  <!-- Q3 -->
+  <div class="kc-question">
+    <div class="kc-q">3. True or False: Redis persists data to disk by default. If the Redis container is restarted, all shopping carts are still there.</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>True — Redis writes everything to disk automatically</li>
+      <li onclick="checkAnswer(this,true)"><div class="kc-radio"></div>False — Redis stores data in RAM by default. If the container stops, all data is lost unless persistence (AOF or RDB snapshots) is explicitly enabled. This is acceptable for shopping carts — a restarted server simply means customers start a fresh cart.</li>
+    </ul>
+  </div>
+
+  <!-- Q4 -->
+  <div class="kc-question">
+    <div class="kc-q">4. A CloudEats order has 2 items. Another has 7 items. Another has 0 items (the customer changed their mind). Which database is the best fit for storing these orders with their items?</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>MySQL — because orders are structured data and we already have the orders table</li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>Redis — because we want orders to be retrieved quickly</li>
+      <li onclick="checkAnswer(this,true)"><div class="kc-radio"></div>MongoDB — because each order has a variable number of items. In MongoDB, the items array can have 0, 2, or 7 entries inside one document. No separate table or JOIN is needed — one read returns the full order.</li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>Any database works equally — the number of items does not affect the choice</li>
+    </ul>
+  </div>
+
+  <!-- Q5 -->
+  <div class="kc-question">
+    <div class="kc-q">5. What does <code>SET cart:user5 '{"items":[...]}' EX 1800</code> do in Redis?</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>Stores the cart permanently for user 5 and limits the cart to 1800 items</li>
+      <li onclick="checkAnswer(this,true)"><div class="kc-radio"></div>Stores the shopping cart JSON under the key "cart:user5" and sets a Time To Live of 1800 seconds (30 minutes). After 30 minutes, Redis automatically deletes the key — no code needed.</li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>Stores the cart and checks for 1800 duplicate items before saving</li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>EX 1800 means the cart is encrypted with a 1800-bit key</li>
+    </ul>
+  </div>
+
+  <!-- Q6 -->
+  <div class="kc-question">
+    <div class="kc-q">6. Scenario: The CloudEats team wants to find all customers who have placed at least one order. Which SQL approach is correct?</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div><code>SELECT * FROM users LEFT JOIN orders ON users.id = orders.user_id WHERE orders.id IS NULL;</code></li>
+      <li onclick="checkAnswer(this,true)"><div class="kc-radio"></div><code>SELECT DISTINCT users.full_name FROM users INNER JOIN orders ON users.id = orders.user_id;</code> — INNER JOIN only returns users who have a matching row in orders. DISTINCT removes duplicates if they placed multiple orders.</li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div><code>SELECT * FROM orders WHERE user_id EXISTS;</code></li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div><code>SELECT * FROM users WHERE orders = TRUE;</code></li>
+    </ul>
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- Summary table -->
+  <div class="sec-header">
+    <span class="sec-pill green">Summary</span>
+    <span class="sec-title">Week 4 Key Takeaways</span>
+  </div>
+
+  <table class="summary-table">
+    <thead><tr><th>Topic</th><th>Key Takeaway</th><th>Next appearance</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>SELECT</strong></td>
+        <td><code>WHERE</code> filters rows. <code>ORDER BY</code> sorts. <code>LIMIT</code> caps results. <code>LIKE '%text%'</code> matches partial strings.</td>
+        <td>Lab 4.1, every future query</td>
+      </tr>
+      <tr>
+        <td><strong>JOIN</strong></td>
+        <td>Combines rows from two tables on a shared column. INNER = only matched pairs. LEFT = all left rows, NULL if no match on right.</td>
+        <td>Lab 4.1 Part 4, Week 5 API responses</td>
+      </tr>
+      <tr>
+        <td><strong>Redis</strong></td>
+        <td>In-memory key-value. Sub-millisecond reads. TTL for auto-expiry. Data lost on restart unless persistence enabled.</td>
+        <td>Lab 4.2, Week 9 monitoring (cache hit rate)</td>
+      </tr>
+      <tr>
+        <td><strong>MongoDB</strong></td>
+        <td>Document database. Flexible nested JSON. One document = complete order with all items. No JOIN needed.</td>
+        <td>Lab 4.2, Week 5 (Order Service), Week 10 migration</td>
+      </tr>
+      <tr>
+        <td><strong>Polyglot Persistence</strong></td>
+        <td>Use the right database for each type of data. CloudEats deliberately uses MySQL + Redis + MongoDB for different problems.</td>
+        <td>Week 5 (each microservice owns its database)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout purple" style="margin-top:1rem">
+    <span>🔮</span>
+    <div><strong>What's coming in Week 5:</strong> We split CloudEats into <em>microservices</em> — separate services that each own their own database. The User Service keeps MySQL. The Order Service keeps MongoDB. The Cart Service keeps Redis. Each talks to the others through an API, not a shared database.</div>
+  </div>
+
+</div><!-- /panel-quiz -->
+
+</div><!-- /tab-content -->
+
+<footer style="border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;color:var(--muted);font-size:0.78rem;max-width:1100px;margin:0 auto">
+  Cloud Computing · Week 4 · Cloud-Native Application Development &nbsp;|&nbsp; CloudEats Academy &nbsp;|&nbsp;
+  <a href="../week03/index.html" style="color:var(--muted);text-decoration:none">← Week 3</a>
+  &nbsp;|&nbsp;
+  <span class="ghp-badge">🐙 GitHub Pages Ready</span>
+  &nbsp;|&nbsp;
+  <a href="#" style="color:var(--muted);text-decoration:none">Week 5 →</a>
+</footer>
+
+<script>
+  /* ── Tab switching ── */
+  function showTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + id).classList.add('active');
+    btn.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ── Query builder accordion ── */
+  function toggleQB(el) {
+    const wasOpen = el.classList.contains('open');
+    document.querySelectorAll('.qb-step').forEach(s => s.classList.remove('open'));
+    if (!wasOpen) el.classList.add('open');
+  }
+
+  /* ── Copy code ── */
+  function copyCode(btn, event) {
+    event.stopPropagation();
+    const pre = btn.closest('.code-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'Copied!'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  /* ── Knowledge check ── */
+  function checkAnswer(li, correct) {
+    const parent = li.closest('ul');
+    parent.querySelectorAll('li').forEach(i => i.classList.remove('correct', 'wrong'));
+    li.classList.add(correct ? 'correct' : 'wrong');
+    if (!correct) {
+      parent.querySelectorAll('li').forEach(i => {
+        if (i.getAttribute('onclick')?.includes('true')) i.classList.add('correct');
+      });
+    }
+  }
+</script>
+</body>
+</html>

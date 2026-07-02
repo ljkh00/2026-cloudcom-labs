@@ -1,0 +1,1940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 2.1 · Static Menu + First Container · CloudEats Academy</title>
+<meta name="description" content="Build a static HTML food menu and serve it with nginx inside a Docker container. Week 2 Lab 1 of the CloudEats cloud computing diploma course. Beginner to advanced pacing.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Lab 2.1 · Static Menu + First Container · CloudEats Academy">
+<meta property="og:description" content="Create the CloudEats static menu page, containerise it with Docker and nginx, and run your first container. Step-by-step with three pace levels.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07090f;
+    --bg2: #0d1117;
+    --bg3: #141b27;
+    --surface: #1a2235;
+    --surface2: #1f2c42;
+    --border: #2a3d5a;
+    --accent: #00c8ff;
+    --accent2: #7c6af5;
+    --green: #00e5a0;
+    --amber: #ffb740;
+    --red: #ff5e7a;
+    --text: #e8edf5;
+    --muted: #6b7fa0;
+    --beginner: #00e5a0;
+    --average: #00c8ff;
+    --advanced: #b46ef5;
+    --radius: 10px;
+    --code-bg: #0b1120;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  .site-header {
+    background: linear-gradient(135deg, #050d1c 0%, #091628 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 58px;
+    gap: 1rem;
+  }
+  .header-left { display: flex; align-items: center; gap: 0.75rem; }
+  .lab-badge {
+    background: var(--accent);
+    color: #000;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .header-title { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+
+  /* ── PACE SELECTOR ── */
+  .pace-bar {
+    display: flex;
+    gap: 0.35rem;
+    background: var(--bg3);
+    padding: 0.25rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .pace-btn {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.28rem 0.7rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+  .pace-btn:hover { color: var(--text); }
+  .pace-btn.active[data-pace="beginner"] { background: var(--beginner); color: #000; }
+  .pace-btn.active[data-pace="average"]  { background: var(--average);  color: #000; }
+  .pace-btn.active[data-pace="advanced"] { background: var(--advanced); color: #fff; }
+
+  /* ── HERO ── */
+  .lab-hero {
+    background: linear-gradient(160deg, #060f20, #0a1c35);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 2rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .lab-hero::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -100px;
+    width: 420px; height: 420px;
+    background: radial-gradient(ellipse, rgba(0,200,255,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .lab-hero-inner { max-width: 960px; margin: 0 auto; }
+  .lab-crumb {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .lab-crumb span { color: var(--accent); }
+  .lab-hero h1 {
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #e8edf5 40%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .lab-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  .meta-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.3rem 0.75rem;
+    color: var(--muted);
+  }
+  .meta-chip strong { color: var(--text); }
+
+  /* ── LAYOUT ── */
+  .lab-layout {
+    max-width: 960px;
+    margin: 2rem auto 4rem;
+    padding: 0 2rem;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar { position: sticky; top: 80px; }
+  .sidebar-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+  .sidebar-nav { list-style: none; }
+  .sidebar-nav li { margin-bottom: 0.1rem; }
+  .sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 7px;
+    color: var(--muted);
+    text-decoration: none;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+  }
+  .sidebar-nav a:hover { background: var(--surface); color: var(--text); }
+  .sidebar-nav a.active { background: var(--surface); color: var(--accent); border-color: rgba(0,200,255,0.2); }
+  .part-divider {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0.5rem 0.75rem 0.2rem;
+    margin-top: 0.5rem;
+  }
+
+  /* ── PROGRESS ── */
+  .progress-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+  .progress-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; }
+  .progress-bar-wrap { background: var(--bg3); border-radius: 4px; height: 6px; margin-bottom: 0.5rem; }
+  .progress-bar { height: 6px; border-radius: 4px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.4s; }
+  .progress-label { font-size: 0.72rem; color: var(--muted); }
+  .progress-label span { color: var(--accent); font-weight: 600; }
+
+  /* ── CONTENT ── */
+  .lab-content > section { margin-bottom: 3rem; }
+  .part-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .part-pill {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    background: rgba(0,200,255,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(0,200,255,0.2);
+    white-space: nowrap;
+  }
+  .part-title { font-size: 1.15rem; font-weight: 700; }
+  .part-time  { font-size: 0.75rem; color: var(--muted); margin-left: auto; white-space: nowrap; }
+
+  /* ── STEP CARD ── */
+  .step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .step.completed { border-color: rgba(0,229,160,0.4); }
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.9rem 1.1rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .step-header:hover { background: var(--surface2); }
+  /* Subtle "click to expand" affordance on collapsed steps */
+  .step:not(.open) .step-header::after {
+    content: 'click to expand';
+    font-size: 0.62rem;
+    color: var(--muted);
+    opacity: 0.5;
+    margin-left: auto;
+    letter-spacing: 0.04em;
+    pointer-events: none;
+  }
+  .step.open .step-header::after { content: ''; }
+  .step-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700;
+    color: var(--muted); flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .step.completed .step-num { background: var(--green); border-color: var(--green); color: #000; }
+  .step-title { font-size: 0.9rem; font-weight: 600; flex: 1; }
+  .step-why { font-size: 0.72rem; color: var(--accent); font-weight: 500; white-space: nowrap; display: none; }
+  .step.open .step-why { display: block; }
+  .step-chevron { color: var(--muted); transition: transform 0.2s; font-size: 0.9rem; flex-shrink: 0; }
+  .step.open .step-chevron { transform: rotate(90deg); }
+  .step-body {
+    display: none;
+    padding: 0 1.25rem 1.25rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.86rem;
+    line-height: 1.7;
+  }
+  .step.open .step-body { display: block; animation: fadeDown 0.2s ease; }
+  @keyframes fadeDown { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ── WHY BOX ── */
+  .why-box {
+    background: rgba(0,200,255,0.05);
+    border: 1px solid rgba(0,200,255,0.15);
+    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+    margin: 0.75rem 0;
+    font-size: 0.82rem; color: #a0d8f0;
+    display: flex; gap: 0.5rem; align-items: flex-start;
+  }
+
+  /* ── PACE HINT ── */
+  .pace-hint {
+    display: none;
+    border-radius: 7px;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    margin: 0.6rem 0;
+    border-left: 2px solid;
+  }
+  .pace-hint.beginner { background: rgba(0,229,160,0.05);  border-color: var(--beginner); color: #8ee8c4; }
+  .pace-hint.average  { background: rgba(0,200,255,0.05);  border-color: var(--average);  color: #a0d8f0; }
+  .pace-hint.advanced { background: rgba(180,110,245,0.05); border-color: var(--advanced); color: #c5a8f5; }
+  body.pace-beginner .pace-hint.beginner,
+  body.pace-average  .pace-hint.average,
+  body.pace-advanced .pace-hint.advanced { display: block; }
+
+  /* ── CODE BLOCK ── */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin: 0.75rem 0;
+    overflow: hidden;
+  }
+  .code-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.5rem 0.9rem;
+    background: rgba(0,0,0,0.3);
+    border-bottom: 1px solid var(--border);
+  }
+  .code-lang {
+    font-size: 0.68rem; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .copy-btn {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.68rem; font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 5px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+  .copy-btn.copied { background: var(--green); color: #000; border-color: var(--green); }
+  pre {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.8rem; line-height: 1.65;
+    padding: 1rem; overflow-x: auto;
+    color: #c5d5ef; white-space: pre;
+  }
+  .cm { color: var(--muted); font-style: italic; }
+  .ck { color: var(--accent); }
+  .cv { color: var(--green); }
+  .cc { color: var(--amber); }
+  .cs { color: #f07090; }
+  .cd { color: #b46ef5; }
+
+  /* ── SUBSTEP LIST ── */
+  .substep-list { list-style: none; margin: 0.75rem 0; }
+  .substep-list li {
+    display: flex; gap: 0.6rem; align-items: flex-start;
+    padding: 0.35rem 0; font-size: 0.85rem;
+    border-bottom: 1px solid rgba(42,61,90,0.35);
+  }
+  .substep-list li:last-child { border-bottom: none; }
+  .substep-bullet {
+    min-width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    flex-shrink: 0; margin-top: 0.1rem;
+    font-size: 0.65rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted);
+  }
+
+  /* ── CHECKPOINT ── */
+  .checkpoint {
+    background: linear-gradient(135deg, rgba(0,229,160,0.08), rgba(0,229,160,0.04));
+    border: 1px solid rgba(0,229,160,0.25);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin: 1.25rem 0 0;
+    display: flex; gap: 0.75rem; align-items: flex-start;
+  }
+  .checkpoint-icon { font-size: 1.3rem; flex-shrink: 0; }
+  .checkpoint-text { font-size: 0.85rem; color: var(--green); line-height: 1.5; }
+  .checkpoint-text strong { font-size: 0.92rem; display: block; margin-bottom: 0.2rem; }
+
+  /* ── WARNING ── */
+  .warning {
+    background: rgba(255,183,64,0.07);
+    border: 1px solid rgba(255,183,64,0.25);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    margin: 0.75rem 0;
+    font-size: 0.82rem; color: #d9c07a;
+    display: flex; gap: 0.6rem; align-items: flex-start;
+  }
+  .info-box {
+    background: rgba(124,106,245,0.07);
+    border: 1px solid rgba(124,106,245,0.25);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    margin: 0.75rem 0;
+    font-size: 0.82rem; color: #c5b8f8;
+    display: flex; gap: 0.6rem; align-items: flex-start;
+  }
+
+  /* ── CHECKLIST ── */
+  .checklist { list-style: none; margin: 0.5rem 0; }
+  .checklist li {
+    display: flex; align-items: flex-start; gap: 0.6rem;
+    padding: 0.45rem 0; font-size: 0.85rem;
+    border-bottom: 1px solid rgba(42,61,90,0.35);
+    cursor: pointer; transition: color 0.15s;
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li.done { color: var(--green); text-decoration: line-through; opacity: 0.7; }
+  .check-box {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-radius: 4px; flex-shrink: 0;
+    margin-top: 0.1rem;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; transition: all 0.15s;
+    background: var(--bg3);
+  }
+  .checklist li.done .check-box { background: var(--green); border-color: var(--green); color: #000; }
+
+  /* ── TROUBLE CARD ── */
+  .trouble-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+  }
+  .trouble-header {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.85rem 1.1rem;
+    cursor: pointer; user-select: none;
+  }
+  .trouble-header:hover { background: var(--surface2); }
+  .trouble-icon { font-size: 1rem; flex-shrink: 0; }
+  .trouble-title { font-size: 0.87rem; font-weight: 600; flex: 1; color: var(--amber); }
+  .trouble-chevron { color: var(--muted); transition: transform 0.2s; }
+  .trouble-card.open .trouble-chevron { transform: rotate(90deg); }
+  .trouble-body {
+    display: none;
+    padding: 0 1.1rem 1.1rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.84rem; line-height: 1.7; color: #c2cfe0;
+  }
+  .trouble-card.open .trouble-body { display: block; }
+
+  /* ── KNOWLEDGE CHECK ── */
+  .kc-question {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 0.85rem;
+  }
+  .kc-q { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem; }
+  .kc-options { list-style: none; }
+  .kc-options li {
+    display: flex; align-items: center; gap: 0.6rem;
+    font-size: 0.83rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 6px; cursor: pointer;
+    transition: background 0.15s;
+    margin-bottom: 0.3rem;
+    border: 1px solid transparent;
+  }
+  .kc-options li:hover { background: var(--surface2); }
+  .kc-options li.correct { background: rgba(0,229,160,0.1);  border-color: rgba(0,229,160,0.3);  color: var(--green); }
+  .kc-options li.wrong   { background: rgba(255,94,122,0.08); border-color: rgba(255,94,122,0.25); color: var(--red); }
+  .kc-radio { width:16px; height:16px; border:2px solid var(--border); border-radius:50%; flex-shrink:0; transition:all 0.15s; }
+  .kc-options li.correct .kc-radio { background: var(--green); border-color: var(--green); }
+  .kc-options li.wrong   .kc-radio { background: var(--red);   border-color: var(--red); }
+
+  /* ── COMPARE TABLE ── */
+  .compare-table { width:100%; border-collapse:collapse; font-size:0.82rem; margin:0.75rem 0; }
+  .compare-table th { padding:0.55rem 0.9rem; background:var(--bg3); color:var(--muted); font-size:0.7rem; letter-spacing:0.07em; text-transform:uppercase; text-align:left; border-bottom:1px solid var(--border); }
+  .compare-table td { padding:0.55rem 0.9rem; border-bottom:1px solid rgba(42,61,90,0.3); vertical-align:top; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  .td-label { color:var(--muted); font-weight:600; white-space:nowrap; }
+  .td-bad  { color:#ff9a8d; }
+  .td-good { color:var(--green); }
+
+  /* ── ROADMAP ── */
+  .roadmap {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-top: 1rem;
+  }
+  .roadmap-title { font-size:0.78rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:1rem; }
+  .rm-week { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; border-bottom:1px solid rgba(42,61,90,0.4); }
+  .rm-week:last-child { border-bottom:none; }
+  .rm-dot { width:10px; height:10px; border-radius:50%; margin-top:0.35rem; flex-shrink:0; }
+  .rm-dot.done    { background: var(--green); }
+  .rm-dot.active  { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .rm-dot.upcoming { background: var(--border); }
+  .rm-label { font-size:0.8rem; font-weight:600; }
+  .rm-desc  { font-size:0.73rem; color:var(--muted); }
+
+  /* ── TAGS ── */
+  .inline-tag { display:inline; font-size:0.72rem; font-weight:600; padding:0.1rem 0.4rem; border-radius:4px; vertical-align:middle; }
+  .tag-green { background:rgba(0,229,160,0.12);  color:var(--green); }
+  .tag-blue  { background:rgba(0,200,255,0.12);  color:var(--accent); }
+  .tag-amber { background:rgba(255,183,64,0.12); color:var(--amber); }
+  .tag-purple{ background:rgba(180,110,245,0.12);color:var(--advanced); }
+
+  /* ── GITHUB PAGES BADGE ── */
+  .ghp-badge {
+    display:inline-flex; align-items:center; gap:0.35rem;
+    font-size:0.68rem; font-weight:700; letter-spacing:0.06em;
+    padding:0.2rem 0.6rem;
+    background:rgba(180,110,245,0.12);
+    border:1px solid rgba(180,110,245,0.3);
+    color:var(--advanced);
+    border-radius:20px;
+  }
+
+  a { color:var(--accent); }
+  a:hover { text-decoration:underline; }
+  strong { color:var(--text); font-weight:600; }
+
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-track { background:var(--bg2); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  @media (max-width:720px) {
+    .lab-layout { grid-template-columns:1fr; }
+    .sidebar { display:none; }
+    .lab-hero, .lab-layout { padding:1.5rem 1rem; }
+  }
+
+  /* ── IMAGE PLACEHOLDER ── */
+  .img-ph {
+    border: 2px dashed rgba(0,200,255,0.22);
+    border-radius: 8px;
+    background: rgba(0,200,255,0.025);
+    padding: 0.8rem 1.1rem;
+    margin: 0.85rem 0;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+  .img-ph-icon { font-size: 1.2rem; flex-shrink: 0; line-height: 1.2; }
+  .img-ph-label { font-size: 0.67rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.18rem; }
+  .img-ph-desc  { font-size: 0.79rem; color: var(--muted); line-height: 1.5; }
+</style>
+</head>
+<body class="pace-beginner">
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <span class="lab-badge">Lab 2.1</span>
+      <span class="header-title">Static Menu + First Container</span>
+    </div>
+    <div class="pace-bar">
+      <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner')">🌱 Beginner</button>
+      <button class="pace-btn" data-pace="average"  onclick="setPace('average')">⚡ Average</button>
+      <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced')">🚀 Advanced</button>
+    </div>
+  </div>
+</header>
+
+<!-- ── LAB HERO ── -->
+<div class="lab-hero">
+  <div class="lab-hero-inner">
+    <div class="lab-crumb">Week 2 <span>›</span> Lab 2.1</div>
+    <h1>Static Menu + First Container</h1>
+    <p style="color:var(--muted);font-size:0.88rem;margin-top:0.4rem">Build the <strong style="color:var(--green)">CloudEats</strong> food menu in HTML/CSS, then ship it in your <strong style="color:var(--accent)">first Docker container</strong> using nginx.</p>
+    <div class="lab-meta-row">
+      <div class="meta-chip">⏱ <strong>75 min</strong> &nbsp;Duration</div>
+      <div class="meta-chip">🐳 <strong>Docker</strong> &nbsp;First Container</div>
+      <div class="meta-chip">📋 <strong>4 Parts</strong> &nbsp;12 Steps</div>
+      <div class="meta-chip">🌐 <strong>nginx:alpine</strong> &nbsp;Web Server</div>
+      <div class="meta-chip"><span class="ghp-badge">🐙 GitHub Pages Ready</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LAYOUT ── -->
+<div class="lab-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="sidebar-title">Lab Navigation</div>
+    <ul class="sidebar-nav">
+      <li class="part-divider">Overview</li>
+      <li><a href="#overview" class="active">📋 Lab Overview</a></li>
+      <li><a href="#objectives">🎯 Objectives</a></li>
+      <li class="part-divider">Part 1 · Build the Menu</li>
+      <li><a href="#step1">Step 1 · Project Folders</a></li>
+      <li><a href="#step2">Step 2 · HTML Menu</a></li>
+      <li><a href="#step3">Step 3 · CSS Styling</a></li>
+      <li class="part-divider">Part 2 · Python Preview</li>
+      <li><a href="#step4">Step 4 · Python Server</a></li>
+      <li><a href="#step5">Step 5 · The Problem</a></li>
+      <li class="part-divider">Part 3 · Docker Container</li>
+      <li><a href="#step6">Step 6 · Dockerfile Concept</a></li>
+      <li><a href="#step7">Step 7 · Write Dockerfile</a></li>
+      <li><a href="#step8">Step 8 · Build Image</a></li>
+      <li><a href="#step9">Step 9 · Run Container</a></li>
+      <li><a href="#step10">Step 10 · Verify</a></li>
+      <li class="part-divider">Part 4 · Save Your Work</li>
+      <li><a href="#step11">Step 11 · .dockerignore</a></li>
+      <li><a href="#step12">Step 12 · Git Commit</a></li>
+      <li class="part-divider">Wrap-Up</li>
+      <li><a href="#checklist">✅ Checklist</a></li>
+      <li><a href="#troubleshoot">🔧 Troubleshoot</a></li>
+      <li><a href="#knowledgecheck">🧠 Knowledge Check</a></li>
+    </ul>
+    <div class="progress-box">
+      <div class="progress-title">Your Progress</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progressBar" style="width:0%"></div>
+      </div>
+      <div class="progress-label"><span id="progressCount">0</span> / 12 items done</div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="lab-content">
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- OVERVIEW -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section id="overview">
+      <div class="part-header">
+        <div class="part-pill">Overview</div>
+        <div class="part-title">Lab Overview &amp; Scenario</div>
+      </div>
+
+      <div class="step open" style="cursor:default;">
+        <div class="step-body" style="display:block; padding:1.1rem 1.25rem;">
+
+          <p style="margin-bottom:0.85rem">
+            Your manager at <strong>CloudEats</strong> has given you your first real task: <em>"We just signed our first restaurant — Nasi Lemak Paradise. Get their menu online today."</em>
+          </p>
+          <p style="margin-bottom:0.85rem">
+            You'll build a proper digital menu in HTML and CSS. Then — instead of leaving it running on your local machine — you'll package it into a <strong>Docker container</strong> so it can be deployed to any server in seconds.
+          </p>
+
+          <div class="warning">
+            <span>⚠️</span>
+            <span><strong>Prerequisite:</strong> Lab 1.1 must be complete — you need Docker installed and your <code style="font-family:'Fira Code',monospace;font-size:0.85em">~/cloudeats-app</code> project folder ready.</span>
+          </div>
+
+          <div class="pace-hint beginner">
+            🌱 <strong>Beginner tip:</strong> This lab has two big ideas — HTML/CSS (building the menu) and Docker (packaging it). Take each part step by step. You'll first see how the menu looks WITHOUT Docker, then understand WHY Docker makes it better.
+          </div>
+          <div class="pace-hint average">
+            ⚡ <strong>Average tip:</strong> Focus on the Dockerfile syntax and the <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker build → docker run</code> workflow. Notice that the image is immutable once built — any change means a new build. That's intentional.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 <strong>Advanced tip:</strong> As you write the Dockerfile, think about image layering. Each instruction creates a new layer. The order matters for build cache efficiency: put instructions that change frequently (COPY your files) <em>after</em> instructions that are stable (FROM, RUN installs). Try <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker image inspect</code> after building to see layers.
+          </div>
+
+          <!-- ── ARCHITECTURE DIAGRAM ── -->
+          <div id="arch-diagram" style="margin-top:1.25rem;">
+            <svg viewBox="0 0 640 310" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2)">
+              <!-- Title -->
+              <text x="320" y="24" font-size="10.5" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle" font-weight="700" letter-spacing="0.08em" text-transform="uppercase">HOW YOUR MENU GETS SERVED</text>
+
+              <!-- LEFT: Browser -->
+              <rect x="20" y="44" width="100" height="220" rx="8" fill="rgba(0,200,255,0.04)" stroke="rgba(0,200,255,0.25)" stroke-width="1.5"/>
+              <text x="70" y="68" font-size="9.5" font-family="Sora,sans-serif" fill="var(--accent)" text-anchor="middle" font-weight="700">BROWSER</text>
+              <text x="70" y="148" font-size="28" text-anchor="middle">🌐</text>
+              <text x="70" y="182" font-size="9" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">Customer's</text>
+              <text x="70" y="196" font-size="9" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">browser</text>
+              <text x="70" y="240" font-size="8.5" font-family="Sora,sans-serif" fill="rgba(0,200,255,0.4)" text-anchor="middle">Port :3000</text>
+
+              <!-- Arrow -->
+              <line x1="122" y1="154" x2="165" y2="154" stroke="rgba(0,200,255,0.5)" stroke-width="1.5" marker-end="url(#arr)"/>
+              <text x="143" y="148" font-size="8" font-family="Fira Code,monospace" fill="var(--accent)" text-anchor="middle">HTTP</text>
+              <text x="143" y="162" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">:3000</text>
+
+              <!-- PORT MAPPING BRIDGE -->
+              <rect x="165" y="134" width="70" height="40" rx="6" fill="rgba(255,183,64,0.08)" stroke="rgba(255,183,64,0.35)" stroke-width="1.5"/>
+              <text x="200" y="151" font-size="8.5" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle" font-weight="700">PORT MAP</text>
+              <text x="200" y="164" font-size="8" font-family="Fira Code,monospace" fill="var(--amber)" text-anchor="middle">3000:80</text>
+
+              <!-- Arrow into container -->
+              <line x1="237" y1="154" x2="270" y2="154" stroke="rgba(255,183,64,0.5)" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+              <!-- DOCKER CONTAINER BOX -->
+              <rect x="270" y="44" width="280" height="220" rx="8" fill="rgba(0,200,255,0.025)" stroke="rgba(0,200,255,0.3)" stroke-width="1.5"/>
+              <text x="410" y="66" font-size="9.5" font-family="Sora,sans-serif" fill="var(--accent)" text-anchor="middle" font-weight="700">🐳 DOCKER CONTAINER</text>
+              <text x="410" y="79" font-size="8" font-family="Fira Code,monospace" fill="rgba(0,200,255,0.45)" text-anchor="middle">cloudeats-menu:v1.0</text>
+
+              <!-- Layer 1: Alpine Linux -->
+              <rect x="285" y="90" width="250" height="38" rx="5" fill="rgba(107,127,160,0.1)" stroke="#3a4d6a" stroke-width="1"/>
+              <text x="410" y="107" font-size="9" font-family="Sora,sans-serif" fill="#6b7fa0" text-anchor="middle" font-weight="700">Alpine Linux (base OS)</text>
+              <text x="410" y="120" font-size="8" font-family="Fira Code,monospace" fill="#3a4d6a" text-anchor="middle">FROM nginx:alpine → layer 1</text>
+
+              <!-- Layer 2: nginx -->
+              <rect x="285" y="136" width="250" height="38" rx="5" fill="rgba(0,200,255,0.07)" stroke="rgba(0,200,255,0.2)" stroke-width="1"/>
+              <text x="410" y="153" font-size="9" font-family="Sora,sans-serif" fill="var(--accent)" text-anchor="middle" font-weight="700">nginx Web Server — port :80</text>
+              <text x="410" y="166" font-size="8" font-family="Fira Code,monospace" fill="rgba(0,200,255,0.5)" text-anchor="middle">FROM nginx:alpine → layer 2</text>
+
+              <!-- Layer 3: Your files -->
+              <rect x="285" y="182" width="250" height="38" rx="5" fill="rgba(0,229,160,0.07)" stroke="rgba(0,229,160,0.3)" stroke-width="1"/>
+              <text x="410" y="199" font-size="9" font-family="Sora,sans-serif" fill="var(--green)" text-anchor="middle" font-weight="700">Your HTML + CSS Files</text>
+              <text x="410" y="212" font-size="8" font-family="Fira Code,monospace" fill="rgba(0,229,160,0.5)" text-anchor="middle">COPY html/ css/ → layer 3</text>
+
+              <!-- EXPOSE -->
+              <text x="410" y="245" font-size="8.5" font-family="Sora,sans-serif" fill="rgba(0,200,255,0.45)" text-anchor="middle">EXPOSE 80 → listens internally on :80</text>
+
+              <!-- HOST label -->
+              <text x="410" y="278" font-size="8.5" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">Running on Ubuntu VM · Docker Engine</text>
+
+              <!-- Arrowhead defs -->
+              <defs>
+                <marker id="arr"  markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="rgba(0,200,255,0.6)"/></marker>
+                <marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="rgba(255,183,64,0.6)"/></marker>
+              </defs>
+            </svg>
+            <p style="font-size:0.73rem;color:var(--muted);text-align:center;margin-top:0.4rem">How a browser request reaches your HTML files through Docker's port mapping and nginx web server</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- OBJECTIVES -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section id="objectives">
+      <div class="part-header">
+        <div class="part-pill">Goals</div>
+        <div class="part-title">Learning Objectives</div>
+      </div>
+      <div class="step open" style="cursor:default;">
+        <div class="step-body" style="display:block;padding:1.1rem 1.25rem;">
+          <ul class="substep-list">
+            <li><div class="substep-bullet">1</div><div>Create a structured HTML page and matching CSS stylesheet for a restaurant menu</div></li>
+            <li><div class="substep-bullet">2</div><div>Understand client-server architecture — what a browser requests and what a server responds with</div></li>
+            <li><div class="substep-bullet">3</div><div>Explain what a Docker container is and why it solves deployment problems</div></li>
+            <li><div class="substep-bullet">4</div><div>Write a <code style="font-family:'Fira Code',monospace;font-size:0.85em">Dockerfile</code> to define a container image for a static web app</div></li>
+            <li><div class="substep-bullet">5</div><div>Build a Docker image using <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker build</code> and run a container with <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker run</code></div></li>
+            <li><div class="substep-bullet">6</div><div>Map host ports to container ports and explain why this is needed</div></li>
+            <li><div class="substep-bullet">7</div><div>Verify a running container with <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker ps</code>, <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker logs</code>, and a browser test</div></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- PART 1: BUILD THE MENU -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section id="part1">
+      <div class="part-header">
+        <div class="part-pill">Part 1</div>
+        <div class="part-title">Build the Menu HTML &amp; CSS</div>
+        <div class="part-time">⏱ 20 min</div>
+      </div>
+
+      <!-- ── EXPAND / COLLAPSE CONTROLS ── -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.85rem;padding:0.4rem 0;">
+        <span style="font-size:0.75rem;color:var(--muted)"><strong style="color:var(--text)">12 steps</strong> across 4 parts</span>
+        <div style="display:flex;gap:0.5rem">
+          <button onclick="expandAll()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↓ Expand All</button>
+          <button onclick="collapseAll()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--muted)';this.style.borderColor='var(--muted)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↑ Collapse All</button>
+        </div>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="step" id="step1" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">1</div>
+          <div class="step-title">Create the Project Structure</div>
+          <div class="step-why">Organise files before writing any code</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.6rem">Navigate to your CloudEats project and create the folders for the menu:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Project Setup</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Go to your project folder</span>
+<span class="cc">cd</span> ~/cloudeats-app
+
+<span class="cm"># Create the web front-end folders</span>
+<span class="cc">mkdir</span> -p frontend/html frontend/css
+
+<span class="cm"># Verify the structure looks right</span>
+<span class="cc">tree</span> frontend/
+<span class="cm"># Expected output:
+# frontend/
+# ├── html/
+# └── css/</span></pre>
+          </div>
+          <div class="pace-hint beginner">
+            🌱 <strong>Why these two folders?</strong> HTML files hold the <em>content</em> (words, lists, headings). CSS files hold the <em>styling</em> (colours, layout, fonts). Keeping them separate makes your code easier to read and update.
+          </div>
+          <div class="pace-hint average">
+            ⚡ This structure follows the <strong>separation of concerns</strong> principle — content is not mixed with presentation. In a real cloud app, the frontend folder would later contain a build output (dist/) that gets served by nginx or a CDN.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 The <code>frontend/</code> root is the build context we'll pass to <code>docker build</code> later. Its directory structure maps directly to what nginx serves. Keep it clean — only place files here that need to be inside the container.
+          </div>
+
+          <p style="margin-top:0.75rem;margin-bottom:0.5rem">Now create two empty files to edit:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Create Files</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cc">touch</span> frontend/html/index.html
+<span class="cc">touch</span> frontend/css/style.css
+
+<span class="cm"># Open VS Code in your project folder</span>
+<span class="cc">code</span> ~/cloudeats-app</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step" id="step2" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">2</div>
+          <div class="step-title">Write the HTML Menu</div>
+          <div class="step-why">Structure before style</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.6rem">In VS Code, open <code style="font-family:'Fira Code',monospace;font-size:0.85em">frontend/html/index.html</code> and paste this complete menu:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">📄 html/index.html</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cs">&lt;!DOCTYPE html&gt;</span>
+<span class="ck">&lt;html</span> <span class="cv">lang=</span><span class="cs">"en"</span><span class="ck">&gt;</span>
+<span class="ck">&lt;head&gt;</span>
+  <span class="ck">&lt;meta</span> <span class="cv">charset=</span><span class="cs">"UTF-8"</span><span class="ck">&gt;</span>
+  <span class="ck">&lt;meta</span> <span class="cv">name=</span><span class="cs">"viewport"</span> <span class="cv">content=</span><span class="cs">"width=device-width, initial-scale=1.0"</span><span class="ck">&gt;</span>
+  <span class="ck">&lt;title&gt;</span>Nasi Lemak Paradise — CloudEats<span class="ck">&lt;/title&gt;</span>
+  <span class="ck">&lt;link</span> <span class="cv">rel=</span><span class="cs">"stylesheet"</span> <span class="cv">href=</span><span class="cs">"../css/style.css"</span><span class="ck">&gt;</span>
+<span class="ck">&lt;/head&gt;</span>
+<span class="ck">&lt;body&gt;</span>
+
+  <span class="ck">&lt;header</span> <span class="cv">class=</span><span class="cs">"site-header"</span><span class="ck">&gt;</span>
+    <span class="ck">&lt;div</span> <span class="cv">class=</span><span class="cs">"header-inner"</span><span class="ck">&gt;</span>
+      <span class="ck">&lt;h1&gt;</span>🍛 Nasi Lemak Paradise<span class="ck">&lt;/h1&gt;</span>
+      <span class="ck">&lt;p</span> <span class="cv">class=</span><span class="cs">"tagline"</span><span class="ck">&gt;</span>Authentic Malaysian flavours since 1998<span class="ck">&lt;/p&gt;</span>
+      <span class="ck">&lt;span</span> <span class="cv">class=</span><span class="cs">"badge"</span><span class="ck">&gt;</span>Order via CloudEats<span class="ck">&lt;/span&gt;</span>
+    <span class="ck">&lt;/div&gt;</span>
+  <span class="ck">&lt;/header&gt;</span>
+
+  <span class="ck">&lt;main</span> <span class="cv">class=</span><span class="cs">"menu-container"</span><span class="ck">&gt;</span>
+
+    <span class="ck">&lt;section</span> <span class="cv">class=</span><span class="cs">"category"</span><span class="ck">&gt;</span>
+      <span class="ck">&lt;h2&gt;</span>🍽️ Signature Dishes<span class="ck">&lt;/h2&gt;</span>
+      <span class="ck">&lt;div</span> <span class="cv">class=</span><span class="cs">"menu-grid"</span><span class="ck">&gt;</span>
+
+        <span class="ck">&lt;div</span> <span class="cv">class=</span><span class="cs">"menu-item popular"</span><span class="ck">&gt;</span>
+          <span class="ck">&lt;div</span> <span class="cv">class=</span><span class="cs">"item-top"</span><span class="ck">&gt;</span>
+            <span class="ck">&lt;h3&gt;</span>Nasi Lemak Special<span class="ck">&lt;/h3&gt;</span>
+            <span class="ck">&lt;span</span> <span class="cv">class=</span><span class="cs">"price"</span><span class="ck">&gt;</span>RM 15.00<span class="ck">&lt;/span&gt;</span>
+          <span class="ck">&lt;/div&gt;</span>
+          <span class="ck">&lt;p&gt;</span>Coconut rice with rendang, sambal, anchovies, peanuts &amp;amp; egg<span class="ck">&lt;/p&gt;</span>
+          <span class="ck">&lt;span</span> <span class="cv">class=</span><span class="cs">"tag"</span><span class="ck">&gt;</span>⭐ Best Seller<span class="ck">&lt;/span&gt;</span>
+        <span class="ck">&lt;/div&gt;</span>
+
+        <span class="ck">&lt;div</span> <span class="cv">class=</span><span class="cs">"menu-item"</span><span class="ck">&gt;</span>
+          <span class="ck">&lt;div</span> <span class="cv">class=</span><span class="cs">"item-top"</span><span class="ck">&gt;</span>
+            <span class="ck">&lt;h3&gt;</span>Nasi Lemak Ayam Goreng<span class="ck">&lt;/h3&gt;</span>
+            <span class="ck">&lt;span</span> <span class="cv">class=</span><span class="cs">"price"</span><span class="ck">&gt;</span>RM 12.00<span class="ck">&lt;/span&gt;</span>
+          <span class="ck">&lt;/div&gt;</span>
+          <span class="ck">&lt;p&gt;</span>Coconut rice with crispy fried chicken, sambal &amp;amp; condiments<span class="ck">&lt;/p&gt;</span>
+        <span class="ck">&lt;/div&gt;</span>
+
+        <span class="ck">&lt;div</span> <span class="cv">class=</span><span class="cs">"menu-item"</span><span class="ck">&gt;</span>
+          <span class="ck">&lt;div</span> <span class="cv">class=</span><span class="cs">"item-top"</span><span class="ck">&gt;</span>
+            <span class="ck">&lt;h3&gt;</span>Nasi Lemak Regular<span class="ck">&lt;/h3&gt;</span>
+            <span class="ck">&lt;span</span> <span class="cv">class=</span><span class="cs">"price"</span><span class="ck">&gt;</span>RM 8.00<span class="ck">&lt;/span&gt;</span>
+          <span class="ck">&lt;/div&gt;</span>
+          <span class="ck">&lt;p&gt;</span>Classic coconut rice with sambal, anchovies, peanuts &amp;amp; boiled egg<span class="ck">&lt;/p&gt;</span>
+        <span class="ck">&lt;/div&gt;</span>
+
+        <span class="ck">&lt;div</span> <span class="cv">class=</span><span class="cs">"menu-item"</span><span class="ck">&gt;</span>
+          <span class="ck">&lt;div</span> <span class="cv">class=</span><span class="cs">"item-top"</span><span class="ck">&gt;</span>
+            <span class="ck">&lt;h3&gt;</span>Nasi Goreng Kampung<span class="ck">&lt;/h3&gt;</span>
+            <span class="ck">&lt;span</span> <span class="cv">class=</span><span class="cs">"price"</span><span class="ck">&gt;</span>RM 11.00<span class="ck">&lt;/span&gt;</span>
+          <span class="ck">&lt;/div&gt;</span>
+          <span class="ck">&lt;p&gt;</span>Village-style fried rice with anchovies, vegetables &amp;amp; egg<span class="ck">&lt;/p&gt;</span>
+        <span class="ck">&lt;/div&gt;</span>
+
+      <span class="ck">&lt;/div&gt;</span>
+    <span class="ck">&lt;/section&gt;</span>
+
+    <span class="ck">&lt;section</span> <span class="cv">class=</span><span class="cs">"category"</span><span class="ck">&gt;</span>
+      <span class="ck">&lt;h2&gt;</span>🥤 Beverages<span class="ck">&lt;/h2&gt;</span>
+      <span class="ck">&lt;div</span> <span class="cv">class=</span><span class="cs">"menu-grid"</span><span class="ck">&gt;</span>
+
+        <span class="ck">&lt;div</span> <span class="cv">class=</span><span class="cs">"menu-item"</span><span class="ck">&gt;</span>
+          <span class="ck">&lt;div</span> <span class="cv">class=</span><span class="cs">"item-top"</span><span class="ck">&gt;</span>
+            <span class="ck">&lt;h3&gt;</span>Teh Tarik<span class="ck">&lt;/h3&gt;</span>
+            <span class="ck">&lt;span</span> <span class="cv">class=</span><span class="cs">"price"</span><span class="ck">&gt;</span>RM 3.00<span class="ck">&lt;/span&gt;</span>
+          <span class="ck">&lt;/div&gt;</span>
+          <span class="ck">&lt;p&gt;</span>Pulled milk tea — frothy, sweet &amp;amp; aromatic<span class="ck">&lt;/p&gt;</span>
+        <span class="ck">&lt;/div&gt;</span>
+
+        <span class="ck">&lt;div</span> <span class="cv">class=</span><span class="cs">"menu-item"</span><span class="ck">&gt;</span>
+          <span class="ck">&lt;div</span> <span class="cv">class=</span><span class="cs">"item-top"</span><span class="ck">&gt;</span>
+            <span class="ck">&lt;h3&gt;</span>Kopi O<span class="ck">&lt;/h3&gt;</span>
+            <span class="ck">&lt;span</span> <span class="cv">class=</span><span class="cs">"price"</span><span class="ck">&gt;</span>RM 2.50<span class="ck">&lt;/span&gt;</span>
+          <span class="ck">&lt;/div&gt;</span>
+          <span class="ck">&lt;p&gt;</span>Bold black Malaysian coffee, strong &amp;amp; rich<span class="ck">&lt;/p&gt;</span>
+        <span class="ck">&lt;/div&gt;</span>
+
+        <span class="ck">&lt;div</span> <span class="cv">class=</span><span class="cs">"menu-item"</span><span class="ck">&gt;</span>
+          <span class="ck">&lt;div</span> <span class="cv">class=</span><span class="cs">"item-top"</span><span class="ck">&gt;</span>
+            <span class="ck">&lt;h3&gt;</span>Air Sirap Bandung<span class="ck">&lt;/h3&gt;</span>
+            <span class="ck">&lt;span</span> <span class="cv">class=</span><span class="cs">"price"</span><span class="ck">&gt;</span>RM 3.50<span class="ck">&lt;/span&gt;</span>
+          <span class="ck">&lt;/div&gt;</span>
+          <span class="ck">&lt;p&gt;</span>Rose-flavoured milk drink, sweet &amp;amp; refreshing<span class="ck">&lt;/p&gt;</span>
+        <span class="ck">&lt;/div&gt;</span>
+
+      <span class="ck">&lt;/div&gt;</span>
+    <span class="ck">&lt;/section&gt;</span>
+
+  <span class="ck">&lt;/main&gt;</span>
+
+  <span class="ck">&lt;footer</span> <span class="cv">class=</span><span class="cs">"site-footer"</span><span class="ck">&gt;</span>
+    <span class="ck">&lt;p&gt;</span>Nasi Lemak Paradise · Jalan Alor, Kuala Lumpur<span class="ck">&lt;/p&gt;</span>
+    <span class="ck">&lt;p&gt;</span>Powered by <span class="ck">&lt;strong&gt;</span>CloudEats<span class="ck">&lt;/strong&gt;</span><span class="ck">&lt;/p&gt;</span>
+  <span class="ck">&lt;/footer&gt;</span>
+
+<span class="ck">&lt;/body&gt;</span>
+<span class="ck">&lt;/html&gt;</span></pre>
+          </div>
+          <div class="pace-hint beginner">
+            🌱 <strong>HTML skeleton explained:</strong> <code>&lt;header&gt;</code> = the top banner. <code>&lt;main&gt;</code> = the main menu content. <code>&lt;section&gt;</code> = a group of related items. <code>&lt;footer&gt;</code> = the bottom of the page. Every HTML page follows this structure.
+          </div>
+          <div class="pace-hint average">
+            ⚡ The CSS link path <code>../css/style.css</code> means "go up one folder (from <code>html/</code>) then into <code>css/</code>". This relative path works whether served by Python, nginx, or any other web server.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 Notice <code>&amp;amp;</code> for the <code>&amp;</code> character — HTML entities prevent the parser from confusing content with markup. Also note: no <code>&lt;script&gt;</code> tag yet — this is a purely static page. In Week 4 we'll add JavaScript for dynamic content fetched from a database API.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step" id="step3" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">3</div>
+          <div class="step-title">Write the CSS Styling</div>
+          <div class="step-why">Make it look professional</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.6rem">Open <code style="font-family:'Fira Code',monospace;font-size:0.85em">frontend/css/style.css</code> and paste this stylesheet:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🎨 css/style.css</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm">/* ── RESET + BASE ── */</span>
+<span class="ck">*</span> { box-sizing: border-box; margin: 0; padding: 0; }
+<span class="ck">body</span> {
+  font-family: <span class="cv">'Segoe UI'</span>, sans-serif;
+  background: <span class="cv">#f5f0e8</span>;
+  color: <span class="cv">#2c2c2c</span>;
+  line-height: <span class="cv">1.6</span>;
+}
+
+<span class="cm">/* ── HEADER ── */</span>
+<span class="ck">.site-header</span> {
+  background: linear-gradient(<span class="cv">135deg</span>, <span class="cv">#1a3a2a</span>, <span class="cv">#2d5a3d</span>);
+  color: white;
+  padding: <span class="cv">2rem</span>;
+  text-align: center;
+}
+<span class="ck">.header-inner h1</span> {
+  font-size: <span class="cv">2rem</span>;
+  font-weight: <span class="cv">800</span>;
+  margin-bottom: <span class="cv">0.3rem</span>;
+}
+<span class="ck">.tagline</span> { font-size: <span class="cv">0.9rem</span>; opacity: <span class="cv">0.8</span>; margin-bottom: <span class="cv">0.75rem</span>; }
+<span class="ck">.badge</span> {
+  display: inline-block;
+  background: <span class="cv">#f5c842</span>;
+  color: <span class="cv">#1a3a2a</span>;
+  font-size: <span class="cv">0.75rem</span>;
+  font-weight: <span class="cv">700</span>;
+  padding: <span class="cv">0.2rem 0.75rem</span>;
+  border-radius: <span class="cv">20px</span>;
+  letter-spacing: <span class="cv">0.05em</span>;
+  text-transform: uppercase;
+}
+
+<span class="cm">/* ── MENU CONTAINER ── */</span>
+<span class="ck">.menu-container</span> {
+  max-width: <span class="cv">900px</span>;
+  margin: <span class="cv">2rem auto</span>;
+  padding: <span class="cv">0 1.5rem</span>;
+}
+
+<span class="cm">/* ── CATEGORY ── */</span>
+<span class="ck">.category</span> { margin-bottom: <span class="cv">2.5rem</span>; }
+<span class="ck">.category h2</span> {
+  font-size: <span class="cv">1.2rem</span>;
+  font-weight: <span class="cv">700</span>;
+  color: <span class="cv">#1a3a2a</span>;
+  border-bottom: <span class="cv">2px solid #2d5a3d</span>;
+  padding-bottom: <span class="cv">0.5rem</span>;
+  margin-bottom: <span class="cv">1.25rem</span>;
+}
+
+<span class="cm">/* ── MENU GRID ── */</span>
+<span class="ck">.menu-grid</span> {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(<span class="cv">260px</span>, <span class="cv">1fr</span>));
+  gap: <span class="cv">1rem</span>;
+}
+
+<span class="cm">/* ── MENU ITEM CARD ── */</span>
+<span class="ck">.menu-item</span> {
+  background: white;
+  border-radius: <span class="cv">10px</span>;
+  padding: <span class="cv">1.1rem</span>;
+  box-shadow: <span class="cv">0 2px 8px rgba(0,0,0,0.07)</span>;
+  border: <span class="cv">1px solid #e8e0d0</span>;
+  transition: transform <span class="cv">0.2s</span>, box-shadow <span class="cv">0.2s</span>;
+  position: relative;
+}
+<span class="ck">.menu-item:hover</span> {
+  transform: translateY(<span class="cv">-3px</span>);
+  box-shadow: <span class="cv">0 6px 20px rgba(0,0,0,0.12)</span>;
+}
+<span class="ck">.menu-item.popular</span> {
+  border-color: <span class="cv">#f5c842</span>;
+  border-width: <span class="cv">2px</span>;
+}
+<span class="ck">.item-top</span> {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: <span class="cv">0.5rem</span>;
+  margin-bottom: <span class="cv">0.4rem</span>;
+}
+<span class="ck">.menu-item h3</span> { font-size: <span class="cv">0.95rem</span>; font-weight: <span class="cv">700</span>; color: <span class="cv">#1a3a2a</span>; }
+<span class="ck">.menu-item p</span>  { font-size: <span class="cv">0.82rem</span>; color: <span class="cv">#666</span>; margin-bottom: <span class="cv">0.5rem</span>; }
+<span class="ck">.price</span> {
+  font-size: <span class="cv">0.9rem</span>;
+  font-weight: <span class="cv">700</span>;
+  color: <span class="cv">#2d5a3d</span>;
+  white-space: nowrap;
+}
+<span class="ck">.tag</span> {
+  font-size: <span class="cv">0.72rem</span>;
+  background: <span class="cv">#fff8e1</span>;
+  color: <span class="cv">#b8860b</span>;
+  padding: <span class="cv">0.15rem 0.5rem</span>;
+  border-radius: <span class="cv">4px</span>;
+  font-weight: <span class="cv">600</span>;
+}
+
+<span class="cm">/* ── FOOTER ── */</span>
+<span class="ck">.site-footer</span> {
+  background: <span class="cv">#1a3a2a</span>;
+  color: <span class="cv">rgba(255,255,255,0.6)</span>;
+  text-align: center;
+  padding: <span class="cv">1.5rem</span>;
+  font-size: <span class="cv">0.82rem</span>;
+  margin-top: <span class="cv">2rem</span>;
+}
+<span class="ck">.site-footer strong</span> { color: <span class="cv">#f5c842</span>; }
+
+<span class="cm">/* ── RESPONSIVE ── */</span>
+<span class="ck">@media (max-width: 600px)</span> {
+  <span class="ck">.menu-grid</span> { grid-template-columns: <span class="cv">1fr</span>; }
+  <span class="ck">.header-inner h1</span> { font-size: <span class="cv">1.5rem</span>; }
+}</pre>
+          </div>
+          <div class="pace-hint beginner">
+            🌱 <strong>Key CSS ideas used here:</strong> <code>display: grid</code> creates the card layout automatically. <code>transition</code> makes the hover animation smooth. <code>@media</code> makes the page work on small screens too.
+          </div>
+          <div class="pace-hint average">
+            ⚡ <code>grid-template-columns: repeat(auto-fill, minmax(260px, 1fr))</code> is a responsive grid — it automatically fits as many cards as possible per row based on screen width. No JavaScript needed.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 The CSS is intentionally self-contained and has no external dependencies. This is important for containerization — the nginx container can serve it completely offline with no CDN calls. Compare this to frameworks like Bootstrap that require internet to load font icons.
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div><div class="img-ph-label">Screenshot · Finished Menu in Browser</div><div class="img-ph-desc">Nasi Lemak Paradise page — green gradient header, 4 food cards in grid layout, "Best Seller" badge on Nasi Lemak Special, footer visible</div></div>
+          </div>
+
+          <div class="checkpoint">
+            <span class="checkpoint-icon">⏱</span>
+            <div class="checkpoint-text">
+              <strong>Checkpoint · 20 min mark</strong>
+              Two files saved in VS Code: <code style="font-family:'Fira Code',monospace;font-size:0.85em">frontend/html/index.html</code> and <code style="font-family:'Fira Code',monospace;font-size:0.85em">frontend/css/style.css</code>.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- PART 2: PYTHON PREVIEW -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section id="part2">
+      <div class="part-header">
+        <div class="part-pill">Part 2</div>
+        <div class="part-title">Preview Without Docker</div>
+        <div class="part-time">⏱ 10 min</div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step" id="step4" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">4</div>
+          <div class="step-title">Serve with Python</div>
+          <div class="step-why">See it working, then spot the problem</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.6rem">Python has a built-in web server. Use it to quickly preview your menu:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Python HTTP Server</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Navigate into the frontend folder</span>
+<span class="cc">cd</span> ~/cloudeats-app/frontend
+
+<span class="cm"># Start Python's built-in web server on port 3000</span>
+<span class="cc">python3</span> -m http.server 3000
+<span class="cm"># Output: Serving HTTP on 0.0.0.0 port 3000 ...</span></pre>
+          </div>
+          <p style="margin-top:0.75rem;margin-bottom:0.5rem">In your <strong>host computer's</strong> browser, navigate to:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🌐 Browser URL</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Get your VM IP first (in a second terminal):</span>
+ip addr show | grep <span class="cv">"inet "</span>
+
+<span class="cm"># Then visit (replace with your actual IP):</span>
+http://<span class="cv">192.168.56.101</span>:3000/html/index.html</pre>
+          </div>
+          <p style="margin-top:0.6rem">You should see the Nasi Lemak Paradise menu with green header and card layout.</p>
+          <div class="pace-hint beginner">
+            🌱 <strong>What's happening?</strong> Python is acting as a "waiter" — it listens for requests on port 3000, and when a browser asks for <code>index.html</code>, Python reads the file from your filesystem and sends it back. This is exactly how all web servers work.
+          </div>
+          <p style="margin-top:0.75rem">When done, press <kbd style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:0.1rem 0.4rem;font-size:0.85em">Ctrl + C</kbd> to stop the Python server.</p>
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="step" id="step5" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">5</div>
+          <div class="step-title">Understand the Problem</div>
+          <div class="step-why">Why Python alone is not enough for production</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <table class="compare-table">
+            <thead><tr><th>Problem</th><th class="td-bad">Python Server</th><th class="td-good">Docker + nginx</th></tr></thead>
+            <tbody>
+              <tr><td class="td-label">Setup</td><td class="td-bad">Must manually run on every server</td><td class="td-good">One command: <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker run</code></td></tr>
+              <tr><td class="td-label">Restarts</td><td class="td-bad">Stops if terminal closes or server reboots</td><td class="td-good">Container restarts automatically</td></tr>
+              <tr><td class="td-label">Scale</td><td class="td-bad">10 servers = 10 manual setups</td><td class="td-good">Same image, deploy anywhere</td></tr>
+              <tr><td class="td-label">Performance</td><td class="td-bad">Development-only, not production-grade</td><td class="td-good">nginx handles thousands of requests/sec</td></tr>
+              <tr><td class="td-label">Dependency</td><td class="td-bad">Needs Python on every server</td><td class="td-good">nginx already inside the image</td></tr>
+            </tbody>
+          </table>
+
+          <div class="why-box">
+            <span>💡</span>
+            <span>A Docker container packages <em>your code + the web server + the OS layer</em> together — it runs identically everywhere Docker is installed.</span>
+          </div>
+
+          <div class="pace-hint beginner">
+            🌱 Python serving files is like cooking at home and hoping every restaurant copies your kitchen. Docker packages the kitchen with the meal — same result, anywhere.
+          </div>
+          <div class="pace-hint average">
+            ⚡ nginx (pronounced "engine-x") powers Netflix, Airbnb, and most major websites. The <code>nginx:alpine</code> image is only ~23MB vs ~80MB+ for an Ubuntu-based image — smaller means faster pulls and fewer security vulnerabilities.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 Python's <code>http.server</code> is single-threaded. nginx uses an async, event-driven model — similar to Node.js — handling thousands of concurrent connections with ~5MB RAM. For a static site with 1,000 simultaneous users, the difference is significant.
+          </div>
+
+          <div class="checkpoint">
+            <span class="checkpoint-icon">⏱</span>
+            <div class="checkpoint-text">
+              <strong>Checkpoint · 30 min mark</strong>
+              Menu visible in browser via Python. Server stopped with Ctrl+C. You understand <em>why</em> Docker solves this.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- PART 3: DOCKER CONTAINER -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section id="part3">
+      <div class="part-header">
+        <div class="part-pill">Part 3</div>
+        <div class="part-title">Your First Docker Container</div>
+        <div class="part-time">⏱ 30 min</div>
+      </div>
+
+      <!-- Step 6 -->
+      <div class="step" id="step6" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">6</div>
+          <div class="step-title">Understand the Dockerfile</div>
+          <div class="step-why">Recipe before cooking</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.75rem">A <strong>Dockerfile</strong> is a recipe for building a Docker image. You write it once, and Docker follows it to create an image — a portable, self-contained package of your app.</p>
+
+          <!-- Docker concept SVG -->
+          <svg viewBox="0 0 580 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;margin:0.75rem 0;border-radius:8px;border:1px solid var(--border);background:var(--bg2)">
+            <!-- Dockerfile -->
+            <rect x="20" y="25" width="120" height="80" rx="7" fill="rgba(0,229,160,0.06)" stroke="rgba(0,229,160,0.3)" stroke-width="1.5"/>
+            <text x="80" y="52" font-size="9.5" font-family="Sora,sans-serif" fill="var(--green)" text-anchor="middle" font-weight="700">Dockerfile</text>
+            <text x="80" y="70" font-size="8.5" font-family="Fira Code,monospace" fill="#6b7fa0" text-anchor="middle">FROM nginx:alpine</text>
+            <text x="80" y="83" font-size="8.5" font-family="Fira Code,monospace" fill="#6b7fa0" text-anchor="middle">COPY html/ ...</text>
+            <text x="80" y="96" font-size="8.5" font-family="Fira Code,monospace" fill="#6b7fa0" text-anchor="middle">EXPOSE 80</text>
+            <text x="80" y="118" font-size="8" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">📋 The Recipe</text>
+
+            <!-- Arrow 1 -->
+            <text x="175" y="68" font-size="11" text-anchor="middle">→</text>
+            <text x="175" y="80" font-size="8" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle">docker build</text>
+
+            <!-- Docker Image -->
+            <rect x="210" y="25" width="120" height="80" rx="7" fill="rgba(0,200,255,0.06)" stroke="rgba(0,200,255,0.3)" stroke-width="1.5"/>
+            <text x="270" y="52" font-size="9.5" font-family="Sora,sans-serif" fill="var(--accent)" text-anchor="middle" font-weight="700">Docker Image</text>
+            <text x="270" y="70" font-size="20" text-anchor="middle">📦</text>
+            <text x="270" y="95" font-size="8.5" font-family="Sora,sans-serif" fill="#6b7fa0" text-anchor="middle">cloudeats-menu:v1.0</text>
+            <text x="270" y="118" font-size="8" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">📸 A Snapshot (read-only)</text>
+
+            <!-- Arrow 2 -->
+            <text x="365" y="68" font-size="11" text-anchor="middle">→</text>
+            <text x="365" y="80" font-size="8" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle">docker run</text>
+
+            <!-- Container -->
+            <rect x="400" y="25" width="160" height="80" rx="7" fill="rgba(180,110,245,0.06)" stroke="rgba(180,110,245,0.35)" stroke-width="1.5"/>
+            <text x="480" y="52" font-size="9.5" font-family="Sora,sans-serif" fill="var(--advanced)" text-anchor="middle" font-weight="700">Running Container</text>
+            <text x="480" y="70" font-size="20" text-anchor="middle">🐳</text>
+            <text x="480" y="95" font-size="8.5" font-family="Sora,sans-serif" fill="#6b7fa0" text-anchor="middle">menu · nginx listening :80</text>
+            <text x="480" y="118" font-size="8" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">▶️ Running Instance (writable)</text>
+          </svg>
+
+          <ul class="substep-list" style="margin-top:0.75rem">
+            <li><div class="substep-bullet">📋</div><div><strong>Dockerfile</strong> — the recipe. Text instructions: FROM, COPY, EXPOSE</div></li>
+            <li><div class="substep-bullet">📦</div><div><strong>Image</strong> — the built result. Read-only snapshot. Like a sealed package</div></li>
+            <li><div class="substep-bullet">🐳</div><div><strong>Container</strong> — a running instance of an image. Many containers can run from one image</div></li>
+          </ul>
+
+          <div class="pace-hint beginner">
+            🌱 Recipe → baked cake → cake on the table. Dockerfile → docker build (image) → docker run (container).
+          </div>
+          <div class="pace-hint average">
+            ⚡ Images are <strong>immutable</strong> — once built, they can't change. Update your HTML? Rebuild the image. This guarantees what you build is exactly what runs in production.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 Each Dockerfile instruction creates a content-addressed layer (SHA256). Unchanged layers are pulled from cache — rebuild only touches what changed. Put frequently-changing instructions (COPY) <em>after</em> stable ones (FROM, RUN) to maximise cache hits.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 7 -->
+      <div class="step" id="step7" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">7</div>
+          <div class="step-title">Write the Dockerfile</div>
+          <div class="step-why">3 lines is all you need</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.6rem">Create the Dockerfile inside the <code style="font-family:'Fira Code',monospace;font-size:0.85em">frontend/</code> folder (no file extension):</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Create Dockerfile</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Make sure you're in the frontend folder</span>
+<span class="cc">cd</span> ~/cloudeats-app/frontend
+
+<span class="cm"># Create the Dockerfile (no extension!)</span>
+<span class="cc">touch</span> Dockerfile</pre>
+          </div>
+
+          <p style="margin-top:0.75rem;margin-bottom:0.5rem">Open <code style="font-family:'Fira Code',monospace;font-size:0.85em">Dockerfile</code> in VS Code and type this:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐳 Dockerfile</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Start from the official nginx image (Alpine Linux variant)</span>
+<span class="ck">FROM</span> nginx:alpine
+
+<span class="cm"># Copy your HTML and CSS files into nginx's web root</span>
+<span class="ck">COPY</span> html/ /usr/share/nginx/html/
+<span class="ck">COPY</span> css/  /usr/share/nginx/html/css/
+
+<span class="cm"># Tell Docker this container listens on port 80</span>
+<span class="ck">EXPOSE</span> 80</pre>
+          </div>
+
+          <p style="margin-top:0.75rem;margin-bottom:0.5rem">Each line explained:</p>
+          <ul class="substep-list">
+            <li><div class="substep-bullet">FROM</div><div><code>nginx:alpine</code> — use the official nginx image (Alpine Linux). Downloads automatically from Docker Hub</div></li>
+            <li><div class="substep-bullet">COPY</div><div><code>html/</code> → nginx's web root at <code>/usr/share/nginx/html/</code></div></li>
+            <li><div class="substep-bullet">COPY</div><div><code>css/</code> → matching subfolder so the HTML's <code>../css/style.css</code> path resolves correctly</div></li>
+            <li><div class="substep-bullet">EXPOSE</div><div>Documents that nginx listens on port 80 internally. Port binding to host happens at <code>docker run -p 3000:80</code></div></li>
+          </ul>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div><div class="img-ph-label">Screenshot · VS Code with Dockerfile</div><div class="img-ph-desc">VS Code editor showing the 4-line Dockerfile, with the file tree on the left displaying <code>frontend/</code> folder containing <code>Dockerfile</code>, <code>html/</code>, and <code>css/</code></div></div>
+          </div>
+
+          <div class="pace-hint beginner">
+            🌱 <strong>Important:</strong> The Dockerfile must be named exactly <code>Dockerfile</code> — capital D, no extension. Docker specifically looks for this filename.
+          </div>
+          <div class="pace-hint average">
+            ⚡ <code>nginx:alpine</code> downloads from <strong>Docker Hub</strong> — the public image registry. It's ~23MB. The alternative <code>nginx:latest</code> is based on Debian and is ~140MB. Alpine is preferred in production because smaller = less attack surface + faster pulls.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 <code>EXPOSE</code> is metadata only — it doesn't actually publish the port. The actual port binding happens at <code>docker run -p 3000:80</code>. Think of EXPOSE as documentation for other developers about what the container expects. In Docker Compose (Week 3), you'll see how EXPOSE helps with service-to-service networking inside the same compose network.
+          </div>
+
+          <div class="warning">
+            <span>⚠️</span>
+            <span>The COPY path <code style="font-family:'Fira Code',monospace;font-size:0.85em">html/</code> is relative to where you run <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker build</code>. You must be inside the <code style="font-family:'Fira Code',monospace;font-size:0.85em">frontend/</code> folder when building, or the COPY will fail.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 8 -->
+      <div class="step" id="step8" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">8</div>
+          <div class="step-title">Build the Docker Image</div>
+          <div class="step-why">Turn your Dockerfile into a packaged image</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.6rem">Run the build command from inside the <code style="font-family:'Fira Code',monospace;font-size:0.85em">frontend/</code> folder:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · docker build</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Make sure you're in frontend/ folder</span>
+<span class="cc">cd</span> ~/cloudeats-app/frontend
+
+<span class="cm"># Build the image
+# -t = tag (name:version)   . = build context = current folder</span>
+<span class="cc">docker</span> build -t cloudeats-menu:v1.0 .
+
+<span class="cm"># You'll see something like:
+# [+] Building 3.2s (7/7) FINISHED
+#  => [1/3] FROM docker.io/library/nginx:alpine
+#  => [2/3] COPY html/ /usr/share/nginx/html/
+#  => [3/3] COPY css/  /usr/share/nginx/html/css/</span></pre>
+          </div>
+
+          <p style="margin-top:0.75rem;margin-bottom:0.5rem">Verify the image was created:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · List Images</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cc">docker</span> images
+
+<span class="cm"># Expected output:
+# REPOSITORY       TAG     IMAGE ID       CREATED         SIZE
+# cloudeats-menu   v1.0    a3f9b1e2d...   10 seconds ago  23.4MB
+# nginx            alpine  ...            ...             ...</span></pre>
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div><div class="img-ph-label">Screenshot · docker build Terminal Output</div><div class="img-ph-desc">Terminal showing the full <code>docker build</code> output — <code>[1/3] FROM nginx:alpine</code>, <code>[2/3] COPY html/</code>, <code>[3/3] COPY css/</code> with "FINISHED" status and elapsed time</div></div>
+          </div>
+
+          <div class="pace-hint beginner">
+            🌱 Docker read your Dockerfile, downloaded nginx:alpine, and copied your files in. The result is stored locally — only ~23MB!
+          </div>
+          <div class="pace-hint average">
+            ⚡ The <code>.</code> at the end is the <strong>build context</strong> — the folder Docker scans for files. Run the same command a second time and every step says <code>CACHED</code>. Change one file in <code>html/</code> and only that COPY step reruns.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 Run <code>docker image inspect cloudeats-menu:v1.0</code> to see the layer SHAs. Try <code>docker history cloudeats-menu:v1.0</code> to visualise every layer's size contribution.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 9 -->
+      <div class="step" id="step9" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">9</div>
+          <div class="step-title">Run the Container</div>
+          <div class="step-why">From image to live container in one command</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.6rem">Start the container from your image:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · docker run</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cc">docker</span> run \
+  -d \
+  -p 3000:80 \
+  --name menu \
+  cloudeats-menu:v1.0
+
+<span class="cm"># What each flag means:
+# -d           → detached (runs in background, no terminal blocking)
+# -p 3000:80   → map HOST port 3000 to CONTAINER port 80
+# --name menu  → friendly name for the container
+# cloudeats-menu:v1.0 → which image to run</span></pre>
+          </div>
+
+          <div class="pace-hint beginner">
+            🌱 <strong>-p 3000:80 explained:</strong> Inside the container, nginx is listening on port 80. But to reach it from outside, we open a "door" on the host machine's port 3000. So: <em>your browser on :3000</em> → <em>Docker routes to container :80</em> → <em>nginx responds</em>. The format is always <code>HOST:CONTAINER</code>.
+          </div>
+          <div class="pace-hint average">
+            ⚡ The <code>-d</code> flag runs the container in <strong>detached mode</strong> — it keeps running even after you close the terminal. Unlike Python's server which dies when you press Ctrl+C. You can stop it with <code>docker stop menu</code>.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 Compare what you just did to the Python server workflow: Python required <code>cd</code> to the right folder, the right Python version installed, and a blocking terminal. Docker only needs the image name. This is the operational simplicity that makes containers so valuable in production automation.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 10 -->
+      <div class="step" id="step10" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">10</div>
+          <div class="step-title">Verify the Running Container</div>
+          <div class="step-why">Confirm everything is working correctly</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.6rem">Check that the container is running:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Inspect Container</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># List all running containers</span>
+<span class="cc">docker</span> ps
+<span class="cm"># Should show: menu   cloudeats-menu:v1.0   Up X seconds   0.0.0.0:3000->80/tcp</span>
+
+<span class="cm"># View nginx access logs</span>
+<span class="cc">docker</span> logs menu
+<span class="cm"># You'll see nginx startup messages</span>
+
+<span class="cm"># Test with curl from the terminal</span>
+<span class="cc">curl</span> http://localhost:3000/html/index.html
+<span class="cm"># Should print your HTML code</span></pre>
+          </div>
+
+          <p style="margin-top:0.75rem;margin-bottom:0.5rem">Now open your browser and visit:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🌐 Browser URL</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre>http://<span class="cv">[YOUR-VM-IP]</span>:3000/html/index.html
+
+<span class="cm"># To get your VM IP:</span>
+ip addr show | grep <span class="cv">"inet "</span></pre>
+          </div>
+
+          <p style="margin-top:0.75rem;margin-bottom:0.5rem">Confirm all of these:</p>
+          <ul class="substep-list">
+            <li><div class="substep-bullet">✓</div><div><code style="font-family:'Fira Code',monospace;font-size:0.85em">docker ps</code> shows <code>menu</code> container with status <strong>Up</strong></div></li>
+            <li><div class="substep-bullet">✓</div><div>Port column shows <code style="font-family:'Fira Code',monospace;font-size:0.85em">0.0.0.0:3000->80/tcp</code></div></li>
+            <li><div class="substep-bullet">✓</div><div>Browser shows the Nasi Lemak Paradise menu with hover effects working</div></li>
+            <li><div class="substep-bullet">✓</div><div>Container stays running after you close the terminal</div></li>
+          </ul>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div><div class="img-ph-label">Screenshot · docker ps Output</div><div class="img-ph-desc">Terminal showing <code>docker ps</code> — one row for the <code>menu</code> container with IMAGE <code>cloudeats-menu:v1.0</code>, STATUS <code>Up X seconds</code>, PORTS <code>0.0.0.0:3000->80/tcp</code></div></div>
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div><div class="img-ph-label">Screenshot · Menu Served from Docker</div><div class="img-ph-desc">Browser at <code>http://[VM-IP]:3000/html/index.html</code> showing the same Nasi Lemak Paradise menu — now served by nginx inside the container, not Python</div></div>
+          </div>
+
+          <div class="pace-hint advanced">
+            🚀 Run a second instance: <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker run -d -p 3001:80 --name menu2 cloudeats-menu:v1.0</code> — both serve the same menu independently. Stop when done: <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker stop menu2 && docker rm menu2</code>.
+          </div>
+
+          <div class="checkpoint">
+            <span class="checkpoint-icon">⏱</span>
+            <div class="checkpoint-text">
+              <strong>Checkpoint · 60 min mark</strong>
+              Container named <code style="font-family:'Fira Code',monospace;font-size:0.85em">menu</code> is running, menu visible in browser, <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker ps</code> confirms status <strong>Up</strong>. This is your first production-style deployment!
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- PART 4: SAVE YOUR WORK -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section id="part4">
+      <div class="part-header">
+        <div class="part-pill">Part 4</div>
+        <div class="part-title">Save Your Work</div>
+        <div class="part-time">⏱ 10 min</div>
+      </div>
+
+      <!-- Step 11 -->
+      <div class="step" id="step11" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">11</div>
+          <div class="step-title">Create .dockerignore</div>
+          <div class="step-why">Keep images clean and small</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.6rem">A <code style="font-family:'Fira Code',monospace;font-size:0.85em">.dockerignore</code> file works like <code style="font-family:'Fira Code',monospace;font-size:0.85em">.gitignore</code> — it tells Docker which files to exclude from the build context. Create it in the <code style="font-family:'Fira Code',monospace;font-size:0.85em">frontend/</code> folder:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">📄 frontend/.dockerignore</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Files we do NOT want inside the container image</span>
+.git
+.gitignore
+*.md
+Dockerfile
+.dockerignore</pre>
+          </div>
+          <div class="pace-hint beginner">
+            🌱 <strong>Why exclude these?</strong> The Dockerfile and .gitignore are instructions for tools — they're not part of your website. Including them in the container wastes space and can expose internal details. Only include files the web server actually needs to serve.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 The <code>.dockerignore</code> also affects build speed. Docker calculates checksums of the build context before sending it to the build engine. Large <code>.git</code> folders (especially with long commit histories) can slow this step significantly. Always ignore <code>.git</code> in Docker builds.
+          </div>
+          <p style="margin-top:0.75rem">Confirm your final frontend folder structure:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Verify Structure</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cc">tree</span> ~/cloudeats-app/frontend/
+<span class="cm"># Expected:
+# frontend/
+# ├── Dockerfile
+# ├── .dockerignore
+# ├── html/
+# │   └── index.html
+# └── css/
+#     └── style.css</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 12 -->
+      <div class="step" id="step12" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">12</div>
+          <div class="step-title">Git Commit</div>
+          <div class="step-why">Save your progress to version control</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Git Commit</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cc">cd</span> ~/cloudeats-app
+
+<span class="cm"># Check what changed</span>
+<span class="cc">git</span> status
+
+<span class="cm"># Stage all new frontend files</span>
+<span class="cc">git</span> add frontend/html/index.html
+<span class="cc">git</span> add frontend/css/style.css
+<span class="cc">git</span> add frontend/Dockerfile
+<span class="cc">git</span> add frontend/.dockerignore
+
+<span class="cm"># Commit with a descriptive message</span>
+<span class="cc">git</span> commit -m <span class="cv">"Lab 2.1: Static menu served from Docker container
+
+- Created Nasi Lemak Paradise HTML menu (html/index.html)
+- Responsive CSS with card layout (css/style.css)
+- Wrote Dockerfile using nginx:alpine
+- Built cloudeats-menu:v1.0 image (23MB)
+- Container running on port 3000 with docker run -d -p 3000:80
+- Added .dockerignore to keep image clean"</span>
+
+<span class="cm"># View your commit history</span>
+<span class="cc">git</span> log --oneline</pre>
+          </div>
+
+          <p style="margin-top:0.75rem;margin-bottom:0.5rem">Update your <code style="font-family:'Fira Code',monospace;font-size:0.85em">README.md</code> in VS Code:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">📄 README.md (update)</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm">## Labs Completed</span>
+- [x] Lab 1.1: Development Environment Setup
+- [x] Lab 2.1: Static Menu + First Docker Container ✅ NEW!
+- [ ] Lab 2.2: Multi-Container Applications
+
+<span class="cm">## How to Run — CloudEats Menu</span>
+
+<span class="cm">### With Docker (Recommended)</span>
+```bash
+cd ~/cloudeats-app/frontend
+docker build -t cloudeats-menu:v1.0 .
+docker run -d -p 3000:80 --name menu cloudeats-menu:v1.0
+# Access: http://[VM-IP]:3000/html/index.html
+```
+
+<span class="cm">### Stop the Container</span>
+```bash
+docker stop menu
+docker rm menu
+```</pre>
+          </div>
+
+          <div class="checkpoint">
+            <span class="checkpoint-icon">⏱</span>
+            <div class="checkpoint-text">
+              <strong>Checkpoint · 75 min mark</strong>
+              All files committed to Git. README updated. Run <code style="font-family:'Fira Code',monospace;font-size:0.85em">git log --oneline</code> — you should see at least two commits (Lab 1.1 + Lab 2.1).
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- CHECKLIST -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section id="checklist">
+      <div class="part-header">
+        <div class="part-pill">Wrap-Up</div>
+        <div class="part-title">Completion Checklist</div>
+      </div>
+      <div class="step open" style="cursor:default;">
+        <div class="step-body" style="display:block;padding:1.1rem 1.25rem;">
+          <p style="margin-bottom:0.85rem;color:var(--muted);font-size:0.85rem">Click each item to mark it complete. All 12 must be ticked before moving to Lab 2.2.</p>
+          <ul class="checklist" id="checklistItems">
+            <li onclick="toggleCheck(this)"><div class="check-box"></div>HTML file created: <code style="font-family:'Fira Code',monospace;font-size:0.85em">frontend/html/index.html</code></li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div>CSS file created: <code style="font-family:'Fira Code',monospace;font-size:0.85em">frontend/css/style.css</code></li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div>Menu displays correctly with all categories (Signature Dishes + Beverages)</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div>Hover effects work on menu cards</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div>Menu viewed via Python server at <code style="font-family:'Fira Code',monospace;font-size:0.85em">http://[VM-IP]:3000/html/index.html</code></li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div>Dockerfile created with correct FROM, COPY, EXPOSE instructions</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div>Image built: <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker images</code> shows <code>cloudeats-menu:v1.0</code></li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div>Container running: <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker ps</code> shows <code>menu</code> container with status <strong>Up</strong></li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div>Menu served from Docker container in browser (same URL, now from nginx)</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div><code style="font-family:'Fira Code',monospace;font-size:0.85em">.dockerignore</code> created and correct folder structure verified with <code>tree</code></li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div>All files committed to Git with a descriptive commit message</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div>Can explain the difference between a Docker image and a running container</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- TROUBLESHOOT -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section id="troubleshoot">
+      <div class="part-header">
+        <div class="part-pill">Help</div>
+        <div class="part-title">Troubleshooting</div>
+      </div>
+
+      <div class="trouble-card" onclick="toggleTrouble(this, event)">
+        <div class="trouble-header">
+          <span class="trouble-icon">🔴</span>
+          <div class="trouble-title">docker build fails: "COPY failed: no such file or directory"</div>
+          <div class="trouble-chevron">›</div>
+        </div>
+        <div class="trouble-body">
+          <p style="margin-bottom:0.5rem">This means you ran <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker build</code> from the wrong folder. The COPY paths in the Dockerfile are relative to where you run the build command.</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Fix</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Make sure you're in the frontend/ folder</span>
+<span class="cc">cd</span> ~/cloudeats-app/frontend
+<span class="cc">ls</span>
+<span class="cm"># Should show: Dockerfile  .dockerignore  html/  css/</span>
+
+<span class="cm"># Now build</span>
+<span class="cc">docker</span> build -t cloudeats-menu:v1.0 .</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="trouble-card" onclick="toggleTrouble(this, event)">
+        <div class="trouble-header">
+          <span class="trouble-icon">🔴</span>
+          <div class="trouble-title">docker run fails: "port is already allocated" or "name already in use"</div>
+          <div class="trouble-chevron">›</div>
+        </div>
+        <div class="trouble-body">
+          <p style="margin-bottom:0.5rem">A container named <code>menu</code> is already running (possibly from a previous attempt), or port 3000 is in use.</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Fix</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Stop and remove the old container</span>
+<span class="cc">docker</span> stop menu
+<span class="cc">docker</span> rm menu
+
+<span class="cm"># If port 3000 is still in use, check what's using it</span>
+<span class="cc">sudo</span> lsof -i :3000
+<span class="cm"># Kill the process if needed, then run again</span>
+<span class="cc">docker</span> run -d -p 3000:80 --name menu cloudeats-menu:v1.0</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="trouble-card" onclick="toggleTrouble(this, event)">
+        <div class="trouble-header">
+          <span class="trouble-icon">🔴</span>
+          <div class="trouble-title">Browser shows the page but CSS is missing (no styling)</div>
+          <div class="trouble-chevron">›</div>
+        </div>
+        <div class="trouble-body">
+          <p style="margin-bottom:0.5rem">The CSS file path in your HTML might be wrong, or the COPY instruction didn't include the css/ folder.</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Check Inside Container</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Check what's inside the running container</span>
+<span class="cc">docker</span> exec menu ls /usr/share/nginx/html/
+<span class="cm"># Should show: index.html  css/</span>
+
+<span class="cc">docker</span> exec menu ls /usr/share/nginx/html/css/
+<span class="cm"># Should show: style.css</span>
+
+<span class="cm"># If css/ is missing, check your Dockerfile COPY lines
+# Then rebuild: docker build -t cloudeats-menu:v1.0 .</span></pre>
+          </div>
+          <p style="margin-top:0.5rem">Also check in <code style="font-family:'Fira Code',monospace;font-size:0.85em">index.html</code> that the link tag says: <code style="font-family:'Fira Code',monospace;font-size:0.85em">href="../css/style.css"</code></p>
+        </div>
+      </div>
+
+      <div class="trouble-card" onclick="toggleTrouble(this, event)">
+        <div class="trouble-header">
+          <span class="trouble-icon">🔴</span>
+          <div class="trouble-title">Browser shows nginx default page, not my menu</div>
+          <div class="trouble-chevron">›</div>
+        </div>
+        <div class="trouble-body">
+          <p style="margin-bottom:0.5rem">You're accessing the root URL instead of the <code>/html/</code> path. Or the HTML files landed in the wrong location inside the container.</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Fix</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Try the correct path in browser:</span>
+http://[VM-IP]:3000<span class="cv">/html/index.html</span>
+
+<span class="cm"># If that doesn't work, check file locations in container:</span>
+<span class="cc">docker</span> exec menu find /usr/share/nginx/html/ -name "*.html"
+<span class="cm"># Expected: /usr/share/nginx/html/index.html</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="trouble-card" onclick="toggleTrouble(this, event)">
+        <div class="trouble-header">
+          <span class="trouble-icon">🔴</span>
+          <div class="trouble-title">docker: command not found</div>
+          <div class="trouble-chevron">›</div>
+        </div>
+        <div class="trouble-body">
+          <p style="margin-bottom:0.5rem">Docker is not installed or not accessible to your user. Run the installation commands from Lab 1.1 and add your user to the docker group.</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Fix</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Check if docker is installed</span>
+<span class="cc">which</span> docker
+<span class="cc">docker</span> --version
+
+<span class="cm"># If permission denied (not "command not found"):</span>
+<span class="cc">sudo</span> usermod -aG docker $USER
+<span class="cc">newgrp</span> docker
+<span class="cm"># Then try docker ps again</span></pre>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- KNOWLEDGE CHECK -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section id="knowledgecheck">
+      <div class="part-header">
+        <div class="part-pill">Review</div>
+        <div class="part-title">Knowledge Check</div>
+      </div>
+      <p style="margin-bottom:1rem;color:var(--muted);font-size:0.85rem">Test your understanding. Click an answer to check it.</p>
+
+      <div class="kc-question">
+        <div class="kc-q">1. In the command <code style="font-family:'Fira Code',monospace;font-size:0.9em">docker run -d -p 3000:80 cloudeats-menu:v1.0</code>, what does <code style="font-family:'Fira Code',monospace;font-size:0.9em">-p 3000:80</code> mean?</div>
+        <ul class="kc-options">
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Run 3000 copies on 80 servers</li>
+          <li onclick="checkAnswer(this, true)"><div class="kc-radio"></div>Map host port 3000 to container port 80 — browser connects on 3000, nginx listens on 80 inside</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>The image uses version 3000 of nginx and port 80 of Python</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Reserve 3000MB of RAM and use CPU core 80</li>
+        </ul>
+      </div>
+
+      <div class="kc-question">
+        <div class="kc-q">2. What is the difference between a Docker <strong>image</strong> and a Docker <strong>container</strong>?</div>
+        <ul class="kc-options">
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>They are the same thing — image is just an older name for container</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>An image runs on Linux, a container runs on Windows</li>
+          <li onclick="checkAnswer(this, true)"><div class="kc-radio"></div>An image is a read-only packaged snapshot; a container is a running instance of an image</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Images are for databases, containers are only for web servers</li>
+        </ul>
+      </div>
+
+      <div class="kc-question">
+        <div class="kc-q">3. Why is <code style="font-family:'Fira Code',monospace;font-size:0.9em">nginx:alpine</code> preferred over <code style="font-family:'Fira Code',monospace;font-size:0.9em">nginx:latest</code> for this project?</div>
+        <ul class="kc-options">
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>nginx:latest is an older, outdated version</li>
+          <li onclick="checkAnswer(this, true)"><div class="kc-radio"></div>Alpine Linux is a minimal OS — the image is ~23MB vs ~140MB, making it faster to pull and deploy with a smaller attack surface</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>nginx:alpine supports CSS; nginx:latest does not</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Alpine version is free; latest requires a paid Docker licence</li>
+        </ul>
+      </div>
+
+      <div class="kc-question">
+        <div class="kc-q">4. You update a menu item price in <code style="font-family:'Fira Code',monospace;font-size:0.9em">index.html</code>. What steps are needed to see the change in the running container?</div>
+        <ul class="kc-options">
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Refresh the browser — the container detects file changes automatically</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Restart Docker Engine with <code style="font-family:'Fira Code',monospace;font-size:0.9em">sudo systemctl restart docker</code></li>
+          <li onclick="checkAnswer(this, true)"><div class="kc-radio"></div>Rebuild the image (<code style="font-family:'Fira Code',monospace;font-size:0.9em">docker build</code>), stop the old container, run a new one from the updated image</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Edit the file directly inside the running container — changes persist automatically</li>
+        </ul>
+      </div>
+
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- ROADMAP -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section>
+      <div class="part-header">
+        <div class="part-pill">What's Next</div>
+        <div class="part-title">Course Roadmap</div>
+      </div>
+      <div class="roadmap">
+        <div class="roadmap-title">Your Journey — CloudEats App</div>
+        <div class="rm-week"><div class="rm-dot done"></div><div><div class="rm-label">Week 1 · Foundation Setup ✅</div><div class="rm-desc">Lab 1.1: Dev Environment · Ubuntu VM, Docker, VS Code, Git</div></div></div>
+        <div class="rm-week"><div class="rm-dot active"></div><div><div class="rm-label">Week 2 · Core Cloud Services ← YOU ARE HERE</div><div class="rm-desc">Lab 2.1: Static Menu + First Container ✅ · Lab 2.2: Multi-Container (Next!)</div></div></div>
+        <div class="rm-week"><div class="rm-dot upcoming"></div><div><div class="rm-label">Week 3 · Databases in the Cloud</div><div class="rm-desc">Lab 3.1: Docker Compose + MySQL · Lab 3.2: User Registration API</div></div></div>
+        <div class="rm-week"><div class="rm-dot upcoming"></div><div><div class="rm-label">Week 4 · Cloud-Native Application Development</div><div class="rm-desc">Lab 4.1: Relational DB Queries · Lab 4.2: NoSQL Orders (Redis + MongoDB)</div></div></div>
+        <div class="rm-week"><div class="rm-dot upcoming"></div><div><div class="rm-label">Weeks 5–6 · Microservices + DevOps</div><div class="rm-desc">Split into services · Git branching · CI pipeline</div></div></div>
+        <div class="rm-week"><div class="rm-dot upcoming"></div><div><div class="rm-label">Weeks 7–8 · IaC, CI/CD + Security</div><div class="rm-desc">Automate deployment · JWT auth · RBAC roles</div></div></div>
+        <div class="rm-week"><div class="rm-dot upcoming"></div><div><div class="rm-label">Weeks 9–10 · Monitoring + Cloud Migration Planning</div><div class="rm-desc">Logging, metrics dashboard, map CloudEats to real cloud services</div></div></div>
+      </div>
+
+      <div class="info-box" style="margin-top:1rem">
+        <span>🐙</span>
+        <div>
+          <strong>GitHub Pages tip:</strong> This lab file is a self-contained static HTML page — no server needed. It can be hosted directly on GitHub Pages as part of the CloudEats Academy course site. Push the <code style="font-family:'Fira Code',monospace;font-size:0.85em">labs/</code> folder to a GitHub repo, enable Pages under Settings, and your students access this lab at <code style="font-family:'Fira Code',monospace;font-size:0.85em">yourusername.github.io/cloudeats-academy/week02_lab1_static_menu.html</code> — no hosting cost, no server to maintain.
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer style="border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;color:var(--muted);font-size:0.78rem;max-width:960px;margin:0 auto">
+  Cloud Computing Course · Lab 2.1 · Static Menu + First Container &nbsp;|&nbsp; CloudEats Project &nbsp;|&nbsp; Est. 75 min &nbsp;|&nbsp; <span class="ghp-badge">🐙 GitHub Pages Ready</span>
+</footer>
+
+<script>
+  function setPace(pace) {
+    document.body.className = 'pace-' + pace;
+    document.querySelectorAll('.pace-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-pace="${pace}"]`).classList.add('active');
+    /* Beginners get all steps open so they can follow linearly */
+    if (pace === 'beginner') expandAll();
+  }
+
+  function expandAll() {
+    document.querySelectorAll('.step:not([style*="cursor:default"])').forEach(s => s.classList.add('open'));
+  }
+  function collapseAll() {
+    document.querySelectorAll('.step:not([style*="cursor:default"])').forEach(s => s.classList.remove('open'));
+  }
+
+  function toggleStep(el, event) {
+    if (event && !event.target.closest('.step-header')) return;
+    el.classList.toggle('open');
+  }
+
+  function toggleTrouble(el, event) {
+    if (event && !event.target.closest('.trouble-header')) return;
+    el.classList.toggle('open');
+  }
+
+  function copyCode(btn, event) {
+    if (event) event.stopPropagation();
+    const pre = btn.closest('.code-block').querySelector('pre');
+    const text = pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  function toggleCheck(li) {
+    li.classList.toggle('done');
+    li.querySelector('.check-box').textContent = li.classList.contains('done') ? '✓' : '';
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const items = document.querySelectorAll('#checklistItems li');
+    const done  = document.querySelectorAll('#checklistItems li.done').length;
+    const pct   = Math.round((done / items.length) * 100);
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressCount').textContent = done;
+  }
+
+  function checkAnswer(li, correct) {
+    const parent = li.closest('ul');
+    parent.querySelectorAll('li').forEach(item => item.classList.remove('correct', 'wrong'));
+    li.classList.add(correct ? 'correct' : 'wrong');
+    if (!correct) {
+      parent.querySelectorAll('li').forEach(item => {
+        if (item.getAttribute('onclick')?.includes('true')) item.classList.add('correct');
+      });
+    }
+  }
+
+  // Active sidebar link on scroll
+  const sections = document.querySelectorAll('[id]');
+  const sideLinks = document.querySelectorAll('.sidebar-nav a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
+    sideLinks.forEach(a => {
+      a.classList.remove('active');
+      if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+    });
+  });
+  /* Default pace is beginner — expand all steps on first load */
+  document.addEventListener('DOMContentLoaded', () => { expandAll(); });
+</script>
+</body>
+</html>

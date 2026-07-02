@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 2 · Core Cloud Services · CloudEats</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07090f; --bg2: #0d1117; --bg3: #141b27;
+    --surface: #1a2235; --surface2: #1f2c42; --border: #2a3d5a;
+    --accent: #00c8ff; --green: #00e5a0; --amber: #ffb740;
+    --red: #ff5e7a; --purple: #b46ef5;
+    --text: #e8edf5; --muted: #6b7fa0;
+    --beginner: #00e5a0; --average: #00c8ff; --advanced: #b46ef5;
+    --radius: 10px; --code-bg: #0b1120;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+
+  /* ── HEADER ── */
+  .site-header { background: linear-gradient(135deg, #050d1c, #091628); border-bottom: 1px solid var(--border); padding: 0 2rem; position: sticky; top: 0; z-index: 100; }
+  .header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 58px; gap: 1rem; }
+  .header-left { display: flex; align-items: center; gap: 0.75rem; }
+  .week-badge { background: var(--accent); color: #000; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; padding: 0.2rem 0.55rem; border-radius: 4px; text-transform: uppercase; }
+  .header-title { font-size: 0.9rem; font-weight: 600; }
+  .ghp-badge { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.68rem; font-weight: 700; padding: 0.2rem 0.6rem; background: rgba(180,110,245,0.12); border: 1px solid rgba(180,110,245,0.3); color: var(--purple); border-radius: 20px; }
+
+  /* ── HERO ── */
+  .page-hero { background: linear-gradient(160deg, #060f20, #080f22); border-bottom: 1px solid var(--border); padding: 2.5rem 2rem 2rem; position: relative; overflow: hidden; }
+  .page-hero::before { content: ''; position: absolute; top: -80px; right: -80px; width: 400px; height: 400px; background: radial-gradient(ellipse, rgba(0,200,255,0.05), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; }
+  .hero-crumb { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.5rem; }
+  .hero-crumb span { color: var(--accent); }
+  .page-hero h1 { font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 800; background: linear-gradient(135deg, #e8edf5 40%, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.5rem; }
+  .hero-meta { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
+  .meta-chip { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.28rem 0.7rem; color: var(--muted); }
+  .meta-chip strong { color: var(--text); }
+
+  /* ── TABS ── */
+  .tab-nav { max-width: 1100px; margin: 0 auto; padding: 1.5rem 2rem 0; display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .tab-btn { font-family: 'Sora', sans-serif; font-size: 0.78rem; font-weight: 600; padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 8px 8px 0 0; background: var(--bg3); color: var(--muted); cursor: pointer; transition: all 0.15s; border-bottom: none; }
+  .tab-btn:hover { color: var(--text); background: var(--surface); }
+  .tab-btn.active { background: var(--surface); color: var(--accent); border-color: var(--border); border-bottom: 1px solid var(--surface); position: relative; z-index: 1; }
+  .tab-content { max-width: 1100px; margin: 0 auto; padding: 0 2rem 4rem; }
+  .tab-panel { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 0 var(--radius) var(--radius) var(--radius); padding: 2rem; margin-top: -1px; }
+  .tab-panel.active { display: block; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ── SECTION HEADERS ── */
+  .sec-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border); }
+  .sec-pill { font-size: 0.67rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.18rem 0.55rem; border-radius: 20px; white-space: nowrap; }
+  .sec-pill.blue  { background: rgba(0,200,255,0.1);  color: var(--accent); border: 1px solid rgba(0,200,255,0.2); }
+  .sec-pill.green { background: rgba(0,229,160,0.1);  color: var(--green);  border: 1px solid rgba(0,229,160,0.2); }
+  .sec-pill.amber { background: rgba(255,183,64,0.1); color: var(--amber); border: 1px solid rgba(255,183,64,0.2); }
+  .sec-pill.purple{ background: rgba(180,110,245,0.1);color: var(--purple); border: 1px solid rgba(180,110,245,0.2); }
+  .sec-title { font-size: 1.1rem; font-weight: 700; }
+  .sec-time  { font-size: 0.73rem; color: var(--muted); margin-left: auto; }
+
+  /* ── CONCEPT CARDS ── */
+  .card-grid { display: grid; gap: 0.85rem; margin: 0.85rem 0; }
+  .card-grid.cols2 { grid-template-columns: repeat(2, 1fr); }
+  .card-grid.cols3 { grid-template-columns: repeat(3, 1fr); }
+  .card-grid.cols4 { grid-template-columns: repeat(4, 1fr); }
+  .concept-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+  .concept-card.highlight-blue  { border-color: rgba(0,200,255,0.35);  background: rgba(0,200,255,0.04); }
+  .concept-card.highlight-green { border-color: rgba(0,229,160,0.35);  background: rgba(0,229,160,0.04); }
+  .concept-card.highlight-amber { border-color: rgba(255,183,64,0.35); background: rgba(255,183,64,0.04); }
+  .cc-icon  { font-size: 1.6rem; margin-bottom: 0.4rem; display: block; }
+  .cc-title { font-size: 0.88rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .cc-body  { font-size: 0.79rem; color: var(--muted); line-height: 1.55; }
+  .cc-tag   { display: inline-block; font-size: 0.68rem; font-weight: 600; padding: 0.1rem 0.45rem; border-radius: 4px; margin-top: 0.5rem; background: rgba(0,200,255,0.1); color: var(--accent); }
+
+  /* ── COMPARE ROW ── */
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 0.85rem 0; }
+  .compare-side { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+  .compare-side.left  { border-top: 3px solid var(--amber); }
+  .compare-side.right { border-top: 3px solid var(--green); }
+  .cs-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.65rem; }
+  .cs-label.amber { color: var(--amber); }
+  .cs-label.green { color: var(--green); }
+  .cs-item  { display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.8rem; margin-bottom: 0.45rem; color: var(--muted); }
+  .cs-item:last-child { margin-bottom: 0; }
+  .cs-dot   { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 0.4rem; }
+  .dot-amber { background: var(--amber); }
+  .dot-green { background: var(--green); }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow-row { display: flex; align-items: center; gap: 0; margin: 0.85rem 0; flex-wrap: wrap; }
+  .flow-box { background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; padding: 0.6rem 0.9rem; font-size: 0.79rem; text-align: center; min-width: 90px; }
+  .flow-arrow { font-size: 1rem; color: var(--muted); padding: 0 0.3rem; flex-shrink: 0; }
+
+  /* ── KEY TERM ── */
+  .term-list { list-style: none; margin: 0.75rem 0; }
+  .term-list li { display: flex; gap: 0.75rem; align-items: baseline; padding: 0.45rem 0; border-bottom: 1px solid rgba(42,61,90,0.35); font-size: 0.84rem; }
+  .term-list li:last-child { border-bottom: none; }
+  .term-key  { font-family: 'Fira Code', monospace; font-size: 0.8rem; font-weight: 500; color: var(--accent); white-space: nowrap; flex-shrink: 0; min-width: 110px; }
+  .term-val  { color: var(--muted); line-height: 1.5; }
+
+  /* ── CODE INLINE ── */
+  code { font-family: 'Fira Code', monospace; font-size: 0.84em; background: var(--code-bg); padding: 0.08rem 0.35rem; border-radius: 3px; color: var(--green); }
+
+  /* ── CODE BLOCK ── */
+  .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; margin: 0.75rem 0; overflow: hidden; }
+  .code-header { display: flex; align-items: center; justify-content: space-between; padding: 0.45rem 0.9rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); }
+  .code-lang  { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .copy-btn   { font-family: 'Sora', sans-serif; font-size: 0.68rem; font-weight: 600; padding: 0.18rem 0.55rem; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 4px; cursor: pointer; transition: all 0.15s; }
+  .copy-btn:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+  .copy-btn.copied { background: var(--green); color: #000; border-color: var(--green); }
+  pre { font-family: 'Fira Code', monospace; font-size: 0.79rem; line-height: 1.65; padding: 0.9rem; overflow-x: auto; color: #c5d5ef; white-space: pre; }
+  .cm { color: var(--muted); font-style: italic; }
+  .ck { color: var(--accent); }
+  .cv { color: var(--green); }
+  .cc { color: var(--amber); }
+
+  /* ── CALLOUT BOXES ── */
+  .callout { border-radius: 8px; padding: 0.75rem 1rem; margin: 0.75rem 0; display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.82rem; line-height: 1.55; }
+  .callout.blue   { background: rgba(0,200,255,0.05); border: 1px solid rgba(0,200,255,0.2); color: #a0d8f0; }
+  .callout.green  { background: rgba(0,229,160,0.05); border: 1px solid rgba(0,229,160,0.2); color: #8ee8c4; }
+  .callout.amber  { background: rgba(255,183,64,0.06); border: 1px solid rgba(255,183,64,0.2); color: #d9c07a; }
+  .callout.purple { background: rgba(180,110,245,0.05); border: 1px solid rgba(180,110,245,0.2); color: #c5a8f5; }
+
+  /* ── IMAGE PLACEHOLDER ── */
+  .img-ph { border: 2px dashed rgba(0,200,255,0.2); border-radius: 8px; background: rgba(0,200,255,0.025); padding: 0.8rem 1.1rem; margin: 0.85rem 0; display: flex; gap: 0.75rem; align-items: flex-start; }
+  .img-ph-icon  { font-size: 1.2rem; flex-shrink: 0; line-height: 1.2; }
+  .img-ph-label { font-size: 0.67rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.18rem; }
+  .img-ph-desc  { font-size: 0.79rem; color: var(--muted); line-height: 1.5; }
+
+  /* ── KNOWLEDGE CHECK ── */
+  .kc-question { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 0.85rem; }
+  .kc-q { font-size: 0.88rem; font-weight: 600; margin-bottom: 0.7rem; }
+  .kc-options { list-style: none; }
+  .kc-options li { display: flex; align-items: center; gap: 0.55rem; font-size: 0.81rem; padding: 0.4rem 0.7rem; border-radius: 6px; cursor: pointer; transition: background 0.15s; margin-bottom: 0.25rem; border: 1px solid transparent; }
+  .kc-options li:hover { background: var(--surface2); }
+  .kc-options li.correct { background: rgba(0,229,160,0.1); border-color: rgba(0,229,160,0.3); color: var(--green); }
+  .kc-options li.wrong   { background: rgba(255,94,122,0.08); border-color: rgba(255,94,122,0.25); color: var(--red); }
+  .kc-radio { width:14px; height:14px; border:2px solid var(--border); border-radius:50%; flex-shrink:0; transition:all 0.15s; }
+  .kc-options li.correct .kc-radio { background: var(--green); border-color: var(--green); }
+  .kc-options li.wrong   .kc-radio { background: var(--red); border-color: var(--red); }
+
+  /* ── SUMMARY TABLE ── */
+  .summary-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin: 0.85rem 0; }
+  .summary-table th { padding: 0.5rem 0.85rem; background: var(--bg3); color: var(--muted); font-size: 0.69rem; letter-spacing: 0.07em; text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--border); }
+  .summary-table td { padding: 0.5rem 0.85rem; border-bottom: 1px solid rgba(42,61,90,0.3); vertical-align: top; }
+  .summary-table tr:last-child td { border-bottom: none; }
+  .summary-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ── DIVIDER ── */
+  .section-divider { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+  a { color: var(--accent); } a:hover { text-decoration: underline; }
+  strong { color: var(--text); font-weight: 600; }
+  p { margin-bottom: 0.75rem; font-size: 0.86rem; line-height: 1.7; }
+  p:last-child { margin-bottom: 0; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 768px) {
+    .tab-content { padding: 0 1rem 3rem; }
+    .tab-panel { padding: 1.25rem; }
+    .card-grid.cols2, .card-grid.cols3, .card-grid.cols4 { grid-template-columns: 1fr; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .flow-row { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <span class="week-badge">Week 2</span>
+      <span class="header-title">Core Cloud Services</span>
+    </div>
+    <span class="ghp-badge">🐙 GitHub Pages Ready</span>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<div class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb">CloudEats Academy <span>›</span> Week 2</div>
+    <h1>Core Cloud Services</h1>
+    <p style="color:var(--muted);font-size:0.88rem;margin-top:0.4rem;margin-bottom:0">VMs &amp; Containers · Storage · Cloud Networking</p>
+    <div class="hero-meta">
+      <div class="meta-chip">⏱ <strong>4 hours</strong> &nbsp;Contact</div>
+      <div class="meta-chip">🐳 <strong>Labs 2.1 &amp; 2.2</strong> &nbsp;This Week</div>
+      <div class="meta-chip">📋 <strong>4 Topics</strong> &nbsp;VMs · Docker · Storage · Networking</div>
+      <div class="meta-chip">🎓 <strong>Mid-Term</strong> &nbsp;Quiz coverage from this week</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TAB NAV ── -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('h1')">⚙️ Hour 1 · VMs &amp; Containers</button>
+  <button class="tab-btn" onclick="showTab('h2')">🐳 Hour 2 · Docker Hands-On</button>
+  <button class="tab-btn" onclick="showTab('h3')">💾 Hour 3 · Storage</button>
+  <button class="tab-btn" onclick="showTab('h4')">🌐 Hour 4 · Networking</button>
+  <button class="tab-btn" onclick="showTab('quiz')">🧠 Quiz Prep</button>
+</div>
+
+<div class="tab-content">
+
+  <!-- ════════════ HOUR 1: VMs + CONTAINERS ════════════ -->
+  <div class="tab-panel active" id="panel-h1">
+
+    <!-- 1.1 Virtual Machines -->
+    <div class="sec-header">
+      <span class="sec-pill blue">1.1</span>
+      <span class="sec-title">Virtual Machines</span>
+      <span class="sec-time">20 min</span>
+    </div>
+
+    <p>A virtual machine (VM) is a software-based computer running <em>inside</em> a physical server. The hypervisor manages multiple VMs on one physical host — the same concept as AWS EC2, just running locally on Proxmox.</p>
+
+    <!-- VM hierarchy diagram -->
+    <svg viewBox="0 0 580 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin:0.85rem 0">
+      <!-- Physical Server -->
+      <rect x="10" y="10" width="560" height="140" rx="8" fill="rgba(107,127,160,0.05)" stroke="#3a4d6a" stroke-width="1.5"/>
+      <text x="20" y="28" font-size="9.5" font-family="Sora,sans-serif" fill="var(--muted)" font-weight="700">🖥️ Physical Server (Proxmox / AWS)</text>
+      <!-- Hypervisor -->
+      <rect x="20" y="35" width="540" height="105" rx="6" fill="rgba(0,200,255,0.03)" stroke="rgba(0,200,255,0.2)" stroke-width="1"/>
+      <text x="30" y="51" font-size="9" font-family="Sora,sans-serif" fill="rgba(0,200,255,0.6)" font-weight="700">Hypervisor (Proxmox / Nitro System)</text>
+      <!-- VM 1 -->
+      <rect x="30" y="57" width="155" height="72" rx="5" fill="rgba(0,229,160,0.05)" stroke="rgba(0,229,160,0.3)" stroke-width="1.5"/>
+      <text x="107" y="78" font-size="16" text-anchor="middle">🐧</text>
+      <text x="107" y="95" font-size="8.5" font-family="Sora,sans-serif" fill="#e8edf5" text-anchor="middle" font-weight="700">VM 1 · Ubuntu</text>
+      <text x="107" y="108" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">2 CPU · 4GB RAM</text>
+      <text x="107" y="121" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(0,229,160,0.4)" text-anchor="middle">Full OS ~5GB</text>
+      <!-- VM 2 -->
+      <rect x="200" y="57" width="155" height="72" rx="5" fill="rgba(0,200,255,0.05)" stroke="rgba(0,200,255,0.3)" stroke-width="1.5"/>
+      <text x="277" y="78" font-size="16" text-anchor="middle">🪟</text>
+      <text x="277" y="95" font-size="8.5" font-family="Sora,sans-serif" fill="#e8edf5" text-anchor="middle" font-weight="700">VM 2 · Windows</text>
+      <text x="277" y="108" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">4 CPU · 8GB RAM</text>
+      <text x="277" y="121" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(0,200,255,0.4)" text-anchor="middle">Full OS ~8GB</text>
+      <!-- VM 3 -->
+      <rect x="370" y="57" width="180" height="72" rx="5" fill="rgba(180,110,245,0.05)" stroke="rgba(180,110,245,0.3)" stroke-width="1.5"/>
+      <text x="460" y="78" font-size="16" text-anchor="middle">🐧</text>
+      <text x="460" y="95" font-size="8.5" font-family="Sora,sans-serif" fill="#e8edf5" text-anchor="middle" font-weight="700">VM 3 · Ubuntu (Your Lab VM)</text>
+      <text x="460" y="108" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">1 CPU · 2GB RAM</text>
+      <text x="460" y="121" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(180,110,245,0.4)" text-anchor="middle">Full OS ~5GB</text>
+    </svg>
+
+    <div class="img-ph">
+      <div class="img-ph-icon">📸</div>
+      <div><div class="img-ph-label">Instructor Demo · Proxmox Web UI</div><div class="img-ph-desc">Browser showing Proxmox web interface — left panel with node tree, centre showing VM list with CPU/memory allocations, one VM console open. Point out: node (physical server), VMs, resource bars.</div></div>
+    </div>
+
+    <div class="card-grid cols3" style="margin-top:1rem">
+      <div class="concept-card">
+        <div class="cc-title">⚡ Isolation</div>
+        <div class="cc-body">A crash in VM 1 doesn't affect VM 2. Each VM has its own OS, memory space, and disk.</div>
+      </div>
+      <div class="concept-card">
+        <div class="cc-title">📸 Snapshots</div>
+        <div class="cc-body">Save a VM's state at any point. Roll back if something breaks — used for backups and testing.</div>
+      </div>
+      <div class="concept-card">
+        <div class="cc-title">🐌 Startup</div>
+        <div class="cc-body">VMs boot a full operating system — takes 1–5 minutes. Containers start in under 1 second.</div>
+      </div>
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- 1.2 Containers -->
+    <div class="sec-header">
+      <span class="sec-pill green">1.2</span>
+      <span class="sec-title">Containers and Docker</span>
+      <span class="sec-time">40 min</span>
+    </div>
+
+    <p>A container packages an application with everything it needs — code, libraries, config — but <em>shares the host OS kernel</em>. No duplicate operating system per container.</p>
+
+    <!-- VM vs Container comparison -->
+    <div class="compare-grid">
+      <div class="compare-side left">
+        <div class="cs-label amber">🏨 VM — The Hotel Suite</div>
+        <div class="cs-item"><div class="cs-dot dot-amber"></div>Has its own full kitchen, bathroom, plumbing</div>
+        <div class="cs-item"><div class="cs-dot dot-amber"></div>Completely self-contained — heavy &amp; slow to set up</div>
+        <div class="cs-item"><div class="cs-dot dot-amber"></div>Gigabytes in size, minutes to start</div>
+        <div class="cs-item"><div class="cs-dot dot-amber"></div>Best when: you need different OS types, full isolation</div>
+      </div>
+      <div class="compare-side right">
+        <div class="cs-label green">🏢 Container — The Hotel Room</div>
+        <div class="cs-item"><div class="cs-dot dot-green"></div>Shares the hotel's plumbing &amp; electricity (OS kernel)</div>
+        <div class="cs-item"><div class="cs-dot dot-green"></div>Smaller, faster to check in/out — still isolated</div>
+        <div class="cs-item"><div class="cs-dot dot-green"></div>Megabytes in size, seconds to start</div>
+        <div class="cs-item"><div class="cs-dot dot-green"></div>Best when: same OS, multiple services, fast deploys</div>
+      </div>
+    </div>
+
+    <!-- Docker 4 components -->
+    <p style="margin-top:1.25rem;margin-bottom:0.75rem"><strong>Docker</strong> is the most widely used container platform. It has four key components:</p>
+    <div class="card-grid cols4">
+      <div class="concept-card highlight-green">
+        <span class="cc-icon">📋</span>
+        <div class="cc-title">Dockerfile</div>
+        <div class="cc-body">The recipe. Text instructions that tell Docker what to put in the image.</div>
+        <span class="cc-tag">FROM · COPY · EXPOSE</span>
+      </div>
+      <div class="concept-card highlight-blue">
+        <span class="cc-icon">📦</span>
+        <div class="cc-title">Image</div>
+        <div class="cc-body">The built result. A read-only snapshot — like a sealed package that can be copied anywhere.</div>
+        <span class="cc-tag">docker build</span>
+      </div>
+      <div class="concept-card highlight-amber">
+        <span class="cc-icon">🐳</span>
+        <div class="cc-title">Container</div>
+        <div class="cc-body">A running instance of an image. Many containers can run from one image simultaneously.</div>
+        <span class="cc-tag">docker run</span>
+      </div>
+      <div class="concept-card">
+        <span class="cc-icon">🌐</span>
+        <div class="cc-title">Docker Hub</div>
+        <div class="cc-body">Public registry of pre-built images — nginx, mysql, redis, node. Like an app store for containers.</div>
+        <span class="cc-tag" style="background:rgba(180,110,245,0.12);color:var(--purple)">hub.docker.com</span>
+      </div>
+    </div>
+
+    <div class="img-ph" style="margin-top:1rem">
+      <div class="img-ph-icon">📸</div>
+      <div><div class="img-ph-label">Screenshot · Docker Hub — nginx Image Page</div><div class="img-ph-desc">hub.docker.com page for the official nginx image — show the pull count (billions), the tags list including <code>nginx:alpine</code>, and the short description. Highlight: this is where <code>FROM nginx:alpine</code> downloads from.</div></div>
+    </div>
+
+    <!-- Port mapping -->
+    <hr class="section-divider">
+    <p style="margin-bottom:0.65rem"><strong>Port Mapping</strong> — containers are isolated by default. <code>-p HOST:CONTAINER</code> creates a "door" from outside into the container.</p>
+
+    <div class="flow-row">
+      <div class="flow-box" style="border-color:rgba(0,200,255,0.3);color:var(--accent)">🌐 Browser<br><small>:3000</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box" style="border-color:rgba(255,183,64,0.3);color:var(--amber)">Port Map<br><small style="font-family:'Fira Code',monospace">-p 3000:80</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box" style="border-color:rgba(0,229,160,0.3);color:var(--green)">🐳 Container<br><small>nginx :80</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box" style="border-color:rgba(107,127,160,0.3);color:var(--muted)">📄 HTML/CSS<br><small>files served</small></div>
+    </div>
+
+    <!-- Docker cheat sheet -->
+    <p style="margin-top:1.25rem;margin-bottom:0.5rem"><strong>Essential Commands</strong> (used in Labs 2.1 &amp; 2.2):</p>
+    <div class="code-block">
+      <div class="code-header"><div class="code-lang">🐳 Docker Quick Reference</div><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="cc">docker</span> build -t my-app:v1.0 .        <span class="cm"># Build image from Dockerfile in current folder</span>
+<span class="cc">docker</span> run -d -p 3000:80 my-app:v1.0  <span class="cm"># Run container in background, map ports</span>
+<span class="cc">docker</span> ps                              <span class="cm"># List running containers</span>
+<span class="cc">docker</span> stop &lt;name&gt;                     <span class="cm"># Stop a container</span>
+<span class="cc">docker</span> rm &lt;name&gt;                       <span class="cm"># Remove a stopped container</span>
+<span class="cc">docker</span> images                          <span class="cm"># List all images on this machine</span>
+<span class="cc">docker</span> logs &lt;name&gt;                     <span class="cm"># View container output</span>
+<span class="cc">docker</span> exec -it &lt;name&gt; sh              <span class="cm"># Open a shell inside a running container</span></pre>
+    </div>
+
+    <div class="callout blue" style="margin-top:0.75rem">
+      <span>🎯</span>
+      <span><strong>Common confusion:</strong> Image ≠ Container. Image = the recipe (static). Container = the running app (dynamic). You can run 5 containers from 1 image — like printing 5 copies of a document from the same template.</span>
+    </div>
+
+  </div>
+
+  <!-- ════════════ HOUR 2: DOCKER HANDS-ON ════════════ -->
+  <div class="tab-panel" id="panel-h2">
+
+    <div class="sec-header">
+      <span class="sec-pill blue">2</span>
+      <span class="sec-title">Docker Hands-On — Lab Orientation</span>
+      <span class="sec-time">60 min</span>
+    </div>
+
+    <p>This hour runs <strong>Labs 2.1 and 2.2</strong>. Before students open their VMs, briefly orient them with what they'll be doing and why.</p>
+
+    <div class="card-grid cols2">
+      <div class="concept-card highlight-blue">
+        <span class="cc-icon">📄</span>
+        <div class="cc-title">Lab 2.1 — Static Menu + First Container</div>
+        <div class="cc-body">Build the Nasi Lemak Paradise HTML/CSS menu. Serve it with Python briefly, then package it in an nginx:alpine Docker container and serve it properly.</div>
+        <span class="cc-tag">75 min · Beginner</span>
+      </div>
+      <div class="concept-card highlight-amber">
+        <span class="cc-icon">🌐</span>
+        <div class="cc-title">Lab 2.2 — Docker Networking</div>
+        <div class="cc-body">Create a custom bridge network. Connect the menu container and a Redis container. Prove they communicate by container name. Discover why Docker Compose is needed.</div>
+        <span class="cc-tag">60 min · Intermediate</span>
+      </div>
+    </div>
+
+    <hr class="section-divider">
+
+    <p style="margin-bottom:0.5rem"><strong>Before Lab 2.2 — point to highlight:</strong></p>
+    <div class="callout amber">
+      <span>📌</span>
+      <span>In Lab 2.2, the <code>menu</code> container reaches <code>redis</code> by typing just <code>redis</code> as the hostname — not an IP address. This works because custom Docker bridge networks include a built-in DNS resolver. This is <em>the exact same principle</em> as cloud internal DNS you'll see in Hour 4 — where microservices find each other by service name, not IP.</span>
+    </div>
+
+    <hr class="section-divider">
+
+    <div class="sec-header">
+      <span class="sec-pill green">Concept Bridge</span>
+      <span class="sec-title">What the Labs Map to in Production</span>
+    </div>
+
+    <table class="summary-table">
+      <thead><tr><th>What you did in the lab</th><th>Production equivalent</th></tr></thead>
+      <tbody>
+        <tr><td><code>docker run -p 3000:80</code> on your Ubuntu VM</td><td>EC2 instance running a containerised service with security group rule: allow TCP 80 from internet</td></tr>
+        <tr><td><code>cloudeats-net</code> Docker bridge network</td><td>VPC — a private, isolated virtual network in AWS/Azure</td></tr>
+        <tr><td>Container name <code>redis</code> as hostname</td><td>Internal DNS / service discovery in a cloud VPC</td></tr>
+        <tr><td>Redis with no <code>-p</code> flag (not exposed to host)</td><td>Database in a private subnet — no public IP, only reachable internally</td></tr>
+        <tr><td><code>nginx:alpine</code> image from Docker Hub</td><td>Container image pulled from AWS ECR or Azure Container Registry on deployment</td></tr>
+      </tbody>
+    </table>
+
+  </div>
+
+  <!-- ════════════ HOUR 3: STORAGE ════════════ -->
+  <div class="tab-panel" id="panel-h3">
+
+    <div class="sec-header">
+      <span class="sec-pill amber">3</span>
+      <span class="sec-title">Cloud Storage Solutions</span>
+      <span class="sec-time">60 min</span>
+    </div>
+
+    <p>Cloud storage comes in three types. Each solves a different problem. Choosing wrong wastes money and causes performance issues.</p>
+
+    <div class="card-grid cols3">
+      <div class="concept-card highlight-blue">
+        <span class="cc-icon">📁</span>
+        <div class="cc-title">File Storage</div>
+        <div class="cc-body">Folder-and-file hierarchy. Multiple machines can read/write the same files <em>simultaneously</em>.</div>
+        <span class="cc-tag">NFS · Samba · AWS EFS</span>
+      </div>
+      <div class="concept-card highlight-amber">
+        <span class="cc-icon">💽</span>
+        <div class="cc-title">Block Storage</div>
+        <div class="cc-body">Raw disk blocks — no file structure. The OS treats it like a hard drive plugged in directly. One machine at a time.</div>
+        <span class="cc-tag">iSCSI · AWS EBS · Azure Disks</span>
+      </div>
+      <div class="concept-card highlight-green">
+        <span class="cc-icon">🗄️</span>
+        <div class="cc-title">Object Storage</div>
+        <div class="cc-body">Flat objects (files) accessed via HTTP REST API — PUT, GET, DELETE. No mounting needed. Scales to billions of files cheaply.</div>
+        <span class="cc-tag">AWS S3 · Azure Blob · MinIO</span>
+      </div>
+    </div>
+
+    <!-- Storage analogy row -->
+    <div class="card-grid cols3" style="margin-top:0.5rem">
+      <div class="concept-card">
+        <div class="cc-title" style="color:var(--accent)">📂 Analogy</div>
+        <div class="cc-body">Shared network drive at school — everyone can browse the same folders at the same time</div>
+      </div>
+      <div class="concept-card">
+        <div class="cc-title" style="color:var(--amber)">📂 Analogy</div>
+        <div class="cc-body">A blank hard drive you plug in — you format it, only your computer uses it at once</div>
+      </div>
+      <div class="concept-card">
+        <div class="cc-title" style="color:var(--green)">📂 Analogy</div>
+        <div class="cc-body">A public cloud drive (like Google Drive) — you get files via a link (URL), from anywhere</div>
+      </div>
+    </div>
+
+    <hr class="section-divider">
+
+    <div class="sec-header">
+      <span class="sec-pill amber">3.4</span>
+      <span class="sec-title">Comparison &amp; Use Cases</span>
+    </div>
+
+    <table class="summary-table">
+      <thead><tr><th>Type</th><th>Access</th><th>Simultaneous?</th><th>Best for</th><th>CloudEats example</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>File</strong></td>
+          <td>File path (NFS/Samba)</td>
+          <td>✅ Many machines</td>
+          <td>Shared config, media uploads, legacy apps</td>
+          <td>Shared config file for all 3 microservices</td>
+        </tr>
+        <tr>
+          <td><strong>Block</strong></td>
+          <td>Raw disk (iSCSI)</td>
+          <td>❌ One machine</td>
+          <td>Databases, OS drives, high-performance I/O</td>
+          <td>MySQL database data files</td>
+        </tr>
+        <tr>
+          <td><strong>Object</strong></td>
+          <td>HTTP REST (GET/PUT)</td>
+          <td>✅ From anywhere</td>
+          <td>Images, videos, backups, large static files</td>
+          <td>Menu item photos served via URL</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout amber">
+      <span>💬</span>
+      <div><strong>Class discussion:</strong> CloudEats needs to store three things — (a) menu item photos, (b) MySQL database files, (c) a config file shared by all microservices. Which storage type for each? <em>Expected: (a) Object → (b) Block → (c) File</em></div>
+    </div>
+
+    <hr class="section-divider">
+
+    <div class="sec-header">
+      <span class="sec-pill amber">Demo</span>
+      <span class="sec-title">Object Storage — HTTP REST in Action</span>
+    </div>
+
+    <div class="img-ph">
+      <div class="img-ph-icon">📸</div>
+      <div><div class="img-ph-label">Demo · MinIO Object Storage UI</div><div class="img-ph-desc">MinIO browser dashboard running on Proxmox — show a bucket with uploaded files, then demonstrate uploading a file and accessing it via its URL. MinIO is S3-compatible: same API, local environment.</div></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-lang">🐧 bash · Object Storage with curl (mock demo)</div><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="cm"># Upload a menu image to object storage (PUT)</span>
+<span class="cc">curl</span> -X PUT http://storage-server/cloudeats/menu-photo.jpg \
+     --data-binary @menu-photo.jpg
+
+<span class="cm"># Retrieve it by URL (GET) — same as what a browser does</span>
+<span class="cc">curl</span> -O http://storage-server/cloudeats/menu-photo.jpg
+
+<span class="cm"># List all objects in the bucket (GET on bucket)</span>
+<span class="cc">curl</span> http://storage-server/cloudeats/
+
+<span class="cm"># No mounting, no driver — just HTTP requests.</span>
+<span class="cm"># This is identical to how AWS S3 works.</span></pre>
+    </div>
+
+  </div>
+
+  <!-- ════════════ HOUR 4: NETWORKING ════════════ -->
+  <div class="tab-panel" id="panel-h4">
+
+    <div class="sec-header">
+      <span class="sec-pill purple">4</span>
+      <span class="sec-title">Networking Basics in the Cloud</span>
+      <span class="sec-time">60 min</span>
+    </div>
+
+    <div class="callout blue">
+      <span>🔗</span>
+      <span>Everything in this hour connects directly to what you saw in the labs: <em>Why did <code>-p 3000:80</code> make the app accessible?</em> (port mapping) · <em>Why could the web container reach redis by name?</em> (internal DNS) · <em>What stops random internet users from reaching your database?</em> (security groups)</span>
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- VPC -->
+    <div class="sec-header">
+      <span class="sec-pill purple">4.1</span>
+      <span class="sec-title">Virtual Private Cloud (VPC)</span>
+      <span class="sec-time">15 min</span>
+    </div>
+
+    <p>A VPC is your own private, isolated section of a cloud provider's network. No other customer can see or reach your resources unless you explicitly allow it.</p>
+
+    <svg viewBox="0 0 580 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin:0.85rem 0">
+      <!-- Internet -->
+      <rect x="10" y="10" width="90" height="190" rx="7" fill="rgba(255,94,122,0.04)" stroke="rgba(255,94,122,0.3)" stroke-width="1.5"/>
+      <text x="55" y="90" font-size="22" text-anchor="middle">🌐</text>
+      <text x="55" y="112" font-size="9" font-family="Sora,sans-serif" fill="var(--red)" text-anchor="middle" font-weight="700">INTERNET</text>
+      <text x="55" y="126" font-size="8" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">Public users</text>
+      <!-- Arrow in -->
+      <line x1="102" y1="100" x2="130" y2="100" stroke="rgba(255,94,122,0.5)" stroke-width="1.5" marker-end="url(#arrd)"/>
+      <!-- VPC outer -->
+      <rect x="132" y="10" width="438" height="190" rx="8" fill="rgba(0,200,255,0.025)" stroke="rgba(0,200,255,0.3)" stroke-width="2"/>
+      <text x="150" y="28" font-size="9.5" font-family="Sora,sans-serif" fill="var(--accent)" font-weight="700">YOUR VPC — 10.0.0.0/16 (private, isolated)</text>
+      <!-- Public subnet -->
+      <rect x="145" y="35" width="195" height="150" rx="6" fill="rgba(0,229,160,0.04)" stroke="rgba(0,229,160,0.3)" stroke-width="1.5"/>
+      <text x="242" y="53" font-size="9" font-family="Sora,sans-serif" fill="var(--green)" text-anchor="middle" font-weight="700">🌍 PUBLIC SUBNET</text>
+      <!-- Load Balancer -->
+      <rect x="158" y="60" width="168" height="44" rx="5" fill="rgba(0,229,160,0.07)" stroke="rgba(0,229,160,0.3)"/>
+      <text x="242" y="78" font-size="9" font-family="Sora,sans-serif" fill="var(--green)" text-anchor="middle" font-weight="700">Load Balancer</text>
+      <text x="242" y="91" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">allows :80/:443 from 0.0.0.0</text>
+      <!-- Web Server -->
+      <rect x="158" y="114" width="168" height="60" rx="5" fill="rgba(0,200,255,0.05)" stroke="rgba(0,200,255,0.25)"/>
+      <text x="242" y="133" font-size="9" font-family="Sora,sans-serif" fill="var(--accent)" text-anchor="middle" font-weight="700">🌐 Web Server</text>
+      <text x="242" y="147" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">nginx container</text>
+      <text x="242" y="167" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(0,200,255,0.4)" text-anchor="middle">≡ Lab 2.1 container</text>
+      <!-- Arrow LB to Web -->
+      <line x1="242" y1="105" x2="242" y2="112" stroke="rgba(0,229,160,0.5)" stroke-width="1.5" marker-end="url(#arrg)"/>
+      <!-- Private subnet -->
+      <rect x="353" y="35" width="205" height="150" rx="6" fill="rgba(180,110,245,0.03)" stroke="rgba(180,110,245,0.3)" stroke-width="1.5"/>
+      <text x="455" y="53" font-size="9" font-family="Sora,sans-serif" fill="var(--purple)" text-anchor="middle" font-weight="700">🔒 PRIVATE SUBNET</text>
+      <!-- Database -->
+      <rect x="366" y="60" width="178" height="44" rx="5" fill="rgba(180,110,245,0.07)" stroke="rgba(180,110,245,0.3)"/>
+      <text x="455" y="78" font-size="9" font-family="Sora,sans-serif" fill="var(--purple)" text-anchor="middle" font-weight="700">🗄️ MySQL Database</text>
+      <text x="455" y="91" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">allows :3306 from web only</text>
+      <!-- Redis -->
+      <rect x="366" y="114" width="178" height="60" rx="5" fill="rgba(255,183,64,0.05)" stroke="rgba(255,183,64,0.25)"/>
+      <text x="455" y="133" font-size="9" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle" font-weight="700">🔴 Redis Cache</text>
+      <text x="455" y="147" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">no public port</text>
+      <text x="455" y="167" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(255,183,64,0.4)" text-anchor="middle">≡ Lab 2.2 redis container</text>
+      <!-- Arrow web to db -->
+      <line x1="328" y1="95" x2="364" y2="82" stroke="rgba(180,110,245,0.4)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrp)"/>
+      <!-- Arrowheads -->
+      <defs>
+        <marker id="arrd" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(255,94,122,0.6)"/></marker>
+        <marker id="arrg" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(0,229,160,0.6)"/></marker>
+        <marker id="arrp" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(180,110,245,0.5)"/></marker>
+      </defs>
+    </svg>
+
+    <ul class="term-list">
+      <li><span class="term-key">Region</span><span class="term-val">Physical location of the data centre (Singapore, KL). Resources in different regions can't communicate by default.</span></li>
+      <li><span class="term-key">CIDR Block</span><span class="term-val">The IP address range for your VPC — e.g. <code>10.0.0.0/16</code> = 65,536 possible IPs. You don't need to calculate it, just recognise the notation.</span></li>
+      <li><span class="term-key">Public Subnet</span><span class="term-val">Has a route to the internet gateway. Resources here <em>can</em> be reached from outside — web server, load balancer.</span></li>
+      <li><span class="term-key">Private Subnet</span><span class="term-val">No route to the internet. Only reachable from inside the VPC — database, internal APIs.</span></li>
+    </ul>
+
+    <div class="callout green">
+      <span>🔗</span>
+      <span><strong>Lab connection:</strong> In Lab 2.2, Redis had no <code>-p</code> flag — it couldn't be reached from your browser. That is the Docker equivalent of a private subnet. Only containers on <code>cloudeats-net</code> (the "VPC") could reach it.</span>
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- Security Groups -->
+    <div class="sec-header">
+      <span class="sec-pill purple">4.3</span>
+      <span class="sec-title">Security Groups</span>
+      <span class="sec-time">10 min</span>
+    </div>
+
+    <p>A security group is a virtual firewall — a list of rules controlling what traffic is allowed in and out of a cloud resource.</p>
+
+    <div class="card-grid cols2">
+      <div class="concept-card highlight-green" style="font-size:0.81rem">
+        <div class="cc-title">🌐 CloudEats Web Server Rules</div>
+        <div style="margin-top:0.5rem">
+          <div style="display:flex;justify-content:space-between;padding:0.3rem 0;border-bottom:1px solid var(--border);font-size:0.78rem"><span style="color:var(--muted)">Inbound</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.3rem 0;font-size:0.78rem"><span>TCP :80, :443</span><span style="color:var(--green)">0.0.0.0/0 ✅</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.3rem 0;font-size:0.78rem"><span>TCP :22 (SSH)</span><span style="color:var(--amber)">YOUR IP only ⚠️</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.3rem 0;border-top:1px solid var(--border);font-size:0.78rem;margin-top:0.3rem"><span style="color:var(--muted)">Outbound</span><span style="color:var(--green)">All allowed ✅</span></div>
+        </div>
+      </div>
+      <div class="concept-card" style="font-size:0.81rem">
+        <div class="cc-title">🗄️ CloudEats Database Rules</div>
+        <div style="margin-top:0.5rem">
+          <div style="display:flex;justify-content:space-between;padding:0.3rem 0;border-bottom:1px solid var(--border);font-size:0.78rem"><span style="color:var(--muted)">Inbound</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.3rem 0;font-size:0.78rem"><span>TCP :3306 (MySQL)</span><span style="color:var(--accent)">web-sg only 🔒</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.3rem 0;font-size:0.78rem"><span>0.0.0.0/0</span><span style="color:var(--red)">BLOCKED ❌</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.3rem 0;border-top:1px solid var(--border);font-size:0.78rem;margin-top:0.3rem"><span style="color:var(--muted)">Outbound</span><span style="color:var(--green)">All allowed ✅</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout amber">
+      <span>⚠️</span>
+      <span><strong>Principle of least privilege:</strong> Only allow the minimum access needed. Opening MySQL port 3306 to <code>0.0.0.0/0</code> (the whole internet) lets attackers attempt brute-force attacks on your database. This is a real and common mistake.</span>
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- DNS -->
+    <div class="sec-header">
+      <span class="sec-pill purple">4.4</span>
+      <span class="sec-title">DNS — Domain Name System</span>
+      <span class="sec-time">10 min</span>
+    </div>
+
+    <p>DNS is the phone book of the internet — it translates human-readable names into IP addresses.</p>
+
+    <div class="flow-row" style="margin-bottom:0.75rem">
+      <div class="flow-box">You type<br><small style="font-family:'Fira Code',monospace;color:var(--green)">cloudeats.com</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box" style="border-color:rgba(0,200,255,0.3)">DNS<br><small>lookup</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box" style="border-color:rgba(0,229,160,0.3)">Returns IP<br><small style="font-family:'Fira Code',monospace;color:var(--green)">52.45.123.88</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Browser<br><small>connects</small></div>
+    </div>
+
+    <ul class="term-list">
+      <li><span class="term-key">A Record</span><span class="term-val">Maps a domain to an IPv4 address: <code>cloudeats.com → 54.123.45.67</code></span></li>
+      <li><span class="term-key">CNAME</span><span class="term-val">Maps a domain to another domain: <code>www.cloudeats.com → cloudeats.com</code></span></li>
+      <li><span class="term-key">Internal DNS</span><span class="term-val">In Lab 2.2, Docker's embedded DNS at <code>127.0.0.11</code> resolved <code>redis</code> to its container IP — identical concept to cloud service discovery.</span></li>
+    </ul>
+
+    <hr class="section-divider">
+
+    <!-- Load Balancing -->
+    <div class="sec-header">
+      <span class="sec-pill purple">4.5</span>
+      <span class="sec-title">Load Balancing</span>
+      <span class="sec-time">10 min</span>
+    </div>
+
+    <div class="compare-grid">
+      <div class="compare-side left" style="border-top-color:var(--red)">
+        <div class="cs-label" style="color:var(--red)">❌ Without Load Balancer</div>
+        <div class="cs-item"><div class="cs-dot" style="background:var(--red)"></div>1,000 users → single web server</div>
+        <div class="cs-item"><div class="cs-dot" style="background:var(--red)"></div>Server overloaded → slow or crashed</div>
+        <div class="cs-item"><div class="cs-dot" style="background:var(--red)"></div>One server fails = all users affected</div>
+      </div>
+      <div class="compare-side right">
+        <div class="cs-label green">✅ With Load Balancer</div>
+        <div class="cs-item"><div class="cs-dot dot-green"></div>1,000 users → load balancer → 3 servers</div>
+        <div class="cs-item"><div class="cs-dot dot-green"></div>~333 users per server — manageable</div>
+        <div class="cs-item"><div class="cs-dot dot-green"></div>One server fails → traffic rerouted automatically</div>
+      </div>
+    </div>
+
+    <div class="card-grid cols3" style="margin-top:0.75rem">
+      <div class="concept-card"><div class="cc-title" style="color:var(--accent)">↻ Round Robin</div><div class="cc-body">Send each new request to the next server in sequence: 1, 2, 3, 1, 2, 3…</div></div>
+      <div class="concept-card"><div class="cc-title" style="color:var(--green)">📊 Least Connections</div><div class="cc-body">Always send to the server with the fewest active connections currently.</div></div>
+      <div class="concept-card"><div class="cc-title" style="color:var(--amber)">📌 IP Hash</div><div class="cc-body">Same user always goes to the same server — useful for session-based apps.</div></div>
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- Request Journey -->
+    <div class="sec-header">
+      <span class="sec-pill purple">4.6</span>
+      <span class="sec-title">The CloudEats Request Journey</span>
+      <span class="sec-time">10 min</span>
+    </div>
+
+    <p>Walk through what happens when a user in KL opens <code>cloudeats.com</code> on their phone — every concept from this week appears in order.</p>
+
+    <svg viewBox="0 0 580 90" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin:0.85rem 0">
+      <defs>
+        <marker id="arrb" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(0,200,255,0.6)"/></marker>
+      </defs>
+      <!-- Step boxes -->
+      <rect x="8"   y="20" width="82" height="50" rx="6" fill="rgba(255,94,122,0.06)"  stroke="rgba(255,94,122,0.3)"  stroke-width="1.5"/>
+      <rect x="108" y="20" width="82" height="50" rx="6" fill="rgba(0,200,255,0.06)"   stroke="rgba(0,200,255,0.3)"   stroke-width="1.5"/>
+      <rect x="208" y="20" width="82" height="50" rx="6" fill="rgba(0,229,160,0.06)"   stroke="rgba(0,229,160,0.3)"   stroke-width="1.5"/>
+      <rect x="308" y="20" width="82" height="50" rx="6" fill="rgba(0,229,160,0.06)"   stroke="rgba(0,229,160,0.3)"   stroke-width="1.5"/>
+      <rect x="408" y="20" width="80" height="50" rx="6" fill="rgba(180,110,245,0.06)" stroke="rgba(180,110,245,0.3)" stroke-width="1.5"/>
+      <rect x="497" y="20" width="76" height="50" rx="6" fill="rgba(255,183,64,0.06)"  stroke="rgba(255,183,64,0.3)"  stroke-width="1.5"/>
+      <!-- Arrows -->
+      <line x1="92"  y1="45" x2="106" y2="45" stroke="rgba(0,200,255,0.4)" stroke-width="1.5" marker-end="url(#arrb)"/>
+      <line x1="192" y1="45" x2="206" y2="45" stroke="rgba(0,200,255,0.4)" stroke-width="1.5" marker-end="url(#arrb)"/>
+      <line x1="292" y1="45" x2="306" y2="45" stroke="rgba(0,200,255,0.4)" stroke-width="1.5" marker-end="url(#arrb)"/>
+      <line x1="392" y1="45" x2="406" y2="45" stroke="rgba(0,200,255,0.4)" stroke-width="1.5" marker-end="url(#arrb)"/>
+      <line x1="490" y1="45" x2="495" y2="45" stroke="rgba(0,200,255,0.4)" stroke-width="1.5" marker-end="url(#arrb)"/>
+      <!-- Labels -->
+      <text x="49"  y="38" font-size="9.5" text-anchor="middle" font-family="Sora,sans-serif" fill="var(--red)">📱 User</text>
+      <text x="49"  y="52" font-size="8.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">cloudeats.com</text>
+      <text x="49"  y="64" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(255,94,122,0.5)" text-anchor="middle">①DNS lookup</text>
+      <text x="149" y="38" font-size="9.5" text-anchor="middle" font-family="Sora,sans-serif" fill="var(--accent)">🔍 DNS</text>
+      <text x="149" y="52" font-size="8.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">→ 54.x.x.x</text>
+      <text x="149" y="64" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(0,200,255,0.5)" text-anchor="middle">A record</text>
+      <text x="249" y="38" font-size="9.5" text-anchor="middle" font-family="Sora,sans-serif" fill="var(--green)">⚖️ Load</text>
+      <text x="249" y="50" font-size="9.5" text-anchor="middle" font-family="Sora,sans-serif" fill="var(--green)">Balancer</text>
+      <text x="249" y="64" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(0,229,160,0.5)" text-anchor="middle">Public subnet</text>
+      <text x="349" y="38" font-size="9.5" text-anchor="middle" font-family="Sora,sans-serif" fill="var(--green)">🌐 Web</text>
+      <text x="349" y="50" font-size="9.5" text-anchor="middle" font-family="Sora,sans-serif" fill="var(--green)">Server</text>
+      <text x="349" y="64" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(0,229,160,0.5)" text-anchor="middle">Public subnet</text>
+      <text x="448" y="38" font-size="9.5" text-anchor="middle" font-family="Sora,sans-serif" fill="var(--purple)">🗄️ MySQL</text>
+      <text x="448" y="52" font-size="8.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">:3306</text>
+      <text x="448" y="64" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(180,110,245,0.5)" text-anchor="middle">Private subnet</text>
+      <text x="535" y="38" font-size="9.5" text-anchor="middle" font-family="Sora,sans-serif" fill="var(--amber)">📱 User</text>
+      <text x="535" y="52" font-size="9" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">Response</text>
+      <text x="535" y="64" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(255,183,64,0.5)" text-anchor="middle">milliseconds</text>
+    </svg>
+
+    <div class="callout purple">
+      <span>🗺️</span>
+      <div><strong>Course connection:</strong> Right now you're building the <em>web server</em> box (Labs 2.1–2.2). By Week 5 it becomes microservices. In Week 10, you'll map every Docker container and network to the exact cloud service that replaces it — MySQL container → RDS, cloudeats-net → VPC, nginx → ALB, and so on.</div>
+    </div>
+
+  </div>
+
+  <!-- ════════════ QUIZ PREP ════════════ -->
+  <div class="tab-panel" id="panel-quiz">
+
+    <div class="sec-header">
+      <span class="sec-pill blue">Mid-Term</span>
+      <span class="sec-title">Quiz Preparation — Week 2 Topics</span>
+    </div>
+
+    <div class="callout amber" style="margin-bottom:1.25rem">
+      <span>📋</span>
+      <span>The mid-term quiz is in Week 5. These are the likely Week 2 question types based on the learning objectives.</span>
+    </div>
+
+    <div class="kc-question">
+      <div class="kc-q">1. Which storage type would you use to store a MySQL database's data files?</div>
+      <ul class="kc-options">
+        <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>File storage (NFS/Samba)</li>
+        <li onclick="checkAnswer(this,true)"><div class="kc-radio"></div>Block storage (iSCSI/EBS) — single machine, high-performance, raw disk access</li>
+        <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>Object storage (S3) — accessed via HTTP REST API</li>
+        <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>Any of the three — they are interchangeable</li>
+      </ul>
+    </div>
+
+    <div class="kc-question">
+      <div class="kc-q">2. What is a VPC?</div>
+      <ul class="kc-options">
+        <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>A virtual machine running on a physical server</li>
+        <li onclick="checkAnswer(this,true)"><div class="kc-radio"></div>Your own private, isolated network section in the cloud — other customers cannot see your resources unless you allow it</li>
+        <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>A type of load balancer that routes traffic based on IP</li>
+        <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>A managed DNS service that maps domain names to containers</li>
+      </ul>
+    </div>
+
+    <div class="kc-question">
+      <div class="kc-q">3. The CloudEats database should be in a <em>private</em> subnet. Why?</div>
+      <ul class="kc-options">
+        <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>Private subnets are faster than public subnets</li>
+        <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>MySQL cannot run in public subnets</li>
+        <li onclick="checkAnswer(this,true)"><div class="kc-radio"></div>A private subnet has no route to the internet — users on the internet cannot directly reach the database, reducing attack surface</li>
+        <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>Public subnets cannot store databases</li>
+      </ul>
+    </div>
+
+    <div class="kc-question">
+      <div class="kc-q">4. A security group rule says: Allow TCP port 3306 from <code>web-server-security-group</code>. What does this mean?</div>
+      <ul class="kc-options">
+        <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>Anyone with port 3306 open can reach the database</li>
+        <li onclick="checkAnswer(this,true)"><div class="kc-radio"></div>Only resources that belong to the web-server security group can connect to MySQL on port 3306 — all other sources are blocked</li>
+        <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>Port 3306 is open to the whole internet from the web server</li>
+        <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>The web server blocks all traffic to port 3306</li>
+      </ul>
+    </div>
+
+    <div class="kc-question">
+      <div class="kc-q">5. In Lab 2.2, the Node.js app connects to Redis using hostname <code>redis</code> instead of an IP address. What provides this name resolution?</div>
+      <ul class="kc-options">
+        <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>The host machine's /etc/hosts file</li>
+        <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>A manually configured DNS server you installed</li>
+        <li onclick="checkAnswer(this,true)"><div class="kc-radio"></div>Docker's built-in embedded DNS server (127.0.0.11) on custom bridge networks — it maps container names to their current IP automatically</li>
+        <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>Redis listens on a special broadcast address that all containers can reach</li>
+      </ul>
+    </div>
+
+    <hr class="section-divider">
+
+    <div class="sec-header">
+      <span class="sec-pill green">Summary</span>
+      <span class="sec-title">Week 2 Key Takeaways</span>
+    </div>
+
+    <table class="summary-table">
+      <thead><tr><th>Topic</th><th>Key Takeaway</th><th>Lab / Demo</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Virtual Machines</strong></td><td>Full OS per VM, managed by Proxmox hypervisor. Minutes to start, gigabytes each.</td><td>Proxmox demo</td></tr>
+        <tr><td><strong>Containers / Docker</strong></td><td>Share host OS kernel. Seconds to start, megabytes. <code>docker build → run</code>. Image ≠ container.</td><td>Lab 2.1</td></tr>
+        <tr><td><strong>Docker Networking</strong></td><td>Custom bridge networks enable DNS. Container name = hostname on the network.</td><td>Lab 2.2</td></tr>
+        <tr><td><strong>File Storage</strong></td><td>NFS/Samba. Many machines simultaneously. Shared config, media.</td><td>Demo</td></tr>
+        <tr><td><strong>Block Storage</strong></td><td>iSCSI/EBS. One machine. Raw disk. Databases, OS drives.</td><td>Demo</td></tr>
+        <tr><td><strong>Object Storage</strong></td><td>HTTP REST API. Anywhere. Images, videos, backups at scale.</td><td>MinIO demo</td></tr>
+        <tr><td><strong>VPC</strong></td><td>Private isolated cloud network. No outside access by default.</td><td>Diagram</td></tr>
+        <tr><td><strong>Subnets</strong></td><td>Public = internet-facing. Private = internal only. DB goes private.</td><td>Diagram</td></tr>
+        <tr><td><strong>Security Groups</strong></td><td>Virtual firewalls. Least privilege — only open what's needed.</td><td>Diagram</td></tr>
+        <tr><td><strong>DNS</strong></td><td>Name → IP. Internal DNS in Docker = service discovery in cloud.</td><td>Lab 2.2</td></tr>
+        <tr><td><strong>Load Balancing</strong></td><td>Distribute traffic. Auto health checks. Round-robin, least-conn, IP hash.</td><td>Week 5+</td></tr>
+      </tbody>
+    </table>
+
+  </div>
+
+</div><!-- /tab-content -->
+
+<footer style="border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;color:var(--muted);font-size:0.78rem;max-width:1100px;margin:0 auto">
+  Cloud Computing · Week 2 · Core Cloud Services &nbsp;|&nbsp; CloudEats Academy &nbsp;|&nbsp; <span class="ghp-badge">🐙 GitHub Pages Ready</span>
+</footer>
+
+<script>
+  function showTab(id) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + id).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function copyCode(btn) {
+    const pre = btn.closest('.code-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'Copied!'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  function checkAnswer(li, correct) {
+    const parent = li.closest('ul');
+    parent.querySelectorAll('li').forEach(i => i.classList.remove('correct', 'wrong'));
+    li.classList.add(correct ? 'correct' : 'wrong');
+    if (!correct) parent.querySelectorAll('li').forEach(i => {
+      if (i.getAttribute('onclick')?.includes('true')) i.classList.add('correct');
+    });
+  }
+</script>
+</body>
+</html>

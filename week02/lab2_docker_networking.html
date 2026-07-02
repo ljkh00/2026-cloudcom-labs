@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 2.2 · Docker Networking · CloudEats Academy</title>
+<meta name="description" content="Learn Docker networking — bridge networks, container DNS, multi-container communication. Week 2 Lab 2 of the CloudEats cloud computing diploma course.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Lab 2.2 · Docker Networking · CloudEats Academy">
+<meta property="og:description" content="Connect containers using Docker networks, understand bridge vs host networking, and wire up the CloudEats app services. Step-by-step with three pace levels.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07090f;
+    --bg2: #0d1117;
+    --bg3: #141b27;
+    --surface: #1a2235;
+    --surface2: #1f2c42;
+    --border: #2a3d5a;
+    --accent: #00c8ff;
+    --accent2: #7c6af5;
+    --green: #00e5a0;
+    --amber: #ffb740;
+    --red: #ff5e7a;
+    --text: #e8edf5;
+    --muted: #6b7fa0;
+    --beginner: #00e5a0;
+    --average: #00c8ff;
+    --advanced: #b46ef5;
+    --radius: 10px;
+    --code-bg: #0b1120;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+
+  .site-header { background: linear-gradient(135deg, #050d1c 0%, #091628 100%); border-bottom: 1px solid var(--border); padding: 0 2rem; position: sticky; top: 0; z-index: 100; }
+  .header-inner { max-width: 960px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 58px; gap: 1rem; }
+  .header-left { display: flex; align-items: center; gap: 0.75rem; }
+  .lab-badge { background: var(--amber); color: #000; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; padding: 0.2rem 0.55rem; border-radius: 4px; text-transform: uppercase; }
+  .header-title { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+
+  .pace-bar { display: flex; gap: 0.35rem; background: var(--bg3); padding: 0.25rem; border-radius: 8px; border: 1px solid var(--border); }
+  .pace-btn { font-family: 'Sora', sans-serif; font-size: 0.7rem; font-weight: 600; padding: 0.28rem 0.7rem; border: none; border-radius: 5px; cursor: pointer; background: transparent; color: var(--muted); transition: all 0.2s; }
+  .pace-btn:hover { color: var(--text); }
+  .pace-btn.active[data-pace="beginner"] { background: var(--beginner); color: #000; }
+  .pace-btn.active[data-pace="average"]  { background: var(--average);  color: #000; }
+  .pace-btn.active[data-pace="advanced"] { background: var(--advanced); color: #fff; }
+
+  .lab-hero { background: linear-gradient(160deg, #060f20, #0c1e10); border-bottom: 1px solid var(--border); padding: 2.5rem 2rem 2rem; position: relative; overflow: hidden; }
+  .lab-hero::before { content: ''; position: absolute; top: -80px; right: -100px; width: 420px; height: 420px; background: radial-gradient(ellipse, rgba(0,229,160,0.05) 0%, transparent 70%); pointer-events: none; }
+  .lab-hero-inner { max-width: 960px; margin: 0 auto; }
+  .lab-crumb { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem; }
+  .lab-crumb span { color: var(--amber); }
+  .lab-hero h1 { font-size: clamp(1.5rem, 3.5vw, 2.2rem); font-weight: 800; margin-bottom: 0.5rem; background: linear-gradient(135deg, #e8edf5 40%, var(--amber) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .lab-meta-row { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem; }
+  .meta-chip { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.3rem 0.75rem; color: var(--muted); }
+  .meta-chip strong { color: var(--text); }
+
+  .lab-layout { max-width: 960px; margin: 2rem auto 4rem; padding: 0 2rem; display: grid; grid-template-columns: 220px 1fr; gap: 2rem; align-items: start; }
+
+  .sidebar { position: sticky; top: 80px; }
+  .sidebar-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; }
+  .sidebar-nav { list-style: none; }
+  .sidebar-nav li { margin-bottom: 0.1rem; }
+  .sidebar-nav a { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; padding: 0.45rem 0.75rem; border-radius: 7px; color: var(--muted); text-decoration: none; transition: all 0.15s; border: 1px solid transparent; }
+  .sidebar-nav a:hover { background: var(--surface); color: var(--text); }
+  .sidebar-nav a.active { background: var(--surface); color: var(--amber); border-color: rgba(255,183,64,0.2); }
+  .part-divider { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 0.5rem 0.75rem 0.2rem; margin-top: 0.5rem; }
+
+  .progress-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-top: 1rem; }
+  .progress-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; }
+  .progress-bar-wrap { background: var(--bg3); border-radius: 4px; height: 6px; margin-bottom: 0.5rem; }
+  .progress-bar { height: 6px; border-radius: 4px; background: linear-gradient(90deg, var(--amber), #ff9a3c); transition: width 0.4s; }
+  .progress-label { font-size: 0.72rem; color: var(--muted); }
+  .progress-label span { color: var(--amber); font-weight: 600; }
+
+  .lab-content > section { margin-bottom: 3rem; }
+  .part-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
+  .part-pill { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.2rem 0.6rem; border-radius: 20px; background: rgba(255,183,64,0.1); color: var(--amber); border: 1px solid rgba(255,183,64,0.2); white-space: nowrap; }
+  .part-title { font-size: 1.15rem; font-weight: 700; }
+  .part-time  { font-size: 0.75rem; color: var(--muted); margin-left: auto; white-space: nowrap; }
+
+  .step { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 1rem; overflow: hidden; transition: border-color 0.2s; }
+  .step.completed { border-color: rgba(0,229,160,0.4); }
+  .step-header { display: flex; align-items: center; gap: 0.75rem; padding: 0.9rem 1.1rem; cursor: pointer; user-select: none; transition: background 0.15s; }
+  .step-header:hover { background: var(--surface2); }
+  .step:not(.open) .step-header::after { content: 'click to expand'; font-size: 0.62rem; color: var(--muted); opacity: 0.5; margin-left: auto; letter-spacing: 0.04em; pointer-events: none; }
+  .step.open .step-header::after { content: ''; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: var(--muted); flex-shrink: 0; transition: all 0.2s; }
+  .step.completed .step-num { background: var(--green); border-color: var(--green); color: #000; }
+  .step-title { font-size: 0.9rem; font-weight: 600; flex: 1; }
+  .step-why { font-size: 0.72rem; color: var(--amber); font-weight: 500; white-space: nowrap; display: none; }
+  .step.open .step-why { display: block; }
+  .step-chevron { color: var(--muted); transition: transform 0.2s; font-size: 0.9rem; flex-shrink: 0; }
+  .step.open .step-chevron { transform: rotate(90deg); }
+  .step-body { display: none; padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); font-size: 0.86rem; line-height: 1.7; }
+  .step.open .step-body { display: block; animation: fadeDown 0.2s ease; }
+  @keyframes fadeDown { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+
+  .why-box { background: rgba(0,200,255,0.05); border: 1px solid rgba(0,200,255,0.15); border-radius: 8px; padding: 0.7rem 0.9rem; margin: 0.75rem 0; font-size: 0.82rem; color: #a0d8f0; display: flex; gap: 0.5rem; align-items: flex-start; }
+  .amber-box { background: rgba(255,183,64,0.05); border: 1px solid rgba(255,183,64,0.2); border-radius: 8px; padding: 0.7rem 0.9rem; margin: 0.75rem 0; font-size: 0.82rem; color: #d9c07a; display: flex; gap: 0.5rem; align-items: flex-start; }
+
+  .pace-hint { display: none; border-radius: 7px; padding: 0.6rem 0.85rem; font-size: 0.8rem; line-height: 1.6; margin: 0.6rem 0; border-left: 2px solid; }
+  .pace-hint.beginner { background: rgba(0,229,160,0.05);  border-color: var(--beginner); color: #8ee8c4; }
+  .pace-hint.average  { background: rgba(0,200,255,0.05);  border-color: var(--average);  color: #a0d8f0; }
+  .pace-hint.advanced { background: rgba(180,110,245,0.05); border-color: var(--advanced); color: #c5a8f5; }
+  body.pace-beginner .pace-hint.beginner,
+  body.pace-average  .pace-hint.average,
+  body.pace-advanced .pace-hint.advanced { display: block; }
+
+  .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; margin: 0.75rem 0; overflow: hidden; }
+  .code-header { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.9rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); }
+  .code-lang { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .copy-btn { font-family: 'Sora', sans-serif; font-size: 0.68rem; font-weight: 600; padding: 0.2rem 0.6rem; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 5px; cursor: pointer; transition: all 0.15s; }
+  .copy-btn:hover { background: var(--amber); color: #000; border-color: var(--amber); }
+  .copy-btn.copied { background: var(--green); color: #000; border-color: var(--green); }
+  pre { font-family: 'Fira Code', monospace; font-size: 0.8rem; line-height: 1.65; padding: 1rem; overflow-x: auto; color: #c5d5ef; white-space: pre; }
+  .cm { color: var(--muted); font-style: italic; }
+  .ck { color: var(--accent); }
+  .cv { color: var(--green); }
+  .cc { color: var(--amber); }
+  .cs { color: #f07090; }
+  .cd { color: #b46ef5; }
+
+  .substep-list { list-style: none; margin: 0.75rem 0; }
+  .substep-list li { display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.35rem 0; font-size: 0.85rem; border-bottom: 1px solid rgba(42,61,90,0.35); }
+  .substep-list li:last-child { border-bottom: none; }
+  .substep-bullet { min-width: 20px; height: 20px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); flex-shrink: 0; margin-top: 0.1rem; font-size: 0.65rem; font-weight: 700; display: flex; align-items: center; justify-content: center; color: var(--muted); }
+
+  .checkpoint { background: linear-gradient(135deg, rgba(0,229,160,0.08), rgba(0,229,160,0.04)); border: 1px solid rgba(0,229,160,0.25); border-radius: var(--radius); padding: 1rem 1.25rem; margin: 1.25rem 0 0; display: flex; gap: 0.75rem; align-items: flex-start; }
+  .checkpoint-icon { font-size: 1.3rem; flex-shrink: 0; }
+  .checkpoint-text { font-size: 0.85rem; color: var(--green); line-height: 1.5; }
+  .checkpoint-text strong { font-size: 0.92rem; display: block; margin-bottom: 0.2rem; }
+
+  .warning { background: rgba(255,183,64,0.07); border: 1px solid rgba(255,183,64,0.25); border-radius: 8px; padding: 0.8rem 1rem; margin: 0.75rem 0; font-size: 0.82rem; color: #d9c07a; display: flex; gap: 0.6rem; align-items: flex-start; }
+  .info-box { background: rgba(124,106,245,0.07); border: 1px solid rgba(124,106,245,0.25); border-radius: 8px; padding: 0.8rem 1rem; margin: 0.75rem 0; font-size: 0.82rem; color: #c5b8f8; display: flex; gap: 0.6rem; align-items: flex-start; }
+  .danger-box { background: rgba(255,94,122,0.06); border: 1px solid rgba(255,94,122,0.22); border-radius: 8px; padding: 0.8rem 1rem; margin: 0.75rem 0; font-size: 0.82rem; color: #ffb0be; display: flex; gap: 0.6rem; align-items: flex-start; }
+
+  .checklist { list-style: none; margin: 0.5rem 0; }
+  .checklist li { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.45rem 0; font-size: 0.85rem; border-bottom: 1px solid rgba(42,61,90,0.35); cursor: pointer; transition: color 0.15s; }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li.done { color: var(--green); text-decoration: line-through; opacity: 0.7; }
+  .check-box { width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 4px; flex-shrink: 0; margin-top: 0.1rem; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; transition: all 0.15s; background: var(--bg3); }
+  .checklist li.done .check-box { background: var(--green); border-color: var(--green); color: #000; }
+
+  .trouble-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 0.75rem; overflow: hidden; }
+  .trouble-header { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1.1rem; cursor: pointer; user-select: none; }
+  .trouble-header:hover { background: var(--surface2); }
+  .trouble-icon { font-size: 1rem; flex-shrink: 0; }
+  .trouble-title { font-size: 0.87rem; font-weight: 600; flex: 1; color: var(--amber); }
+  .trouble-chevron { color: var(--muted); transition: transform 0.2s; }
+  .trouble-card.open .trouble-chevron { transform: rotate(90deg); }
+  .trouble-body { display: none; padding: 0 1.1rem 1.1rem; border-top: 1px solid var(--border); font-size: 0.84rem; line-height: 1.7; color: #c2cfe0; }
+  .trouble-card.open .trouble-body { display: block; }
+
+  .kc-question { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem 1.25rem; margin-bottom: 0.85rem; }
+  .kc-q { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem; }
+  .kc-options { list-style: none; }
+  .kc-options li { display: flex; align-items: center; gap: 0.6rem; font-size: 0.83rem; padding: 0.45rem 0.75rem; border-radius: 6px; cursor: pointer; transition: background 0.15s; margin-bottom: 0.3rem; border: 1px solid transparent; }
+  .kc-options li:hover { background: var(--surface2); }
+  .kc-options li.correct { background: rgba(0,229,160,0.1); border-color: rgba(0,229,160,0.3); color: var(--green); }
+  .kc-options li.wrong   { background: rgba(255,94,122,0.08); border-color: rgba(255,94,122,0.25); color: var(--red); }
+  .kc-radio { width:16px; height:16px; border:2px solid var(--border); border-radius:50%; flex-shrink:0; transition:all 0.15s; }
+  .kc-options li.correct .kc-radio { background: var(--green); border-color: var(--green); }
+  .kc-options li.wrong   .kc-radio { background: var(--red);   border-color: var(--red); }
+
+  /* network type cards */
+  .net-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin: 0.85rem 0; }
+  .net-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem; }
+  .net-card.highlight { border-color: rgba(0,229,160,0.4); background: rgba(0,229,160,0.04); }
+  .net-card-title { font-size: 0.8rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .net-card-sub   { font-size: 0.73rem; color: var(--muted); line-height: 1.5; }
+
+  /* manual steps counter */
+  .step-counter { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.85rem 0; }
+  .sc-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 0.45rem 0.75rem; font-size: 0.78rem; display: flex; align-items: center; gap: 0.4rem; }
+  .sc-num { background: var(--amber); color: #000; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; flex-shrink: 0; }
+
+  .roadmap { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-top: 1rem; }
+  .roadmap-title { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; }
+  .rm-week { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.6rem 0; border-bottom: 1px solid rgba(42,61,90,0.4); }
+  .rm-week:last-child { border-bottom: none; }
+  .rm-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 0.35rem; flex-shrink: 0; }
+  .rm-dot.done    { background: var(--green); }
+  .rm-dot.active  { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+  .rm-dot.upcoming { background: var(--border); }
+  .rm-label { font-size: 0.8rem; font-weight: 600; }
+  .rm-desc  { font-size: 0.73rem; color: var(--muted); }
+
+  .ghp-badge { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; padding: 0.2rem 0.6rem; background: rgba(180,110,245,0.12); border: 1px solid rgba(180,110,245,0.3); color: var(--advanced); border-radius: 20px; }
+
+  a { color: var(--accent); }
+  a:hover { text-decoration: underline; }
+  strong { color: var(--text); font-weight: 600; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 720px) {
+    .lab-layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .lab-hero, .lab-layout { padding: 1.5rem 1rem; }
+    .net-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── IMAGE PLACEHOLDER ── */
+  .img-ph {
+    border: 2px dashed rgba(255,183,64,0.22);
+    border-radius: 8px;
+    background: rgba(255,183,64,0.025);
+    padding: 0.8rem 1.1rem;
+    margin: 0.85rem 0;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+  .img-ph-icon { font-size: 1.2rem; flex-shrink: 0; line-height: 1.2; }
+  .img-ph-label { font-size: 0.67rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--amber); margin-bottom: 0.18rem; }
+  .img-ph-desc  { font-size: 0.79rem; color: var(--muted); line-height: 1.5; }
+</style>
+</head>
+<body class="pace-beginner">
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <span class="lab-badge">Lab 2.2</span>
+      <span class="header-title">Docker Networking</span>
+    </div>
+    <div class="pace-bar">
+      <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner')">🌱 Beginner</button>
+      <button class="pace-btn" data-pace="average"  onclick="setPace('average')">⚡ Average</button>
+      <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced')">🚀 Advanced</button>
+    </div>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<div class="lab-hero">
+  <div class="lab-hero-inner">
+    <div class="lab-crumb">Week 2 <span>›</span> Lab 2.2</div>
+    <h1>Docker Networking</h1>
+    <p style="color:var(--muted);font-size:0.88rem;margin-top:0.4rem">Run <strong style="color:var(--green)">multiple containers</strong>, create a shared network, and make them <strong style="color:var(--amber)">talk to each other by name</strong> — no IP addresses needed.</p>
+    <div class="lab-meta-row">
+      <div class="meta-chip">⏱ <strong>60 min</strong> &nbsp;Duration</div>
+      <div class="meta-chip">🌐 <strong>Docker Networks</strong> &nbsp;Bridge + DNS</div>
+      <div class="meta-chip">📋 <strong>5 Parts</strong> &nbsp;10 Steps</div>
+      <div class="meta-chip">🐳 <strong>nginx + Redis</strong> &nbsp;Two Containers</div>
+      <div class="meta-chip"><span class="ghp-badge">🐙 GitHub Pages Ready</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LAYOUT ── -->
+<div class="lab-layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-title">Lab Navigation</div>
+    <ul class="sidebar-nav">
+      <li class="part-divider">Overview</li>
+      <li><a href="#overview" class="active">📋 Lab Overview</a></li>
+      <li><a href="#objectives">🎯 Objectives</a></li>
+      <li class="part-divider">Part 1 · Network Types</li>
+      <li><a href="#step1">Step 1 · docker network ls</a></li>
+      <li><a href="#step2">Step 2 · Default vs Custom</a></li>
+      <li class="part-divider">Part 2 · Custom Network</li>
+      <li><a href="#step3">Step 3 · Create cloudeats-net</a></li>
+      <li><a href="#step4">Step 4 · Run Menu Container</a></li>
+      <li class="part-divider">Part 3 · Add Redis</li>
+      <li><a href="#step5">Step 5 · Run Redis Container</a></li>
+      <li><a href="#step6">Step 6 · Inspect the Network</a></li>
+      <li class="part-divider">Part 4 · Communication</li>
+      <li><a href="#step7">Step 7 · Ping by Name</a></li>
+      <li><a href="#step8">Step 8 · Isolation Demo</a></li>
+      <li class="part-divider">Part 5 · Reflect &amp; Save</li>
+      <li><a href="#step9">Step 9 · Count the Steps</a></li>
+      <li><a href="#step10">Step 10 · Git Commit</a></li>
+      <li class="part-divider">Wrap-Up</li>
+      <li><a href="#checklist">✅ Checklist</a></li>
+      <li><a href="#troubleshoot">🔧 Troubleshoot</a></li>
+      <li><a href="#knowledgecheck">🧠 Knowledge Check</a></li>
+    </ul>
+    <div class="progress-box">
+      <div class="progress-title">Your Progress</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progressBar" style="width:0%"></div>
+      </div>
+      <div class="progress-label"><span id="progressCount">0</span> / 10 items done</div>
+    </div>
+  </aside>
+
+  <main class="lab-content">
+
+    <!-- ═══════════ OVERVIEW ═══════════ -->
+    <section id="overview">
+      <div class="part-header">
+        <div class="part-pill">Overview</div>
+        <div class="part-title">Lab Overview &amp; Scenario</div>
+      </div>
+      <div class="step open" style="cursor:default;">
+        <div class="step-body" style="display:block;padding:1.1rem 1.25rem;">
+          <p style="margin-bottom:0.85rem">
+            In Lab 2.1 you ran <em>one</em> container — the menu. But real applications are never one container. CloudEats needs a web server <em>and</em> a cache, and eventually a database too. This lab answers the question: <strong>how do containers talk to each other?</strong>
+          </p>
+          <p style="margin-bottom:0.85rem">
+            You'll discover that Docker containers are isolated by default — they can't reach each other just because they're on the same machine. Then you'll create a <strong>custom bridge network</strong> and connect both containers to it. Once on the same network, any container can reach any other using just its <strong>container name as a hostname</strong>. No IP addresses needed.
+          </p>
+
+          <div class="warning">
+            <span>⚠️</span>
+            <span><strong>Prerequisite:</strong> Lab 2.1 complete — you should have the <code style="font-family:'Fira Code',monospace;font-size:0.85em">cloudeats-menu:v1.0</code> image on your machine. Confirm with <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker images | grep cloudeats</code>.</span>
+          </div>
+
+          <div class="pace-hint beginner">
+            🌱 <strong>Beginner tip:</strong> The big idea today is simple: containers on the <em>same Docker network</em> can find each other by name. Like houses on the same street — you can visit your neighbour by name, not by memorising their GPS coordinates.
+          </div>
+          <div class="pace-hint average">
+            ⚡ <strong>Average tip:</strong> Focus on the difference between the <em>default bridge</em> (legacy, no DNS) and <em>custom bridge</em> (has DNS). This distinction is why Docker Compose always creates a custom network automatically — it's not optional for modern multi-service apps.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 <strong>Advanced tip:</strong> Docker uses embedded DNS (127.0.0.11) for service discovery on custom networks. Container names resolve to their internal IP addresses. Try <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker exec menu cat /etc/resolv.conf</code> after connecting to a custom network — you'll see the DNS server entry.
+          </div>
+
+          <!-- ── ARCHITECTURE DIAGRAM ── -->
+          <div style="margin-top:1.25rem;">
+            <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2)">
+              <!-- LEFT: Default Bridge — ISOLATED -->
+              <rect x="20" y="30" width="275" height="240" rx="8" fill="rgba(255,94,122,0.03)" stroke="rgba(255,94,122,0.25)" stroke-width="1.5"/>
+              <text x="157" y="52" font-size="9.5" font-family="Sora,sans-serif" fill="var(--red)" text-anchor="middle" font-weight="700">DEFAULT BRIDGE — No DNS</text>
+              <!-- Container A -->
+              <rect x="38" y="65" width="108" height="80" rx="7" fill="rgba(0,200,255,0.05)" stroke="rgba(0,200,255,0.3)" stroke-width="1.5"/>
+              <text x="92" y="90" font-size="20" text-anchor="middle">🌐</text>
+              <text x="92" y="110" font-size="8.5" font-family="Sora,sans-serif" fill="var(--accent)" text-anchor="middle" font-weight="700">menu</text>
+              <text x="92" y="123" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">172.17.0.2</text>
+              <!-- Container B -->
+              <rect x="168" y="65" width="108" height="80" rx="7" fill="rgba(255,183,64,0.05)" stroke="rgba(255,183,64,0.3)" stroke-width="1.5"/>
+              <text x="222" y="90" font-size="20" text-anchor="middle">🔴</text>
+              <text x="222" y="110" font-size="8.5" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle" font-weight="700">redis</text>
+              <text x="222" y="123" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">172.17.0.3</text>
+              <!-- X between them -->
+              <line x1="148" y1="105" x2="166" y2="105" stroke="var(--red)" stroke-width="2" stroke-dasharray="4 3"/>
+              <text x="157" y="101" font-size="14" fill="var(--red)" text-anchor="middle">✕</text>
+              <!-- Error text -->
+              <text x="157" y="165" font-size="9" font-family="Fira Code,monospace" fill="var(--red)" text-anchor="middle">ping "redis" → fails</text>
+              <text x="157" y="180" font-size="8.5" font-family="Sora,sans-serif" fill="#6b7fa0" text-anchor="middle">No DNS — must use raw IP</text>
+              <!-- Bridge bar -->
+              <rect x="50" y="200" width="215" height="18" rx="4" fill="rgba(255,94,122,0.1)" stroke="rgba(255,94,122,0.25)"/>
+              <text x="157" y="213" font-size="8.5" font-family="Sora,sans-serif" fill="var(--red)" text-anchor="middle">docker0 (default bridge)</text>
+              <text x="157" y="255" font-size="8" font-family="Sora,sans-serif" fill="#3a4d6a" text-anchor="middle">IPs can change on restart!</text>
+
+              <!-- RIGHT: Custom Network — CONNECTED -->
+              <rect x="345" y="30" width="275" height="240" rx="8" fill="rgba(0,229,160,0.03)" stroke="rgba(0,229,160,0.25)" stroke-width="1.5"/>
+              <text x="483" y="52" font-size="9.5" font-family="Sora,sans-serif" fill="var(--green)" text-anchor="middle" font-weight="700">CUSTOM BRIDGE — DNS Enabled ✓</text>
+              <!-- Container A -->
+              <rect x="363" y="65" width="108" height="80" rx="7" fill="rgba(0,200,255,0.05)" stroke="rgba(0,200,255,0.3)" stroke-width="1.5"/>
+              <text x="417" y="90" font-size="20" text-anchor="middle">🌐</text>
+              <text x="417" y="110" font-size="8.5" font-family="Sora,sans-serif" fill="var(--accent)" text-anchor="middle" font-weight="700">menu</text>
+              <text x="417" y="123" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">hostname: menu</text>
+              <!-- Container B -->
+              <rect x="493" y="65" width="108" height="80" rx="7" fill="rgba(255,183,64,0.05)" stroke="rgba(255,183,64,0.3)" stroke-width="1.5"/>
+              <text x="547" y="90" font-size="20" text-anchor="middle">🔴</text>
+              <text x="547" y="110" font-size="8.5" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle" font-weight="700">redis</text>
+              <text x="547" y="123" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">hostname: redis</text>
+              <!-- Connected arrow -->
+              <line x1="473" y1="105" x2="491" y2="105" stroke="var(--green)" stroke-width="2"/>
+              <text x="482" y="101" font-size="14" fill="var(--green)" text-anchor="middle">↔</text>
+              <!-- Success text -->
+              <text x="483" y="165" font-size="9" font-family="Fira Code,monospace" fill="var(--green)" text-anchor="middle">ping "redis" → ✓</text>
+              <text x="483" y="180" font-size="8.5" font-family="Sora,sans-serif" fill="#6b7fa0" text-anchor="middle">Name = hostname on the network</text>
+              <!-- Network bar -->
+              <rect x="375" y="200" width="215" height="18" rx="4" fill="rgba(0,229,160,0.08)" stroke="rgba(0,229,160,0.25)"/>
+              <text x="483" y="213" font-size="8.5" font-family="Sora,sans-serif" fill="var(--green)" text-anchor="middle">cloudeats-net (custom bridge)</text>
+              <!-- DNS label -->
+              <rect x="430" y="225" width="106" height="16" rx="4" fill="rgba(0,200,255,0.08)" stroke="rgba(0,200,255,0.2)"/>
+              <text x="483" y="237" font-size="8" font-family="Sora,sans-serif" fill="var(--accent)" text-anchor="middle">🔍 Docker DNS: 127.0.0.11</text>
+            </svg>
+            <p style="font-size:0.73rem;color:var(--muted);text-align:center;margin-top:0.4rem">Default bridge: containers are isolated (IP addresses only). Custom bridge: containers find each other by name via Docker's built-in DNS.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ OBJECTIVES ═══════════ -->
+    <section id="objectives">
+      <div class="part-header">
+        <div class="part-pill">Goals</div>
+        <div class="part-title">Learning Objectives</div>
+      </div>
+      <div class="step open" style="cursor:default;">
+        <div class="step-body" style="display:block;padding:1.1rem 1.25rem;">
+          <ul class="substep-list">
+            <li><div class="substep-bullet">1</div><div>List and distinguish Docker network types: bridge, host, and none</div></li>
+            <li><div class="substep-bullet">2</div><div>Explain why the default bridge network does not support container-name DNS resolution</div></li>
+            <li><div class="substep-bullet">3</div><div>Create a custom Docker bridge network and attach containers to it</div></li>
+            <li><div class="substep-bullet">4</div><div>Run a second container (Redis) and connect it to the same network as the web container</div></li>
+            <li><div class="substep-bullet">5</div><div>Verify container-to-container communication using <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker exec</code> and ping by container name</div></li>
+            <li><div class="substep-bullet">6</div><div>Demonstrate network isolation — containers on different networks cannot communicate</div></li>
+            <li><div class="substep-bullet">7</div><div>Articulate why Docker Compose (Week 3) eliminates the manual networking steps</div></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ PART 1 ═══════════ -->
+    <section id="part1">
+      <div class="part-header">
+        <div class="part-pill">Part 1</div>
+        <div class="part-title">Docker Network Types</div>
+        <div class="part-time">⏱ 10 min</div>
+      </div>
+
+      <!-- ── EXPAND / COLLAPSE CONTROLS ── -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.85rem;padding:0.4rem 0;">
+        <span style="font-size:0.75rem;color:var(--muted)"><strong style="color:var(--text)">10 steps</strong> across 4 parts</span>
+        <div style="display:flex;gap:0.5rem">
+          <button onclick="expandAll()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--amber)';this.style.borderColor='var(--amber)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↓ Expand All</button>
+          <button onclick="collapseAll()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--muted)';this.style.borderColor='var(--muted)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↑ Collapse All</button>
+        </div>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="step" id="step1" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">1</div>
+          <div class="step-title">Explore Existing Networks</div>
+          <div class="step-why">See what Docker created automatically</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.6rem">Start by checking what networks Docker has created on your VM:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · docker network ls</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cc">docker</span> network ls
+
+<span class="cm"># Expected output:
+# NETWORK ID     NAME      DRIVER    SCOPE
+# a1b2c3d4e5f6   bridge    bridge    local
+# b2c3d4e5f6a1   host      host      local
+# c3d4e5f6a1b2   none      null      local</span></pre>
+          </div>
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div><div class="img-ph-label">Screenshot · docker network ls</div><div class="img-ph-desc">Terminal showing 3-row table: <code>bridge</code> (DRIVER: bridge), <code>host</code> (DRIVER: host), <code>none</code> (DRIVER: null) — all SCOPE: local</div></div>
+          </div>
+
+          <p style="margin-top:0.75rem;margin-bottom:0.6rem">Docker creates these three networks automatically on every installation:</p>
+          <div class="net-grid">
+            <div class="net-card">
+              <div class="net-card-title" style="color:var(--amber)">🌉 bridge</div>
+              <div class="net-card-sub">The default. Containers get a private IP but <strong style="color:#e8edf5">cannot find each other by name</strong>. Used when you run <code style="font-family:'Fira Code',monospace">docker run</code> without a <code>--network</code> flag.</div>
+            </div>
+            <div class="net-card">
+              <div class="net-card-title" style="color:var(--muted)">🖥️ host</div>
+              <div class="net-card-sub">Container shares the host's network directly — no isolation, no port mapping. Rarely used in production. Not available on Mac/Windows.</div>
+            </div>
+            <div class="net-card">
+              <div class="net-card-title" style="color:var(--muted)">🚫 none</div>
+              <div class="net-card-sub">Completely isolated — no network at all. For security-sensitive batch jobs that must never touch the network.</div>
+            </div>
+          </div>
+
+          <div class="pace-hint beginner">
+            🌱 Bridge = private street where every house (container) has a number (IP), but neighbours can only visit using the exact number — not a name. We'll fix that with a custom network.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 Run <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker network inspect bridge</code> — subnet is typically <code>172.17.0.0/16</code>, bridged via Linux device <code>docker0</code>. Verify with <code>ip link show docker0</code>.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step" id="step2" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">2</div>
+          <div class="step-title">Why Default Bridge Breaks Name Resolution</div>
+          <div class="step-why">The core problem we're about to solve</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.75rem">Let's prove the problem first. Start two containers on the default bridge and try to ping one from the other:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Demonstrate the Problem</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># First, stop any container named 'menu' from Lab 2.1</span>
+<span class="cc">docker</span> stop menu 2>/dev/null; <span class="cc">docker</span> rm menu 2>/dev/null
+
+<span class="cm"># Start menu on the DEFAULT bridge (no --network flag)</span>
+<span class="cc">docker</span> run -d -p 3000:80 --name menu cloudeats-menu:v1.0
+
+<span class="cm"># Start a simple alpine container to test from</span>
+<span class="cc">docker</span> run -d --name tester alpine sleep 600
+
+<span class="cm"># Try to ping 'menu' from tester by NAME</span>
+<span class="cc">docker</span> exec tester ping -c 2 menu
+<span class="cm"># Result: ping: bad address 'menu'  ← NAME RESOLUTION FAILS!</span>
+
+<span class="cm"># Clean up the tester</span>
+<span class="cc">docker</span> stop tester && <span class="cc">docker</span> rm tester</pre>
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div><div class="img-ph-label">Screenshot · DNS Failure on Default Bridge</div><div class="img-ph-desc">Terminal output of <code>docker exec tester ping -c 2 menu</code> — showing error message <code>ping: bad address 'menu'</code></div></div>
+          </div>
+
+          <div class="danger-box">
+            <span>❌</span>
+            <div><strong>Expected failure!</strong> The default bridge has no DNS. Containers can only communicate via raw IP addresses (e.g. <code style="font-family:'Fira Code',monospace;font-size:0.85em">172.17.0.2</code>), which change every time a container restarts.</div>
+          </div>
+
+          <div class="why-box">
+            <span>💡</span>
+            <span><strong>The fix:</strong> A <em>custom bridge network</em> includes Docker's built-in DNS — container names automatically become hostnames. This is the same model Docker Compose uses, which is why we're learning it by hand first.</span>
+          </div>
+
+          <div class="pace-hint beginner">
+            🌱 Default bridge is a legacy feature. <strong>Always use a custom network</strong> for any multi-container application.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 The legacy <code>--link</code> flag was Docker's workaround — injecting hostname entries into <code>/etc/hosts</code>. It's deprecated and one-way only. Custom networks with embedded DNS (added in Docker 1.9, 2015) replaced it. Never use <code>--link</code>.
+          </div>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Clean Up</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Remove the menu container — we'll recreate it on our custom network</span>
+<span class="cc">docker</span> stop menu 2>/dev/null; <span class="cc">docker</span> rm menu 2>/dev/null
+<span class="cc">docker</span> ps  <span class="cm"># Should show: no containers running</span></pre>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════ PART 2 ═══════════ -->
+    <section id="part2">
+      <div class="part-header">
+        <div class="part-pill">Part 2</div>
+        <div class="part-title">Create a Custom Network</div>
+        <div class="part-time">⏱ 15 min</div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step" id="step3" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">3</div>
+          <div class="step-title">Create cloudeats-net</div>
+          <div class="step-why">A private network for CloudEats containers</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Create Network</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Create a custom bridge network named cloudeats-net</span>
+<span class="cc">docker</span> network create cloudeats-net
+
+<span class="cm"># Output: a long ID like: 7d3a9c8f1b2e... (that's your network ID)</span>
+
+<span class="cm"># Verify it was created</span>
+<span class="cc">docker</span> network ls
+<span class="cm"># Now you'll see cloudeats-net listed with DRIVER: bridge</span>
+
+<span class="cm"># Inspect the new network</span>
+<span class="cc">docker</span> network inspect cloudeats-net
+<span class="cm"># Look for: "Subnet": "172.18.0.0/16" (or similar)
+# and "Containers": {}  ← empty for now</span></pre>
+          </div>
+
+          <div class="pace-hint beginner">
+            🌱 <strong>What you just created:</strong> A virtual private network that only Docker containers can join. Think of it like creating a new private group chat — no one is in it yet, but anyone you invite can talk to everyone else in the group.
+          </div>
+          <div class="pace-hint average">
+            ⚡ Notice the subnet is <code>172.18.0.0/16</code> — different from the default bridge at <code>172.17.0.0/16</code>. Docker automatically assigns the next available subnet. You can specify a custom subnet with <code>--subnet 192.168.100.0/24</code> if needed for specific IP planning.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 You can also specify the driver: <code>docker network create --driver bridge cloudeats-net</code>. Other drivers include <code>overlay</code> (Docker Swarm, multi-host networking) and <code>macvlan</code> (each container gets a real MAC address on the physical network). For this course we always use bridge.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step" id="step4" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">4</div>
+          <div class="step-title">Run the Menu Container on the Network</div>
+          <div class="step-why">Connect your first service</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.6rem">Run the menu container and attach it to <code style="font-family:'Fira Code',monospace;font-size:0.85em">cloudeats-net</code> with the <code style="font-family:'Fira Code',monospace;font-size:0.85em">--network</code> flag:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Run on Custom Network</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cc">docker</span> run \
+  -d \
+  -p 3000:80 \
+  --name menu \
+  --network cloudeats-net \
+  cloudeats-menu:v1.0
+
+<span class="cm"># Verify it's running on the right network</span>
+<span class="cc">docker</span> inspect menu | grep -A 5 <span class="cv">"Networks"</span>
+<span class="cm"># Should show: "cloudeats-net": { ... }</span></pre>
+          </div>
+
+          <ul class="substep-list" style="margin-top:0.75rem">
+            <li><div class="substep-bullet">-d</div><div>Detached — runs in background</div></li>
+            <li><div class="substep-bullet">-p</div><div><code style="font-family:'Fira Code',monospace;font-size:0.85em">3000:80</code> — still maps host port 3000 to container port 80 for browser access</div></li>
+            <li><div class="substep-bullet">--name</div><div><code style="font-family:'Fira Code',monospace;font-size:0.85em">menu</code> — this name becomes the container's <strong>DNS hostname</strong> on the network</div></li>
+            <li><div class="substep-bullet">--network</div><div><code style="font-family:'Fira Code',monospace;font-size:0.85em">cloudeats-net</code> — join our custom network (DNS enabled)</div></li>
+          </ul>
+
+          <div class="pace-hint beginner">
+            🌱 Key insight: <strong>the container name you give with <code>--name</code> becomes its hostname</strong> on the Docker network. Other containers will reach it by typing <code>menu</code> — like a domain name but only inside your private network.
+          </div>
+
+          <div class="checkpoint">
+            <span class="checkpoint-icon">⏱</span>
+            <div class="checkpoint-text">
+              <strong>Checkpoint · 25 min mark</strong>
+              Network created, menu container running. Browser still shows the menu at <code style="font-family:'Fira Code',monospace;font-size:0.85em">http://[VM-IP]:3000/html/index.html</code> — confirm this.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════ PART 3 ═══════════ -->
+    <section id="part3">
+      <div class="part-header">
+        <div class="part-pill">Part 3</div>
+        <div class="part-title">Add Redis to the Network</div>
+        <div class="part-time">⏱ 15 min</div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="step" id="step5" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">5</div>
+          <div class="step-title">Run the Redis Container</div>
+          <div class="step-why">Add a second service to the CloudEats stack</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <div class="why-box">
+            <span>🔴</span>
+            <div><strong>What is Redis?</strong> Redis is an in-memory key-value store — an extremely fast database used for caching (temporarily storing data to speed up responses). CloudEats will use it in <strong>Week 4</strong> for the shopping cart. Today you just need to know it's a second service that needs to talk to the web server.</div>
+          </div>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Run Redis</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Run Redis on the same network
+# redis:alpine is only ~30MB — tiny!</span>
+<span class="cc">docker</span> run \
+  -d \
+  --name redis \
+  --network cloudeats-net \
+  redis:alpine
+
+<span class="cm"># Note: NO -p flag — we don't need Redis on the host
+# It's only needed internally by other containers</span>
+
+<span class="cm"># Confirm both containers are running</span>
+<span class="cc">docker</span> ps
+<span class="cm"># Should show: menu (port 3000) and redis (no host ports)</span></pre>
+          </div>
+
+          <div class="pace-hint beginner">
+            🌱 <strong>Notice: no -p flag for Redis.</strong> We don't want Redis accessible from outside — only from within the Docker network. This is good security practice. The browser needs to reach <code>menu</code> (so it needs -p). But only <code>menu</code> talks to <code>redis</code>, and they're both inside the same private network.
+          </div>
+          <div class="pace-hint average">
+            ⚡ Redis defaults to port <code>6379</code>. Without <code>-p 6379:6379</code>, this port is only reachable from within <code>cloudeats-net</code>. This is the <strong>principle of least exposure</strong> — only expose what needs to be publicly accessible. In cloud terms, this is like putting Redis in a private subnet with no public IP.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 Redis's official image includes a health check that runs <code>redis-cli ping</code> every 30 seconds. You can see it with <code>docker inspect redis | grep -A 10 Health</code>. In Week 7 we'll add our own HEALTHCHECK instructions to Dockerfiles and use them in Docker Compose to control start-up order.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 6 -->
+      <div class="step" id="step6" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">6</div>
+          <div class="step-title">Inspect the Network</div>
+          <div class="step-why">Confirm both containers are connected</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Inspect Network</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Inspect the cloudeats-net network</span>
+<span class="cc">docker</span> network inspect cloudeats-net
+
+<span class="cm"># Look for the "Containers" section — you should see both:
+# "menu": {
+#   "IPv4Address": "172.18.0.2/16",
+#   ...
+# },
+# "redis": {
+#   "IPv4Address": "172.18.0.3/16",
+#   ...
+# }</span></pre>
+          </div>
+          <p style="margin-top:0.75rem">For a quick view, use this one-liner:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Quick Network Summary</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># List container names and IPs on cloudeats-net</span>
+<span class="cc">docker</span> network inspect cloudeats-net \
+  --format <span class="cv">'{{range $k, $v := .Containers}}{{$v.Name}}: {{$v.IPv4Address}}{{"\n"}}{{end}}'</span>
+
+<span class="cm"># Expected output:
+# menu:  172.18.0.2/16
+# redis: 172.18.0.3/16</span></pre>
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div><div class="img-ph-label">Screenshot · Network Inspect Output</div><div class="img-ph-desc"><code>docker network inspect cloudeats-net</code> showing the "Containers" section with both <code>menu</code> (172.18.0.2) and <code>redis</code> (172.18.0.3) listed</div></div>
+          </div>
+
+          <div class="pace-hint beginner">
+            🌱 Both containers have IPs, but you'll never need to type them. On a custom network, <code>menu</code> and <code>redis</code> are the hostnames — Docker handles the rest.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 IPs in <code>172.18.0.0/16</code> change on container recreation — never hardcode them. Docker Compose goes further: service key names (not container names) become DNS entries, letting you rename containers without changing app config.
+          </div>
+
+          <div class="checkpoint">
+            <span class="checkpoint-icon">⏱</span>
+            <div class="checkpoint-text">
+              <strong>Checkpoint · 40 min mark</strong>
+              <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker network inspect cloudeats-net</code> shows both <code>menu</code> and <code>redis</code> in the Containers section.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════ PART 4 ═══════════ -->
+    <section id="part4">
+      <div class="part-header">
+        <div class="part-pill">Part 4</div>
+        <div class="part-title">Container-to-Container Communication</div>
+        <div class="part-time">⏱ 15 min</div>
+      </div>
+
+      <!-- Step 7 -->
+      <div class="step" id="step7" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">7</div>
+          <div class="step-title">Ping by Container Name</div>
+          <div class="step-why">Prove that DNS is working</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.6rem">Use <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker exec</code> to run commands <em>inside</em> the running <code>menu</code> container:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Test from Inside menu Container</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Install ping inside the nginx:alpine container (it's minimal)</span>
+<span class="cc">docker</span> exec menu apk add --no-cache iputils 2>/dev/null || true
+
+<span class="cm"># Ping redis by NAME from inside the menu container</span>
+<span class="cc">docker</span> exec menu ping -c 3 redis
+
+<span class="cm"># Expected output:
+# PING redis (172.18.0.3): 56 data bytes
+# 64 bytes from 172.18.0.3: seq=0 ttl=64 time=0.123 ms
+# 64 bytes from 172.18.0.3: seq=1 ttl=64 time=0.098 ms
+# 64 bytes from 172.18.0.3: seq=2 ttl=64 time=0.105 ms
+#
+# ✅ Docker DNS resolved "redis" to 172.18.0.3 automatically!</span></pre>
+          </div>
+
+          <p style="margin-top:0.75rem;margin-bottom:0.5rem">Now test connecting to Redis directly from the menu container:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Connect to Redis via Name</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Connect to Redis from inside the menu container
+# redis-cli is in the redis image, not nginx — use the redis container</span>
+<span class="cc">docker</span> exec -it redis redis-cli -h redis
+
+<span class="cm"># You'll see the Redis prompt: redis:6379></span>
+<span class="cm"># Try these commands:</span>
+SET greeting <span class="cv">"Hello from CloudEats!"</span>
+GET greeting
+<span class="cm"># Output: "Hello from CloudEats!"</span>
+
+PING
+<span class="cm"># Output: PONG</span>
+
+<span class="cm"># Exit Redis CLI</span>
+exit</pre>
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div><div class="img-ph-label">Screenshot · Successful Ping by Name</div><div class="img-ph-desc"><code>docker exec menu ping -c 3 redis</code> output — showing <code>PING redis (172.18.0.x)</code> with 3 reply lines and round-trip times. Docker DNS resolved the name automatically.</div></div>
+          </div>
+
+          <p style="margin-top:0.75rem;margin-bottom:0.5rem">Now test Redis from inside its own container:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Connect to Redis via Name</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cc">docker</span> exec -it redis redis-cli -h redis
+
+<span class="cm"># redis:6379> prompt appears — try:</span>
+SET greeting <span class="cv">"Hello from CloudEats!"</span>
+GET greeting   <span class="cm"># → "Hello from CloudEats!"</span>
+PING           <span class="cm"># → PONG</span>
+exit</pre>
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div><div class="img-ph-label">Screenshot · redis-cli Session</div><div class="img-ph-desc">Terminal showing the <code>redis:6379&gt;</code> prompt, then <code>SET greeting "Hello from CloudEats!"</code> → <code>OK</code>, <code>GET greeting</code> → <code>"Hello from CloudEats!"</code>, <code>PING</code> → <code>PONG</code></div></div>
+          </div>
+
+          <div class="pace-hint beginner">
+            🌱 The container name (<code>redis</code>) is the hostname on the network. In Week 4, the shopping cart Node.js app will connect using exactly <code>redis://redis:6379</code> — same idea.
+          </div>
+          <div class="pace-hint average">
+            ⚡ Connection string pattern: <code style="font-family:'Fira Code',monospace;font-size:0.85em">redis://redis:6379</code> — hostname = container name, port = service's internal port. App code never changes between dev and production; only the container names need to match.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 Docker's embedded DNS at <code>127.0.0.11:53</code> auto-updates when a container is replaced (same name, new IP). Run <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker exec menu cat /etc/resolv.conf</code> to see it — this is automatic service discovery.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 8 -->
+      <div class="step" id="step8" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">8</div>
+          <div class="step-title">Network Isolation Demo</div>
+          <div class="step-why">Containers on different networks can't communicate</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.6rem">Create a <em>second</em> network and run a container on it. Show that it cannot reach <code>redis</code>:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Isolation Demonstration</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Create a separate network (simulates a different service team)</span>
+<span class="cc">docker</span> network create isolated-net
+
+<span class="cm"># Run a container on the isolated network</span>
+<span class="cc">docker</span> run -d --name outsider \
+  --network isolated-net \
+  alpine sleep 300
+
+<span class="cm"># Try to ping redis from 'outsider' — should FAIL</span>
+<span class="cc">docker</span> exec outsider ping -c 2 redis
+<span class="cm"># Result: ping: bad address 'redis'  ← CANNOT SEE IT!</span>
+
+<span class="cm"># Try to ping menu from 'outsider' — should also FAIL</span>
+<span class="cc">docker</span> exec outsider ping -c 2 menu
+<span class="cm"># Result: ping: bad address 'menu'  ← ISOLATED!</span>
+
+<span class="cm"># Clean up the demo container and network</span>
+<span class="cc">docker</span> stop outsider && <span class="cc">docker</span> rm outsider
+<span class="cc">docker</span> network rm isolated-net</pre>
+          </div>
+
+          <div class="amber-box">
+            <span>🔒</span>
+            <div><strong>This is a feature, not a bug.</strong> Network isolation means a hacked container on one network cannot access services on another network. In production, you might have: <code>frontend-net</code> (web + cache), <code>backend-net</code> (API + database), and only the API container on <em>both</em> networks as the bridge between them.</div>
+          </div>
+
+          <div class="pace-hint beginner">
+            🌱 <strong>Summary so far:</strong> Containers on the <em>same</em> custom network can talk by name ✅. Containers on <em>different</em> networks cannot see each other ✅. You control what can communicate with what, just by choosing which network to put each container on.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 A container can actually be connected to <em>multiple</em> networks simultaneously: <code style="font-family:'Fira Code',monospace;font-size:0.85em">docker network connect backend-net api-container</code>. This makes the <code>api-container</code> reachable from both networks. This is how an API service acts as a bridge between the frontend and database layers — without exposing the database to the frontend network.
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════ PART 5 ═══════════ -->
+    <section id="part5">
+      <div class="part-header">
+        <div class="part-pill">Part 5</div>
+        <div class="part-title">Reflect &amp; Save Your Work</div>
+        <div class="part-time">⏱ 10 min</div>
+      </div>
+
+      <!-- Step 9 -->
+      <div class="step" id="step9" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">9</div>
+          <div class="step-title">Count the Manual Steps</div>
+          <div class="step-why">Why Docker Compose exists</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.75rem">Let's count exactly what you had to do to get two containers talking:</p>
+
+          <div class="step-counter">
+            <div class="sc-item"><div class="sc-num">1</div>Build the menu image</div>
+            <div class="sc-item"><div class="sc-num">2</div>Create the network</div>
+            <div class="sc-item"><div class="sc-num">3</div>Run menu on network</div>
+            <div class="sc-item"><div class="sc-num">4</div>Pull Redis image</div>
+            <div class="sc-item"><div class="sc-num">5</div>Run Redis on network</div>
+            <div class="sc-item"><div class="sc-num">6</div>Verify both running</div>
+            <div class="sc-item"><div class="sc-num">7</div>Inspect network to confirm</div>
+          </div>
+
+          <p style="margin-top:0.85rem;margin-bottom:0.5rem">That's 7 manual steps. And when it comes to restarting, updating, or deploying to a new server, you repeat all 7. <strong>Now imagine 5 services: web, API, MySQL, Redis, MongoDB.</strong></p>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · What Week 3 Will Look Like</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># All 7 steps above become THIS in Docker Compose:</span>
+<span class="cc">docker-compose</span> up -d
+
+<span class="cm"># That's it. One command.
+# Networks created automatically.
+# Containers connected automatically.
+# Container names = DNS hostnames automatically.
+# Coming in Lab 3.1!</span></pre>
+          </div>
+
+          <div class="info-box">
+            <span>🚀</span>
+            <div><strong>What you learned today is the foundation for Docker Compose.</strong> Compose just automates exactly these steps: create network → run containers → attach to network → set names. The docker-compose.yml file you write in Week 3 is a description of what you just did by hand.</div>
+          </div>
+
+          <div class="pace-hint beginner">
+            🌱 Don't worry — you will NOT need to memorise all these manual commands once we learn Docker Compose. The goal of today was to understand <em>what Docker Compose does under the hood</em>. When you write <code>docker-compose up</code>, you now know <em>exactly what it's doing</em>.
+          </div>
+          <div class="pace-hint advanced">
+            🚀 Docker Compose also adds dependency management (<code>depends_on</code>), health-check-aware startup ordering, environment variable files (<code>.env</code>), named volumes, and resource limits — all things we'll use in Week 3. But none of it is magic. It all maps directly to the manual <code>docker network</code>, <code>docker run</code>, and <code>docker volume</code> commands you've now seen.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 10 -->
+      <div class="step" id="step10" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">10</div>
+          <div class="step-title">Git Commit</div>
+          <div class="step-why">Document your networking knowledge</div>
+          <div class="step-chevron">›</div>
+        </div>
+        <div class="step-body">
+          <p style="margin-bottom:0.6rem">There are no new files to commit this lab — the work was in Docker commands. But document what you did in your notes file:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Create Notes File</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cc">cd</span> ~/cloudeats-app
+
+<span class="cm"># Create a notes file documenting the networking setup</span>
+<span class="cc">mkdir</span> -p docs
+<span class="cc">cat</span> > docs/docker-networking-notes.md << <span class="cv">'EOF'</span>
+# Docker Networking — Lab 2.2 Notes
+
+## Network Setup
+docker network create cloudeats-net
+
+## Running Services
+docker run -d -p 3000:80 --name menu --network cloudeats-net cloudeats-menu:v1.0
+docker run -d          --name redis --network cloudeats-net redis:alpine
+
+## Key Commands
+docker network ls                        # list all networks
+docker network inspect cloudeats-net     # see connected containers
+docker exec &lt;name&gt; ping &lt;other-name&gt;    # test connectivity
+
+## What Docker Compose replaces (Lab 3.1):
+# All of the above → docker-compose up -d
+EOF</pre>
+          </div>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Git Commit</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cc">git</span> add docs/docker-networking-notes.md
+<span class="cc">git</span> commit -m <span class="cv">"Lab 2.2: Docker networking — multiple containers
+
+- Created cloudeats-net custom bridge network
+- Connected menu (nginx) and redis containers by name
+- Demonstrated DNS resolution: ping by container name works
+- Showed network isolation between separate Docker networks
+- Documented manual steps that Docker Compose will automate"</span>
+
+<span class="cc">git</span> log --oneline
+<span class="cm"># Expected: 3 commits (Lab 1.1, Lab 2.1, Lab 2.2)</span></pre>
+          </div>
+
+          <p style="margin-top:0.75rem;margin-bottom:0.5rem">Leave both containers running for reference. When you're done exploring:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Clean Up (Optional)</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Stop and remove containers</span>
+<span class="cc">docker</span> stop menu redis
+<span class="cc">docker</span> rm menu redis
+
+<span class="cm"># Remove the network</span>
+<span class="cc">docker</span> network rm cloudeats-net
+
+<span class="cm"># Verify everything is gone</span>
+<span class="cc">docker</span> ps -a
+<span class="cc">docker</span> network ls</pre>
+          </div>
+
+          <div class="checkpoint">
+            <span class="checkpoint-icon">⏱</span>
+            <div class="checkpoint-text">
+              <strong>Checkpoint · 60 min mark</strong>
+              Notes file committed. <code style="font-family:'Fira Code',monospace;font-size:0.85em">git log --oneline</code> shows Lab 1.1, Lab 2.1, and Lab 2.2 commits. Week 2 complete!
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════ CHECKLIST ═══════════ -->
+    <section id="checklist">
+      <div class="part-header">
+        <div class="part-pill">Wrap-Up</div>
+        <div class="part-title">Completion Checklist</div>
+      </div>
+      <div class="step open" style="cursor:default;">
+        <div class="step-body" style="display:block;padding:1.1rem 1.25rem;">
+          <p style="margin-bottom:0.85rem;color:var(--muted);font-size:0.85rem">Click each item to mark complete. All 10 must be ticked before moving to Week 3.</p>
+          <ul class="checklist" id="checklistItems">
+            <li onclick="toggleCheck(this)"><div class="check-box"></div><code style="font-family:'Fira Code',monospace;font-size:0.85em">docker network ls</code> shows bridge, host, and none networks</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div>Demonstrated that containers on the default bridge CANNOT ping each other by name</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div>Created <code style="font-family:'Fira Code',monospace;font-size:0.85em">cloudeats-net</code> custom bridge network</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div>Ran <code style="font-family:'Fira Code',monospace;font-size:0.85em">menu</code> container on <code style="font-family:'Fira Code',monospace;font-size:0.85em">cloudeats-net</code> with <code>--network</code> flag</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div>Ran <code style="font-family:'Fira Code',monospace;font-size:0.85em">redis:alpine</code> container on <code style="font-family:'Fira Code',monospace;font-size:0.85em">cloudeats-net</code></li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div><code style="font-family:'Fira Code',monospace;font-size:0.85em">docker network inspect cloudeats-net</code> shows both containers</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div>Successfully pinged <code style="font-family:'Fira Code',monospace;font-size:0.85em">redis</code> by name from inside the <code style="font-family:'Fira Code',monospace;font-size:0.85em">menu</code> container</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div>Used <code style="font-family:'Fira Code',monospace;font-size:0.85em">redis-cli</code> to SET and GET a value in Redis</li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div>Demonstrated that a container on <code style="font-family:'Fira Code',monospace;font-size:0.85em">isolated-net</code> CANNOT reach <code style="font-family:'Fira Code',monospace;font-size:0.85em">redis</code> or <code style="font-family:'Fira Code',monospace;font-size:0.85em">menu</code></li>
+            <li onclick="toggleCheck(this)"><div class="check-box"></div>Committed notes file to Git — can explain in one sentence why Docker Compose replaces manual networking</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ TROUBLESHOOT ═══════════ -->
+    <section id="troubleshoot">
+      <div class="part-header">
+        <div class="part-pill">Help</div>
+        <div class="part-title">Troubleshooting</div>
+      </div>
+
+      <div class="trouble-card" onclick="toggleTrouble(this, event)">
+        <div class="trouble-header">
+          <span class="trouble-icon">🔴</span>
+          <div class="trouble-title">docker network create fails: "network with name cloudeats-net already exists"</div>
+          <div class="trouble-chevron">›</div>
+        </div>
+        <div class="trouble-body">
+          <p style="margin-bottom:0.5rem">From a previous session. Either reuse it or remove and recreate:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Fix</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Option A: Reuse it (check what's connected)</span>
+<span class="cc">docker</span> network inspect cloudeats-net
+
+<span class="cm"># Option B: Remove and recreate
+# Must disconnect all containers first</span>
+<span class="cc">docker</span> network disconnect cloudeats-net menu 2>/dev/null
+<span class="cc">docker</span> network disconnect cloudeats-net redis 2>/dev/null
+<span class="cc">docker</span> network rm cloudeats-net
+<span class="cc">docker</span> network create cloudeats-net</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="trouble-card" onclick="toggleTrouble(this, event)">
+        <div class="trouble-header">
+          <span class="trouble-icon">🔴</span>
+          <div class="trouble-title">ping: executable file not found in PATH (nginx container)</div>
+          <div class="trouble-chevron">›</div>
+        </div>
+        <div class="trouble-body">
+          <p style="margin-bottom:0.5rem">The nginx:alpine image is minimal and doesn't include <code>ping</code>. Install it first, or use <code>wget</code> instead:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Fix</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Install ping inside the nginx container</span>
+<span class="cc">docker</span> exec menu apk add --no-cache iputils
+
+<span class="cm"># OR use wget to test HTTP connectivity</span>
+<span class="cc">docker</span> exec menu wget -qO- http://redis:6379 2>&1 | head -3
+<span class="cm"># Redis responds with an error message (not HTTP) — but the name resolved!</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="trouble-card" onclick="toggleTrouble(this, event)">
+        <div class="trouble-header">
+          <span class="trouble-icon">🔴</span>
+          <div class="trouble-title">redis-cli: command not found (when running from menu container)</div>
+          <div class="trouble-chevron">›</div>
+        </div>
+        <div class="trouble-body">
+          <p style="margin-bottom:0.5rem">The <code>redis-cli</code> tool is only available in the <code>redis</code> container — not in the nginx one. Use <code>docker exec</code> on the redis container:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Fix</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Run redis-cli FROM the redis container itself</span>
+<span class="cc">docker</span> exec -it redis redis-cli
+
+<span class="cm"># Or connect to the redis server using its hostname</span>
+<span class="cc">docker</span> exec -it redis redis-cli -h redis PING
+<span class="cm"># Should output: PONG</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="trouble-card" onclick="toggleTrouble(this, event)">
+        <div class="trouble-header">
+          <span class="trouble-icon">🔴</span>
+          <div class="trouble-title">docker network inspect shows empty Containers even after docker run</div>
+          <div class="trouble-chevron">›</div>
+        </div>
+        <div class="trouble-body">
+          <p style="margin-bottom:0.5rem">The container was run without the <code>--network</code> flag, so it joined the default bridge. Connect it:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">🐧 bash · Fix</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Connect an existing container to the network</span>
+<span class="cc">docker</span> network connect cloudeats-net menu
+<span class="cc">docker</span> network connect cloudeats-net redis
+
+<span class="cm"># Verify</span>
+<span class="cc">docker</span> network inspect cloudeats-net</pre>
+          </div>
+          <p style="margin-top:0.5rem">Or stop and rerun with the <code>--network cloudeats-net</code> flag.</p>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════ KNOWLEDGE CHECK ═══════════ -->
+    <section id="knowledgecheck">
+      <div class="part-header">
+        <div class="part-pill">Review</div>
+        <div class="part-title">Knowledge Check</div>
+      </div>
+      <p style="margin-bottom:1rem;color:var(--muted);font-size:0.85rem">Click an answer to check it.</p>
+
+      <div class="kc-question">
+        <div class="kc-q">1. Why can't containers on the default bridge network communicate using names like <code style="font-family:'Fira Code',monospace;font-size:0.9em">ping redis</code>?</div>
+        <ul class="kc-options">
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>The default bridge is too slow for DNS</li>
+          <li onclick="checkAnswer(this, true)"><div class="kc-radio"></div>The default bridge network has no built-in DNS server — containers can only communicate via raw IP addresses</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Redis doesn't support ping from other containers</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>You need to install a plugin to enable container names</li>
+        </ul>
+      </div>
+
+      <div class="kc-question">
+        <div class="kc-q">2. You run Redis without a <code style="font-family:'Fira Code',monospace;font-size:0.9em">-p</code> flag: <code style="font-family:'Fira Code',monospace;font-size:0.9em">docker run -d --name redis --network cloudeats-net redis:alpine</code>. What can and cannot reach it?</div>
+        <ul class="kc-options">
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Nothing can reach it — the container is completely isolated</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Only your browser on the host machine can reach it</li>
+          <li onclick="checkAnswer(this, true)"><div class="kc-radio"></div>Containers on <code>cloudeats-net</code> can reach it by name; the host machine and external traffic cannot</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>All traffic is blocked until a -p flag is added</li>
+        </ul>
+      </div>
+
+      <div class="kc-question">
+        <div class="kc-q">3. An app container needs to be accessible from both a <em>frontend network</em> and a <em>backend network</em>. What is the correct approach?</div>
+        <ul class="kc-options">
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Run two copies of the container, one on each network</li>
+          <li onclick="checkAnswer(this, true)"><div class="kc-radio"></div>Use <code style="font-family:'Fira Code',monospace;font-size:0.9em">docker network connect</code> to attach the container to both networks simultaneously</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Set the container's network to "none" so it bypasses all restrictions</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>This is impossible in Docker — containers can only be on one network</li>
+        </ul>
+      </div>
+
+      <div class="kc-question">
+        <div class="kc-q">4. What does Docker Compose automate compared to what you did manually in this lab?</div>
+        <ul class="kc-options">
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Docker Compose runs faster because it uses a different network driver</div></li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Docker Compose bypasses the need for networks entirely</li>
+          <li onclick="checkAnswer(this, true)"><div class="kc-radio"></div>It creates the network, connects all containers, resolves names, and manages start-up order — all from a single <code>docker-compose.yml</code> file with one command</li>
+          <li onclick="checkAnswer(this, false)"><div class="kc-radio"></div>Docker Compose only manages images; networks are still manual</li>
+        </ul>
+      </div>
+
+    </section>
+
+    <!-- ═══════════ ROADMAP ═══════════ -->
+    <section>
+      <div class="part-header">
+        <div class="part-pill">What's Next</div>
+        <div class="part-title">Course Roadmap</div>
+      </div>
+      <div class="roadmap">
+        <div class="roadmap-title">Your Journey — CloudEats App</div>
+        <div class="rm-week"><div class="rm-dot done"></div><div><div class="rm-label">Week 1 · Foundation ✅</div><div class="rm-desc">Lab 1.1: Dev environment, Docker installed, VS Code, Git</div></div></div>
+        <div class="rm-week"><div class="rm-dot done"></div><div><div class="rm-label">Week 2 · Core Cloud Services ✅</div><div class="rm-desc">Lab 2.1: Menu built + containerised · Lab 2.2: Multi-container networking ✅</div></div></div>
+        <div class="rm-week"><div class="rm-dot active"></div><div><div class="rm-label">Week 3 · Databases in the Cloud ← NEXT</div><div class="rm-desc">Lab 3.1: Docker Compose + MySQL (replaces everything you did today with 1 command!) · Lab 3.2: User Registration</div></div></div>
+        <div class="rm-week"><div class="rm-dot upcoming"></div><div><div class="rm-label">Week 4 · Cloud-Native Development</div><div class="rm-desc">Lab 4.1: SQL queries · Lab 4.2: Redis cart + MongoDB orders (you'll use redis by name!)</div></div></div>
+        <div class="rm-week"><div class="rm-dot upcoming"></div><div><div class="rm-label">Weeks 5–7 · Microservices + DevOps + CI/CD</div><div class="rm-desc">Split services · Git CI pipeline · Automated deployment</div></div></div>
+        <div class="rm-week"><div class="rm-dot upcoming"></div><div><div class="rm-label">Weeks 8–10 · Security, Monitoring + Cloud Plan</div><div class="rm-desc">JWT auth, logging, metrics dashboard, cloud migration map</div></div></div>
+      </div>
+      <div class="info-box" style="margin-top:1rem">
+        <span>🐙</span>
+        <div><strong>GitHub Pages:</strong> This page is fully static. Add it to your <code style="font-family:'Fira Code',monospace;font-size:0.85em">labs/</code> folder alongside Lab 2.1 and push to GitHub Pages. Students can access both from the same course index page at zero hosting cost.</div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer style="border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;color:var(--muted);font-size:0.78rem;max-width:960px;margin:0 auto">
+  Cloud Computing Course · Lab 2.2 · Docker Networking &nbsp;|&nbsp; CloudEats Project &nbsp;|&nbsp; Est. 60 min &nbsp;|&nbsp; <span class="ghp-badge">🐙 GitHub Pages Ready</span>
+</footer>
+
+<script>
+  function setPace(pace) {
+    document.body.className = 'pace-' + pace;
+    document.querySelectorAll('.pace-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-pace="${pace}"]`).classList.add('active');
+    if (pace === 'beginner') expandAll();
+  }
+  function expandAll() {
+    document.querySelectorAll('.step:not([style*="cursor:default"])').forEach(s => s.classList.add('open'));
+  }
+  function collapseAll() {
+    document.querySelectorAll('.step:not([style*="cursor:default"])').forEach(s => s.classList.remove('open'));
+  }
+  function toggleStep(el, event) {
+    if (event && !event.target.closest('.step-header')) return;
+    el.classList.toggle('open');
+  }
+  function toggleTrouble(el, event) {
+    if (event && !event.target.closest('.trouble-header')) return;
+    el.classList.toggle('open');
+  }
+  function copyCode(btn, event) {
+    if (event) event.stopPropagation();
+    const pre = btn.closest('.code-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'Copied!'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+  function toggleCheck(li) {
+    li.classList.toggle('done');
+    li.querySelector('.check-box').textContent = li.classList.contains('done') ? '✓' : '';
+    updateProgress();
+  }
+  function updateProgress() {
+    const items = document.querySelectorAll('#checklistItems li');
+    const done  = document.querySelectorAll('#checklistItems li.done').length;
+    document.getElementById('progressBar').style.width = Math.round((done / items.length) * 100) + '%';
+    document.getElementById('progressCount').textContent = done;
+  }
+  function checkAnswer(li, correct) {
+    const parent = li.closest('ul');
+    parent.querySelectorAll('li').forEach(i => i.classList.remove('correct', 'wrong'));
+    li.classList.add(correct ? 'correct' : 'wrong');
+    if (!correct) parent.querySelectorAll('li').forEach(i => {
+      if (i.getAttribute('onclick')?.includes('true')) i.classList.add('correct');
+    });
+  }
+  const sections = document.querySelectorAll('[id]');
+  const sideLinks = document.querySelectorAll('.sidebar-nav a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
+    sideLinks.forEach(a => {
+      a.classList.remove('active');
+      if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+    });
+  });
+  /* Default pace is beginner — expand all steps on first load */
+  document.addEventListener('DOMContentLoaded', () => { expandAll(); });
+</script>
+</body>
+</html>

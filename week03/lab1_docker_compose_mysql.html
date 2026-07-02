@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 3.1 · Docker Compose &amp; MySQL · CloudEats Academy</title>
+<meta name="description" content="Run nginx + MySQL together with Docker Compose, persist data with named volumes, and wire a Node.js backend to a real database. Week 3 Lab 1 of the CloudEats cloud computing diploma course.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Lab 3.1 · Docker Compose &amp; MySQL · CloudEats Academy">
+<meta property="og:description" content="Multi-container orchestration with Docker Compose — define services, networks and volumes in one YAML file. Step-by-step with three pace levels.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07090f; --bg2: #0d1117; --bg3: #141b27;
+    --surface: #1a2235; --surface2: #1f2c42; --border: #2a3d5a;
+    --accent: #00c8ff; --accent2: #7c6af5;
+    --green: #00e5a0; --amber: #ffb740; --red: #ff5e7a; --purple: #b46ef5;
+    --text: #e8edf5; --muted: #6b7fa0;
+    --beginner: #00e5a0; --average: #00c8ff; --advanced: #b46ef5;
+    --radius: 10px; --code-bg: #0b1120;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+
+  /* ── HEADER ── */
+  .site-header { background: linear-gradient(135deg, #050d1c, #091628); border-bottom: 1px solid var(--border); padding: 0 2rem; position: sticky; top: 0; z-index: 100; }
+  .header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 58px; gap: 1rem; }
+  .header-left { display: flex; align-items: center; gap: 0.75rem; }
+  .lab-badge { background: var(--green); color: #000; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; padding: 0.2rem 0.55rem; border-radius: 4px; text-transform: uppercase; }
+  .header-title { font-size: 0.9rem; font-weight: 600; }
+  .ghp-badge { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.68rem; font-weight: 700; padding: 0.2rem 0.6rem; background: rgba(180,110,245,0.12); border: 1px solid rgba(180,110,245,0.3); color: var(--purple); border-radius: 20px; }
+
+  /* ── PACE SELECTOR ── */
+  .pace-bar { display: flex; gap: 0.35rem; background: var(--bg3); padding: 0.25rem; border-radius: 8px; border: 1px solid var(--border); }
+  .pace-btn { font-family: 'Sora', sans-serif; font-size: 0.7rem; font-weight: 600; padding: 0.28rem 0.7rem; border: none; border-radius: 5px; cursor: pointer; background: transparent; color: var(--muted); transition: all 0.2s; }
+  .pace-btn:hover { color: var(--text); }
+  .pace-btn.active[data-pace="beginner"] { background: var(--beginner); color: #000; }
+  .pace-btn.active[data-pace="average"]  { background: var(--average);  color: #000; }
+  .pace-btn.active[data-pace="advanced"] { background: var(--advanced); color: #fff; }
+
+  /* ── HERO ── */
+  .lab-hero { background: linear-gradient(160deg, #060f20, #0a1c35); border-bottom: 1px solid var(--border); padding: 2rem 2rem 1.75rem; position: relative; overflow: hidden; }
+  .lab-hero::before { content: ''; position: absolute; top: -80px; right: -80px; width: 360px; height: 360px; background: radial-gradient(ellipse, rgba(0,229,160,0.06), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; }
+  .hero-crumb { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.4rem; }
+  .hero-crumb a { color: var(--green); text-decoration: none; }
+  .lab-hero h1 { font-size: clamp(1.3rem, 2.5vw, 1.8rem); font-weight: 800; background: linear-gradient(135deg, #e8edf5 40%, var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.4rem; }
+  .hero-meta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.85rem; }
+  .meta-chip { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.25rem 0.65rem; color: var(--muted); }
+  .meta-chip strong { color: var(--text); }
+  .prereq-bar { margin-top: 0.85rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .prereq-label { font-size: 0.7rem; font-weight: 700; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .prereq-chip { font-size: 0.72rem; background: rgba(0,229,160,0.08); border: 1px solid rgba(0,229,160,0.2); color: var(--green); padding: 0.15rem 0.55rem; border-radius: 20px; }
+
+  /* ── LAYOUT ── */
+  .page-body { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 220px 1fr; gap: 0; padding: 0; }
+
+  /* ── SIDEBAR ── */
+  .sidebar { position: sticky; top: 58px; height: calc(100vh - 58px); overflow-y: auto; padding: 1.5rem 1rem 2rem; border-right: 1px solid var(--border); background: var(--bg2); }
+  .sidebar-title { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.85rem; }
+  .sidebar-nav { list-style: none; }
+  .sidebar-nav li { margin-bottom: 0.1rem; }
+  .sidebar-nav a { display: block; font-size: 0.75rem; padding: 0.35rem 0.65rem; border-radius: 6px; color: var(--muted); text-decoration: none; border: 1px solid transparent; transition: all 0.15s; }
+  .sidebar-nav a:hover { background: var(--surface); color: var(--text); }
+  .sidebar-nav a.active { background: var(--surface); color: var(--green); border-color: rgba(0,229,160,0.2); }
+  .part-divider { font-size: 0.63rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(107,127,160,0.5); padding: 0.65rem 0.65rem 0.2rem; }
+  .progress-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; margin-bottom: 1.25rem; }
+  .progress-title { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.65rem; }
+  .progress-bar-wrap { background: var(--bg3); border-radius: 4px; height: 6px; margin-bottom: 0.4rem; }
+  .progress-bar { height: 6px; border-radius: 4px; background: linear-gradient(90deg, var(--green), var(--accent)); transition: width 0.4s; }
+  .progress-label { font-size: 0.71rem; color: var(--muted); }
+  .progress-label span { color: var(--green); font-weight: 600; }
+
+  /* ── MAIN CONTENT ── */
+  .lab-content { padding: 2rem 2rem 4rem; min-width: 0; }
+  section { margin-bottom: 2.5rem; }
+
+  /* ── PART HEADER ── */
+  .part-header { display: flex; align-items: center; gap: 0.75rem; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--green); border-radius: 0 8px 8px 0; padding: 0.75rem 1rem; margin-bottom: 1.25rem; }
+  .part-pill { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; background: rgba(0,229,160,0.1); color: var(--green); border: 1px solid rgba(0,229,160,0.25); border-radius: 20px; padding: 0.18rem 0.55rem; white-space: nowrap; }
+  .part-title { font-size: 1rem; font-weight: 700; }
+  .part-time { font-size: 0.72rem; color: var(--muted); margin-left: auto; white-space: nowrap; }
+
+  /* ── STEPS ── */
+  .step { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0.85rem; overflow: hidden; }
+  .step-header { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1rem; cursor: pointer; user-select: none; }
+  .step-header:hover { background: var(--surface2); }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; color: var(--muted); transition: all 0.2s; }
+  .step.completed .step-num { background: var(--green); border-color: var(--green); color: #000; }
+  .step-title { font-size: 0.9rem; font-weight: 600; flex: 1; }
+  .step-toggle { font-size: 0.75rem; color: var(--muted); transition: transform 0.2s; }
+  .step.open .step-toggle { transform: rotate(90deg); }
+  .step-body { display: none; padding: 0 1rem 1rem; border-top: 1px solid var(--border); }
+  .step.open .step-body { display: block; }
+  .step-time { font-size: 0.7rem; color: var(--muted); }
+
+  /* ── CODE ── */
+  code { font-family: 'Fira Code', monospace; font-size: 0.84em; background: var(--code-bg); padding: 0.08rem 0.35rem; border-radius: 3px; color: var(--green); }
+  .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; margin: 0.75rem 0; overflow: hidden; }
+  .code-header { display: flex; align-items: center; justify-content: space-between; padding: 0.45rem 0.9rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); }
+  .code-lang { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .copy-btn { font-family: 'Sora', sans-serif; font-size: 0.68rem; font-weight: 600; padding: 0.18rem 0.55rem; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 4px; cursor: pointer; transition: all 0.15s; }
+  .copy-btn:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+  .copy-btn.copied { background: var(--green); color: #000; border-color: var(--green); }
+  pre { font-family: 'Fira Code', monospace; font-size: 0.79rem; line-height: 1.65; padding: 0.9rem; overflow-x: auto; color: #c5d5ef; white-space: pre; }
+  .cm { color: var(--muted); font-style: italic; }
+  .ck { color: var(--accent); }
+  .cv { color: var(--green); }
+  .cc { color: var(--amber); }
+  .cs { color: #ff8fab; }
+
+  /* ── CALLOUT ── */
+  .callout { border-radius: 8px; padding: 0.75rem 1rem; margin: 0.75rem 0; display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.82rem; line-height: 1.55; }
+  .callout.blue   { background: rgba(0,200,255,0.05); border: 1px solid rgba(0,200,255,0.2); color: #a0d8f0; }
+  .callout.green  { background: rgba(0,229,160,0.05); border: 1px solid rgba(0,229,160,0.2); color: #8ee8c4; }
+  .callout.amber  { background: rgba(255,183,64,0.06); border: 1px solid rgba(255,183,64,0.2); color: #d9c07a; }
+  .callout.purple { background: rgba(180,110,245,0.05); border: 1px solid rgba(180,110,245,0.2); color: #c5a8f5; }
+  .callout.red    { background: rgba(255,94,122,0.05); border: 1px solid rgba(255,94,122,0.2); color: #f0a0b0; }
+
+  /* ── CHECKPOINT ── */
+  .checkpoint { background: rgba(0,229,160,0.06); border: 1px solid rgba(0,229,160,0.25); border-radius: 10px; padding: 1rem 1.25rem; margin: 1.25rem 0; display: flex; gap: 0.85rem; align-items: flex-start; }
+  .checkpoint-icon { font-size: 1.5rem; flex-shrink: 0; }
+  .checkpoint-text strong { font-size: 0.92rem; color: var(--green); display: block; margin-bottom: 0.35rem; }
+  .checkpoint-text { font-size: 0.83rem; color: var(--muted); line-height: 1.6; }
+  .expected-out { font-family: 'Fira Code', monospace; font-size: 0.77rem; background: var(--bg2); border: 1px solid rgba(0,229,160,0.15); border-radius: 6px; padding: 0.6rem 0.85rem; margin-top: 0.5rem; color: var(--green); line-height: 1.65; white-space: pre; overflow-x: auto; }
+
+  /* ── IMAGE PLACEHOLDER ── */
+  .img-ph { border: 2px dashed rgba(0,229,160,0.2); border-radius: 8px; background: rgba(0,229,160,0.025); padding: 0.85rem 1.1rem; margin: 0.85rem 0; display: flex; gap: 0.75rem; align-items: flex-start; }
+  .img-ph-icon { font-size: 1.2rem; flex-shrink: 0; line-height: 1.2; }
+  .img-ph-label { font-size: 0.67rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--green); margin-bottom: 0.18rem; }
+  .img-ph-desc { font-size: 0.79rem; color: var(--muted); line-height: 1.5; }
+
+  /* ── TROUBLESHOOT ── */
+  .trouble { background: rgba(255,94,122,0.04); border: 1px solid rgba(255,94,122,0.2); border-radius: 8px; margin: 0.6rem 0; overflow: hidden; }
+  .trouble-header { display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 0.85rem; cursor: pointer; font-size: 0.82rem; font-weight: 600; color: var(--red); user-select: none; }
+  .trouble-header:hover { background: rgba(255,94,122,0.06); }
+  .trouble-toggle { margin-left: auto; font-size: 0.75rem; transition: transform 0.2s; }
+  .trouble.open .trouble-toggle { transform: rotate(90deg); }
+  .trouble-body { display: none; padding: 0.5rem 0.85rem 0.85rem; font-size: 0.81rem; color: var(--muted); line-height: 1.65; }
+  .trouble.open .trouble-body { display: block; }
+
+  /* ── CHECKLIST ── */
+  .task-list { list-style: none; margin: 0.5rem 0; }
+  .task-list li { display: flex; align-items: flex-start; gap: 0.65rem; font-size: 0.82rem; padding: 0.35rem 0; border-bottom: 1px solid rgba(42,61,90,0.25); cursor: pointer; }
+  .task-list li:last-child { border-bottom: none; }
+  .check-box { width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: #000; transition: all 0.15s; margin-top: 0.05rem; }
+  .task-list li.done .check-box { background: var(--green); border-color: var(--green); }
+  .task-list li.done { color: var(--muted); text-decoration: line-through; }
+
+  /* ── PACE BLOCKS ── */
+  .pace-block { border-radius: 8px; padding: 0.75rem 1rem; margin: 0.75rem 0; font-size: 0.82rem; line-height: 1.6; }
+  .pace-block .pace-label { font-size: 0.64rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.35rem; }
+  .pace-block.beginner { background: rgba(0,229,160,0.04); border: 1px solid rgba(0,229,160,0.18); border-left: 3px solid var(--beginner); }
+  .pace-block.average  { background: rgba(0,200,255,0.04); border: 1px solid rgba(0,200,255,0.18); border-left: 3px solid var(--average); }
+  .pace-block.advanced { background: rgba(180,110,245,0.04); border: 1px solid rgba(180,110,245,0.18); border-left: 3px solid var(--advanced); }
+  .pace-block.beginner .pace-label { color: var(--beginner); }
+  .pace-block.average  .pace-label { color: var(--average); }
+  .pace-block.advanced .pace-label { color: var(--advanced); }
+
+  /* Pace visibility */
+  body.pace-beginner .avg-only, body.pace-beginner .adv-only { display: none; }
+  body.pace-average .adv-only { display: none; }
+  body.pace-advanced .adv-only { display: block; }
+
+  /* ── ROADMAP ── */
+  .roadmap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; margin: 0.85rem 0; }
+  .roadmap-title { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; }
+  .rm-week { display: flex; gap: 0.85rem; margin-bottom: 0.75rem; align-items: flex-start; }
+  .rm-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 0.25rem; }
+  .rm-dot.done { background: var(--green); }
+  .rm-dot.active { background: var(--amber); box-shadow: 0 0 0 3px rgba(255,183,64,0.2); }
+  .rm-dot.upcoming { background: var(--border); }
+  .rm-label { font-size: 0.82rem; font-weight: 600; margin-bottom: 0.15rem; }
+  .rm-desc { font-size: 0.76rem; color: var(--muted); }
+
+  /* ── TABLE ── */
+  .info-table { width: 100%; border-collapse: collapse; font-size: 0.81rem; margin: 0.75rem 0; }
+  .info-table th { padding: 0.4rem 0.75rem; background: var(--bg3); color: var(--muted); font-size: 0.67rem; letter-spacing: 0.07em; text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--border); }
+  .info-table td { padding: 0.42rem 0.75rem; border-bottom: 1px solid rgba(42,61,90,0.3); vertical-align: top; }
+  .info-table tr:last-child td { border-bottom: none; }
+  .info-table tr:hover td { background: rgba(255,255,255,0.015); }
+
+  /* ── FLOW ROW ── */
+  .flow-row { display: flex; align-items: center; gap: 0; margin: 0.85rem 0; flex-wrap: wrap; }
+  .flow-box { background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; padding: 0.55rem 0.85rem; font-size: 0.77rem; text-align: center; min-width: 80px; }
+  .flow-arrow { font-size: 1rem; color: var(--muted); padding: 0 0.25rem; flex-shrink: 0; }
+
+  a { color: var(--accent); } a:hover { text-decoration: underline; }
+  strong { color: var(--text); font-weight: 600; }
+  p { margin-bottom: 0.75rem; font-size: 0.85rem; line-height: 1.7; }
+  p:last-child { margin-bottom: 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 768px) {
+    .page-body { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .lab-content { padding: 1.25rem 1rem 3rem; }
+  }
+</style>
+</head>
+<body class="pace-average">
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <span class="lab-badge">Lab 3.1</span>
+      <span class="header-title">Docker Compose &amp; MySQL</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.85rem">
+      <div class="pace-bar">
+        <button class="pace-btn" data-pace="beginner" onclick="setPace('beginner')">🟢 Beginner</button>
+        <button class="pace-btn active" data-pace="average" onclick="setPace('average')">🔵 Average</button>
+        <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced')">🟣 Advanced</button>
+      </div>
+      <span class="ghp-badge">🐙 GitHub Pages Ready</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<div class="lab-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb"><a href="week03_Databases_in_the_Cloud.html">← Week 3 Lecture</a> › Lab 3.1</div>
+    <h1>🐳 Docker Compose &amp; MySQL</h1>
+    <p style="color:var(--muted);font-size:0.86rem;margin:0.25rem 0 0">Replace the hardcoded menu with a real database — persistent, dynamic, queryable.</p>
+    <div class="hero-meta">
+      <div class="meta-chip">⏱ <strong>60 min</strong></div>
+      <div class="meta-chip">🐳 <strong>Docker Compose</strong> · multi-container</div>
+      <div class="meta-chip">🗄️ <strong>MySQL 8.0</strong> · official Docker image</div>
+      <div class="meta-chip">📦 <strong>Named Volume</strong> · data persistence</div>
+    </div>
+    <div class="prereq-bar">
+      <span class="prereq-label">Prerequisites:</span>
+      <span class="prereq-chip">✅ Lab 2.1 — Static Menu</span>
+      <span class="prereq-chip">✅ Lab 2.2 — Docker Networking</span>
+      <span class="prereq-chip">✅ Docker Compose installed</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── PAGE BODY ── -->
+<div class="page-body">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="progress-box">
+      <div class="progress-title">Your Progress</div>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+      <div class="progress-label"><span id="progressCount">0</span> / 11 steps done</div>
+    </div>
+    <div class="sidebar-title">Lab Navigation</div>
+    <ul class="sidebar-nav">
+      <li class="part-divider">Overview</li>
+      <li><a href="#overview">Scenario &amp; Goals</a></li>
+      <li class="part-divider">Before You Start</li>
+      <li><a href="#cleanup">Stop Previous Containers</a></li>
+      <li class="part-divider">Part 1 · Why Compose?</li>
+      <li><a href="#p1s1">The Problem</a></li>
+      <li class="part-divider">Part 2 · Project Structure</li>
+      <li><a href="#p2s1">Folder Layout</a></li>
+      <li class="part-divider">Part 3 · Add MySQL</li>
+      <li><a href="#p3s1">docker-compose.yml</a></li>
+      <li><a href="#p3s2">Init SQL Schema</a></li>
+      <li class="part-divider">Part 4 · Connect Node.js</li>
+      <li><a href="#p4s1">db.js Connection Pool</a></li>
+      <li><a href="#p4s2">Backend server.js</a></li>
+      <li class="part-divider">Part 5 · Run &amp; Verify</li>
+      <li><a href="#p5s1">Start the Stack</a></li>
+      <li><a href="#p5s2">Verify Persistence</a></li>
+      <li class="part-divider">Wrap-Up</li>
+      <li><a href="#wrapup">Checklist &amp; Next</a></li>
+    </ul>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="lab-content">
+
+    <!-- ══ OVERVIEW ══ -->
+    <section id="overview">
+      <div class="part-header">
+        <div class="part-pill">Overview</div>
+        <div class="part-title">Lab Scenario &amp; Objectives</div>
+      </div>
+
+      <div class="callout blue">
+        <span>📖</span>
+        <div><strong>The story:</strong> CloudEats' manager loved the static menu from Lab 2.1. But now the restaurant wants to change the special every day and add seasonal items. That means editing HTML, rebuilding the container, and redeploying — every single time. The manager has asked for a database-backed menu.</div>
+      </div>
+
+      <p><strong>What you'll build:</strong> Extend the Week 2 container setup by adding a MySQL database service to <code>docker-compose.yml</code>. The menu items move from hardcoded HTML into a real database table. The Node.js backend queries the database and returns live data to the browser.</p>
+
+      <div class="flow-row" style="margin:1rem 0">
+        <div class="flow-box" style="border-color:rgba(255,183,64,0.3);color:var(--amber)">📄 Browser</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box" style="border-color:rgba(0,200,255,0.3);color:var(--accent)">🌐 Node.js :3000</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box" style="border-color:rgba(0,229,160,0.3);color:var(--green)">🗄️ MySQL :3306</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box" style="border-color:rgba(0,229,160,0.3);color:var(--green)">menu_items table</div>
+      </div>
+
+      <p style="margin-bottom:0.5rem"><strong>Learning objectives:</strong></p>
+      <ul class="task-list" id="checklistItems">
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Understand why Docker Compose replaces manual docker run commands</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Add a MySQL service with credentials and named volume to docker-compose.yml</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Explain why depends_on + healthcheck is needed</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Write the menu_items CREATE TABLE SQL</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Connect Node.js to MySQL by service name</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Implement GET /api/menu that reads from the database</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Verify menu items survive container restart (persistence test)</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Use docker compose logs to debug connection issues</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Explain what a named volume does vs a bind mount</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Complete all checkpoints successfully</li>
+      </ul>
+    </section>
+
+    <!-- ══ BEFORE YOU START: CLEAN-UP ══ -->
+    <section id="cleanup">
+      <div class="part-header">
+        <div class="part-pill">Before You Start</div>
+        <div class="part-title">Stop Previous Containers &amp; Clean Up</div>
+        <div class="part-time">⏱ 2 min</div>
+      </div>
+
+      <div class="step open" id="step-cleanup">
+        <div class="step-header" onclick="toggleStep(this.parentElement)">
+          <div class="step-num">0</div>
+          <div class="step-title">Stop Everything from Lab 2.2</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>In Lab 2.2 you started a <code>menu</code> container and a <code>redis</code> container manually using <code>docker run</code>. Before adding Docker Compose, stop and remove them — otherwise their ports and names will conflict.</p>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">bash · Stop Lab 2.2 Containers</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Stop and remove the containers from Lab 2.2</span>
+docker stop menu redis 2>/dev/null || true
+docker rm   menu redis 2>/dev/null || true
+
+<span class="cm"># Remove the manual network (Docker Compose creates its own)</span>
+docker network rm cloudeats-net 2>/dev/null || true
+
+<span class="cm"># Check nothing is running on port 3000</span>
+docker ps
+
+<span class="cm"># Expected: no cloudeats containers in the list</span></pre>
+          </div>
+
+          <div class="callout amber">
+            <span>⚠️</span>
+            <div><strong>If you also ran the Week 1 Lab 1 docker-compose.yml</strong> (which had a <code>web</code>, <code>database</code>, and <code>cache</code> service), run <code>docker compose down</code> inside that folder first. Today's <code>docker-compose.yml</code> is a complete replacement — not an update to that file.</div>
+          </div>
+
+          <div class="callout green">
+            <span>✅</span>
+            <div><strong>Your files are safe.</strong> Stopping containers does not delete your <code>frontend/</code> folder, HTML, CSS, or any code. You're only removing the running processes, not the project files.</div>
+          </div>
+
+          <div class="pace-block beginner">
+            <div class="pace-label">🟢 Beginner — Why are we doing this?</div>
+            In Lab 2.2 you started containers by typing <code>docker run</code> commands one by one. Docker Compose does the same thing automatically from a YAML file. We need a clean slate so the new Compose setup doesn't collide with your manually started containers.
+          </div>
+          <div class="pace-block advanced">
+            <div class="pace-label">🟣 Advanced — Volume Safety</div>
+            Running <code>docker compose down</code> removes containers but keeps named volumes. That means if Week 1 Lab 1 created a volume called <code>cloudeats_mysql_data</code>, it still exists. Today's Compose uses a different volume name (<code>mysql-data</code>) to avoid inheriting an old schema. Run <code>docker volume ls</code> to see what's on your machine — anything prefixed <code>cloudeats_</code> from a previous lab is safe to leave or remove with <code>docker volume rm</code>.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PART 1: WHY COMPOSE ══ -->
+    <section id="p1s1">
+      <div class="part-header">
+        <div class="part-pill">Part 1</div>
+        <div class="part-title">Why Docker Compose?</div>
+        <div class="part-time">⏱ 5 min</div>
+      </div>
+
+      <!-- ── EXPAND / COLLAPSE CONTROLS ── -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.85rem;padding:0.4rem 0;">
+        <span style="font-size:0.75rem;color:var(--muted)"><strong style="color:var(--text)">11 steps</strong> across 5 parts</span>
+        <div style="display:flex;gap:0.5rem">
+          <button onclick="expandAll()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--green)';this.style.borderColor='var(--green)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↓ Expand All</button>
+          <button onclick="collapseAll()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--muted)';this.style.borderColor='var(--muted)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↑ Collapse All</button>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p1s1">
+        <div class="step-header" onclick="toggleStep(this.parentElement)">
+          <div class="step-num">1</div>
+          <div class="step-title">The Problem with Manual docker run</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>In Lab 2.2 you connected two containers using <code>docker network create</code> and two separate <code>docker run</code> commands. For two containers that was manageable. For a real application with web server + database + cache, it becomes:</p>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">bash · The Manual Way (Bad)</div></div>
+            <pre><span class="cm"># 1. Create the network</span>
+docker network create cloudeats-network
+
+<span class="cm"># 2. Start MySQL — 5 flags, easy to mistype</span>
+docker run -d --name db \
+  --network cloudeats-network \
+  -e MYSQL_ROOT_PASSWORD=rootpassword \
+  -e MYSQL_DATABASE=cloudeats_db \
+  -e MYSQL_USER=cloudeats_user \
+  -e MYSQL_PASSWORD=cloudeats_password \
+  -v mysql-data:/var/lib/mysql \
+  mysql:8.0
+
+<span class="cm"># 3. Wait for MySQL to be ready (how long? nobody knows)</span>
+sleep 15
+
+<span class="cm"># 4. Start the backend — hope you remembered all the env vars</span>
+docker run -d --name backend \
+  --network cloudeats-network \
+  -p 3000:3000 \
+  -e DB_HOST=db \
+  -e DB_USER=cloudeats_user \
+  -e DB_PASSWORD=cloudeats_password \
+  -e DB_NAME=cloudeats_db \
+  cloudeats-backend:v1
+
+<span class="cm"># Total: 4 commands, 15+ flags, reproducibility = 0%</span></pre>
+          </div>
+
+          <p>With Docker Compose, all of this is declared in one <code>docker-compose.yml</code> file and launched with a single command:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">bash · The Compose Way (Good)</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre>docker compose up -d    <span class="cm"># That's it. Everything starts in the right order.</span></pre>
+          </div>
+
+          <div class="pace-block beginner">
+            <div class="pace-label">🟢 Beginner</div>
+            Think of <code>docker-compose.yml</code> as a recipe card. Instead of following 4 separate cooking steps from memory each time, you write the recipe once and hand it to anyone. They follow the same recipe, get the same result.
+          </div>
+          <div class="pace-block advanced">
+            <div class="pace-label">🟣 Advanced</div>
+            Docker Compose also handles dependency ordering, environment variable injection, health checks, and network creation — all declaratively. This is Infrastructure as Code at the development level. Week 7 applies these same principles to production environments.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PART 2: PROJECT STRUCTURE ══ -->
+    <section id="p2s1">
+      <div class="part-header">
+        <div class="part-pill">Part 2</div>
+        <div class="part-title">Project Structure</div>
+        <div class="part-time">⏱ 5 min</div>
+      </div>
+
+      <div class="step open" id="step-p2s1">
+        <div class="step-header" onclick="toggleStep(this.parentElement)">
+          <div class="step-num">2</div>
+          <div class="step-title">Set Up the Folder Structure</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Starting from your Week 2 Lab 2.2 project, add the <code>backend/</code> folder and <code>init.sql</code>. The final structure should look like this:</p>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">📁 Project Structure</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre>cloudeats/
+├── docker-compose.yml          <span class="cm"># ← Multi-container config (created this lab)</span>
+├── backend/
+│   ├── Dockerfile              <span class="cm"># ← Node.js image build instructions</span>
+│   ├── package.json            <span class="cm"># ← Dependencies: express, mysql2</span>
+│   ├── server.js               <span class="cm"># ← Main app: routes, API endpoints</span>
+│   ├── db.js                   <span class="cm"># ← MySQL connection pool (created this lab)</span>
+│   └── init.sql                <span class="cm"># ← CREATE TABLE statements (created this lab)</span>
+└── frontend/
+    ├── html/
+    │   └── index.html          <span class="cm"># ← Menu page (updated to fetch from API)</span>
+    └── css/
+        └── style.css</pre>
+          </div>
+
+          <p>Create the <code>backend/</code> folder and starter files now:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">bash · Create Folder Structure</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Navigate to your project root (Week 2 Lab folder)</span>
+cd ~/cloudeats
+
+<span class="cm"># Create backend directory</span>
+mkdir -p backend
+
+<span class="cm"># Create empty files (we'll fill them in the next steps)</span>
+touch backend/Dockerfile
+touch backend/package.json
+touch backend/server.js
+touch backend/db.js
+touch backend/init.sql</pre>
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Screenshot · VS Code File Tree — Project Structure</div>
+              <div class="img-ph-desc">VS Code Explorer panel showing the <code>cloudeats/</code> root with two visible folders: <code>backend/</code> (containing Dockerfile, package.json, server.js, db.js, init.sql) and <code>frontend/</code> (html/, css/). The <code>docker-compose.yml</code> sits at the root. All five backend files should be visible.</div>
+            </div>
+          </div>
+
+          <div class="callout blue">
+            <span>🔄</span>
+            <div>
+              <strong>Two Dockerfiles — two different jobs.</strong> You already have <code>frontend/Dockerfile</code> from Lab 2.1 (it builds an nginx image that serves your HTML). Today you create a second Dockerfile at <code>backend/Dockerfile</code> — this one builds a Node.js API server. They are completely separate and can both exist in the project at the same time. The <code>docker-compose.yml</code> decides which one to build and when.
+            </div>
+          </div>
+
+          <div class="callout amber">
+            <span>📝</span>
+            <div>
+              <strong>Service name changed: <code>web</code> → <code>backend</code>.</strong> If you used the Week 1 Lab 1 <code>docker-compose.yml</code> as a reference, it had a service called <code>web</code> (nginx serving HTML). Today's compose file uses <code>backend</code> instead — because this service is no longer a static web server, it's a Node.js API. Any command that previously targeted <code>web</code> (e.g. <code>docker compose logs web</code>) now uses <code>backend</code> instead.
+            </div>
+          </div>
+
+          <div class="pace-block beginner">
+            <div class="pace-label">🟢 Beginner — Summary: what changes, what stays</div>
+            <ul style="margin:0.25rem 0 0 0.5rem;padding-left:1rem;font-size:0.82rem;line-height:1.8">
+              <li><strong>Stays:</strong> Your <code>frontend/</code> folder, HTML, CSS — untouched</li>
+              <li><strong>Stays:</strong> Your <code>frontend/Dockerfile</code> (nginx) — still there, not deleted</li>
+              <li><strong>New:</strong> <code>backend/</code> folder with a Node.js Dockerfile</li>
+              <li><strong>Replaced:</strong> The <code>docker-compose.yml</code> — today you rewrite this entirely</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PART 3: ADD MYSQL ══ -->
+    <section id="p3s1">
+      <div class="part-header">
+        <div class="part-pill">Part 3</div>
+        <div class="part-title">Add MySQL to Docker Compose</div>
+        <div class="part-time">⏱ 20 min</div>
+      </div>
+
+      <div class="step open" id="step-p3s1">
+        <div class="step-header" onclick="toggleStep(this.parentElement)">
+          <div class="step-num">3</div>
+          <div class="step-title">Write docker-compose.yml</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Create (or replace) <code>docker-compose.yml</code> in the project root. Copy this file exactly — every indentation matters in YAML.</p>
+
+          <div class="callout amber">
+            <span>⚠️</span>
+            <div><strong>YAML indentation:</strong> Use <strong>spaces, not tabs</strong>. YAML treats tabs as errors. Two spaces per indent level. VS Code shows a YAML syntax error (red squiggle) if the indentation is wrong — check it before saving.</div>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">yaml · docker-compose.yml</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="ck">services:</span>
+
+  <span class="cv">backend:</span>
+    <span class="ck">build:</span> <span class="cv">./backend</span>
+    <span class="ck">container_name:</span> <span class="cv">cloudeats-backend</span>
+    <span class="ck">ports:</span>
+      - <span class="cs">"3000:3000"</span>
+    <span class="ck">environment:</span>
+      <span class="ck">DB_HOST:</span>     <span class="cv">db</span>
+      <span class="ck">DB_USER:</span>     <span class="cv">cloudeats_user</span>
+      <span class="ck">DB_PASSWORD:</span> <span class="cv">cloudeats_password</span>
+      <span class="ck">DB_NAME:</span>     <span class="cv">cloudeats_db</span>
+      <span class="ck">PORT:</span>        <span class="cv">3000</span>
+    <span class="ck">depends_on:</span>
+      <span class="ck">db:</span>
+        <span class="ck">condition:</span> <span class="cv">service_healthy</span>
+    <span class="ck">networks:</span>
+      - <span class="cv">cloudeats-network</span>
+    <span class="ck">restart:</span> <span class="cv">on-failure</span>
+
+  <span class="cv">db:</span>
+    <span class="ck">image:</span> <span class="cv">mysql:8.0</span>
+    <span class="ck">container_name:</span> <span class="cv">cloudeats-db</span>
+    <span class="ck">environment:</span>
+      <span class="ck">MYSQL_ROOT_PASSWORD:</span> <span class="cv">rootpassword</span>
+      <span class="ck">MYSQL_DATABASE:</span>      <span class="cv">cloudeats_db</span>
+      <span class="ck">MYSQL_USER:</span>          <span class="cv">cloudeats_user</span>
+      <span class="ck">MYSQL_PASSWORD:</span>      <span class="cv">cloudeats_password</span>
+    <span class="ck">volumes:</span>
+      - <span class="cv">mysql-data:/var/lib/mysql</span>
+      - <span class="cv">./backend/init.sql:/docker-entrypoint-initdb.d/init.sql:ro</span>
+    <span class="ck">healthcheck:</span>
+      <span class="ck">test:</span> <span class="cs">["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]</span>
+      <span class="ck">interval:</span> <span class="cv">5s</span>
+      <span class="ck">timeout:</span>  <span class="cv">5s</span>
+      <span class="ck">retries:</span>  <span class="cv">10</span>
+    <span class="ck">networks:</span>
+      - <span class="cv">cloudeats-network</span>
+
+<span class="ck">volumes:</span>
+  <span class="cv">mysql-data:</span>
+
+<span class="ck">networks:</span>
+  <span class="cv">cloudeats-network:</span>
+    <span class="ck">driver:</span> <span class="cv">bridge</span></pre>
+          </div>
+
+          <p style="margin-top:0.75rem"><strong>Key lines explained:</strong></p>
+          <table class="info-table">
+            <thead><tr><th>Line</th><th>What It Does</th></tr></thead>
+            <tbody>
+              <tr><td><code>build: ./backend</code></td><td>Build the backend image from the Dockerfile inside <code>backend/</code>. Docker will look for <code>backend/Dockerfile</code>.</td></tr>
+              <tr><td><code>DB_HOST: db</code></td><td>The hostname of the database container is its <strong>service name</strong>. Docker DNS resolves <code>db</code> to the container's IP automatically.</td></tr>
+              <tr><td><code>depends_on: db: condition: service_healthy</code></td><td>Backend waits until MySQL passes its healthcheck before starting. Prevents the "cannot connect" race condition.</td></tr>
+              <tr><td><code>mysql-data:/var/lib/mysql</code></td><td>Named volume. MySQL stores all data here. Volume survives <code>docker compose down</code>.</td></tr>
+              <tr><td><code>./backend/init.sql:/docker-entrypoint-initdb.d/init.sql:ro</code></td><td>MySQL runs any <code>.sql</code> files in <code>/docker-entrypoint-initdb.d/</code> automatically on first start. This creates our tables.</td></tr>
+              <tr><td><code>healthcheck: test: ["CMD", "mysqladmin", "ping"...]</code></td><td>Docker pings MySQL every 5 seconds. The backend only starts when MySQL responds to pings — usually after 10–20 seconds.</td></tr>
+            </tbody>
+          </table>
+
+          <div class="pace-block advanced">
+            <div class="pace-label">🟣 Advanced — Named Volume vs Bind Mount</div>
+            The YAML has <em>two types</em> of volumes for the db service. <code>mysql-data:/var/lib/mysql</code> is a <strong>named volume</strong> — Docker manages the storage location on the host. <code>./backend/init.sql:...</code> is a <strong>bind mount</strong> — mounts a specific file from your host into the container. Named volumes are better for databases (Docker manages them, better performance). Bind mounts are better for config files and code you want to share directly.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step open" id="step-p3s2">
+        <div class="step-header" onclick="toggleStep(this.parentElement)">
+          <div class="step-num">4</div>
+          <div class="step-title">Write the Backend Dockerfile &amp; package.json</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Create <code>backend/Dockerfile</code>:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">dockerfile · backend/Dockerfile</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="ck">FROM</span> <span class="cv">node:18-alpine</span>
+
+<span class="ck">WORKDIR</span> <span class="cv">/app</span>
+
+<span class="ck">COPY</span> <span class="cv">package*.json ./</span>
+<span class="ck">RUN</span>  <span class="cv">npm install</span>
+
+<span class="ck">COPY</span> <span class="cv">. .</span>
+
+<span class="ck">EXPOSE</span> <span class="cv">3000</span>
+<span class="ck">CMD</span> <span class="cs">["node", "server.js"]</span></pre>
+          </div>
+
+          <p style="margin-top:0.75rem">Create <code>backend/package.json</code>:</p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">json · backend/package.json</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre>{
+  <span class="ck">"name"</span>: <span class="cs">"cloudeats-backend"</span>,
+  <span class="ck">"version"</span>: <span class="cs">"1.0.0"</span>,
+  <span class="ck">"scripts"</span>: { <span class="ck">"start"</span>: <span class="cs">"node server.js"</span> },
+  <span class="ck">"dependencies"</span>: {
+    <span class="ck">"express"</span>: <span class="cs">"^4.18.2"</span>,
+    <span class="ck">"mysql2"</span>: <span class="cs">"^3.6.0"</span>,
+    <span class="ck">"cors"</span>:   <span class="cs">"^2.8.5"</span>
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5 — Init SQL -->
+      <div class="step open" id="step-p3s3">
+        <div class="step-header" onclick="toggleStep(this.parentElement)">
+          <div class="step-num">5</div>
+          <div class="step-title">Write init.sql — Create the Database Schema</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>MySQL reads <code>init.sql</code> automatically on first startup (via the <code>docker-entrypoint-initdb.d</code> mount). This creates the table and seeds sample data.</p>
+
+          <div class="callout amber">
+            <span>⚠️</span>
+            <div>The init script runs <strong>only on first startup</strong> — when the named volume is empty. If you need to re-run it, you must delete the volume: <code>docker compose down -v</code> (the <code>-v</code> flag removes volumes). Without <code>-v</code>, the volume is kept.</div>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">sql · backend/init.sql</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm">-- Use the database created by Docker Compose environment variables</span>
+<span class="ck">USE</span> <span class="cv">cloudeats_db</span>;
+
+<span class="cm">-- Create menu_items table</span>
+<span class="ck">CREATE TABLE IF NOT EXISTS</span> <span class="cv">menu_items</span> (
+  <span class="cv">id</span>          <span class="cc">INT AUTO_INCREMENT PRIMARY KEY</span>,
+  <span class="cv">name</span>        <span class="cc">VARCHAR(255)</span> <span class="ck">NOT NULL</span>,
+  <span class="cv">category</span>    <span class="cc">VARCHAR(100)</span> <span class="ck">NOT NULL</span>,
+  <span class="cv">price</span>       <span class="cc">DECIMAL(10, 2)</span> <span class="ck">NOT NULL</span>,
+  <span class="cv">description</span> <span class="cc">TEXT</span>,
+  <span class="cv">badge</span>       <span class="cc">VARCHAR(50)</span>,
+  <span class="cv">created_at</span>  <span class="cc">TIMESTAMP</span> <span class="ck">DEFAULT CURRENT_TIMESTAMP</span>
+);
+
+<span class="cm">-- Seed sample menu items (only insert if table is empty)</span>
+<span class="ck">INSERT IGNORE INTO</span> <span class="cv">menu_items</span> (<span class="cv">id</span>, <span class="cv">name</span>, <span class="cv">category</span>, <span class="cv">price</span>, <span class="cv">description</span>, <span class="cv">badge</span>) <span class="ck">VALUES</span>
+  (1, <span class="cs">'Nasi Lemak Special'</span>,    <span class="cs">'Breakfast'</span>, 12.00, <span class="cs">'Fragrant coconut rice with sambal, fried chicken, egg &amp; peanuts'</span>, <span class="cs">'Best Seller'</span>),
+  (2, <span class="cs">'Nasi Lemak Regular'</span>,    <span class="cs">'Breakfast'</span>,  8.00, <span class="cs">'Classic nasi lemak with sambal, anchovies &amp; half egg'</span>,           NULL),
+  (3, <span class="cs">'Roti Canai with Curry'</span>, <span class="cs">'Breakfast'</span>,  6.00, <span class="cs">'Crispy flaky flatbread with aromatic chicken curry dip'</span>,         NULL),
+  (4, <span class="cs">'Char Kway Teow'</span>,        <span class="cs">'Mains'</span>,     14.00, <span class="cs">'Stir-fried flat noodles with prawns, egg &amp; bean sprouts'</span>,        <span class="cs">'New'</span>),
+  (5, <span class="cs">'Mee Goreng Mamak'</span>,      <span class="cs">'Mains'</span>,     11.00, <span class="cs">'Yellow noodles fried with tofu, squid &amp; tomato sauce'</span>,           NULL),
+  (6, <span class="cs">'Teh Tarik'</span>,             <span class="cs">'Beverages'</span>,  3.00, <span class="cs">'Pulled milk tea — sweet, frothy, and perfectly Malaysian'</span>,        NULL),
+  (7, <span class="cs">'Milo Ais'</span>,              <span class="cs">'Beverages'</span>,  4.00, <span class="cs">'Iced Milo with condensed milk — the Malaysian childhood drink'</span>,   NULL);</pre>
+          </div>
+
+          <div class="pace-block beginner">
+            <div class="pace-label">🟢 Beginner</div>
+            <code>INSERT IGNORE</code> is safer than <code>INSERT</code> when combined with explicit <code>id</code> values. If the row with that <code>id</code> already exists (e.g., you restarted with an existing volume), MySQL silently skips it instead of throwing an error.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PART 4: CONNECT NODE.JS ══ -->
+    <section id="p4s1">
+      <div class="part-header">
+        <div class="part-pill">Part 4</div>
+        <div class="part-title">Connect Node.js to MySQL</div>
+        <div class="part-time">⏱ 15 min</div>
+      </div>
+
+      <!-- Step 6 — db.js -->
+      <div class="step open" id="step-p4s1">
+        <div class="step-header" onclick="toggleStep(this.parentElement)">
+          <div class="step-num">6</div>
+          <div class="step-title">Create db.js — MySQL Connection Pool</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>The connection pool is created once when the app starts and reused for every query. <strong>Never create a new connection per request</strong> — it's slow and crashes under load.</p>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">javascript · backend/db.js</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="ck">const</span> mysql = <span class="cv">require</span>(<span class="cs">'mysql2/promise'</span>);
+
+<span class="ck">const</span> pool = mysql.<span class="cv">createPool</span>({
+  host:             process.env.<span class="cv">DB_HOST</span>     || <span class="cs">'db'</span>,         <span class="cm">// Service name in docker-compose.yml</span>
+  user:             process.env.<span class="cv">DB_USER</span>     || <span class="cs">'cloudeats_user'</span>,
+  password:         process.env.<span class="cv">DB_PASSWORD</span> || <span class="cs">'cloudeats_password'</span>,
+  database:         process.env.<span class="cv">DB_NAME</span>     || <span class="cs">'cloudeats_db'</span>,
+  waitForConnections: <span class="cc">true</span>,
+  connectionLimit:    <span class="cc">10</span>,    <span class="cm">// Max 10 simultaneous DB operations</span>
+  queueLimit:         <span class="cc">0</span>     <span class="cm">// Queue unlimited requests (0 = no limit)</span>
+});
+
+<span class="cm">// Test the pool at startup — logs an error if MySQL is unreachable</span>
+pool.<span class="cv">getConnection</span>()
+  .<span class="cv">then</span>(conn => {
+    console.<span class="cv">log</span>(<span class="cs">'✅ MySQL connected — pool ready'</span>);
+    conn.<span class="cv">release</span>();
+  })
+  .<span class="ck">catch</span>(err => console.<span class="cv">error</span>(<span class="cs">'❌ MySQL connection error:'</span>, err.message));
+
+module.exports = pool;</pre>
+          </div>
+
+          <div class="pace-block average">
+            <div class="pace-label">🔵 Average — Why mysql2/promise?</div>
+            <code>mysql2/promise</code> is the async/await-compatible version of the mysql2 driver. It lets you write <code>const [rows] = await pool.query(...)</code> instead of callback functions. The <code>/promise</code> suffix is important — without it, you get the callback-style API.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 7 — server.js -->
+      <div class="step open" id="step-p4s2">
+        <div class="step-header" onclick="toggleStep(this.parentElement)">
+          <div class="step-num">7</div>
+          <div class="step-title">Create server.js — API Endpoints</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">javascript · backend/server.js</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="ck">const</span> express = <span class="cv">require</span>(<span class="cs">'express'</span>);
+<span class="ck">const</span> cors    = <span class="cv">require</span>(<span class="cs">'cors'</span>);
+<span class="ck">const</span> db      = <span class="cv">require</span>(<span class="cs">'./db'</span>);
+
+<span class="ck">const</span> app  = <span class="cv">express</span>();
+<span class="ck">const</span> PORT = process.env.<span class="cv">PORT</span> || <span class="cc">3000</span>;
+
+app.<span class="cv">use</span>(cors());
+app.<span class="cv">use</span>(express.<span class="cv">json</span>());
+app.<span class="cv">use</span>(express.<span class="cv">static</span>(<span class="cs">'public'</span>));        <span class="cm">// Serve HTML/CSS from /public</span>
+
+<span class="cm">// ── HEALTH CHECK ───────────────────────────────────</span>
+app.<span class="cv">get</span>(<span class="cs">'/health'</span>, (req, res) => {
+  res.<span class="cv">json</span>({ status: <span class="cs">'ok'</span>, service: <span class="cs">'cloudeats-backend'</span> });
+});
+
+<span class="cm">// ── GET ALL MENU ITEMS ──────────────────────────────</span>
+app.<span class="cv">get</span>(<span class="cs">'/api/menu'</span>, <span class="ck">async</span> (req, res) => {
+  <span class="ck">try</span> {
+    <span class="ck">const</span> [rows] = <span class="ck">await</span> db.<span class="cv">query</span>(<span class="cs">'SELECT * FROM menu_items ORDER BY category, name'</span>);
+    res.<span class="cv">json</span>({ success: <span class="cc">true</span>, data: rows });
+  } <span class="ck">catch</span> (err) {
+    console.<span class="cv">error</span>(<span class="cs">'Menu fetch error:'</span>, err.message);
+    res.<span class="cv">status</span>(<span class="cc">500</span>).<span class="cv">json</span>({ success: <span class="cc">false</span>, error: <span class="cs">'Could not load menu'</span> });
+  }
+});
+
+<span class="cm">// ── GET MENU BY CATEGORY ───────────────────────────</span>
+app.<span class="cv">get</span>(<span class="cs">'/api/menu/category/:category'</span>, <span class="ck">async</span> (req, res) => {
+  <span class="ck">try</span> {
+    <span class="ck">const</span> [rows] = <span class="ck">await</span> db.<span class="cv">query</span>(
+      <span class="cs">'SELECT * FROM menu_items WHERE category = ? ORDER BY name'</span>,
+      [req.params.category]
+    );
+    res.<span class="cv">json</span>({ success: <span class="cc">true</span>, data: rows });
+  } <span class="ck">catch</span> (err) {
+    res.<span class="cv">status</span>(<span class="cc">500</span>).<span class="cv">json</span>({ success: <span class="cc">false</span>, error: err.message });
+  }
+});
+
+app.<span class="cv">listen</span>(PORT, () => console.<span class="cv">log</span>(<span class="cs">`CloudEats backend running on port ${PORT}`</span>));</pre>
+          </div>
+
+          <div class="callout blue">
+            <span>💡</span>
+            <div><strong>Parameterised queries:</strong> Notice <code>'WHERE category = ?', [req.params.category]</code> — the <code>?</code> placeholder. Never concatenate user input directly into SQL strings (<code>`WHERE category = '${req.params.category}'`</code>). That creates an SQL injection vulnerability. The <code>?</code> syntax automatically escapes the value.</div>
+          </div>
+
+          <div class="pace-block advanced">
+            <div class="pace-label">🟣 Advanced — Add a Category Filter to the Frontend</div>
+            The <code>/api/menu/category/:category</code> endpoint lets you filter by category. Try calling <code>http://[VM-IP]:3000/api/menu/category/Breakfast</code> directly. Then update the frontend to add filter buttons that call this endpoint when clicked.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PART 5: RUN & VERIFY ══ -->
+    <section id="p5s1">
+      <div class="part-header">
+        <div class="part-pill">Part 5</div>
+        <div class="part-title">Start the Stack &amp; Verify</div>
+        <div class="part-time">⏱ 15 min</div>
+      </div>
+
+      <!-- Step 8 -->
+      <div class="step open" id="step-p5s1">
+        <div class="step-header" onclick="toggleStep(this.parentElement)">
+          <div class="step-num">8</div>
+          <div class="step-title">Start Everything with docker compose up</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <div class="callout amber">
+            <span>⚠️</span>
+            <div><strong>Heads up — <code>localhost:3000</code> now returns JSON, not your menu page.</strong> In Lab 2.1, port 3000 served your HTML menu via nginx. From this lab onwards, port 3000 is the Node.js API. Opening it in a browser will show raw JSON like <code>{"success":true,"data":[...]}</code>. That is correct. The frontend reconnects to this API in the next step — don't panic if the HTML page appears broken for now.</div>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">bash · Launch the Stack</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># From the project root (where docker-compose.yml lives)</span>
+cd ~/cloudeats
+
+<span class="cm"># Build backend image and start all services in detached mode</span>
+docker compose up -d --build
+
+<span class="cm"># Watch logs in real-time (Ctrl+C to stop watching, containers keep running)</span>
+docker compose logs -f</pre>
+          </div>
+
+          <p>Watch the logs. You should see this sequence:</p>
+
+          <div class="expected-out">cloudeats-db      | [Entrypoint]: Database files initialized
+cloudeats-db      | [Entrypoint]: MySQL init process done. Ready for start up.
+cloudeats-db      | mysqld: ready for connections.
+cloudeats-db      | Version: '8.0.x'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306
+cloudeats-backend | ✅ MySQL connected — pool ready
+cloudeats-backend | CloudEats backend running on port 3000</div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Screenshot · docker compose logs — Both Containers Starting</div>
+              <div class="img-ph-desc">Terminal showing <code>docker compose up -d --build</code> output — build steps for backend (Step 1/4, 2/4...), then <code>[+] Running 2/2</code>, followed by <code>docker compose logs -f</code> showing both container names with timestamps: db showing "ready for connections" and backend showing "✅ MySQL connected — pool ready" and "CloudEats backend running on port 3000".</div>
+            </div>
+          </div>
+
+          <!-- Troubleshooting -->
+          <div class="trouble">
+            <div class="trouble-header" onclick="toggleTrouble(this.parentElement)">
+              ❌ "Cannot connect to database" or backend keeps restarting
+              <span class="trouble-toggle">▶</span>
+            </div>
+            <div class="trouble-body">
+              <strong>Cause 1 — healthcheck not working:</strong> Check <code>docker compose ps</code>. Is the <code>db</code> service showing <code>healthy</code> or <code>starting</code>? If it stays on <code>starting</code> for more than 60 seconds, the healthcheck command may be wrong. Verify the MySQL root password in the healthcheck matches <code>MYSQL_ROOT_PASSWORD</code>.<br><br>
+              <strong>Cause 2 — DB_HOST typo:</strong> Check <code>DB_HOST: db</code> in the YAML. The value must be <code>db</code> (the service name), not <code>localhost</code> or an IP.<br><br>
+              <strong>Cause 3 — old container conflict:</strong> Run <code>docker compose down</code> first to remove old containers, then <code>docker compose up -d --build</code>.
+            </div>
+          </div>
+
+          <div class="trouble">
+            <div class="trouble-header" onclick="toggleTrouble(this.parentElement)">
+              ❌ "Error response from daemon: Conflict. The container name ... is already in use"
+              <span class="trouble-toggle">▶</span>
+            </div>
+            <div class="trouble-body">
+              A container with that name already exists from a previous run. Stop and remove it: <code>docker compose down</code> — this removes containers but keeps volumes. Then re-run <code>docker compose up -d --build</code>.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 9 — Test -->
+      <div class="step open" id="step-p5s2">
+        <div class="step-header" onclick="toggleStep(this.parentElement)">
+          <div class="step-num">9</div>
+          <div class="step-title">Test the API &amp; Check the Database</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p><strong>Test 1 — Health check:</strong></p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">bash</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre>curl http://localhost:3000/health
+<span class="cm"># Expected: {"status":"ok","service":"cloudeats-backend"}</span></pre>
+          </div>
+
+          <p><strong>Test 2 — Menu API:</strong></p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">bash</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre>curl http://localhost:3000/api/menu | python3 -m json.tool
+<span class="cm"># Or open in browser: http://[VM-IP]:3000/api/menu</span></pre>
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Screenshot · Browser — GET /api/menu JSON Response</div>
+              <div class="img-ph-desc">Browser tab open at <code>http://[VM-IP]:3000/api/menu</code> showing formatted JSON: <code>{"success":true,"data":[{"id":1,"name":"Nasi Lemak Special","category":"Breakfast","price":"12.00","description":"...","badge":"Best Seller","created_at":"..."},...}]}</code>. All 7 menu items visible.</div>
+            </div>
+          </div>
+
+          <p style="margin-top:0.75rem"><strong>Test 3 — Inspect MySQL directly:</strong></p>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">bash · Connect to MySQL Inside the Container</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Open a MySQL shell inside the db container</span>
+docker exec -it cloudeats-db mysql -u cloudeats_user -pcloudeats_password cloudeats_db
+
+<span class="cm"># Inside MySQL shell — run these commands:</span>
+SHOW TABLES;
+SELECT * FROM menu_items;
+EXIT;</pre>
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Screenshot · MySQL Terminal — SHOW TABLES and SELECT</div>
+              <div class="img-ph-desc">Terminal showing the MySQL prompt <code>mysql&gt;</code>, then <code>SHOW TABLES;</code> output: a single table row — <code>menu_items</code>. Then <code>SELECT id, name, price, badge FROM menu_items;</code> showing all 7 rows in a formatted table, including the <code>Best Seller</code> and <code>New</code> badges visible.</div>
+            </div>
+          </div>
+
+          <div class="checkpoint">
+            <span class="checkpoint-icon">✅</span>
+            <div class="checkpoint-text">
+              <strong>Checkpoint 1 — API Working</strong>
+              <code>GET /api/menu</code> returns JSON with 7 menu items. MySQL shell shows the <code>menu_items</code> table with all rows. The backend logs show no errors.
+            </div>
+          </div>
+
+          <div class="trouble">
+            <div class="trouble-header" onclick="toggleTrouble(this.parentElement)">
+              ❌ /api/menu returns empty array or 500 error
+              <span class="trouble-toggle">▶</span>
+            </div>
+            <div class="trouble-body">
+              <strong>Check 1 — Did init.sql run?</strong> Inside MySQL: <code>SHOW TABLES;</code> — if no tables exist, the init script didn't run. This happens if you started with an existing volume. Run <code>docker compose down -v</code> (deletes volume) then <code>docker compose up -d --build</code>.<br><br>
+              <strong>Check 2 — init.sql syntax error?</strong> Check <code>docker compose logs db</code> for SQL error messages during startup.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 10 — Persistence Test -->
+      <div class="step open" id="step-p5s3">
+        <div class="step-header" onclick="toggleStep(this.parentElement)">
+          <div class="step-num">10</div>
+          <div class="step-title">Persistence Test — The Key Checkpoint</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>This is the most important test of this lab. It proves that the named volume is working and data is not stored inside the container.</p>
+
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">bash · Persistence Test</div><button class="copy-btn" onclick="copyCode(this, event)">Copy</button></div>
+            <pre><span class="cm"># Step 1: Add a new menu item via MySQL</span>
+docker exec -it cloudeats-db mysql -u cloudeats_user -pcloudeats_password cloudeats_db \
+  -e "INSERT INTO menu_items (name, category, price, badge) VALUES ('Cendol', 'Desserts', 5.50, 'New');"
+
+<span class="cm"># Step 2: Verify it appears in the API</span>
+curl http://localhost:3000/api/menu | python3 -m json.tool | grep Cendol
+
+<span class="cm"># Step 3: STOP and REMOVE all containers (but NOT volumes)</span>
+docker compose down
+
+<span class="cm"># Step 4: Start them all again</span>
+docker compose up -d
+
+<span class="cm"># Step 5: Check if Cendol is still there</span>
+curl http://localhost:3000/api/menu | python3 -m json.tool | grep Cendol</pre>
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Screenshot · Persistence Test — Cendol Survives Restart</div>
+              <div class="img-ph-desc">Terminal showing two <code>grep Cendol</code> results — before and after <code>docker compose down &amp;&amp; docker compose up -d</code>. Both outputs show <code>"name": "Cendol"</code>, proving the named volume persisted the data. Second screenshot: <code>docker volume ls</code> showing <code>cloudeats_mysql-data</code> as a separate entry from the containers.</div>
+            </div>
+          </div>
+
+          <div class="checkpoint">
+            <span class="checkpoint-icon">🏆</span>
+            <div class="checkpoint-text">
+              <strong>Checkpoint 2 — Persistence Confirmed</strong>
+              Cendol appears in the API response both before and after <code>docker compose down && docker compose up -d</code>. This proves the named volume is working — MySQL data lives outside the container.
+            </div>
+          </div>
+
+          <div class="pace-block advanced">
+            <div class="pace-label">🟣 Advanced — What Happens with docker compose down -v?</div>
+            Try: <code>docker compose down -v</code> then <code>docker compose up -d</code>. The <code>-v</code> flag deletes the named volume. Cendol is gone — and so are all 7 seed items. init.sql runs again on first start and re-inserts them. This simulates a complete data loss scenario. In production, you'd have automated backups (RDS automatic backups, mysqldump to S3) to recover from this.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ WRAP-UP ══ -->
+    <section id="wrapup">
+      <div class="part-header">
+        <div class="part-pill">Wrap-Up</div>
+        <div class="part-title">Completion Checklist &amp; What's Next</div>
+      </div>
+
+      <p><strong>Before moving to Lab 3.2, verify all of these:</strong></p>
+      <table class="info-table">
+        <thead><tr><th>Item</th><th>How to Verify</th></tr></thead>
+        <tbody>
+          <tr><td>✅ <code>docker ps</code> shows both <code>cloudeats-backend</code> and <code>cloudeats-db</code> running</td><td><code>docker ps --format "table {{.Names}}\t{{.Status}}"</code></td></tr>
+          <tr><td>✅ <code>GET /api/menu</code> returns 7 items from database</td><td>Browser or <code>curl localhost:3000/api/menu</code></td></tr>
+          <tr><td>✅ MySQL shell shows <code>menu_items</code> table with rows</td><td><code>docker exec -it cloudeats-db mysql...</code></td></tr>
+          <tr><td>✅ Data persists after <code>docker compose down && up</code></td><td>Cendol still appears after restart</td></tr>
+          <tr><td>✅ <code>docker volume ls</code> shows <code>cloudeats_mysql-data</code></td><td><code>docker volume ls | grep mysql</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout green" style="margin-top:1rem">
+        <span>🎉</span>
+        <div><strong>Lab 3.1 complete!</strong> You've replaced hardcoded HTML with a real database. The menu now lives in MySQL, survives container restarts, and can be updated without touching any code. Continue to Lab 3.2 to add user accounts and password hashing.</div>
+      </div>
+
+      <div class="roadmap" style="margin-top:1.25rem">
+        <div class="roadmap-title">CloudEats — Progress So Far</div>
+        <div class="rm-week"><div class="rm-dot done"></div><div><div class="rm-label">Lab 1.1 · Dev Environment ✅</div><div class="rm-desc">Docker, VS Code, Git installed and verified</div></div></div>
+        <div class="rm-week"><div class="rm-dot done"></div><div><div class="rm-label">Lab 2.1 · Static Menu ✅</div><div class="rm-desc">CloudEats homepage in a Docker container</div></div></div>
+        <div class="rm-week"><div class="rm-dot done"></div><div><div class="rm-label">Lab 2.2 · Docker Networking ✅</div><div class="rm-desc">Multi-container, custom network, DNS</div></div></div>
+        <div class="rm-week"><div class="rm-dot done"></div><div><div class="rm-label">Lab 3.1 · Docker Compose + MySQL ✅</div><div class="rm-desc">Dynamic menu from database, persistent data ← YOU ARE HERE</div></div></div>
+        <div class="rm-week"><div class="rm-dot active"></div><div><div class="rm-label">Lab 3.2 · User Registration → Next</div><div class="rm-desc">Add users table, bcrypt password hashing, registration API</div></div></div>
+        <div class="rm-week"><div class="rm-dot upcoming"></div><div><div class="rm-label">Lab 4.1 · Relational DB Queries</div><div class="rm-desc">SQL SELECT, JOIN, aggregate queries on this schema</div></div></div>
+      </div>
+
+      <div class="callout purple" style="margin-top:1rem">
+        <span>🐙</span>
+        <div><strong>GitHub Pages tip:</strong> This lab page is self-contained static HTML. Push to a GitHub repo, enable Pages under Settings → Pages → Branch: main. Access at <code>yourusername.github.io/cloudeats-academy/week03_lab1_docker_compose_mysql.html</code>. No server required.</div>
+      </div>
+
+      <div class="callout blue" style="margin-top:0.75rem">
+        <span>💡</span>
+        <div><strong>Two different things on GitHub:</strong> This <em>lab guide page</em> runs on GitHub Pages (static HTML, no server). The <em>CloudEats app you built</em> (Node.js + MySQL) runs on your local machine or a cloud VM — it cannot run on GitHub Pages because it needs a real server and database. Week 10 covers how to deploy that to a cloud provider.</div>
+      </div>
+    </section>
+
+  </main>
+</div><!-- /page-body -->
+
+<footer style="border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;color:var(--muted);font-size:0.78rem;max-width:1100px;margin:0 auto">
+  Cloud Computing · Lab 3.1 · Docker Compose &amp; MySQL &nbsp;|&nbsp; CloudEats Academy &nbsp;|&nbsp; Est. 60 min &nbsp;|&nbsp;
+  <a href="week03_Databases_in_the_Cloud.html" style="color:var(--muted);text-decoration:none">← Week 3 Lecture</a>
+  &nbsp;|&nbsp;
+  <a href="week03_lab2_user_registration.html" style="color:var(--green);text-decoration:none">Lab 3.2 →</a>
+  &nbsp;|&nbsp;
+  <span class="ghp-badge">🐙 GitHub Pages Ready</span>
+</footer>
+
+<script>
+  function setPace(pace) {
+    document.body.className = 'pace-' + pace;
+    document.querySelectorAll('.pace-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-pace="${pace}"]`).classList.add('active');
+    if (pace === 'beginner') expandAll();
+  }
+  function expandAll() {
+    document.querySelectorAll('.step').forEach(s => s.classList.add('open'));
+  }
+  function collapseAll() {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('open'));
+  }
+  function toggleStep(el) { el.classList.toggle('open'); }
+  function toggleTrouble(el) { el.classList.toggle('open'); }
+  function copyCode(btn, event) {
+    if (event) event.stopPropagation();
+    const pre = btn.closest('.code-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'Copied!'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+  function toggleCheck(li) {
+    li.classList.toggle('done');
+    li.querySelector('.check-box').textContent = li.classList.contains('done') ? '✓' : '';
+    updateProgress();
+  }
+  function updateProgress() {
+    const items = document.querySelectorAll('#checklistItems li');
+    const done  = document.querySelectorAll('#checklistItems li.done').length;
+    document.getElementById('progressBar').style.width = Math.round((done/items.length)*100) + '%';
+    document.getElementById('progressCount').textContent = done;
+  }
+  const sections  = document.querySelectorAll('[id]');
+  const sideLinks = document.querySelectorAll('.sidebar-nav a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
+    sideLinks.forEach(a => {
+      a.classList.remove('active');
+      if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+    });
+  });
+  /* Default pace is beginner — expand all steps on first load */
+  document.addEventListener('DOMContentLoaded', () => { expandAll(); });
+</script>
+</body>
+</html>

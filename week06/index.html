@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 6 · DevOps and Version Control · CloudEats Academy</title>
+<meta name="description" content="Learn Git, branching strategies, merge conflicts, CI/CD pipelines and automated testing with GitHub Actions — hands-on concepts for the CloudEats project.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Week 6 · DevOps and Version Control · CloudEats Academy">
+<meta property="og:description" content="Master Git branching, pull requests, and GitHub Actions CI — the DevOps skills that connect your code to a running app automatically.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090f;--bg2:#0d1117;--bg3:#141b27;
+  --surface:#1a2235;--surface2:#1f2c42;--border:#2a3d5a;
+  --accent:#00c8ff;--green:#00e5a0;--amber:#ffb740;
+  --red:#ff5e7a;--purple:#b46ef5;
+  --text:#e8edf5;--muted:#6b7fa0;
+  --beginner:#00e5a0;--average:#00c8ff;--advanced:#b46ef5;
+  --week-color:#ffb740;--radius:10px;--code-bg:#0b1120;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;}
+.site-header{background:linear-gradient(135deg,#050d1c,#091628);border-bottom:1px solid var(--border);padding:0 2rem;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:58px;gap:1rem;}
+.header-left{display:flex;align-items:center;gap:.75rem;}
+.week-badge{background:var(--week-color);color:#000;font-size:.65rem;font-weight:700;letter-spacing:.1em;padding:.2rem .55rem;border-radius:4px;text-transform:uppercase;}
+.header-title{font-size:.9rem;font-weight:600;}
+.ghp-badge{display:inline-flex;align-items:center;gap:.35rem;font-size:.68rem;font-weight:700;padding:.2rem .6rem;background:rgba(255,183,64,.1);border:1px solid rgba(255,183,64,.3);color:var(--amber);border-radius:20px;}
+.week-nav{display:flex;gap:.4rem;align-items:center;}
+.week-nav a{font-size:.68rem;font-weight:600;padding:.2rem .55rem;border:1px solid var(--border);border-radius:4px;color:var(--muted);text-decoration:none;transition:all .15s;}
+.week-nav a:hover{color:var(--accent);border-color:var(--accent);}
+.week-nav a.current{background:rgba(255,183,64,.1);color:var(--amber);border-color:rgba(255,183,64,.3);}
+.page-hero{background:linear-gradient(160deg,#0a0e18,#0f1620);border-bottom:1px solid var(--border);padding:2.5rem 2rem 2rem;position:relative;overflow:hidden;}
+.page-hero::before{content:'';position:absolute;top:-80px;right:-80px;width:400px;height:400px;background:radial-gradient(ellipse,rgba(255,183,64,.07),transparent 70%);pointer-events:none;}
+.hero-inner{max-width:1100px;margin:0 auto;}
+.hero-crumb{font-size:.72rem;color:var(--muted);margin-bottom:.5rem;}
+.hero-crumb span{color:var(--amber);}
+.page-hero h1{font-size:clamp(1.5rem,3vw,2.1rem);font-weight:800;background:linear-gradient(135deg,#e8edf5 40%,var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.5rem;}
+.hero-sub{color:var(--muted);font-size:.88rem;margin-top:.3rem;}
+.hero-meta{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1rem;}
+.meta-chip{display:flex;align-items:center;gap:.4rem;font-size:.78rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.28rem .7rem;color:var(--muted);}
+.meta-chip strong{color:var(--text);}
+.pace-bar{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.25rem;align-items:center;}
+.pace-bar span{font-size:.73rem;color:var(--muted);margin-right:.25rem;}
+.pace-btn{font-family:'Sora',sans-serif;font-size:.75rem;font-weight:700;padding:.3rem .85rem;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);cursor:pointer;transition:all .18s;}
+.pace-btn.active[data-pace="beginner"]{background:rgba(0,229,160,.12);color:var(--beginner);border-color:rgba(0,229,160,.4);}
+.pace-btn.active[data-pace="average"]{background:rgba(0,200,255,.12);color:var(--average);border-color:rgba(0,200,255,.4);}
+.pace-btn.active[data-pace="advanced"]{background:rgba(180,110,245,.12);color:var(--advanced);border-color:rgba(180,110,245,.4);}
+.tab-nav{max-width:1100px;margin:0 auto;padding:1.5rem 2rem 0;display:flex;gap:.4rem;flex-wrap:wrap;}
+.tab-btn{font-family:'Sora',sans-serif;font-size:.78rem;font-weight:600;padding:.5rem 1rem;border:1px solid var(--border);border-radius:8px 8px 0 0;background:var(--bg3);color:var(--muted);cursor:pointer;transition:all .15s;border-bottom:none;}
+.tab-btn:hover{color:var(--text);background:var(--surface);}
+.tab-btn.active{background:var(--surface);color:var(--amber);border-color:var(--border);border-bottom:1px solid var(--surface);position:relative;z-index:1;}
+.tab-content{max-width:1100px;margin:0 auto;padding:0 2rem 4rem;}
+.tab-panel{display:none;background:var(--surface);border:1px solid var(--border);border-radius:0 var(--radius) var(--radius) var(--radius);padding:2rem;margin-top:-1px;}
+.tab-panel.active{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+.sec-header{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;padding-bottom:.6rem;border-bottom:1px solid var(--border);}
+.sec-pill{font-size:.67rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.18rem .55rem;border-radius:20px;white-space:nowrap;}
+.sec-pill.amber{background:rgba(255,183,64,.1);color:var(--amber);border:1px solid rgba(255,183,64,.2);}
+.sec-pill.blue{background:rgba(0,200,255,.1);color:var(--accent);border:1px solid rgba(0,200,255,.2);}
+.sec-pill.green{background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.2);}
+.sec-pill.purple{background:rgba(180,110,245,.1);color:var(--purple);border:1px solid rgba(180,110,245,.2);}
+.sec-pill.red{background:rgba(255,94,122,.1);color:var(--red);border:1px solid rgba(255,94,122,.2);}
+.sec-title{font-size:1.1rem;font-weight:700;}
+.sec-time{font-size:.73rem;color:var(--muted);margin-left:auto;}
+.section-divider{border:none;border-top:1px solid var(--border);margin:2rem 0;}
+p{margin-bottom:.75rem;font-size:.86rem;line-height:1.7;}
+p:last-child{margin-bottom:0;}
+strong{color:var(--text);font-weight:600;}
+a{color:var(--accent);}a:hover{text-decoration:underline;}
+code{font-family:'Fira Code',monospace;font-size:.84em;background:var(--code-bg);padding:.08rem .35rem;border-radius:3px;color:var(--green);}
+.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;margin:.75rem 0;overflow:hidden;}
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:.45rem .9rem;background:rgba(0,0,0,.3);border-bottom:1px solid var(--border);}
+.code-lang{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.copy-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.18rem .55rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;transition:all .15s;}
+.copy-btn:hover{background:var(--amber);color:#000;border-color:var(--amber);}
+.copy-btn.copied{background:var(--green);color:#000;border-color:var(--green);}
+pre{font-family:'Fira Code',monospace;font-size:.79rem;line-height:1.65;padding:.9rem;overflow-x:auto;color:#c5d5ef;white-space:pre;}
+.ck{color:var(--accent);}.cv{color:var(--green);}.cm{color:var(--muted);font-style:italic;}.cp{color:var(--purple);}.ca{color:var(--amber);}
+.level-row{display:flex;flex-wrap:wrap;gap:.4rem;margin:.75rem 0;}
+.level-pill{font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.15rem .5rem;border-radius:20px;white-space:nowrap;}
+.level-pill.beginner{background:rgba(0,229,160,.12);color:var(--beginner);border:1px solid rgba(0,229,160,.3);}
+.level-pill.average{background:rgba(0,200,255,.12);color:var(--average);border:1px solid rgba(0,200,255,.3);}
+.level-pill.advanced{background:rgba(180,110,245,.12);color:var(--advanced);border:1px solid rgba(180,110,245,.3);}
+.level-block{border-radius:8px;padding:.75rem 1rem;margin:.6rem 0;font-size:.82rem;line-height:1.55;}
+.level-block.beginner{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.18);border-left:3px solid var(--beginner);}
+.level-block.average{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.18);border-left:3px solid var(--average);}
+.level-block.advanced{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.18);border-left:3px solid var(--advanced);}
+.level-block-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem;}
+.level-block.beginner .level-block-label{color:var(--beginner);}
+.level-block.average .level-block-label{color:var(--average);}
+.level-block.advanced .level-block-label{color:var(--advanced);}
+.callout{border-radius:8px;padding:.75rem 1rem;margin:.75rem 0;display:flex;gap:.6rem;align-items:flex-start;font-size:.82rem;line-height:1.55;}
+.callout.blue{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);color:#a0d8f0;}
+.callout.green{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);color:#8ee8c4;}
+.callout.amber{background:rgba(255,183,64,.06);border:1px solid rgba(255,183,64,.2);color:#d9c07a;}
+.callout.purple{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);color:#c5a8f5;}
+.callout.red{background:rgba(255,94,122,.05);border:1px solid rgba(255,94,122,.2);color:#f0a0b0;}
+.callout-icon{font-size:1rem;flex-shrink:0;line-height:1.4;}
+.why-box{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.2);border-left:3px solid var(--accent);border-radius:6px;padding:.7rem 1rem;margin:.75rem 0;font-size:.81rem;color:#a0d8f0;}
+.why-box strong{color:var(--accent);}
+.card-grid{display:grid;gap:.85rem;margin:.85rem 0;}
+.card-grid.cols2{grid-template-columns:repeat(2,1fr);}
+.card-grid.cols3{grid-template-columns:repeat(3,1fr);}
+.concept-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem;}
+.concept-card.hl-amber{border-color:rgba(255,183,64,.35);background:rgba(255,183,64,.04);}
+.concept-card.hl-blue{border-color:rgba(0,200,255,.35);background:rgba(0,200,255,.04);}
+.concept-card.hl-green{border-color:rgba(0,229,160,.35);background:rgba(0,229,160,.04);}
+.concept-card.hl-purple{border-color:rgba(180,110,245,.35);background:rgba(180,110,245,.04);}
+.concept-card.hl-red{border-color:rgba(255,94,122,.35);background:rgba(255,94,122,.04);}
+.cc-icon{font-size:1.6rem;margin-bottom:.4rem;display:block;}
+.cc-title{font-size:.88rem;font-weight:700;margin-bottom:.3rem;}
+.cc-body{font-size:.79rem;color:var(--muted);line-height:1.55;}
+.cc-tag{display:inline-block;font-size:.68rem;font-weight:600;padding:.1rem .45rem;border-radius:4px;margin-top:.5rem;}
+.cc-tag.amber{background:rgba(255,183,64,.1);color:var(--amber);}
+.cc-tag.blue{background:rgba(0,200,255,.1);color:var(--accent);}
+.cc-tag.green{background:rgba(0,229,160,.1);color:var(--green);}
+.cc-tag.purple{background:rgba(180,110,245,.1);color:var(--purple);}
+.cc-tag.red{background:rgba(255,94,122,.1);color:var(--red);}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:.85rem 0;}
+.compare-side{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem;}
+.compare-side.bad{border-top:3px solid var(--red);}
+.compare-side.good{border-top:3px solid var(--green);}
+.cs-label{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.65rem;}
+.cs-label.red{color:var(--red);}.cs-label.green{color:var(--green);}.cs-label.amber{color:var(--amber);}
+.cs-item{display:flex;gap:.5rem;align-items:flex-start;font-size:.8rem;margin-bottom:.45rem;color:var(--muted);}
+.cs-item:last-child{margin-bottom:0;}
+.cs-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:.4rem;}
+.dot-red{background:var(--red);}.dot-green{background:var(--green);}.dot-amber{background:var(--amber);}.dot-blue{background:var(--accent);}.dot-purple{background:var(--purple);}
+.kc-question{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:.85rem;}
+.kc-q{font-size:.88rem;font-weight:600;margin-bottom:.7rem;}
+.kc-options{list-style:none;}
+.kc-options li{display:flex;align-items:center;gap:.55rem;font-size:.81rem;padding:.4rem .7rem;border-radius:6px;cursor:pointer;transition:background .15s;margin-bottom:.25rem;border:1px solid transparent;}
+.kc-options li:hover{background:var(--surface2);}
+.kc-options li.correct{background:rgba(0,229,160,.1);border-color:rgba(0,229,160,.3);color:var(--green);}
+.kc-options li.wrong{background:rgba(255,94,122,.08);border-color:rgba(255,94,122,.25);color:var(--red);}
+.kc-radio{width:14px;height:14px;border:2px solid var(--border);border-radius:50%;flex-shrink:0;transition:all .15s;}
+.kc-options li.correct .kc-radio{background:var(--green);border-color:var(--green);}
+.kc-options li.wrong .kc-radio{background:var(--red);border-color:var(--red);}
+.summary-table{width:100%;border-collapse:collapse;font-size:.82rem;margin:.85rem 0;}
+.summary-table th{padding:.5rem .85rem;background:var(--bg3);color:var(--muted);font-size:.69rem;letter-spacing:.07em;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border);}
+.summary-table td{padding:.5rem .85rem;border-bottom:1px solid rgba(42,61,90,.3);vertical-align:top;}
+.summary-table tr:last-child td{border-bottom:none;}
+.summary-table tr:hover td{background:rgba(255,255,255,.02);}
+.lab-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1rem;}
+.lab-card-header{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;}
+.lab-num{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.18rem .55rem;border-radius:20px;}
+.lab-num.amber{background:rgba(255,183,64,.12);color:var(--amber);border:1px solid rgba(255,183,64,.25);}
+.lab-num.green{background:rgba(0,229,160,.12);color:var(--green);border:1px solid rgba(0,229,160,.25);}
+.lab-title{font-size:1rem;font-weight:700;}
+.checklist{list-style:none;margin:.5rem 0;}
+.checklist li{display:flex;gap:.55rem;font-size:.81rem;color:var(--muted);padding:.25rem 0;}
+.checklist li::before{content:'&#9657;';color:var(--green);flex-shrink:0;}
+.interactive-panel{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1.5rem;margin:1rem 0;}
+.interactive-panel h3{font-size:.88rem;font-weight:700;margin-bottom:1rem;color:var(--amber);}
+.git-timeline{display:flex;align-items:center;gap:0;margin:1rem 0;overflow-x:auto;padding:.5rem 0;}
+.commit-node{display:flex;flex-direction:column;align-items:center;cursor:pointer;min-width:72px;}
+.commit-dot{width:34px;height:34px;border-radius:50%;border:2px solid var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-family:'Fira Code',monospace;color:var(--muted);transition:all .2s;font-weight:600;}
+.commit-node.active .commit-dot{background:var(--amber);color:#000;border-color:var(--amber);box-shadow:0 0 12px rgba(255,183,64,.4);}
+.commit-label{font-size:.62rem;color:var(--muted);margin-top:.35rem;text-align:center;max-width:68px;line-height:1.3;}
+.commit-line{width:28px;height:2px;background:var(--border);flex-shrink:0;margin-bottom:18px;}
+.commit-detail{background:var(--bg3);border:1px solid rgba(255,183,64,.25);border-radius:8px;padding:.85rem 1rem;margin-top:.75rem;font-size:.8rem;}
+.cd-hash{font-family:'Fira Code',monospace;color:var(--amber);font-size:.75rem;margin-bottom:.3rem;}
+.cd-msg{font-weight:600;margin-bottom:.25rem;}
+.cd-meta{color:var(--muted);font-size:.75rem;}
+.branch-controls{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem;}
+.branch-btn{font-family:'Sora',sans-serif;font-size:.75rem;font-weight:700;padding:.4rem .9rem;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);cursor:pointer;transition:all .18s;}
+.branch-btn:hover{color:var(--amber);border-color:var(--amber);}
+.branch-btn.active{background:rgba(255,183,64,.12);color:var(--amber);border-color:rgba(255,183,64,.4);}
+.branch-status{font-size:.77rem;color:var(--muted);margin-top:.5rem;min-height:1.4em;}
+.branch-status span{color:var(--amber);}
+.ci-pipeline{display:flex;flex-direction:column;gap:.5rem;margin:1rem 0;}
+.ci-step{display:flex;align-items:center;gap:.75rem;padding:.65rem .9rem;border-radius:8px;border:1px solid var(--border);background:var(--bg3);font-size:.81rem;transition:all .3s;}
+.ci-step.pending{color:var(--muted);}
+.ci-step.running{border-color:rgba(255,183,64,.4);background:rgba(255,183,64,.04);color:var(--amber);}
+.ci-step.pass{border-color:rgba(0,229,160,.35);background:rgba(0,229,160,.05);color:var(--green);}
+.ci-step.fail{border-color:rgba(255,94,122,.35);background:rgba(255,94,122,.05);color:var(--red);}
+.ci-icon{width:22px;text-align:center;font-size:1rem;flex-shrink:0;}
+.ci-run-btn{font-family:'Sora',sans-serif;font-size:.8rem;font-weight:700;padding:.5rem 1.2rem;background:rgba(255,183,64,.12);color:var(--amber);border:1px solid rgba(255,183,64,.4);border-radius:6px;cursor:pointer;transition:all .18s;}
+.ci-run-btn:hover{background:rgba(255,183,64,.2);}
+.ci-run-btn:disabled{opacity:.4;cursor:not-allowed;}
+.conflict-block{font-family:'Fira Code',monospace;font-size:.8rem;line-height:1.7;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+.conflict-marker{padding:.25rem .9rem;font-size:.72rem;font-weight:700;letter-spacing:.07em;}
+.conflict-yours{background:rgba(0,229,160,.08);padding:.5rem .9rem;cursor:pointer;transition:background .18s;border:2px solid transparent;}
+.conflict-yours:hover{background:rgba(0,229,160,.14);border-color:rgba(0,229,160,.4);}
+.conflict-incoming{background:rgba(0,200,255,.06);padding:.5rem .9rem;cursor:pointer;transition:background .18s;border:2px solid transparent;}
+.conflict-incoming:hover{background:rgba(0,200,255,.12);border-color:rgba(0,200,255,.4);}
+.conflict-sep{background:rgba(180,110,245,.08);padding:.2rem .9rem;color:var(--purple);font-size:.72rem;}
+.conflict-resolved{background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.3);border-radius:8px;padding:.75rem .9rem;font-family:'Fira Code',monospace;font-size:.8rem;display:none;}
+.conflict-msg{font-size:.8rem;color:var(--muted);margin-top:.6rem;min-height:1.2em;}
+.assess-item{display:flex;align-items:flex-start;gap:.6rem;padding:.45rem .65rem;border-radius:6px;font-size:.82rem;color:var(--muted);cursor:pointer;transition:all .15s;border:1px solid transparent;}
+.assess-item:hover{background:var(--bg3);}
+.assess-item.done{color:var(--text);background:rgba(0,229,160,.04);border-color:rgba(0,229,160,.2);}
+.assess-check{width:18px;height:18px;border:2px solid var(--border);border-radius:4px;flex-shrink:0;margin-top:.1rem;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.assess-item.done .assess-check{background:var(--green);border-color:var(--green);}
+.assess-item.done .assess-check::after{content:'&#10003;';font-size:.72rem;color:#000;font-weight:700;}
+.quiz-score-bar{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:.85rem 1.25rem;margin-top:1rem;display:none;font-size:.85rem;}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+@media(max-width:768px){
+  .tab-content{padding:0 1rem 3rem;}
+  .tab-panel{padding:1.25rem;}
+  .card-grid.cols2,.card-grid.cols3,.compare-grid{grid-template-columns:1fr;}
+  .week-nav{display:none;}
+}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <span class="week-badge">Week 6</span>
+      <span class="header-title">DevOps &amp; Version Control</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem">
+      <nav class="week-nav">
+        <a href="../week01/index.html">W1</a>
+        <a href="../week02/index.html">W2</a>
+        <a href="../week03/index.html">W3</a>
+        <a href="../week04/index.html">W4</a>
+        <a href="../week05/index.html">W5</a>
+        <a class="current" href="#">W6</a>
+      </nav>
+      <span class="ghp-badge">&#127758; GitHub Pages Ready</span>
+    </div>
+  </div>
+</header>
+
+<div class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb">CloudEats Academy &rsaquo; <span>Week 6</span></div>
+    <h1>DevOps &amp; Version Control</h1>
+    <p class="hero-sub">Git &middot; Branching &middot; Pull Requests &middot; Merge Conflicts &middot; CI/CD &middot; GitHub Actions &middot; Automated Testing</p>
+    <div class="hero-meta">
+      <div class="meta-chip">&#9200; <strong>4 hours</strong>&nbsp;Contact</div>
+      <div class="meta-chip">&#128300; <strong>Labs 6.1 &amp; 6.2</strong>&nbsp;This Week</div>
+      <div class="meta-chip">&#128073; <strong>Prereq:</strong>&nbsp;Lab 5.1 complete + GitHub account</div>
+      <div class="meta-chip">&#8594; <strong>Next:</strong>&nbsp;Week 7 CI/CD + IaC</div>
+    </div>
+    <div class="pace-bar">
+      <span>Your pace:</span>
+      <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner')">&#127807; Beginner</button>
+      <button class="pace-btn" data-pace="average" onclick="setPace('average')">&#9889; Average</button>
+      <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced')">&#128640; Advanced</button>
+    </div>
+  </div>
+</div>
+
+<div style="max-width:1100px;margin:1.25rem auto;padding:0 2rem">
+  <div class="callout amber">
+    <span class="callout-icon">&#128073;</span>
+    <div><strong>Before you start:</strong> Complete <a href="../week05/lab1_microservices_architecture.html">Lab 5.1</a> and have the CloudEats repo on your local machine. You need a GitHub account &mdash; <a href="https://github.com/signup" target="_blank" rel="noopener">create one free here</a> if you haven't already.</div>
+  </div>
+</div>
+
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('h1',this)">&#127968; Hour 1 &middot; DevOps &amp; Git Core</button>
+  <button class="tab-btn" onclick="showTab('h2',this)">&#127807; Hour 2 &middot; Branching &amp; Conflicts</button>
+  <button class="tab-btn" onclick="showTab('h3',this)">&#9889; Hour 3 &middot; CI/CD &amp; Testing</button>
+  <button class="tab-btn" onclick="showTab('quiz',this)">&#128221; Week Quiz</button>
+  <button class="tab-btn" onclick="showTab('labs',this)">&#128300; Labs This Week</button>
+</div>
+
+<div class="tab-content">
+<!-- ═══════════════════════════════ HOUR 1 ═══════════════════════════════ -->
+<div class="tab-panel active" id="panel-h1">
+
+  <div class="sec-header">
+    <span class="sec-pill amber">1.1</span>
+    <span class="sec-title">The Problem DevOps Solves</span>
+    <span class="sec-time">15 min</span>
+  </div>
+
+  <p>Before DevOps, software companies had two separate teams that rarely talked to each other &mdash; and that silence caused constant crises.</p>
+
+  <div class="compare-grid">
+    <div class="compare-side bad">
+      <div class="cs-label red">&#128679; Dev Team &mdash; wants speed</div>
+      <div class="cs-item"><span class="cs-dot dot-red"></span><span>Writes new features every week</span></div>
+      <div class="cs-item"><span class="cs-dot dot-red"></span><span>Wants to deploy on Friday afternoon</span></div>
+      <div class="cs-item"><span class="cs-dot dot-red"></span><span>"It works on my machine!"</span></div>
+      <div class="cs-item"><span class="cs-dot dot-red"></span><span>Blames Ops when deployment fails</span></div>
+    </div>
+    <div class="compare-side bad">
+      <div class="cs-label amber">&#128221; Ops Team &mdash; wants stability</div>
+      <div class="cs-item"><span class="cs-dot dot-amber"></span><span>Runs the servers, fears downtime</span></div>
+      <div class="cs-item"><span class="cs-dot dot-amber"></span><span>Reluctant to deploy on Fridays</span></div>
+      <div class="cs-item"><span class="cs-dot dot-amber"></span><span>"This worked fine last quarter!"</span></div>
+      <div class="cs-item"><span class="cs-dot dot-amber"></span><span>Blames Dev when servers crash</span></div>
+    </div>
+  </div>
+
+  <div class="level-row">
+    <span class="level-pill beginner">&#127807; Beginner</span>
+    <span class="level-pill average">&#9889; Average</span>
+    <span class="level-pill advanced">&#128640; Advanced</span>
+  </div>
+  <div class="level-block beginner">
+    <div class="level-block-label">&#127807; Beginner &mdash; Think of a Restaurant</div>
+    Imagine the kitchen (Dev team) cooks food however they like. The waiter (Ops team) then has to serve it &mdash; but the chef never warned the waiter what was on the menu. Every service is a surprise and customers keep getting the wrong food. DevOps is like having a shared kitchen screen: everyone sees what is cooking, and the recipe is always the same no matter which chef made it.
+  </div>
+  <div class="level-block average">
+    <div class="level-block-label">&#9889; Average &mdash; The Wall of Confusion</div>
+    Developers throw code "over the wall" to operations. Ops scrambles to deploy code they did not write, on servers the developer never tested on. When something breaks, there is a blame game instead of a fix. DevOps breaks down the wall &mdash; same people, same tools, shared responsibility for the full lifecycle: code &rarr; test &rarr; deploy &rarr; monitor.
+  </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">&#128640; Advanced &mdash; DORA Metrics</div>
+    The DevOps Research and Assessment (DORA) team identified four key metrics for high-performing engineering organisations: <em>Deployment Frequency</em>, <em>Lead Time for Changes</em>, <em>Change Failure Rate</em>, and <em>Mean Time to Recovery</em>. Elite performers deploy multiple times per day with a change failure rate below 1%. Week 6 gives you the Git and CI foundation that makes this possible at any scale.
+  </div>
+
+  <div class="callout green">
+    <span class="callout-icon">&#128279;</span>
+    <div><strong>CloudEats connection:</strong> Every lab from Week 6 onwards is a DevOps practice. Git = version control; automated tests = quality gate; GitHub Actions = the pipeline that takes code from your laptop to a running container automatically.</div>
+  </div>
+
+  <hr class="section-divider">
+
+  <div class="sec-header">
+    <span class="sec-pill blue">1.2</span>
+    <span class="sec-title">Git &mdash; Core Concepts</span>
+    <span class="sec-time">25 min</span>
+  </div>
+
+  <p>Git is a <strong>distributed version control system</strong> &mdash; a tool that tracks every change to every file, who made it, and when. Without it, teams manage code like this:</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">without git &mdash; file naming chaos</span></div>
+    <pre><span class="cm">server-v1.js</span>
+<span class="cm">server-v2-ali-changes.js</span>
+<span class="cm">server-FINAL.js</span>
+<span class="cm">server-FINAL-FINAL-USE-THIS-ONE.js</span>
+<span class="cm">server-FINAL-FINAL-v2-with-bugfix.js</span>
+<span class="cm"># Which one is production? Nobody knows.</span></pre>
+  </div>
+
+  <p>With Git there is <strong>one file</strong>. The complete history is stored in a hidden <code>.git</code> folder. You can return to any previous version at any time.</p>
+
+  <!-- Interactive Git Timeline -->
+  <div class="interactive-panel">
+    <h3>&#128197; Interactive Commit Timeline &mdash; click any commit to inspect it</h3>
+    <div class="git-timeline" id="gitTimeline">
+      <div class="commit-node active" onclick="showCommit(0)">
+        <div class="commit-dot" id="cd0">a3f82b</div>
+        <div class="commit-label">Init project</div>
+      </div>
+      <div class="commit-line"></div>
+      <div class="commit-node" onclick="showCommit(1)">
+        <div class="commit-dot" id="cd1">7c14de</div>
+        <div class="commit-label">Add menu API</div>
+      </div>
+      <div class="commit-line"></div>
+      <div class="commit-node" onclick="showCommit(2)">
+        <div class="commit-dot" id="cd2">f901aa</div>
+        <div class="commit-label">Fix cart bug</div>
+      </div>
+      <div class="commit-line"></div>
+      <div class="commit-node" onclick="showCommit(3)">
+        <div class="commit-dot" id="cd3">2b88cc</div>
+        <div class="commit-label">Add JWT auth</div>
+      </div>
+      <div class="commit-line"></div>
+      <div class="commit-node" onclick="showCommit(4)">
+        <div class="commit-dot" id="cd4">9e51ff</div>
+        <div class="commit-label">Update README</div>
+      </div>
+    </div>
+    <div class="commit-detail" id="commitDetail">
+      <div class="cd-hash">commit a3f82b1c4d9e0f2a...</div>
+      <div class="cd-msg">Initial project structure for CloudEats</div>
+      <div class="cd-meta">Author: Ali Hassan &lt;ali@cloudeats.dev&gt;&nbsp;&nbsp;Date: Mon Jun 3 09:14:22 2024</div>
+      <div class="cd-meta" style="margin-top:.3rem;color:var(--muted)">4 files changed &nbsp;|&nbsp; +127 lines added &nbsp;|&nbsp; -0 removed</div>
+    </div>
+  </div>
+
+  <div class="level-row">
+    <span class="level-pill beginner">&#127807; Beginner</span>
+    <span class="level-pill average">&#9889; Average</span>
+    <span class="level-pill advanced">&#128640; Advanced</span>
+  </div>
+  <div class="level-block beginner">
+    <div class="level-block-label">&#127807; Beginner &mdash; Key Terms Explained Simply</div>
+    <ul style="list-style:none;margin:.4rem 0">
+      <li style="padding:.3rem 0;font-size:.82rem"><strong style="color:var(--amber)">Repository (repo):</strong> <span style="color:var(--muted)">A folder that Git is watching and remembering. Think of it as a project box that keeps every version of every file you ever saved.</span></li>
+      <li style="padding:.3rem 0;font-size:.82rem"><strong style="color:var(--amber)">Commit:</strong> <span style="color:var(--muted)">A saved snapshot of your project at a moment in time &mdash; like hitting "Save Game" in a video game. You can reload any old save.</span></li>
+      <li style="padding:.3rem 0;font-size:.82rem"><strong style="color:var(--amber)">Staging area:</strong> <span style="color:var(--muted)">A waiting room before you commit. You choose exactly which changed files go into the next snapshot using <code>git add</code>.</span></li>
+      <li style="padding:.3rem 0;font-size:.82rem"><strong style="color:var(--amber)">Remote:</strong> <span style="color:var(--muted)">A copy of your repo on GitHub's servers. <code>push</code> uploads your snapshots there; <code>pull</code> downloads new ones from there.</span></li>
+    </ul>
+  </div>
+  <div class="level-block average">
+    <div class="level-block-label">&#9889; Average &mdash; The Three-State Model</div>
+    Git tracks files in three states: <strong>Working directory</strong> (your actual files on disk), <strong>Staging area / index</strong> (changes chosen for the next commit via <code>git add</code>), and <strong>Repository</strong> (committed snapshots in <code>.git/</code>). Run <code>git status</code> before every commit &mdash; it shows exactly which state each changed file is in.
+  </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">&#128640; Advanced &mdash; Content-Addressable Storage</div>
+    Every commit hash (e.g. <code>a3f82b1</code>) is a SHA-1 checksum of the commit's content including the parent commit hash. This makes Git a Merkle tree &mdash; tamper-proof by design. Changing one byte in any historical file produces a completely different hash chain, immediately detectable. This is also why <code>git rebase</code> creates <em>new</em> commits (new hashes) rather than moving old ones.
+  </div>
+
+  <div class="code-block" style="margin-top:1rem">
+    <div class="code-header"><span class="code-lang">essential git commands</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+    <pre><span class="cm"># Start tracking a folder ────────────────────────────────</span>
+<span class="ca">git init</span>                          <span class="cm"># Start tracking this folder with Git</span>
+
+<span class="cm"># See what has changed ───────────────────────────────────</span>
+<span class="ca">git status</span>                        <span class="cm"># See all changed / staged / untracked files</span>
+<span class="ca">git diff</span>                          <span class="cm"># See exact line-by-line changes (unstaged only)</span>
+
+<span class="cm"># Stage and commit ───────────────────────────────────────</span>
+<span class="ca">git add server.js</span>                 <span class="cm"># Stage one specific file</span>
+<span class="ca">git add .</span>                         <span class="cm"># Stage ALL changed files in this folder</span>
+<span class="ca">git commit -m "Add menu endpoint"</span> <span class="cm"># Save a snapshot with a description</span>
+
+<span class="cm"># View history ───────────────────────────────────────────</span>
+<span class="ca">git log --oneline</span>                 <span class="cm"># Compact one-line history</span>
+<span class="ca">git log --oneline --graph</span>         <span class="cm"># History with branch lines drawn in ASCII</span>
+
+<span class="cm"># Sync with GitHub ───────────────────────────────────────</span>
+<span class="ca">git push origin main</span>              <span class="cm"># Upload your commits to GitHub</span>
+<span class="ca">git pull origin main</span>              <span class="cm"># Download new commits from GitHub</span></pre>
+  </div>
+
+  <p style="font-weight:600;font-size:.86rem;margin:.85rem 0 .5rem">Writing good commit messages &mdash; this matters for teamwork:</p>
+  <div class="compare-grid">
+    <div class="compare-side bad">
+      <div class="cs-label red">&#10060; Bad messages</div>
+      <div class="cs-item"><span class="cs-dot dot-red"></span><code>"fix stuff"</code></div>
+      <div class="cs-item"><span class="cs-dot dot-red"></span><code>"changes"</code></div>
+      <div class="cs-item"><span class="cs-dot dot-red"></span><code>"update"</code></div>
+      <div class="cs-item"><span class="cs-dot dot-red"></span><code>"asdfgh"</code></div>
+    </div>
+    <div class="compare-side good">
+      <div class="cs-label green">&#10004; Good messages</div>
+      <div class="cs-item"><span class="cs-dot dot-green"></span><code style="font-size:.73rem">"Fix null error in order endpoint"</code></div>
+      <div class="cs-item"><span class="cs-dot dot-green"></span><code style="font-size:.73rem">"Add bcrypt to registration route"</code></div>
+      <div class="cs-item"><span class="cs-dot dot-green"></span><code style="font-size:.73rem">"Update docker-compose healthcheck"</code></div>
+    </div>
+  </div>
+  <div class="callout blue">
+    <span class="callout-icon">&#128161;</span>
+    <div>A commit message should complete this sentence: <strong>"If applied, this commit will: [your message]."</strong> Try it with "fix stuff" and you will immediately see why it fails.</div>
+  </div>
+
+  <hr class="section-divider">
+
+  <div class="sec-header">
+    <span class="sec-pill red">1.3</span>
+    <span class="sec-title">.gitignore &mdash; What Not to Track</span>
+    <span class="sec-time">10 min</span>
+  </div>
+
+  <p>Not everything in your project folder should be committed to Git. The <code>.gitignore</code> file (note the dot at the start) tells Git which files to silently skip.</p>
+
+  <div class="card-grid cols2">
+    <div class="concept-card hl-red">
+      <span class="cc-icon">&#128683;</span>
+      <div class="cc-title">Never commit these</div>
+      <div class="cc-body">
+        <code>node_modules/</code> &mdash; hundreds of megabytes; <code>npm install</code> recreates it every time<br><br>
+        <code>.env</code> &mdash; contains real passwords and API keys. If this reaches GitHub, rotate credentials immediately<br><br>
+        <code>*.log</code> &mdash; runtime log files, different on every machine<br><br>
+        <code>.DS_Store</code> &mdash; macOS metadata, meaningless to teammates on Windows/Linux
+      </div>
+    </div>
+    <div class="concept-card hl-green">
+      <span class="cc-icon">&#9989;</span>
+      <div class="cc-title">Always commit these</div>
+      <div class="cc-body">
+        All source code (<code>.js</code>, <code>.py</code>, <code>.html</code>, <code>.css</code>)<br><br>
+        Config files (<code>docker-compose.yml</code>, <code>package.json</code>, <code>Dockerfile</code>)<br><br>
+        Documentation (<code>README.md</code>)<br><br>
+        <code>.env.example</code> &mdash; shows shape of <code>.env</code> without real values
+      </div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">.gitignore &mdash; paste at project root</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+    <pre><span class="cm"># Dependencies (recreated by npm install)</span>
+node_modules/
+
+<span class="cm"># Environment secrets &mdash; NEVER commit real values</span>
+.env
+
+<span class="cm"># Runtime logs</span>
+*.log
+npm-debug.log*
+
+<span class="cm"># OS metadata</span>
+.DS_Store
+Thumbs.db</pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">.env.example &mdash; commit this instead of .env</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+    <pre><span class="cm"># Copy this to .env and fill in your real values</span>
+DB_HOST=<span class="cv">your_database_host</span>
+DB_USER=<span class="cv">your_username</span>
+DB_PASSWORD=<span class="cv">your_password_here</span>
+JWT_SECRET=<span class="cv">your_secret_here</span>
+REDIS_URL=<span class="cv">redis://localhost:6379</span></pre>
+  </div>
+
+  <div class="level-row">
+    <span class="level-pill beginner">&#127807; Beginner</span>
+    <span class="level-pill average">&#9889; Average</span>
+    <span class="level-pill advanced">&#128640; Advanced</span>
+  </div>
+  <div class="level-block beginner">
+    <div class="level-block-label">&#127807; Beginner &mdash; Why .env is so dangerous</div>
+    Your <code>.env</code> file contains database passwords and secret keys. GitHub is public by default. If you push <code>.env</code> to GitHub, automated bots scan for it within seconds, extract your credentials, and use them to attack your database or run up cloud charges under your account. This happens to real students every semester. The rule is simple: <code>.env</code> goes in <code>.gitignore</code>, always, forever.
+  </div>
+  <div class="level-block average">
+    <div class="level-block-label">&#9889; Average &mdash; Why .env.example matters</div>
+    <code>.env.example</code> communicates required environment variables to new contributors without exposing real values. When a new developer clones the repo, they run <code>cp .env.example .env</code> and fill in their own values. This is a professional convention used in every serious Node.js project. See: <a href="https://www.npmjs.com/package/dotenv" target="_blank" rel="noopener">dotenv docs &rarr;</a>
+  </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">&#128640; Advanced &mdash; Git history remembers deleted files</div>
+    Deleting <code>.env</code> from a later commit does NOT remove it from history. <code>git log --all -- .env</code> will still find it. Anyone who clones and checks out an old commit will see the file with real credentials. Correct remediation is <code>git filter-branch</code> or BFG Repo Cleaner, followed by rotating all exposed credentials. Prevention is the only real solution &mdash; always gitignore before first commit.
+  </div>
+
+</div><!-- /panel-h1 -->
+<!-- ═══════════════════════════════ HOUR 2 ═══════════════════════════════ -->
+<div class="tab-panel" id="panel-h2">
+
+  <div class="sec-header">
+    <span class="sec-pill green">2.1</span>
+    <span class="sec-title">What is a Branch?</span>
+    <span class="sec-time">20 min</span>
+  </div>
+
+  <p>A <strong>branch</strong> is a separate, parallel line of development inside the same repository. Changes on a branch do not affect anyone else until you choose to merge them back.</p>
+
+  <div class="level-row">
+    <span class="level-pill beginner">&#127807; Beginner</span>
+    <span class="level-pill average">&#9889; Average</span>
+    <span class="level-pill advanced">&#128640; Advanced</span>
+  </div>
+  <div class="level-block beginner">
+    <div class="level-block-label">&#127807; Beginner &mdash; Branching is Like a Draft</div>
+    You are writing an essay. You have your main essay saved. You want to try a new introduction but you are not sure it is good. You make a copy, edit the copy, and if you like it, you paste it back into the main essay. A Git branch is exactly that &mdash; a safe draft space. The main essay (the <code>main</code> branch) is never touched until you are confident.
+  </div>
+  <div class="level-block average">
+    <div class="level-block-label">&#9889; Average &mdash; Why branches matter for teams</div>
+    Without branches, all developers push directly to <code>main</code>. Ali pushes broken code at 3pm. By 3:01pm the entire team is blocked. Branches give Ali a sandbox &mdash; his broken code only affects <code>feature/ali-profile</code>. The team carries on. When Ali fixes it and tests pass, the branch merges cleanly into <code>main</code>.
+  </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">&#128640; Advanced &mdash; A branch is just a pointer</div>
+    Under the hood, a branch is a text file in <code>.git/refs/heads/</code> containing one commit hash (41 bytes). Creating a branch is O(1) &mdash; it costs nothing. This is why Git branching is so cheap compared to older systems like SVN that physically copied files. <code>HEAD</code> is a special pointer that always tracks your current branch.
+  </div>
+
+  <!-- Interactive Branch Visualizer -->
+  <div class="interactive-panel">
+    <h3>&#127807; Interactive Branch Visualizer &mdash; step through a feature branch workflow</h3>
+    <div class="branch-controls">
+      <button class="branch-btn active" id="bStep0" onclick="setBranchStep(0)">Start</button>
+      <button class="branch-btn" id="bStep1" onclick="setBranchStep(1)">1. Create branch</button>
+      <button class="branch-btn" id="bStep2" onclick="setBranchStep(2)">2. Commit D</button>
+      <button class="branch-btn" id="bStep3" onclick="setBranchStep(3)">3. Commit E</button>
+      <button class="branch-btn" id="bStep4" onclick="setBranchStep(4)">4. Merge!</button>
+    </div>
+    <svg id="branchSvg" viewBox="0 0 680 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2)">
+      <defs>
+        <marker id="arrowA" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(255,183,64,.6)"/></marker>
+        <marker id="arrowG" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(0,229,160,.6)"/></marker>
+        <marker id="arrowM" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(180,110,245,.7)"/></marker>
+      </defs>
+      <!-- Labels -->
+      <text x="20" y="42" font-size="9" font-family="Sora,sans-serif" fill="rgba(255,183,64,.8)" font-weight="700">main</text>
+      <text id="featureLabel" x="20" y="120" font-size="9" font-family="Sora,sans-serif" fill="rgba(0,229,160,.8)" font-weight="700" opacity="0">feature/add-laksa</text>
+      <!-- Main dashed baseline -->
+      <line x1="60" y1="36" x2="600" y2="36" stroke="rgba(255,183,64,.15)" stroke-width="1" stroke-dasharray="4,3"/>
+      <!-- A -->
+      <circle cx="100" cy="36" r="13" fill="rgba(255,183,64,.15)" stroke="rgba(255,183,64,.6)" stroke-width="2"/>
+      <text x="100" y="40" font-size="9" font-family="Fira Code,monospace" fill="var(--amber)" text-anchor="middle" font-weight="700">A</text>
+      <text x="100" y="58" font-size="7" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">init</text>
+      <line x1="113" y1="36" x2="154" y2="36" stroke="rgba(255,183,64,.6)" stroke-width="2" marker-end="url(#arrowA)"/>
+      <!-- B -->
+      <circle cx="167" cy="36" r="13" fill="rgba(255,183,64,.15)" stroke="rgba(255,183,64,.6)" stroke-width="2"/>
+      <text x="167" y="40" font-size="9" font-family="Fira Code,monospace" fill="var(--amber)" text-anchor="middle" font-weight="700">B</text>
+      <text x="167" y="58" font-size="7" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">menu API</text>
+      <line x1="180" y1="36" x2="221" y2="36" stroke="rgba(255,183,64,.6)" stroke-width="2" marker-end="url(#arrowA)"/>
+      <!-- C -->
+      <circle cx="234" cy="36" r="13" fill="rgba(255,183,64,.15)" stroke="rgba(255,183,64,.6)" stroke-width="2"/>
+      <text x="234" y="40" font-size="9" font-family="Fira Code,monospace" fill="var(--amber)" text-anchor="middle" font-weight="700">C</text>
+      <text x="234" y="58" font-size="7" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">user auth</text>
+      <!-- Branch line C to D -->
+      <line id="bLine1" x1="234" y1="49" x2="308" y2="108" stroke="rgba(0,229,160,.6)" stroke-width="2" opacity="0"/>
+      <!-- D -->
+      <circle id="cD" cx="318" cy="114" r="13" fill="rgba(0,229,160,.15)" stroke="rgba(0,229,160,.6)" stroke-width="2" opacity="0"/>
+      <text id="tD" x="318" y="118" font-size="9" font-family="Fira Code,monospace" fill="var(--green)" text-anchor="middle" font-weight="700" opacity="0">D</text>
+      <text id="tDl" x="318" y="134" font-size="7" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle" opacity="0">add laksa</text>
+      <!-- D to E -->
+      <line id="bLine2" x1="331" y1="114" x2="374" y2="114" stroke="rgba(0,229,160,.6)" stroke-width="2" marker-end="url(#arrowG)" opacity="0"/>
+      <!-- E -->
+      <circle id="cE" cx="387" cy="114" r="13" fill="rgba(0,229,160,.15)" stroke="rgba(0,229,160,.6)" stroke-width="2" opacity="0"/>
+      <text id="tE" x="387" y="118" font-size="9" font-family="Fira Code,monospace" fill="var(--green)" text-anchor="middle" font-weight="700" opacity="0">E</text>
+      <text id="tEl" x="387" y="134" font-size="7" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle" opacity="0">add price</text>
+      <!-- C to F line on main -->
+      <line id="mainLine2" x1="247" y1="36" x2="458" y2="36" stroke="rgba(255,183,64,.6)" stroke-width="2" marker-end="url(#arrowA)" opacity="0"/>
+      <!-- Merge line E to F -->
+      <line id="mergeLine" x1="397" y1="104" x2="463" y2="48" stroke="rgba(180,110,245,.6)" stroke-width="2" opacity="0"/>
+      <!-- F merge commit -->
+      <circle id="cF" cx="476" cy="36" r="14" fill="rgba(180,110,245,.2)" stroke="rgba(180,110,245,.7)" stroke-width="2.5" opacity="0"/>
+      <text id="tF" x="476" y="40" font-size="9" font-family="Fira Code,monospace" fill="var(--purple)" text-anchor="middle" font-weight="700" opacity="0">F</text>
+      <text id="tFl" x="476" y="58" font-size="7" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle" opacity="0">merge</text>
+      <!-- Step label -->
+      <text id="branchStepLabel" x="340" y="22" font-size="8.5" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle" font-weight="700">main has 3 commits &mdash; no branches yet</text>
+    </svg>
+    <div class="branch-status" id="branchStatus">You are on <span>main</span>. Three commits exist: init, menu API, user auth.</div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">branch commands</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+    <pre><span class="ca">git branch</span>                           <span class="cm"># List all branches (* = current branch)</span>
+<span class="ca">git branch feature/add-laksa</span>          <span class="cm"># Create a new branch (stays on current)</span>
+<span class="ca">git checkout feature/add-laksa</span>        <span class="cm"># Switch to that branch</span>
+<span class="ca">git checkout -b feature/add-laksa</span>     <span class="cm"># Create AND switch in one step</span>
+<span class="ca">git push origin feature/add-laksa</span>     <span class="cm"># Upload this branch to GitHub</span>
+<span class="ca">git merge feature/add-laksa</span>           <span class="cm"># Merge branch into current branch</span>
+<span class="ca">git branch -d feature/add-laksa</span>       <span class="cm"># Delete branch after merging (safe)</span></pre>
+  </div>
+
+  <hr class="section-divider">
+
+  <div class="sec-header">
+    <span class="sec-pill amber">2.2</span>
+    <span class="sec-title">Branching Strategy for CloudEats</span>
+    <span class="sec-time">20 min</span>
+  </div>
+
+  <div class="card-grid cols3">
+    <div class="concept-card hl-amber">
+      <span class="cc-icon">&#127381;</span>
+      <div class="cc-title">main</div>
+      <div class="cc-body">Always deployable. This is what runs in production. Only gets code from tested, reviewed merges &mdash; never direct pushes.</div>
+      <span class="cc-tag amber">production</span>
+    </div>
+    <div class="concept-card hl-blue">
+      <span class="cc-icon">&#128279;</span>
+      <div class="cc-title">develop</div>
+      <div class="cc-body">Integration branch. Features merge here first and are tested together before going to <code>main</code>. Think of it as staging.</div>
+      <span class="cc-tag blue">staging</span>
+    </div>
+    <div class="concept-card hl-green">
+      <span class="cc-icon">&#127807;</span>
+      <div class="cc-title">feature/*</div>
+      <div class="cc-body">Individual feature branches. One per feature or bug fix. Named clearly: <code>feature/add-laksa</code>, <code>fix/cart-total</code>.</div>
+      <span class="cc-tag green">short-lived</span>
+    </div>
+  </div>
+
+  <p style="margin-top:.85rem;font-weight:600;font-size:.86rem">The complete pull request workflow:</p>
+  <svg viewBox="0 0 680 88" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin:.85rem 0">
+    <defs><marker id="arr1" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(107,127,160,.5)"/></marker></defs>
+    <rect x="8" y="26" width="72" height="36" rx="5" fill="rgba(0,229,160,.08)" stroke="rgba(0,229,160,.3)" stroke-width="1.5"/>
+    <text x="44" y="42" font-size="7.5" font-family="Sora,sans-serif" fill="var(--green)" text-anchor="middle" font-weight="700">1. Create</text>
+    <text x="44" y="54" font-size="7" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">feature branch</text>
+    <line x1="80" y1="44" x2="96" y2="44" stroke="rgba(107,127,160,.5)" stroke-width="1.5" marker-end="url(#arr1)"/>
+    <rect x="99" y="26" width="72" height="36" rx="5" fill="rgba(0,229,160,.08)" stroke="rgba(0,229,160,.3)" stroke-width="1.5"/>
+    <text x="135" y="42" font-size="7.5" font-family="Sora,sans-serif" fill="var(--green)" text-anchor="middle" font-weight="700">2. Code</text>
+    <text x="135" y="54" font-size="7" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">commit + push</text>
+    <line x1="171" y1="44" x2="187" y2="44" stroke="rgba(107,127,160,.5)" stroke-width="1.5" marker-end="url(#arr1)"/>
+    <rect x="190" y="26" width="72" height="36" rx="5" fill="rgba(0,200,255,.08)" stroke="rgba(0,200,255,.3)" stroke-width="1.5"/>
+    <text x="226" y="42" font-size="7.5" font-family="Sora,sans-serif" fill="var(--accent)" text-anchor="middle" font-weight="700">3. Pull</text>
+    <text x="226" y="54" font-size="7" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">Request on GH</text>
+    <line x1="262" y1="44" x2="278" y2="44" stroke="rgba(107,127,160,.5)" stroke-width="1.5" marker-end="url(#arr1)"/>
+    <rect x="281" y="26" width="72" height="36" rx="5" fill="rgba(255,183,64,.08)" stroke="rgba(255,183,64,.3)" stroke-width="1.5"/>
+    <text x="317" y="42" font-size="7.5" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle" font-weight="700">4. Review</text>
+    <text x="317" y="54" font-size="7" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">team checks code</text>
+    <line x1="353" y1="44" x2="369" y2="44" stroke="rgba(107,127,160,.5)" stroke-width="1.5" marker-end="url(#arr1)"/>
+    <rect x="372" y="26" width="72" height="36" rx="5" fill="rgba(0,229,160,.08)" stroke="rgba(0,229,160,.3)" stroke-width="1.5"/>
+    <text x="408" y="42" font-size="7.5" font-family="Sora,sans-serif" fill="var(--green)" text-anchor="middle" font-weight="700">5. CI Runs</text>
+    <text x="408" y="54" font-size="7" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">tests pass &#10003;</text>
+    <line x1="444" y1="44" x2="460" y2="44" stroke="rgba(107,127,160,.5)" stroke-width="1.5" marker-end="url(#arr1)"/>
+    <rect x="463" y="26" width="72" height="36" rx="5" fill="rgba(180,110,245,.08)" stroke="rgba(180,110,245,.3)" stroke-width="1.5"/>
+    <text x="499" y="42" font-size="7.5" font-family="Sora,sans-serif" fill="var(--purple)" text-anchor="middle" font-weight="700">6. Merge</text>
+    <text x="499" y="54" font-size="7" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">into develop</text>
+    <line x1="535" y1="44" x2="551" y2="44" stroke="rgba(107,127,160,.5)" stroke-width="1.5" marker-end="url(#arr1)"/>
+    <rect x="554" y="26" width="118" height="36" rx="5" fill="rgba(255,183,64,.08)" stroke="rgba(255,183,64,.3)" stroke-width="1.5"/>
+    <text x="613" y="42" font-size="7.5" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle" font-weight="700">7. Release</text>
+    <text x="613" y="54" font-size="7" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">develop &#8594; main</text>
+  </svg>
+
+  <div class="why-box">
+    <strong>Why open a Pull Request instead of merging directly?</strong> A PR creates a permanent record of what changed, why, and who approved it. It shows the code diff for review, surfaces automated test results, and blocks merge until all checks pass. Six months later when something breaks, the PR history tells you exactly which change caused it.
+  </div>
+
+  <div class="level-block advanced">
+    <div class="level-block-label">&#128640; Advanced &mdash; Trunk-Based vs Gitflow</div>
+    CloudEats uses simplified Gitflow (main + develop + feature branches). For large teams, <em>trunk-based development</em> is often preferable &mdash; everyone commits to <code>main</code> using very short-lived branches (&lt;24 hours), relying on feature flags to hide incomplete work. Gitflow suits products with versioned releases (mobile apps, packaged software). Trunk-based suits continuous deployment (web services). Since CloudEats deploys continuously, trunk-based would be the industry choice &mdash; but Gitflow is easier to learn first.
+  </div>
+
+  <hr class="section-divider">
+
+  <div class="sec-header">
+    <span class="sec-pill red">2.3</span>
+    <span class="sec-title">Resolving Merge Conflicts</span>
+    <span class="sec-time">20 min</span>
+  </div>
+
+  <p>A <strong>merge conflict</strong> occurs when two branches change the exact same lines of the same file. Git pauses and asks you to decide. This looks scary but is just a text editing task.</p>
+
+  <div class="interactive-panel">
+    <h3>&#9889; Interactive Conflict Resolver &mdash; click the version you want to keep</h3>
+    <p style="font-size:.8rem;color:var(--muted);margin-bottom:.75rem">Two developers both edited line 8 of <code>server.js</code>. Click your preferred version below.</p>
+    <div id="conflictView">
+      <div class="conflict-block">
+        <div class="conflict-marker" style="background:rgba(0,229,160,.1);color:var(--green)">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD (your branch)</div>
+        <div class="conflict-yours" onclick="resolveConflict('yours')">
+          <code>const PORT = 3000;</code>
+        </div>
+        <div class="conflict-sep">======= (divider)</div>
+        <div class="conflict-incoming" onclick="resolveConflict('incoming')">
+          <code>const PORT = 3001;</code>
+        </div>
+        <div class="conflict-marker" style="background:rgba(0,200,255,.1);color:var(--accent)">&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/user-service</div>
+      </div>
+    </div>
+    <div class="conflict-resolved" id="conflictResolved">
+      <span style="color:var(--green);font-size:.75rem;font-weight:700;letter-spacing:.07em;display:block;margin-bottom:.4rem">&#10004; RESOLVED</span>
+      <span id="resolvedLine"></span>
+    </div>
+    <div class="conflict-msg" id="conflictMsg">Click a version above to resolve the conflict.</div>
+    <div id="conflictNextSteps" style="display:none;margin-top:.75rem">
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">next steps after resolving</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># After editing the file to keep the right version:</span>
+<span class="ca">git add server.js</span>
+<span class="ca">git commit -m "Resolve conflict: use port 3001 for user-service"</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout green">
+    <span class="callout-icon">&#128737;</span>
+    <div><strong>Prevention is better than cure:</strong> Pull from main frequently (<code>git pull origin main</code> before starting work). Keep feature branches short-lived &mdash; merge within a day or two. Communicate with teammates about which files you are editing.</div>
+  </div>
+
+  <div class="level-block average">
+    <div class="level-block-label">&#9889; Average &mdash; Reading the conflict markers</div>
+    Between <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</code> and <code>=======</code> is <em>your</em> version (current branch). Between <code>=======</code> and <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code> is the <em>incoming</em> version (branch being merged). Edit the file, remove all three marker lines, keep whichever code is correct. Then <code>git add</code> and <code>git commit</code>.
+  </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">&#128640; Advanced &mdash; 3-way merge vs rebase</div>
+    <code>git merge</code> creates a merge commit (non-linear history). <code>git rebase</code> replays commits on top of the target &mdash; linear history, but rewrites commit hashes. Rebase is cleaner for feature branches before opening a PR. Never rebase a branch that has been pushed and shared &mdash; you rewrite history others already have. GitHub's "Squash and merge" button handles this safely.
+  </div>
+
+</div><!-- /panel-h2 -->
+
+<!-- ═══════════════════════════════ HOUR 3 ═══════════════════════════════ -->
+<div class="tab-panel" id="panel-h3">
+
+  <div class="sec-header">
+    <span class="sec-pill purple">3.1</span>
+    <span class="sec-title">What is CI/CD?</span>
+    <span class="sec-time">20 min</span>
+  </div>
+
+  <p><strong>CI/CD</strong> stands for Continuous Integration / Continuous Deployment. It automates every step between writing code and running that code in production &mdash; removing manual SSH sessions, manual <code>docker compose up</code>, and manual "hope it works" deployments.</p>
+
+  <div class="card-grid cols2">
+    <div class="concept-card hl-blue">
+      <span class="cc-icon">&#128279;</span>
+      <div class="cc-title">Continuous Integration (CI)</div>
+      <div class="cc-body">Every time a developer pushes code, an automated process:<br><br>1. Downloads the code<br>2. Installs dependencies<br>3. Runs all tests<br>4. Reports: pass &#10004; or fail &#10006;<br><br>Broken code is caught immediately. A PR cannot merge until CI passes.</div>
+      <span class="cc-tag blue">runs on every push</span>
+    </div>
+    <div class="concept-card hl-purple">
+      <span class="cc-icon">&#128640;</span>
+      <div class="cc-title">Continuous Deployment (CD)</div>
+      <div class="cc-body">If CI passes, the code is automatically deployed to a server. No manual steps required.<br><br>Push to main &rarr; tests pass &rarr; app is live.<br><br>CD builds on top of CI. You build a full CD pipeline in Week 7 Lab 7.2.</div>
+      <span class="cc-tag purple">covered in Week 7</span>
+    </div>
+  </div>
+
+  <div class="callout amber">
+    <span class="callout-icon">&#128241;</span>
+    <div><strong>Why this matters:</strong> Manual deployment is a Friday afternoon nightmare. Automated deployment is a Tuesday morning routine. Every serious software company uses CI/CD &mdash; it is table stakes, not optional.</div>
+  </div>
+
+  <!-- CI Pipeline Animator -->
+  <div class="interactive-panel">
+    <h3>&#9889; Interactive CI Pipeline &mdash; click to watch what happens after a push</h3>
+    <p style="font-size:.8rem;color:var(--muted);margin-bottom:.85rem">This simulates what GitHub Actions does when you run <code>git push origin main</code>.</p>
+    <button class="ci-run-btn" id="ciRunBtn" onclick="runCIPipeline()">&#128640; Push to GitHub &mdash; trigger CI</button>
+    <div class="ci-pipeline" id="ciPipeline" style="margin-top:1rem">
+      <div class="ci-step pending" id="ci0"><span class="ci-icon">&#9899;</span>Workflow triggered by <code>git push origin main</code></div>
+      <div class="ci-step pending" id="ci1"><span class="ci-icon">&#9899;</span>Checkout code (<code>actions/checkout@v3</code>)</div>
+      <div class="ci-step pending" id="ci2"><span class="ci-icon">&#9899;</span>Setup Node.js 18</div>
+      <div class="ci-step pending" id="ci3"><span class="ci-icon">&#9899;</span>Install dependencies (<code>npm install</code>)</div>
+      <div class="ci-step pending" id="ci4"><span class="ci-icon">&#9899;</span>Run tests (<code>npm test</code>)</div>
+      <div class="ci-step pending" id="ci5"><span class="ci-icon">&#9899;</span>Report result &mdash; update commit status on GitHub</div>
+    </div>
+    <div id="ciResult" style="margin-top:.75rem;display:none"></div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">.github/workflows/ci.yml &mdash; the workflow students build in Lab 6.2</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+    <pre><span class="cp">name:</span> <span class="cv">Run Tests</span>
+
+<span class="cp">on:</span>
+  <span class="cp">push:</span>
+    <span class="cp">branches:</span> <span class="cv">[main, develop]</span>
+  <span class="cp">pull_request:</span>
+    <span class="cp">branches:</span> <span class="cv">[main]</span>
+
+<span class="cp">jobs:</span>
+  <span class="cp">test:</span>
+    <span class="cp">runs-on:</span> <span class="cv">ubuntu-latest</span>
+
+    <span class="cp">steps:</span>
+      <span class="cm"># Step 1 &mdash; get the code</span>
+      - <span class="cp">uses:</span> <span class="cv">actions/checkout@v3</span>
+
+      <span class="cm"># Step 2 &mdash; install Node.js</span>
+      - <span class="cp">name:</span> <span class="cv">Setup Node.js</span>
+        <span class="cp">uses:</span> <span class="cv">actions/setup-node@v3</span>
+        <span class="cp">with:</span>
+          <span class="cp">node-version:</span> <span class="cv">'18'</span>
+
+      <span class="cm"># Step 3 &mdash; install packages</span>
+      - <span class="cp">name:</span> <span class="cv">Install dependencies</span>
+        <span class="cp">run:</span> <span class="cv">npm install</span>
+
+      <span class="cm"># Step 4 &mdash; run the tests</span>
+      - <span class="cp">name:</span> <span class="cv">Run tests</span>
+        <span class="cp">run:</span> <span class="cv">npm test</span></pre>
+  </div>
+
+  <div class="level-row">
+    <span class="level-pill beginner">&#127807; Beginner</span>
+    <span class="level-pill average">&#9889; Average</span>
+    <span class="level-pill advanced">&#128640; Advanced</span>
+  </div>
+  <div class="level-block beginner">
+    <div class="level-block-label">&#127807; Beginner &mdash; What is YAML?</div>
+    YAML (pronounced "yam-ul") is a file format for writing configuration in a human-readable way. It uses indentation (spaces, not tabs!) to show structure. Think of it like a form: <code>name:</code> is the label, <code>Run Tests</code> is your answer. GitHub reads this file and knows exactly what to do when you push code.
+  </div>
+  <div class="level-block average">
+    <div class="level-block-label">&#9889; Average &mdash; The on: trigger block</div>
+    The <code>on:</code> block defines when the workflow fires. <code>push: branches: [main, develop]</code> means "run CI whenever anyone pushes to main or develop". <code>pull_request: branches: [main]</code> means "also run CI when a PR targeting main is opened or updated". This is the gate &mdash; a PR must show a green checkmark before it can be merged. See <a href="https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows" target="_blank" rel="noopener">GitHub Actions trigger docs &rarr;</a>
+  </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">&#128640; Advanced &mdash; GitHub Actions architecture</div>
+    When CI triggers, GitHub allocates a fresh ephemeral <code>ubuntu-latest</code> runner VM. Each <code>step</code> runs in sequence on this VM. <code>uses:</code> references a reusable action from the <a href="https://github.com/marketplace?type=actions" target="_blank" rel="noopener">Actions Marketplace</a>. <code>run:</code> executes a shell command. The VM is destroyed after the job &mdash; nothing persists between runs unless you use <code>actions/cache</code> explicitly. This immutability is a feature: every run starts clean, eliminating "works on my runner" bugs.
+  </div>
+
+  <hr class="section-divider">
+
+  <div class="sec-header">
+    <span class="sec-pill green">3.2</span>
+    <span class="sec-title">Unit Tests vs Integration Tests</span>
+    <span class="sec-time">20 min</span>
+  </div>
+
+  <p>Automated tests verify that code works correctly without a human clicking buttons. Two types matter for CloudEats right now:</p>
+
+  <div class="card-grid cols2">
+    <div class="concept-card hl-green">
+      <span class="cc-icon">&#128300;</span>
+      <div class="cc-title">Unit Test</div>
+      <div class="cc-body">Tests <em>one isolated function</em> &mdash; no database, no network, no other services. Fast (milliseconds). Run hundreds per second.<br><br>External dependencies are replaced with fake versions called "mocks". Only the logic of the function is tested.</div>
+      <span class="cc-tag green">fast &middot; isolated</span>
+    </div>
+    <div class="concept-card hl-blue">
+      <span class="cc-icon">&#128200;</span>
+      <div class="cc-title">Integration Test</div>
+      <div class="cc-body">Tests <em>multiple parts working together</em> &mdash; usually an API endpoint hitting a real database. Slower (seconds). Tests actual user-facing behaviour.<br><br>Catches "wiring errors" &mdash; wrong SQL, missing middleware, incorrect response shape &mdash; that unit tests miss entirely.</div>
+      <span class="cc-tag blue">real dependencies</span>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">unit test &mdash; pure function, no database needed</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+    <pre><span class="cm">// Function to test (orders/utils.js)</span>
+<span class="ck">function</span> <span class="cp">calculateTotal</span>(items) {
+  <span class="ck">return</span> items.<span class="cp">reduce</span>((sum, item) =&gt; sum + item.price * item.quantity, <span class="cv">0</span>);
+}
+
+<span class="cm">// Test (tests/utils.test.js)</span>
+<span class="cp">test</span>(<span class="cv">'calculateTotal returns correct sum'</span>, () =&gt; {
+  <span class="ck">const</span> items = [
+    { price: <span class="cv">12.90</span>, quantity: <span class="cv">2</span> },   <span class="cm">// Nasi Lemak x 2 = 25.80</span>
+    { price: <span class="cv">8.50</span>,  quantity: <span class="cv">1</span> }    <span class="cm">// Laksa x 1    =  8.50</span>
+  ];
+  <span class="cp">expect</span>(<span class="cp">calculateTotal</span>(items)).<span class="cp">toBe</span>(<span class="cv">34.30</span>);
+});</pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">reading test output &mdash; what pass and fail look like</span></div>
+    <pre><span class="cv">PASS</span>  tests/utils.test.js
+  calculateTotal
+    <span class="cv">&#10003;</span> returns correct sum (3ms)
+    <span class="cv">&#10003;</span> returns 0 for empty cart (1ms)
+    <span class="cv">&#10003;</span> handles decimal prices correctly (2ms)
+
+Test Suites: <span class="cv">1 passed</span>, 1 total  |  Tests: <span class="cv">3 passed</span>, 3 total  |  Time: <span class="cv">0.847s</span>
+
+<span class="cm">--- If a test fails: --------------------------------------------------</span>
+<span class="red">FAIL</span>  tests/utils.test.js
+  calculateTotal
+    <span class="red">&#10007;</span> returns correct sum (4ms)
+      <span class="red">Expected: 34.30</span>
+      <span class="red">Received: 21.40</span>
+<span class="cm"># The received value tells you exactly what went wrong</span></pre>
+  </div>
+
+  <div class="level-row">
+    <span class="level-pill beginner">&#127807; Beginner</span>
+    <span class="level-pill average">&#9889; Average</span>
+    <span class="level-pill advanced">&#128640; Advanced</span>
+  </div>
+  <div class="level-block beginner">
+    <div class="level-block-label">&#127807; Beginner &mdash; Tests are just IF statements</div>
+    A test says "I expect the function to return X when given Y. If it does not, something broke." <code>expect(calculateTotal(items)).toBe(34.30)</code> reads as "I expect calculateTotal called with these items to equal 34.30." If it returns 21.40 instead, the test fails and gives you the exact numbers &mdash; no detective work needed.
+  </div>
+  <div class="level-block average">
+    <div class="level-block-label">&#9889; Average &mdash; Both types are needed</div>
+    Unit tests are fast and catch logic errors (the multiplication formula is wrong). Integration tests are slower but catch wiring errors (the SQL query inserts to the wrong column). Industry practice: many unit tests that run in under 30 seconds, plus fewer integration tests. A 10:1 unit-to-integration ratio is common. See <a href="https://jestjs.io" target="_blank" rel="noopener">Jest documentation &rarr;</a>
+  </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">&#128640; Advanced &mdash; Test pyramid and Jest vs Mocha</div>
+    The <em>test pyramid</em> prescribes: many unit tests at the base, fewer integration tests in the middle, minimal end-to-end (browser) tests at the top. CloudEats uses <strong>Jest</strong> over Mocha because: zero-config setup, built-in <code>expect</code> assertions, built-in mocking, and coverage reports. Mocha is more modular but requires separate packages (Chai for assertions, Sinon for mocks). For a small team, Jest's batteries-included approach wins. For a large team with specific tooling needs, Mocha's composability is valuable.
+  </div>
+
+</div><!-- /panel-h3 -->
+<!-- ═══════════════════════════════ QUIZ ═══════════════════════════════ -->
+<div class="tab-panel" id="panel-quiz">
+
+  <div class="sec-header">
+    <span class="sec-pill amber">Quiz</span>
+    <span class="sec-title">Week 6 Knowledge Check</span>
+  </div>
+
+  <p>Eight questions covering Hours 1&ndash;3. Click any answer to check it instantly. An explanation appears below each question after you answer.</p>
+
+  <!-- Q1 -->
+  <div class="kc-question">
+    <div class="kc-q">1. A developer pushes broken code directly to <code>main</code> at 4pm on a Friday. Which DevOps practice most directly prevents this?</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span>Having two separate teams &mdash; one Dev, one Ops</li>
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span>Writing more comments in the code</li>
+      <li onclick="checkAnswer(this,true)"><span class="kc-radio"></span>Branch protection rules requiring CI to pass before merging to main</li>
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span>Deploying on Mondays only</li>
+    </ul>
+    <div class="callout green" style="margin-top:.6rem;display:none">
+      <span class="callout-icon">&#128161;</span>
+      <div>Branch protection rules on GitHub block any merge to <code>main</code> unless all required CI checks pass and a reviewer has approved. Even if a developer tries to push directly, the rule enforces the gate. This is the DevOps practice that replaces "hope nothing breaks on Friday" with a repeatable, automated safety net.</div>
+    </div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="kc-question">
+    <div class="kc-q">2. You run <code>git status</code> and see a file listed under "Changes not staged for commit". What is the correct next command to include it in your next commit?</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span><code>git commit -m "save it"</code></li>
+      <li onclick="checkAnswer(this,true)"><span class="kc-radio"></span><code>git add filename.js</code></li>
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span><code>git push origin main</code></li>
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span><code>git pull origin main</code></li>
+    </ul>
+    <div class="callout green" style="margin-top:.6rem;display:none">
+      <span class="callout-icon">&#128161;</span>
+      <div>"Not staged for commit" means the file is in your working directory but has not been moved to the staging area yet. <code>git add filename.js</code> moves it to staging. Only then can <code>git commit</code> include it in the snapshot. Think of staging as a shopping basket &mdash; you choose what goes in before you check out.</div>
+    </div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="kc-question">
+    <div class="kc-q">3. Which of these files should <strong>never</strong> be committed to a public GitHub repository?</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span><code>package.json</code></li>
+      <li onclick="checkAnswer(this,true)"><span class="kc-radio"></span><code>.env</code></li>
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span><code>README.md</code></li>
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span><code>docker-compose.yml</code></li>
+    </ul>
+    <div class="callout green" style="margin-top:.6rem;display:none">
+      <span class="callout-icon">&#128161;</span>
+      <div><code>.env</code> contains real database passwords and API keys. Automated bots scan GitHub for exposed credentials within seconds of a push and use them to attack databases or generate cloud charges. Always add <code>.env</code> to <code>.gitignore</code> before your very first commit. Use <code>.env.example</code> instead to document which variables teammates need to fill in.</div>
+    </div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="kc-question">
+    <div class="kc-q">4. After running <code>git merge feature/user-service</code>, you see this in your file:<br><br>
+    <code style="font-size:.78rem;display:block;background:var(--bg2);padding:.5rem .75rem;border-radius:5px;margin:.4rem 0;line-height:1.8">
+    &lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD<br>
+    const PORT = 3000;<br>
+    =======<br>
+    const PORT = 3001;<br>
+    &gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/user-service
+    </code>
+    What does the section between <code>&lt;&lt;&lt;</code> and <code>===</code> represent?</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span>The incoming branch&rsquo;s version</li>
+      <li onclick="checkAnswer(this,true)"><span class="kc-radio"></span>Your current branch&rsquo;s version (HEAD)</li>
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span>The original version before either branch changed it</li>
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span>A Git error message that you cannot edit</li>
+    </ul>
+    <div class="callout green" style="margin-top:.6rem;display:none">
+      <span class="callout-icon">&#128161;</span>
+      <div><code>HEAD</code> points to your current branch. The section between <code>&lt;&lt;&lt;</code> and <code>===</code> is <em>your</em> version. The section between <code>===</code> and <code>&gt;&gt;&gt;</code> is the <em>incoming</em> version from <code>feature/user-service</code>. To resolve: edit the file, delete all three marker lines, keep whichever code is correct, then <code>git add</code> and <code>git commit</code>.</div>
+    </div>
+  </div>
+
+  <!-- Q5 -->
+  <div class="kc-question">
+    <div class="kc-q">5. In the GitHub Actions workflow file, what does the <code>on: push: branches: [main]</code> block control?</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span>Which Node.js version to install</li>
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span>Which test files to run</li>
+      <li onclick="checkAnswer(this,true)"><span class="kc-radio"></span>When the workflow is triggered</li>
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span>Where to deploy the application after tests pass</li>
+    </ul>
+    <div class="callout green" style="margin-top:.6rem;display:none">
+      <span class="callout-icon">&#128161;</span>
+      <div>The <code>on:</code> block defines <em>triggers</em> &mdash; events that cause the workflow to run. <code>push: branches: [main]</code> means "run this workflow whenever someone pushes commits to the main branch". The <code>jobs:</code> block below it defines <em>what to do</em> when triggered. Separating trigger from action is what makes GitHub Actions reusable across different events.</div>
+    </div>
+  </div>
+
+  <!-- Q6 -->
+  <div class="kc-question">
+    <div class="kc-q">6. A unit test for <code>calculateTotal()</code> passes successfully. But when the app runs, orders are saved with the wrong total in the database. Which type of test would have caught this bug?</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span>More unit tests on <code>calculateTotal()</code></li>
+      <li onclick="checkAnswer(this,true)"><span class="kc-radio"></span>An integration test for the POST /api/orders endpoint</li>
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span>Adding the file to <code>.gitignore</code></li>
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span>A better commit message on the broken commit</li>
+    </ul>
+    <div class="callout green" style="margin-top:.6rem;display:none">
+      <span class="callout-icon">&#128161;</span>
+      <div>The calculation function works correctly in isolation (the unit test passes). The bug is in the "wiring" &mdash; how the total is passed and saved to the database. Unit tests only test one function in isolation. An integration test for <code>POST /api/orders</code> would exercise the full path: HTTP request &rarr; middleware &rarr; database write &rarr; response, and would catch a wiring error that unit tests miss by design.</div>
+    </div>
+  </div>
+
+  <!-- Q7 -->
+  <div class="kc-question">
+    <div class="kc-q">7. Which single command creates a new branch called <code>feature/add-laksa</code> AND immediately switches to it?</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span><code>git branch feature/add-laksa</code></li>
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span><code>git checkout feature/add-laksa</code></li>
+      <li onclick="checkAnswer(this,true)"><span class="kc-radio"></span><code>git checkout -b feature/add-laksa</code></li>
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span><code>git merge feature/add-laksa</code></li>
+    </ul>
+    <div class="callout green" style="margin-top:.6rem;display:none">
+      <span class="callout-icon">&#128161;</span>
+      <div>The <code>-b</code> flag tells <code>git checkout</code> to create the branch and switch to it in one step. Without <code>-b</code>, <code>git checkout feature/add-laksa</code> tries to switch to a branch that does not exist yet and gives an error. The modern equivalent (Git 2.23+) is <code>git switch -c feature/add-laksa</code>, which is more readable.</div>
+    </div>
+  </div>
+
+  <!-- Q8 -->
+  <div class="kc-question">
+    <div class="kc-q">8. Describe step by step what happens from the moment a developer types <code>git push origin main</code> to when GitHub shows a green &#10004; on the commit. (Choose the most complete answer.)</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span>Nothing automatic &mdash; the green tick appears after 5 minutes</li>
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span>GitHub emails the team to ask if the code is safe to deploy</li>
+      <li onclick="checkAnswer(this,true)"><span class="kc-radio"></span>GitHub detects the push, allocates a fresh Ubuntu runner VM, checks out the code, installs npm packages, runs <code>npm test</code>, and marks the commit pass or fail based on the exit code</li>
+      <li onclick="checkAnswer(this,false)"><span class="kc-radio"></span>The code is deployed to production immediately without any checks</li>
+    </ul>
+    <div class="callout green" style="margin-top:.6rem;display:none">
+      <span class="callout-icon">&#128161;</span>
+      <div>The push triggers the <code>on: push</code> workflow. GitHub allocates an ephemeral Ubuntu VM (the "runner") and executes each step in sequence: checkout code &rarr; setup Node.js &rarr; <code>npm install</code> &rarr; <code>npm test</code>. If every step exits with code 0 (success), the commit receives a green checkmark. If any step fails (non-zero exit), it receives a red cross and the developer is notified. The runner VM is then destroyed.</div>
+    </div>
+  </div>
+
+  <div id="quizScoreBox" class="quiz-score-bar">
+    <strong id="quizScoreText"></strong>
+  </div>
+
+</div><!-- /panel-quiz -->
+
+<!-- ═══════════════════════════════ LABS ═══════════════════════════════ -->
+<div class="tab-panel" id="panel-labs">
+
+  <div class="sec-header">
+    <span class="sec-pill amber">Labs</span>
+    <span class="sec-title">Labs This Week</span>
+  </div>
+
+  <div class="lab-card">
+    <div class="lab-card-header">
+      <span class="lab-num amber">Lab 6.1</span>
+      <span class="lab-title">Git Version Control</span>
+      <span style="font-size:.72rem;color:var(--muted);margin-left:auto">60 min</span>
+    </div>
+    <p style="font-size:.82rem;color:var(--muted)">Push the CloudEats repository to GitHub, create a feature branch, commit with clear messages, simulate a Pull Request, and resolve a guided merge conflict.</p>
+    <ul class="checklist">
+      <li>Initialise the repo and push to GitHub for the first time</li>
+      <li>Create <code>feature/add-laksa-to-menu</code> from main</li>
+      <li>Write at least three commits with imperative present-tense messages</li>
+      <li>Open a Pull Request on GitHub and read the diff view</li>
+      <li>Trigger and resolve a guided merge conflict in <code>server.js</code></li>
+      <li><span style="color:var(--purple);font-weight:700">Advanced only:</span> Set up a branch protection rule requiring CI to pass before any merge to main</li>
+    </ul>
+    <a href="../week06/lab1_git_version_control.html" style="display:inline-block;margin-top:.75rem;font-size:.8rem;font-weight:700;padding:.4rem .9rem;background:rgba(255,183,64,.1);color:var(--amber);border:1px solid rgba(255,183,64,.35);border-radius:6px;text-decoration:none">Open Lab 6.1 &rarr;</a>
+  </div>
+
+  <div class="lab-card">
+    <div class="lab-card-header">
+      <span class="lab-num green">Lab 6.2</span>
+      <span class="lab-title">Automated Testing with GitHub Actions</span>
+      <span style="font-size:.72rem;color:var(--muted);margin-left:auto">60 min</span>
+    </div>
+    <p style="font-size:.82rem;color:var(--muted)">Run pre-written Jest tests, find and fix a deliberately broken test, write the GitHub Actions CI workflow, push to GitHub, and watch CI run automatically on your commit.</p>
+    <ul class="checklist">
+      <li>Run the existing test suite and read the pass/fail output carefully</li>
+      <li>Find and fix the deliberately broken <code>calculateTotal</code> test (guided)</li>
+      <li>Create <code>.github/workflows/ci.yml</code> from scratch</li>
+      <li>Push to GitHub and monitor the Actions tab in real time</li>
+      <li>Introduce a deliberate test failure and watch CI block the merge</li>
+      <li><span style="color:var(--purple);font-weight:700">Advanced only:</span> Add a Husky pre-commit hook that runs tests before every local commit</li>
+    </ul>
+    <a href="../week06/lab2_automated_testing.html" style="display:inline-block;margin-top:.75rem;font-size:.8rem;font-weight:700;padding:.4rem .9rem;background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.35);border-radius:6px;text-decoration:none">Open Lab 6.2 &rarr;</a>
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- Week Summary Table -->
+  <div class="sec-header">
+    <span class="sec-pill blue">Summary</span>
+    <span class="sec-title">Week 6 Quick Reference</span>
+  </div>
+
+  <table class="summary-table">
+    <thead>
+      <tr><th>Topic</th><th>Key Takeaway</th><th>Command / Tool</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>DevOps</strong></td><td>Shared responsibility for build + run. Automate everything between writing code and serving users.</td><td>Culture + practices</td></tr>
+      <tr><td><strong>git commit</strong></td><td>A snapshot with hash, message, author, timestamp. Use imperative present-tense messages: "Add menu endpoint".</td><td><code>git commit -m "..."</code></td></tr>
+      <tr><td><strong>Staging area</strong></td><td>A waiting room. Choose exactly which changes go into the next snapshot before committing.</td><td><code>git add</code></td></tr>
+      <tr><td><strong>git branch</strong></td><td>Isolated line of development. Work in isolation; merge when ready and tested. Cheap to create.</td><td><code>git checkout -b</code></td></tr>
+      <tr><td><strong>Pull Request</strong></td><td>Request to merge + code review gate + CI results. Creates permanent record of what changed and why.</td><td>GitHub PR UI</td></tr>
+      <tr><td><strong>Merge conflict</strong></td><td>Two branches changed the same lines. Edit file, remove markers, keep correct version, stage, commit.</td><td><code>git merge</code></td></tr>
+      <tr><td><strong>.gitignore</strong></td><td>Always exclude <code>node_modules/</code> and <code>.env</code>. Use <code>.env.example</code> to document required variables.</td><td><code>.gitignore</code></td></tr>
+      <tr><td><strong>CI (Actions)</strong></td><td>Runs tests on every push. Green &#10004; = safe to merge. Red &#10006; = fix the code first.</td><td><code>.github/workflows/ci.yml</code></td></tr>
+      <tr><td><strong>Unit test</strong></td><td>Tests one function in isolation. Milliseconds. No database or network. Uses mocks for dependencies.</td><td>Jest <code>test()</code></td></tr>
+      <tr><td><strong>Integration test</strong></td><td>Tests the full request &rarr; database &rarr; response path. Catches wiring errors unit tests miss.</td><td>Supertest + Jest</td></tr>
+    </tbody>
+  </table>
+
+  <hr class="section-divider">
+
+  <div class="sec-header">
+    <span class="sec-pill red">Exam</span>
+    <span class="sec-title">Assessment Pointers</span>
+  </div>
+
+  <p style="font-size:.84rem;color:var(--muted);margin-bottom:.85rem">Tick each item below as you can answer it confidently without notes. These are the exact question types that appear in the final assessment for Week 6 content.</p>
+
+  <div style="display:flex;flex-direction:column;gap:.4rem">
+    <div class="assess-item" onclick="this.classList.toggle('done')">
+      <div class="assess-check"></div>
+      <div>Name two files that should always be in <code>.gitignore</code> and explain <em>why</em> for each one</div>
+    </div>
+    <div class="assess-item" onclick="this.classList.toggle('done')">
+      <div class="assess-check"></div>
+      <div>Given a merge conflict block, identify which lines belong to your branch (HEAD) vs the incoming branch</div>
+    </div>
+    <div class="assess-item" onclick="this.classList.toggle('done')">
+      <div class="assess-check"></div>
+      <div>Describe step-by-step what happens when a developer pushes to <code>main</code> with GitHub Actions CI configured</div>
+    </div>
+    <div class="assess-item" onclick="this.classList.toggle('done')">
+      <div class="assess-check"></div>
+      <div>Distinguish between a unit test and an integration test &mdash; give a concrete CloudEats example of each</div>
+    </div>
+    <div class="assess-item" onclick="this.classList.toggle('done')">
+      <div class="assess-check"></div>
+      <div>Explain the purpose of a Pull Request &mdash; what does it show, and what does it prevent?</div>
+    </div>
+    <div class="assess-item" onclick="this.classList.toggle('done')">
+      <div class="assess-check"></div>
+      <div>What is the difference between <code>git commit</code> and <code>git push</code>? Which one sends code to GitHub?</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- Architecture progress SVG -->
+  <div class="sec-header">
+    <span class="sec-pill purple">Progress</span>
+    <span class="sec-title">CloudEats Architecture &mdash; Where We Are After Week 6</span>
+  </div>
+  <svg viewBox="0 0 740 128" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin:.85rem 0">
+    <defs><marker id="ppa6" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(107,127,160,.45)"/></marker></defs>
+    <rect x="10" y="38" width="78" height="50" rx="5" fill="rgba(107,127,160,.04)" stroke="rgba(107,127,160,.18)" stroke-width="1"/>
+    <text x="49" y="58" font-size="7" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle" font-weight="700">Week 1&ndash;2</text>
+    <text x="49" y="72" font-size="7" font-family="Sora,sans-serif" fill="rgba(107,127,160,.4)" text-anchor="middle">Docker + Static</text>
+    <line x1="90" y1="63" x2="108" y2="63" stroke="rgba(107,127,160,.25)" stroke-width="1.2" marker-end="url(#ppa6)"/>
+    <rect x="111" y="28" width="84" height="70" rx="5" fill="rgba(107,127,160,.04)" stroke="rgba(107,127,160,.18)" stroke-width="1"/>
+    <text x="153" y="48" font-size="7" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle" font-weight="700">Week 3&ndash;4</text>
+    <text x="153" y="62" font-size="7" font-family="Sora,sans-serif" fill="rgba(107,127,160,.4)" text-anchor="middle">+MySQL +Redis</text>
+    <text x="153" y="76" font-size="7" font-family="Fira Code,monospace" fill="rgba(107,127,160,.35)" text-anchor="middle">+MongoDB</text>
+    <line x1="197" y1="63" x2="215" y2="63" stroke="rgba(107,127,160,.25)" stroke-width="1.2" marker-end="url(#ppa6)"/>
+    <rect x="218" y="20" width="100" height="86" rx="5" fill="rgba(107,127,160,.04)" stroke="rgba(107,127,160,.18)" stroke-width="1"/>
+    <text x="268" y="40" font-size="7" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle" font-weight="700">Week 5</text>
+    <text x="268" y="56" font-size="7" font-family="Sora,sans-serif" fill="rgba(107,127,160,.4)" text-anchor="middle">Microservices</text>
+    <text x="268" y="70" font-size="7" font-family="Fira Code,monospace" fill="rgba(107,127,160,.35)" text-anchor="middle">3 services</text>
+    <text x="268" y="84" font-size="7" font-family="Fira Code,monospace" fill="rgba(107,127,160,.35)" text-anchor="middle">API Gateway</text>
+    <line x1="320" y1="63" x2="338" y2="63" stroke="rgba(255,183,64,.5)" stroke-width="1.8" marker-end="url(#ppa6)"/>
+    <rect x="341" y="8" width="204" height="110" rx="6" fill="rgba(255,183,64,.06)" stroke="rgba(255,183,64,.4)" stroke-width="2"/>
+    <text x="443" y="26" font-size="8.5" font-family="Sora,sans-serif" fill="rgba(255,183,64,.9)" text-anchor="middle" font-weight="700">Week 6 &larr; You are here</text>
+    <text x="391" y="52" font-size="10" text-anchor="middle">&#128336;</text>
+    <text x="443" y="52" font-size="10" text-anchor="middle">&#127807;</text>
+    <text x="495" y="52" font-size="10" text-anchor="middle">&#128640;</text>
+    <text x="391" y="66" font-size="7" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle">Git + GitHub</text>
+    <text x="443" y="66" font-size="7" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle">Branching PRs</text>
+    <text x="495" y="66" font-size="7" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle">CI Pipeline</text>
+    <text x="443" y="82" font-size="8" font-family="Sora,sans-serif" fill="var(--text)" text-anchor="middle" font-weight="600">DevOps Layer Added</text>
+    <text x="443" y="96" font-size="7" font-family="Fira Code,monospace" fill="rgba(255,183,64,.6)" text-anchor="middle">automated tests + GitHub Actions CI</text>
+    <line x1="547" y1="63" x2="565" y2="63" stroke="rgba(107,127,160,.2)" stroke-width="1.2" marker-end="url(#ppa6)"/>
+    <rect x="568" y="32" width="162" height="62" rx="5" fill="rgba(107,127,160,.02)" stroke="rgba(107,127,160,.1)" stroke-dasharray="4,3" stroke-width="1.2"/>
+    <text x="649" y="55" font-size="7" font-family="Sora,sans-serif" fill="rgba(107,127,160,.38)" text-anchor="middle" font-weight="700">Week 7 (Next)</text>
+    <text x="649" y="69" font-size="7" font-family="Sora,sans-serif" fill="rgba(107,127,160,.28)" text-anchor="middle">Full CD + Terraform IaC</text>
+    <text x="649" y="83" font-size="7" font-family="Fira Code,monospace" fill="rgba(107,127,160,.22)" text-anchor="middle">deploy on push</text>
+  </svg>
+
+</div><!-- /panel-labs -->
+
+</div><!-- /tab-content -->
+
+<footer style="border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;color:var(--muted);font-size:.78rem;max-width:1100px;margin:0 auto">
+  Cloud Computing &middot; Week 6 &middot; DevOps &amp; Version Control &nbsp;|&nbsp; CloudEats Academy &nbsp;|&nbsp;
+  <a href="../week05/index.html" style="color:var(--muted);text-decoration:none">&larr; Week 5</a>
+  &nbsp;|&nbsp;<span class="ghp-badge">&#127758; GitHub Pages Ready</span>&nbsp;|&nbsp;
+  <a href="../week07/index.html" style="color:var(--muted);text-decoration:none">Week 7 &rarr;</a>
+</footer>
+
+<script>
+/* ── Tab switching ── */
+function showTab(id,btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ── Pace setter ── */
+function setPace(pace){
+  document.body.className='pace-'+pace;
+  document.querySelectorAll('.pace-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('[data-pace="'+pace+'"]').classList.add('active');
+}
+
+/* ── Copy code ── */
+function copyCode(btn,event){
+  event.stopPropagation();
+  const pre=btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    btn.textContent='Copied!';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2000);
+  });
+}
+
+/* ── Interactive commit timeline ── */
+const commits=[
+  {hash:'a3f82b1c4d9e0f2a',msg:'Initial project structure for CloudEats',meta:'Author: Ali Hassan &lt;ali@cloudeats.dev&gt;  &nbsp; Date: Mon Jun 3 09:14:22 2024',files:'4 files changed &nbsp;|&nbsp; +127 lines added &nbsp;|&nbsp; -0 removed'},
+  {hash:'7c14de8b2f3a1c9e',msg:'Add GET /api/menu endpoint with MySQL query',meta:'Author: Priya Nair &lt;priya@cloudeats.dev&gt; &nbsp; Date: Tue Jun 4 14:22:11 2024',files:'2 files changed &nbsp;|&nbsp; +48 added &nbsp;|&nbsp; -3 removed'},
+  {hash:'f901aa5d3b2e7c1f',msg:'Fix cart total returning NaN when cart is empty',meta:'Author: Ali Hassan &lt;ali@cloudeats.dev&gt;  &nbsp; Date: Wed Jun 5 10:05:44 2024',files:'1 file changed &nbsp;|&nbsp; +4 added &nbsp;|&nbsp; -2 removed'},
+  {hash:'2b88cc4e1a9f3d7b',msg:'Add JWT authentication to registration and login routes',meta:'Author: Priya Nair &lt;priya@cloudeats.dev&gt; &nbsp; Date: Thu Jun 6 16:41:09 2024',files:'3 files changed &nbsp;|&nbsp; +92 added &nbsp;|&nbsp; -11 removed'},
+  {hash:'9e51ff2c7d4a8b3e',msg:'Update README with setup instructions and environment variables',meta:'Author: Ali Hassan &lt;ali@cloudeats.dev&gt;  &nbsp; Date: Fri Jun 7 09:30:55 2024',files:'1 file changed &nbsp;|&nbsp; +35 added &nbsp;|&nbsp; -8 removed'}
+];
+function showCommit(idx){
+  document.querySelectorAll('.commit-node').forEach((n,i)=>{
+    n.classList.toggle('active',i===idx);
+  });
+  const c=commits[idx];
+  document.getElementById('commitDetail').innerHTML=
+    '<div class="cd-hash">commit '+c.hash+'...</div>'+
+    '<div class="cd-msg">'+c.msg+'</div>'+
+    '<div class="cd-meta">'+c.meta+'</div>'+
+    '<div class="cd-meta" style="margin-top:.3rem;color:var(--muted)">'+c.files+'</div>';
+}
+
+/* ── Branch visualizer ── */
+const branchSteps=[
+  {label:'main has 3 commits — no branches yet',
+   status:'You are on <span>main</span>. Three commits exist: init, menu API, user auth.'},
+  {label:'feature/add-laksa created from commit C',
+   status:'Branch <span>feature/add-laksa</span> created. You are now on this branch. main is untouched.'},
+  {label:'commit D added on feature branch',
+   status:'Commit D added to <span>feature/add-laksa</span>: "add laksa menu item". main still has only A, B, C.'},
+  {label:'commit E added on feature branch',
+   status:'Commit E added: "add laksa price". Branch is 2 commits ahead of main. Ready to open a Pull Request.'},
+  {label:'feature/add-laksa merged into main as commit F',
+   status:'<span>feature/add-laksa</span> merged into main as merge commit F. All changes are now in main. Branch can be deleted safely.'}
+];
+function setBranchStep(n){
+  document.querySelectorAll('.branch-btn').forEach((b,i)=>b.classList.toggle('active',i===n));
+  const s=branchSteps[n];
+  document.getElementById('branchStepLabel').textContent=s.label;
+  document.getElementById('branchStatus').innerHTML=s.status;
+  const op=id=>{ const el=document.getElementById(id); if(el)el.setAttribute('opacity',n>=1?'1':'0'); };
+  const op2=id=>{ const el=document.getElementById(id); if(el)el.setAttribute('opacity',n>=2?'1':'0'); };
+  const op3=id=>{ const el=document.getElementById(id); if(el)el.setAttribute('opacity',n>=3?'1':'0'); };
+  const op4=id=>{ const el=document.getElementById(id); if(el)el.setAttribute('opacity',n>=4?'1':'0'); };
+  ['bLine1','featureLabel'].forEach(op);
+  ['cD','tD','tDl'].forEach(op2);
+  ['bLine2','cE','tE','tEl'].forEach(op3);
+  ['mergeLine','cF','tF','tFl','mainLine2'].forEach(op4);
+}
+
+/* ── CI Pipeline animator ── */
+const ciData=[
+  {icon:'&#128640;',pass:true},
+  {icon:'&#128194;',pass:true},
+  {icon:'&#9881;&#65039;',pass:true},
+  {icon:'&#128230;',pass:true},
+  {icon:'&#128300;',pass:true},
+  {icon:'&#10004;&#65039;',pass:true}
+];
+const ciLabels=[
+  'Workflow triggered by <code>git push origin main</code>',
+  'Checkout code (<code>actions/checkout@v3</code>)',
+  'Setup Node.js 18',
+  'Install dependencies (<code>npm install</code>)',
+  'Run tests (<code>npm test</code>) — 7 tests, 0 failures',
+  'Report result — <strong style="color:var(--green)">All checks passed</strong> &middot; commit marked &#10004;'
+];
+let ciRunning=false;
+function runCIPipeline(){
+  if(ciRunning)return;
+  ciRunning=true;
+  const btn=document.getElementById('ciRunBtn');
+  btn.disabled=true;btn.textContent='Running CI...';
+  const steps=document.querySelectorAll('#ciPipeline .ci-step');
+  steps.forEach((s,i)=>{
+    s.className='ci-step pending';
+    s.querySelector('.ci-icon').innerHTML='&#9899;';
+    s.innerHTML='<span class="ci-icon">&#9899;</span>'+ciLabels[i];
+  });
+  document.getElementById('ciResult').style.display='none';
+  let i=0;
+  function next(){
+    if(i>=steps.length){
+      const r=document.getElementById('ciResult');
+      r.style.display='block';
+      r.innerHTML='<div class="callout green"><span class="callout-icon">&#10004;&#65039;</span><div><strong>CI passed in 34 seconds.</strong> Your commit now shows a green checkmark on GitHub. The PR is cleared to merge into main.</div></div>';
+      btn.disabled=false;btn.textContent='&#128640; Push to GitHub — trigger CI';
+      ciRunning=false;return;
+    }
+    const s=steps[i];
+    s.className='ci-step running';
+    s.querySelector('.ci-icon').innerHTML='&#9696;';
+    setTimeout(()=>{
+      s.className='ci-step '+(ciData[i].pass?'pass':'fail');
+      s.querySelector('.ci-icon').innerHTML=ciData[i].icon;
+      i++;setTimeout(next,350);
+    },650+Math.random()*350);
+  }
+  next();
+}
+
+/* ── Merge conflict resolver ── */
+function resolveConflict(choice){
+  const line=choice==='yours'?'const PORT = 3000;':'const PORT = 3001;';
+  const who=choice==='yours'?'your branch (HEAD)':'the incoming branch (feature/user-service)';
+  document.getElementById('conflictView').style.opacity='0.4';
+  const res=document.getElementById('conflictResolved');
+  res.querySelector('#resolvedLine').innerHTML='<code>'+line+'</code>';
+  res.style.display='block';
+  document.getElementById('conflictMsg').innerHTML=
+    '<span style="color:var(--green)">&#10004;</span> Conflict resolved &mdash; you kept the version from <strong>'+who+'</strong>. Now delete the three conflict marker lines from the file, then <code>git add</code> and <code>git commit</code>.';
+  document.getElementById('conflictNextSteps').style.display='block';
+}
+
+/* ── Quiz answer check ── */
+function checkAnswer(li,correct){
+  const parent=li.closest('ul');
+  if(parent.querySelector('.correct')||parent.querySelector('.wrong'))return; // already answered
+  li.classList.add(correct?'correct':'wrong');
+  if(!correct){
+    parent.querySelectorAll('li').forEach(item=>{
+      if(item.getAttribute('onclick')&&item.getAttribute('onclick').includes('true'))
+        item.classList.add('correct');
+    });
+  }
+  // Show explanation (first .callout.green sibling in the kc-question)
+  const qEl=li.closest('.kc-question');
+  const exp=qEl.querySelector('.callout.green');
+  if(exp)exp.style.display='flex';
+  updateQuizScore();
+}
+function updateQuizScore(){
+  const questions=document.querySelectorAll('.kc-question');
+  let answered=0,correct=0;
+  questions.forEach(q=>{
+    if(q.querySelector('li.correct')){answered++;correct++;}
+    else if(q.querySelector('li.wrong'))answered++;
+  });
+  if(answered===questions.length){
+    const box=document.getElementById('quizScoreBox');
+    box.style.display='block';
+    const pct=Math.round(correct/questions.length*100);
+    document.getElementById('quizScoreText').innerHTML=
+      (pct>=75?'&#127881;':'&#128712;')+' Quiz complete: '+correct+'/'+questions.length+' correct ('+pct+'%)'+
+      (pct>=75?' &mdash; Great work! Move on to the labs.':' &mdash; Review the sections where you got it wrong, then retry those questions.');
+  }
+}
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded',()=>{
+  setPace('beginner');
+  showCommit(0);
+  setBranchStep(0);
+});
+</script>
+</body>
+</html>

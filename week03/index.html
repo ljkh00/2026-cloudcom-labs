@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 3 · Databases in the Cloud · CloudEats</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07090f; --bg2: #0d1117; --bg3: #141b27;
+    --surface: #1a2235; --surface2: #1f2c42; --border: #2a3d5a;
+    --accent: #00c8ff; --green: #00e5a0; --amber: #ffb740;
+    --red: #ff5e7a; --purple: #b46ef5;
+    --text: #e8edf5; --muted: #6b7fa0;
+    --beginner: #00e5a0; --average: #00c8ff; --advanced: #b46ef5;
+    --radius: 10px; --code-bg: #0b1120;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+
+  /* ── HEADER ── */
+  .site-header { background: linear-gradient(135deg, #050d1c, #091628); border-bottom: 1px solid var(--border); padding: 0 2rem; position: sticky; top: 0; z-index: 100; }
+  .header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 58px; gap: 1rem; }
+  .header-left { display: flex; align-items: center; gap: 0.75rem; }
+  .week-badge { background: var(--purple); color: #000; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; padding: 0.2rem 0.55rem; border-radius: 4px; text-transform: uppercase; }
+  .header-title { font-size: 0.9rem; font-weight: 600; }
+  .ghp-badge { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.68rem; font-weight: 700; padding: 0.2rem 0.6rem; background: rgba(180,110,245,0.12); border: 1px solid rgba(180,110,245,0.3); color: var(--purple); border-radius: 20px; }
+  .week-nav { display: flex; gap: 0.4rem; align-items: center; }
+  .week-nav a { font-size: 0.68rem; font-weight: 600; padding: 0.2rem 0.55rem; border: 1px solid var(--border); border-radius: 4px; color: var(--muted); text-decoration: none; transition: all 0.15s; }
+  .week-nav a:hover { color: var(--accent); border-color: var(--accent); }
+  .week-nav a.current { background: rgba(180,110,245,0.12); color: var(--purple); border-color: rgba(180,110,245,0.3); }
+
+  /* ── HERO ── */
+  .page-hero { background: linear-gradient(160deg, #060f20, #080f22); border-bottom: 1px solid var(--border); padding: 2.5rem 2rem 2rem; position: relative; overflow: hidden; }
+  .page-hero::before { content: ''; position: absolute; top: -80px; right: -80px; width: 400px; height: 400px; background: radial-gradient(ellipse, rgba(180,110,245,0.06), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; }
+  .hero-crumb { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.5rem; }
+  .hero-crumb span { color: var(--purple); }
+  .page-hero h1 { font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 800; background: linear-gradient(135deg, #e8edf5 40%, var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.5rem; }
+  .hero-meta { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
+  .meta-chip { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.28rem 0.7rem; color: var(--muted); }
+  .meta-chip strong { color: var(--text); }
+
+  /* ── LEVEL PILLS ── */
+  .level-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.75rem 0; }
+  .level-pill { font-size: 0.64rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.15rem 0.5rem; border-radius: 20px; white-space: nowrap; }
+  .level-pill.beginner { background: rgba(0,229,160,0.12); color: var(--beginner); border: 1px solid rgba(0,229,160,0.3); }
+  .level-pill.average  { background: rgba(0,200,255,0.12); color: var(--average);  border: 1px solid rgba(0,200,255,0.3); }
+  .level-pill.advanced { background: rgba(180,110,245,0.12); color: var(--advanced); border: 1px solid rgba(180,110,245,0.3); }
+  .level-block { border-radius: 8px; padding: 0.75rem 1rem; margin: 0.75rem 0; font-size: 0.82rem; line-height: 1.55; }
+  .level-block.beginner { background: rgba(0,229,160,0.04); border: 1px solid rgba(0,229,160,0.18); border-left: 3px solid var(--beginner); }
+  .level-block.average  { background: rgba(0,200,255,0.04); border: 1px solid rgba(0,200,255,0.18); border-left: 3px solid var(--average); }
+  .level-block.advanced { background: rgba(180,110,245,0.04); border: 1px solid rgba(180,110,245,0.18); border-left: 3px solid var(--advanced); }
+  .level-block-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.3rem; }
+  .level-block.beginner .level-block-label { color: var(--beginner); }
+  .level-block.average  .level-block-label { color: var(--average); }
+  .level-block.advanced .level-block-label { color: var(--advanced); }
+
+  /* ── TABS ── */
+  .tab-nav { max-width: 1100px; margin: 0 auto; padding: 1.5rem 2rem 0; display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .tab-btn { font-family: 'Sora', sans-serif; font-size: 0.78rem; font-weight: 600; padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 8px 8px 0 0; background: var(--bg3); color: var(--muted); cursor: pointer; transition: all 0.15s; border-bottom: none; }
+  .tab-btn:hover { color: var(--text); background: var(--surface); }
+  .tab-btn.active { background: var(--surface); color: var(--accent); border-color: var(--border); border-bottom: 1px solid var(--surface); position: relative; z-index: 1; }
+  .tab-content { max-width: 1100px; margin: 0 auto; padding: 0 2rem 4rem; }
+  .tab-panel { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 0 var(--radius) var(--radius) var(--radius); padding: 2rem; margin-top: -1px; }
+  .tab-panel.active { display: block; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ── SECTION HEADERS ── */
+  .sec-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border); }
+  .sec-pill { font-size: 0.67rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.18rem 0.55rem; border-radius: 20px; white-space: nowrap; }
+  .sec-pill.blue   { background: rgba(0,200,255,0.1);  color: var(--accent); border: 1px solid rgba(0,200,255,0.2); }
+  .sec-pill.green  { background: rgba(0,229,160,0.1);  color: var(--green);  border: 1px solid rgba(0,229,160,0.2); }
+  .sec-pill.amber  { background: rgba(255,183,64,0.1); color: var(--amber);  border: 1px solid rgba(255,183,64,0.2); }
+  .sec-pill.purple { background: rgba(180,110,245,0.1);color: var(--purple); border: 1px solid rgba(180,110,245,0.2); }
+  .sec-pill.red    { background: rgba(255,94,122,0.1); color: var(--red);    border: 1px solid rgba(255,94,122,0.2); }
+  .sec-title { font-size: 1.1rem; font-weight: 700; }
+  .sec-time  { font-size: 0.73rem; color: var(--muted); margin-left: auto; }
+
+  /* ── CONCEPT CARDS ── */
+  .card-grid { display: grid; gap: 0.85rem; margin: 0.85rem 0; }
+  .card-grid.cols2 { grid-template-columns: repeat(2, 1fr); }
+  .card-grid.cols3 { grid-template-columns: repeat(3, 1fr); }
+  .card-grid.cols4 { grid-template-columns: repeat(4, 1fr); }
+  .concept-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+  .concept-card.highlight-blue  { border-color: rgba(0,200,255,0.35);  background: rgba(0,200,255,0.04); }
+  .concept-card.highlight-green { border-color: rgba(0,229,160,0.35);  background: rgba(0,229,160,0.04); }
+  .concept-card.highlight-amber { border-color: rgba(255,183,64,0.35); background: rgba(255,183,64,0.04); }
+  .concept-card.highlight-purple{ border-color: rgba(180,110,245,0.35);background: rgba(180,110,245,0.04); }
+  .cc-icon  { font-size: 1.6rem; margin-bottom: 0.4rem; display: block; }
+  .cc-title { font-size: 0.88rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .cc-body  { font-size: 0.79rem; color: var(--muted); line-height: 1.55; }
+  .cc-tag   { display: inline-block; font-size: 0.68rem; font-weight: 600; padding: 0.1rem 0.45rem; border-radius: 4px; margin-top: 0.5rem; background: rgba(0,200,255,0.1); color: var(--accent); }
+
+  /* ── COMPARE GRID ── */
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 0.85rem 0; }
+  .compare-side { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+  .compare-side.left  { border-top: 3px solid var(--amber); }
+  .compare-side.right { border-top: 3px solid var(--green); }
+  .compare-side.bad   { border-top: 3px solid var(--red); }
+  .compare-side.good  { border-top: 3px solid var(--green); }
+  .cs-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.65rem; }
+  .cs-label.amber  { color: var(--amber); }
+  .cs-label.green  { color: var(--green); }
+  .cs-label.red    { color: var(--red); }
+  .cs-item  { display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.8rem; margin-bottom: 0.45rem; color: var(--muted); }
+  .cs-item:last-child { margin-bottom: 0; }
+  .cs-dot   { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 0.4rem; }
+  .dot-amber { background: var(--amber); } .dot-green { background: var(--green); } .dot-red { background: var(--red); }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow-row { display: flex; align-items: center; gap: 0; margin: 0.85rem 0; flex-wrap: wrap; }
+  .flow-box { background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; padding: 0.6rem 0.9rem; font-size: 0.79rem; text-align: center; min-width: 90px; }
+  .flow-arrow { font-size: 1rem; color: var(--muted); padding: 0 0.3rem; flex-shrink: 0; }
+
+  /* ── KEY TERM ── */
+  .term-list { list-style: none; margin: 0.75rem 0; }
+  .term-list li { display: flex; gap: 0.75rem; align-items: baseline; padding: 0.45rem 0; border-bottom: 1px solid rgba(42,61,90,0.35); font-size: 0.84rem; }
+  .term-list li:last-child { border-bottom: none; }
+  .term-key  { font-family: 'Fira Code', monospace; font-size: 0.8rem; font-weight: 500; color: var(--accent); white-space: nowrap; flex-shrink: 0; min-width: 130px; }
+  .term-val  { color: var(--muted); line-height: 1.5; }
+
+  /* ── CODE ── */
+  code { font-family: 'Fira Code', monospace; font-size: 0.84em; background: var(--code-bg); padding: 0.08rem 0.35rem; border-radius: 3px; color: var(--green); }
+  .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; margin: 0.75rem 0; overflow: hidden; }
+  .code-header { display: flex; align-items: center; justify-content: space-between; padding: 0.45rem 0.9rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); }
+  .code-lang  { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .copy-btn   { font-family: 'Sora', sans-serif; font-size: 0.68rem; font-weight: 600; padding: 0.18rem 0.55rem; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 4px; cursor: pointer; transition: all 0.15s; }
+  .copy-btn:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+  .copy-btn.copied { background: var(--green); color: #000; border-color: var(--green); }
+  pre { font-family: 'Fira Code', monospace; font-size: 0.79rem; line-height: 1.65; padding: 0.9rem; overflow-x: auto; color: #c5d5ef; white-space: pre; }
+  .cm { color: var(--muted); font-style: italic; }
+  .ck { color: var(--accent); }
+  .cv { color: var(--green); }
+  .cc { color: var(--amber); }
+  .cs { color: #ff8fab; }
+
+  /* ── CALLOUT BOXES ── */
+  .callout { border-radius: 8px; padding: 0.75rem 1rem; margin: 0.75rem 0; display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.82rem; line-height: 1.55; }
+  .callout.blue   { background: rgba(0,200,255,0.05); border: 1px solid rgba(0,200,255,0.2); color: #a0d8f0; }
+  .callout.green  { background: rgba(0,229,160,0.05); border: 1px solid rgba(0,229,160,0.2); color: #8ee8c4; }
+  .callout.amber  { background: rgba(255,183,64,0.06); border: 1px solid rgba(255,183,64,0.2); color: #d9c07a; }
+  .callout.purple { background: rgba(180,110,245,0.05); border: 1px solid rgba(180,110,245,0.2); color: #c5a8f5; }
+  .callout.red    { background: rgba(255,94,122,0.05); border: 1px solid rgba(255,94,122,0.2); color: #f0a0b0; }
+
+  /* ── IMG PLACEHOLDER ── */
+  .img-ph { border: 2px dashed rgba(0,200,255,0.2); border-radius: 8px; background: rgba(0,200,255,0.025); padding: 0.8rem 1.1rem; margin: 0.85rem 0; display: flex; gap: 0.75rem; align-items: flex-start; }
+  .img-ph-icon  { font-size: 1.2rem; flex-shrink: 0; line-height: 1.2; }
+  .img-ph-label { font-size: 0.67rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.18rem; }
+  .img-ph-desc  { font-size: 0.79rem; color: var(--muted); line-height: 1.5; }
+
+  /* ── KNOWLEDGE CHECK ── */
+  .kc-question { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 0.85rem; }
+  .kc-q { font-size: 0.88rem; font-weight: 600; margin-bottom: 0.7rem; }
+  .kc-options { list-style: none; }
+  .kc-options li { display: flex; align-items: center; gap: 0.55rem; font-size: 0.81rem; padding: 0.4rem 0.7rem; border-radius: 6px; cursor: pointer; transition: background 0.15s; margin-bottom: 0.25rem; border: 1px solid transparent; }
+  .kc-options li:hover { background: var(--surface2); }
+  .kc-options li.correct { background: rgba(0,229,160,0.1); border-color: rgba(0,229,160,0.3); color: var(--green); }
+  .kc-options li.wrong   { background: rgba(255,94,122,0.08); border-color: rgba(255,94,122,0.25); color: var(--red); }
+  .kc-radio { width:14px; height:14px; border:2px solid var(--border); border-radius:50%; flex-shrink:0; transition:all 0.15s; }
+  .kc-options li.correct .kc-radio { background: var(--green); border-color: var(--green); }
+  .kc-options li.wrong   .kc-radio { background: var(--red); border-color: var(--red); }
+
+  /* ── TABLE ── */
+  .summary-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin: 0.85rem 0; }
+  .summary-table th { padding: 0.5rem 0.85rem; background: var(--bg3); color: var(--muted); font-size: 0.69rem; letter-spacing: 0.07em; text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--border); }
+  .summary-table td { padding: 0.5rem 0.85rem; border-bottom: 1px solid rgba(42,61,90,0.3); vertical-align: top; }
+  .summary-table tr:last-child td { border-bottom: none; }
+  .summary-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 0.79rem; margin: 0.6rem 0; font-family: 'Fira Code', monospace; }
+  .data-table th { padding: 0.35rem 0.75rem; background: var(--bg2); color: var(--accent); font-size: 0.72rem; text-align: left; border: 1px solid var(--border); }
+  .data-table td { padding: 0.32rem 0.75rem; border: 1px solid rgba(42,61,90,0.5); color: var(--text); }
+  .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .pk-cell { color: var(--amber); font-weight: 700; }
+  .fk-cell { color: var(--purple); }
+
+  /* ── ANNOTATION ── */
+  .annotation { display: flex; gap: 0.6rem; font-size: 0.79rem; margin: 0.35rem 0; color: var(--muted); }
+  .ann-arrow { color: var(--accent); flex-shrink: 0; }
+
+  /* ── SECTION DIVIDER ── */
+  .section-divider { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+  /* ── LAB CARD ── */
+  .lab-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
+  .lab-card-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+  .lab-num { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.18rem 0.55rem; background: rgba(0,229,160,0.12); color: var(--green); border: 1px solid rgba(0,229,160,0.25); border-radius: 20px; }
+  .lab-title { font-size: 1rem; font-weight: 700; }
+  .lab-duration { font-size: 0.72rem; color: var(--muted); margin-left: auto; }
+  .checklist { list-style: none; margin: 0.5rem 0; }
+  .checklist li { display: flex; gap: 0.55rem; font-size: 0.81rem; color: var(--muted); padding: 0.25rem 0; }
+  .checklist li::before { content: '▹'; color: var(--green); flex-shrink: 0; }
+
+  a { color: var(--accent); } a:hover { text-decoration: underline; }
+  strong { color: var(--text); font-weight: 600; }
+  p { margin-bottom: 0.75rem; font-size: 0.86rem; line-height: 1.7; }
+  p:last-child { margin-bottom: 0; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 768px) {
+    .tab-content { padding: 0 1rem 3rem; }
+    .tab-panel { padding: 1.25rem; }
+    .card-grid.cols2, .card-grid.cols3, .card-grid.cols4 { grid-template-columns: 1fr; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .flow-row { flex-direction: column; align-items: flex-start; }
+    .week-nav { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <span class="week-badge">Week 3</span>
+      <span class="header-title">Databases in the Cloud</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem">
+      <nav class="week-nav">
+        <a href="../week01/index.html">W1</a>
+        <a href="../week02/index.html">W2</a>
+        <a class="current" href="#">W3</a>
+        <a href="#">W4</a>
+      </nav>
+      <span class="ghp-badge">🐙 GitHub Pages Ready</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<div class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb">CloudEats Academy <span>›</span> Week 3</div>
+    <h1>Databases in the Cloud</h1>
+    <p style="color:var(--muted);font-size:0.88rem;margin-top:0.4rem;margin-bottom:0">Relational DBs · Docker Compose · Schema Design · Password Security</p>
+    <div class="hero-meta">
+      <div class="meta-chip">⏱ <strong>4 hours</strong> &nbsp;Contact</div>
+      <div class="meta-chip">🗄️ <strong>Labs 3.1 &amp; 3.2</strong> &nbsp;This Week</div>
+      <div class="meta-chip">📋 <strong>3 Tables</strong> &nbsp;menu_items · users · orders</div>
+      <div class="meta-chip">🔒 <strong>bcrypt</strong> &nbsp;Password hashing introduced</div>
+      <div class="meta-chip">🎓 <strong>Mid-Term</strong> &nbsp;Quiz coverage from this week</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TAB NAV ── -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('h1')">🗄️ Hour 1 · Why Databases?</button>
+  <button class="tab-btn" onclick="showTab('h2')">🐳 Hour 2 · MySQL in Docker</button>
+  <button class="tab-btn" onclick="showTab('labs')">🔬 Labs This Week</button>
+  <button class="tab-btn" onclick="showTab('quiz')">🧠 Quiz Prep</button>
+</div>
+
+<div class="tab-content">
+
+<!-- ══════════════════════════════════════════════════
+     HOUR 1: RELATIONAL DATABASE CONCEPTS
+═══════════════════════════════════════════════════ -->
+<div class="tab-panel active" id="panel-h1">
+
+  <!-- 1.1 Why Apps Need a Database -->
+  <div class="sec-header">
+    <span class="sec-pill blue">1.1</span>
+    <span class="sec-title">Why Applications Need a Database</span>
+    <span class="sec-time">15 min</span>
+  </div>
+
+  <p>In Lab 2.1, the CloudEats menu was hardcoded directly in HTML. For a single restaurant, this was fine. Let's think about what happens when the business grows.</p>
+
+  <div class="compare-grid">
+    <div class="compare-side left">
+      <div class="cs-label amber">😰 Without a Database</div>
+      <div class="cs-item"><div class="cs-dot dot-amber"></div>Menu lives inside the HTML file</div>
+      <div class="cs-item"><div class="cs-dot dot-amber"></div>Change menu = edit code file + rebuild + redeploy container</div>
+      <div class="cs-item"><div class="cs-dot dot-amber"></div>100 restaurants = 100 separate deployments per menu update</div>
+      <div class="cs-item"><div class="cs-dot dot-amber"></div>No history — who changed what and when?</div>
+      <div class="cs-item"><div class="cs-dot dot-amber"></div>Developers become the restaurant's menu editors</div>
+    </div>
+    <div class="compare-side right">
+      <div class="cs-label green">✅ With a Database</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Menu lives in a <em>database table</em> separate from code</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Change menu = update one database row, instant reflection</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>100 restaurants = all pull from the same database</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Every change is a new row — full audit history built-in</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Restaurant staff can edit menus themselves via an admin panel</div>
+    </div>
+  </div>
+
+  <div class="callout blue">
+    <span>💡</span>
+    <div><strong>Core principle:</strong> A database <em>separates data from code</em>. The application logic (what the code does) and the application data (what the app knows) should live in different places. This is the foundation of scalable software design.</div>
+  </div>
+
+  <!-- CloudEats evolution diagram -->
+  <svg viewBox="0 0 600 110" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin:0.85rem 0">
+    <defs><marker id="arr1" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(0,200,255,0.5)"/></marker></defs>
+    <!-- Lab 2.1 box -->
+    <rect x="10" y="20" width="150" height="70" rx="7" fill="rgba(255,183,64,0.06)" stroke="rgba(255,183,64,0.3)" stroke-width="1.5"/>
+    <text x="85" y="42" font-size="9" font-family="Sora,sans-serif" fill="rgba(255,183,64,0.8)" text-anchor="middle" font-weight="700">Lab 2.1 (Last Week)</text>
+    <text x="85" y="57" font-size="13" text-anchor="middle">📄</text>
+    <text x="85" y="74" font-size="8.5" font-family="Sora,sans-serif" fill="var(--text)" text-anchor="middle" font-weight="600">Static HTML</text>
+    <text x="85" y="86" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">menu hardcoded in file</text>
+    <!-- Arrow -->
+    <line x1="163" y1="55" x2="195" y2="55" stroke="rgba(0,200,255,0.5)" stroke-width="2" marker-end="url(#arr1)"/>
+    <text x="179" y="49" font-size="7.5" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">Week 3</text>
+    <!-- Lab 3.1 box -->
+    <rect x="198" y="20" width="175" height="70" rx="7" fill="rgba(0,229,160,0.06)" stroke="rgba(0,229,160,0.3)" stroke-width="1.5"/>
+    <text x="285" y="42" font-size="9" font-family="Sora,sans-serif" fill="rgba(0,229,160,0.8)" text-anchor="middle" font-weight="700">Lab 3.1 (This Week)</text>
+    <text x="270" y="60" font-size="13" text-anchor="middle">🌐</text>
+    <text x="305" y="60" font-size="11" text-anchor="middle">🗄️</text>
+    <text x="285" y="74" font-size="8.5" font-family="Sora,sans-serif" fill="var(--text)" text-anchor="middle" font-weight="600">Node.js API + MySQL</text>
+    <text x="285" y="86" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">menu_items table in DB</text>
+    <!-- Arrow -->
+    <line x1="376" y1="55" x2="408" y2="55" stroke="rgba(0,200,255,0.5)" stroke-width="2" marker-end="url(#arr1)"/>
+    <text x="392" y="49" font-size="7.5" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">+ Lab 3.2</text>
+    <!-- Lab 3.2 box -->
+    <rect x="411" y="20" width="178" height="70" rx="7" fill="rgba(180,110,245,0.06)" stroke="rgba(180,110,245,0.3)" stroke-width="1.5"/>
+    <text x="500" y="42" font-size="9" font-family="Sora,sans-serif" fill="rgba(180,110,245,0.8)" text-anchor="middle" font-weight="700">Lab 3.2 (This Week)</text>
+    <text x="484" y="60" font-size="13" text-anchor="middle">👤</text>
+    <text x="516" y="60" font-size="11" text-anchor="middle">🔒</text>
+    <text x="500" y="74" font-size="8.5" font-family="Sora,sans-serif" fill="var(--text)" text-anchor="middle" font-weight="600">Users + Orders Tables</text>
+    <text x="500" y="86" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">bcrypt password hashing</text>
+  </svg>
+
+  <div class="img-ph">
+    <div class="img-ph-icon">📸</div>
+    <div>
+      <div class="img-ph-label">Instructor Demo · Terminal — Before vs After</div>
+      <div class="img-ph-desc">Split terminal or two screenshots side by side: (Left) Week 2 state — <code>docker ps</code> showing only one container, then editing <code>index.html</code> to change a menu price, then <code>docker build</code> + <code>docker run</code> to redeploy. (Right) Week 3 target — <code>docker ps</code> showing <code>backend</code> and <code>db</code> containers, then a one-line MySQL <code>UPDATE menu_items SET price=9.00 WHERE id=2</code> — browser refreshes and price changes instantly, no rebuild.</div>
+    </div>
+  </div>
+
+  <div class="level-row">
+    <span class="level-pill beginner">🟢 Beginner</span>
+    <span class="level-pill average">🔵 Average</span>
+    <span class="level-pill advanced">🟣 Advanced</span>
+  </div>
+  <div class="level-block beginner">
+    <div class="level-block-label">🟢 Beginner Goal</div>
+    Understand that a database stores data separately from code. Think of it like a spreadsheet that your app can read and update automatically.
+  </div>
+  <div class="level-block average">
+    <div class="level-block-label">🔵 Average Goal</div>
+    Connect this to the architecture: browser → API → database → back to browser. Every web app you use (Grab, Shopee, Instagram) follows this exact pattern.
+  </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">🟣 Advanced — Think Further</div>
+    Why not just use a flat file (like a JSON file) instead of a full database? When does a JSON file become insufficient? Consider: concurrent writes, relationships between data, query performance on thousands of rows.
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- 1.2 Tables, PK, FK -->
+  <div class="sec-header">
+    <span class="sec-pill green">1.2</span>
+    <span class="sec-title">Tables, Primary Keys &amp; Foreign Keys</span>
+    <span class="sec-time">20 min</span>
+  </div>
+
+  <p>A relational database organises data into <strong>tables</strong>. Each table is like a spreadsheet — rows are individual records, columns are the properties of each record.</p>
+
+  <!-- menu_items table -->
+  <p style="margin-bottom:0.4rem"><strong>Example: The <code>menu_items</code> table</strong></p>
+  <div style="overflow-x:auto;margin:0.6rem 0 1rem">
+    <table class="data-table">
+      <thead><tr><th>id (PK)</th><th>name</th><th>category</th><th>price</th><th>description</th><th>created_at</th></tr></thead>
+      <tbody>
+        <tr><td class="pk-cell">1</td><td>Nasi Lemak Special</td><td>Breakfast</td><td>12.00</td><td>Fragrant coconut rice...</td><td>2024-01-15 09:00:00</td></tr>
+        <tr><td class="pk-cell">2</td><td>Nasi Lemak Regular</td><td>Breakfast</td><td>8.00</td><td>Classic nasi lemak...</td><td>2024-01-15 09:00:00</td></tr>
+        <tr><td class="pk-cell">3</td><td>Roti Canai with Curry</td><td>Breakfast</td><td>6.00</td><td>Crispy flaky flatbread...</td><td>2024-01-15 09:00:00</td></tr>
+        <tr><td class="pk-cell">4</td><td>Teh Tarik</td><td>Beverage</td><td>3.00</td><td>Pulled milk tea...</td><td>2024-01-15 09:00:00</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card-grid cols3" style="margin-bottom:1rem">
+    <div class="concept-card highlight-amber">
+      <span class="cc-icon">🔑</span>
+      <div class="cc-title">Primary Key (PK)</div>
+      <div class="cc-body">The <code>id</code> column uniquely identifies each row. MySQL auto-assigns it using <code>AUTO_INCREMENT</code> — you never need to set it manually. No two rows share the same <code>id</code>, even if their names are identical.</div>
+      <span class="cc-tag" style="background:rgba(255,183,64,0.1);color:var(--amber)">AUTO_INCREMENT</span>
+    </div>
+    <div class="concept-card highlight-blue">
+      <span class="cc-icon">📋</span>
+      <div class="cc-title">Rows = Records</div>
+      <div class="cc-body">Each row is one complete menu item. If you add a new dish, you <code>INSERT</code> a new row. If the price changes, you <code>UPDATE</code> that row. To remove a dish, you <code>DELETE</code> the row.</div>
+      <span class="cc-tag">INSERT · UPDATE · DELETE</span>
+    </div>
+    <div class="concept-card highlight-green">
+      <span class="cc-icon">📊</span>
+      <div class="cc-title">Columns = Properties</div>
+      <div class="cc-body">Each column holds one specific piece of information. Every row in the table has the same set of columns — the structure is fixed when the table is created.</div>
+      <span class="cc-tag" style="background:rgba(0,229,160,0.1);color:var(--green)">Schema</span>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+
+  <p><strong>Now — relationships between tables (Foreign Keys)</strong></p>
+  <p>Once we add user accounts, we need to link orders to the user who placed them. We do this with a <strong>Foreign Key (FK)</strong>.</p>
+
+  <!-- users table -->
+  <p style="margin-bottom:0.4rem;font-size:0.84rem"><strong>users table:</strong></p>
+  <div style="overflow-x:auto;margin:0.4rem 0 0.85rem">
+    <table class="data-table">
+      <thead><tr><th>id (PK)</th><th>full_name</th><th>email</th></tr></thead>
+      <tbody>
+        <tr><td class="pk-cell">1</td><td>Ali Hassan</td><td>ali@example.com</td></tr>
+        <tr><td class="pk-cell">2</td><td>Siti Aminah</td><td>siti@example.com</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- orders table -->
+  <p style="margin-bottom:0.4rem;font-size:0.84rem"><strong>orders table:</strong></p>
+  <div style="overflow-x:auto;margin:0.4rem 0 0.85rem">
+    <table class="data-table">
+      <thead><tr><th>id (PK)</th><th>user_id (FK)</th><th>total_amount</th><th>status</th></tr></thead>
+      <tbody>
+        <tr><td class="pk-cell">1</td><td class="fk-cell">1</td><td>26.00</td><td>delivered</td></tr>
+        <tr><td class="pk-cell">2</td><td class="fk-cell">1</td><td>14.00</td><td>pending</td></tr>
+        <tr><td class="pk-cell">3</td><td class="fk-cell">2</td><td>12.00</td><td>confirmed</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Relationship diagram -->
+  <svg viewBox="0 0 580 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin:0.85rem 0">
+    <defs><marker id="arr2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(180,110,245,0.7)"/></marker></defs>
+    <!-- users box -->
+    <rect x="20" y="20" width="200" height="80" rx="8" fill="rgba(255,183,64,0.05)" stroke="rgba(255,183,64,0.3)" stroke-width="1.5"/>
+    <text x="120" y="38" font-size="9.5" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle" font-weight="700">📋 users</text>
+    <rect x="35" y="44" width="170" height="15" rx="3" fill="rgba(255,183,64,0.08)"/>
+    <text x="40" y="55" font-size="8.5" font-family="Fira Code,monospace" fill="var(--amber)">id</text>
+    <text x="90" y="55" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)">INT · PK · AUTO_INCREMENT</text>
+    <text x="40" y="72" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)">full_name</text>
+    <text x="40" y="85" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)">email</text>
+    <text x="40" y="97" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)">password_hash</text>
+    <text x="120" y="115" font-size="8" font-family="Sora,sans-serif" fill="rgba(255,183,64,0.5)" text-anchor="middle">ONE user</text>
+    <!-- Arrow -->
+    <line x1="222" y1="60" x2="320" y2="60" stroke="rgba(180,110,245,0.5)" stroke-width="2" marker-end="url(#arr2)"/>
+    <text x="271" y="52" font-size="8" font-family="Sora,sans-serif" fill="rgba(180,110,245,0.6)" text-anchor="middle">1 : many</text>
+    <text x="271" y="77" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">FOREIGN KEY</text>
+    <!-- orders box -->
+    <rect x="323" y="20" width="235" height="80" rx="8" fill="rgba(180,110,245,0.05)" stroke="rgba(180,110,245,0.3)" stroke-width="1.5"/>
+    <text x="440" y="38" font-size="9.5" font-family="Sora,sans-serif" fill="var(--purple)" text-anchor="middle" font-weight="700">📦 orders</text>
+    <rect x="338" y="44" width="205" height="15" rx="3" fill="rgba(180,110,245,0.08)"/>
+    <text x="343" y="55" font-size="8.5" font-family="Fira Code,monospace" fill="var(--purple)">user_id</text>
+    <text x="393" y="55" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)">FK → users.id</text>
+    <text x="343" y="72" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)">total_amount</text>
+    <text x="343" y="85" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)">status</text>
+    <text x="343" y="97" font-size="8" font-family="Fira Code,monospace" fill="var(--muted)">delivery_address</text>
+    <text x="440" y="115" font-size="8" font-family="Sora,sans-serif" fill="rgba(180,110,245,0.5)" text-anchor="middle">MANY orders</text>
+  </svg>
+
+  <div class="callout amber">
+    <span>🤔</span>
+    <div>
+      <strong>Why not just put the user's name in the orders table?</strong><br>
+      If Ali changes his name, you'd have to update every single order row. With a foreign key, you update <code>users</code> once — all orders automatically reflect it. This principle is called <strong>normalisation</strong>: <em>store each piece of data exactly once, reference it with a key</em>.
+    </div>
+  </div>
+
+  <div class="level-block average">
+    <div class="level-block-label">🔵 Average — Make the Connection</div>
+    This is how every app you use works. Your Grab order history links your <code>user_id</code> to a list of orders. Your Shopee order links to the seller's product. The "relational" in relational database means tables relate to each other through keys.
+  </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">🟣 Advanced — ON DELETE CASCADE</div>
+    What happens if you delete user Ali? Without special handling, MySQL refuses — it won't leave orders pointing to a non-existent user (these are called <em>orphan rows</em>). We use <code>ON DELETE CASCADE</code> so when a user is deleted, all their orders are deleted automatically. Lab 3.2 uses this in the <code>orders</code> table definition.
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- 1.3 Data Types -->
+  <div class="sec-header">
+    <span class="sec-pill amber">1.3</span>
+    <span class="sec-title">Data Types in MySQL</span>
+    <span class="sec-time">15 min</span>
+  </div>
+
+  <p>Every column in MySQL has a <strong>data type</strong>. Choosing the right type prevents bad data from entering the database and improves query speed.</p>
+
+  <table class="summary-table">
+    <thead><tr><th>Type</th><th>What It Stores</th><th>CloudEats Example</th><th>Why Not Something Else?</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>INT</code></td>
+        <td>Whole numbers (no decimals)</td>
+        <td><code>id = 42</code></td>
+        <td>IDs never have decimal places. INT is faster to index than text.</td>
+      </tr>
+      <tr>
+        <td><code>DECIMAL(10,2)</code></td>
+        <td>Exact decimal numbers</td>
+        <td><code>price = 12.50</code></td>
+        <td>Never use <code>FLOAT</code> for money — floating-point rounding errors can make RM12.50 become RM12.49999...</td>
+      </tr>
+      <tr>
+        <td><code>VARCHAR(255)</code></td>
+        <td>Short text, max 255 chars</td>
+        <td><code>name = 'Nasi Lemak'</code></td>
+        <td>More efficient than TEXT for short strings. MySQL can index VARCHAR.</td>
+      </tr>
+      <tr>
+        <td><code>TEXT</code></td>
+        <td>Long text, no fixed limit</td>
+        <td><code>description = 'Fragrant...'</code></td>
+        <td>For descriptions, notes, addresses. Cannot be fully indexed.</td>
+      </tr>
+      <tr>
+        <td><code>TIMESTAMP</code></td>
+        <td>Date and time</td>
+        <td><code>created_at = '2024-01-15 09:30:00'</code></td>
+        <td>Use <code>DEFAULT CURRENT_TIMESTAMP</code> so MySQL fills it automatically.</td>
+      </tr>
+      <tr>
+        <td><code>ENUM(...)</code></td>
+        <td>One value from a fixed list</td>
+        <td><code>status = 'pending'</code></td>
+        <td>Prevents typos. Inserting <code>status = 'shipped'</code> fails if that value isn't in the ENUM list.</td>
+      </tr>
+      <tr>
+        <td><code>BOOLEAN</code></td>
+        <td>True / False (stored as 0/1)</td>
+        <td><code>is_active = true</code></td>
+        <td>MySQL stores BOOLEAN as TINYINT(1) internally. Both work.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout green">
+    <span>📌</span>
+    <div><strong>NOT NULL</strong> — add this to any column that must never be empty. A menu item without a name is meaningless data. <code>name VARCHAR(255) NOT NULL</code> forces MySQL to reject any INSERT that doesn't include a name. Think of it as a contract: the database enforces what your app might forget to check.</div>
+  </div>
+
+  <div class="level-block beginner">
+    <div class="level-block-label">🟢 Beginner — Quick Rule</div>
+    When in doubt: numbers without decimals → <code>INT</code>, prices/money → <code>DECIMAL</code>, words and names → <code>VARCHAR</code>, long text → <code>TEXT</code>, date/time → <code>TIMESTAMP</code>. You'll use these five types in 90% of tables.
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- 1.4 Cloud DB vs Self-Managed -->
+  <div class="sec-header">
+    <span class="sec-pill purple">1.4</span>
+    <span class="sec-title">Cloud Database Services vs Self-Managed</span>
+    <span class="sec-time">10 min</span>
+  </div>
+
+  <p>Today we run MySQL in a Docker container on Proxmox. In a real production deployment, the same database would sit inside a <strong>managed cloud database service</strong>. The SQL is identical — the difference is who manages the server.</p>
+
+  <div class="compare-grid">
+    <div class="compare-side left">
+      <div class="cs-label amber">🐳 Self-Managed (Docker Container)</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Free — runs on your own hardware</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Full control over configuration</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Great for development &amp; learning</div>
+      <div class="cs-item"><div class="cs-dot dot-amber"></div>You manage backups (or data is lost)</div>
+      <div class="cs-item"><div class="cs-dot dot-amber"></div>You apply security patches manually</div>
+      <div class="cs-item"><div class="cs-dot dot-amber"></div>Single container = single point of failure</div>
+      <div class="cs-item"><div class="cs-dot dot-amber"></div>Scaling requires manual setup</div>
+    </div>
+    <div class="compare-side right">
+      <div class="cs-label green">☁️ Managed Cloud (e.g. AWS RDS for MySQL)</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Automatic daily backups, 35-day retention</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Security patches applied automatically</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>One-click read replicas for high availability</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Scale storage without downtime</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Monitoring, metrics, alerts built-in</div>
+      <div class="cs-item"><div class="cs-dot dot-amber"></div>Costs money (~USD 30–50/month for small instance)</div>
+      <div class="cs-item"><div class="cs-dot dot-amber"></div>Less direct control (managed = less access)</div>
+    </div>
+  </div>
+
+  <div class="card-grid cols3" style="margin-top:0.85rem">
+    <div class="concept-card">
+      <span class="cc-icon">🏢</span>
+      <div class="cc-title">AWS RDS for MySQL</div>
+      <div class="cc-body">Amazon's managed MySQL. Runs Multi-AZ (two data centres) for automatic failover. Most common choice for web apps.</div>
+      <span class="cc-tag">Amazon Web Services</span>
+    </div>
+    <div class="concept-card">
+      <span class="cc-icon">🔷</span>
+      <div class="cc-title">Azure Database for MySQL</div>
+      <div class="cc-body">Microsoft's managed MySQL. Integrates well with Azure App Service and Azure DevOps pipelines.</div>
+      <span class="cc-tag">Microsoft Azure</span>
+    </div>
+    <div class="concept-card">
+      <span class="cc-icon">🌐</span>
+      <div class="cc-title">GCP Cloud SQL</div>
+      <div class="cc-body">Google Cloud's managed MySQL, PostgreSQL, and SQL Server. Tight integration with Cloud Run and BigQuery.</div>
+      <span class="cc-tag">Google Cloud</span>
+    </div>
+  </div>
+
+  <div class="callout purple">
+    <span>🗺️</span>
+    <div><strong>Course connection — Week 10:</strong> In the final lab, you will draw a migration map: <em>this Docker MySQL container → AWS RDS</em>. The SQL you write today works on RDS without any changes. You're already writing production-grade SQL.</div>
+  </div>
+
+</div><!-- /panel-h1 -->
+
+
+<!-- ══════════════════════════════════════════════════
+     HOUR 2: MySQL IN DOCKER + SCHEMA DESIGN
+═══════════════════════════════════════════════════ -->
+<div class="tab-panel" id="panel-h2">
+
+  <!-- 2.1 Docker Compose for MySQL -->
+  <div class="sec-header">
+    <span class="sec-pill blue">2.1</span>
+    <span class="sec-title">How MySQL Runs in Docker Compose</span>
+    <span class="sec-time">20 min</span>
+  </div>
+
+  <p>So far, you ran containers with long <code>docker run</code> commands. <strong>Docker Compose</strong> lets you declare your entire multi-container setup in a single <code>docker-compose.yml</code> file and start everything with one command.</p>
+
+  <!-- Analogy -->
+  <div class="compare-grid">
+    <div class="compare-side left">
+      <div class="cs-label amber">😫 Without Docker Compose</div>
+      <div class="cs-item"><div class="cs-dot dot-amber"></div>Create network manually: <code>docker network create...</code></div>
+      <div class="cs-item"><div class="cs-dot dot-amber"></div>Start DB: 1 long command with 5+ flags</div>
+      <div class="cs-item"><div class="cs-dot dot-amber"></div>Connect DB to network: another command</div>
+      <div class="cs-item"><div class="cs-dot dot-amber"></div>Start backend: another long command</div>
+      <div class="cs-item"><div class="cs-dot dot-amber"></div>Hope you wrote down all those flags correctly</div>
+      <div class="cs-item"><div class="cs-dot dot-amber"></div>Every new team member must repeat this</div>
+    </div>
+    <div class="compare-side right">
+      <div class="cs-label green">✅ With Docker Compose</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Write <code>docker-compose.yml</code> once</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div><code>docker compose up -d</code> — everything starts</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Network is created automatically</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Service order handled automatically</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Every team member runs the same command</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>The YAML file is version-controlled with the code</div>
+    </div>
+  </div>
+
+  <div class="img-ph">
+    <div class="img-ph-icon">📸</div>
+    <div>
+      <div class="img-ph-label">Instructor Demo · VS Code — docker-compose.yml Open</div>
+      <div class="img-ph-desc">VS Code editor showing the project root with <code>docker-compose.yml</code> open and highlighted. File tree on the left: <code>backend/</code> (Dockerfile, server.js, db.js, init.sql), <code>docker-compose.yml</code> at root. Point out: the two services (<code>backend</code> and <code>db</code>) clearly visible, the <code>depends_on</code> section, and the <code>volumes</code> block at the bottom — each annotated with VS Code's YAML extension showing key/value colouring.</div>
+    </div>
+  </div>
+
+  <p style="margin-top:1rem">Here is the <code>docker-compose.yml</code> that students build in Lab 3.1. Every line is explained:</p>
+
+  <div class="code-block">
+    <div class="code-header"><div class="code-lang">🐳 docker-compose.yml — Annotated</div><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><span class="ck">services:</span>
+
+  <span class="cm"># ── WEB / BACKEND ────────────────────────────────</span>
+  <span class="ck">backend:</span>
+    <span class="ck">build:</span> <span class="cv">./backend</span>             <span class="cm"># Build from local Dockerfile</span>
+    <span class="ck">ports:</span>
+      - <span class="cs">"3000:3000"</span>              <span class="cm"># Host:Container — browser hits :3000</span>
+    <span class="ck">environment:</span>
+      <span class="ck">DB_HOST:</span> <span class="cv">db</span>               <span class="cm"># ← Service name, not an IP address!</span>
+      <span class="ck">DB_USER:</span> <span class="cv">cloudeats_user</span>
+      <span class="ck">DB_PASSWORD:</span> <span class="cv">cloudeats_password</span>
+      <span class="ck">DB_NAME:</span> <span class="cv">cloudeats_db</span>
+    <span class="ck">depends_on:</span>
+      <span class="ck">db:</span>
+        <span class="ck">condition:</span> <span class="cv">service_healthy</span> <span class="cm"># Wait until MySQL is READY, not just started</span>
+    <span class="ck">networks:</span>
+      - <span class="cv">cloudeats-network</span>
+
+  <span class="cm"># ── DATABASE ─────────────────────────────────────</span>
+  <span class="ck">db:</span>
+    <span class="ck">image:</span> <span class="cv">mysql:8.0</span>              <span class="cm"># Official MySQL image from Docker Hub</span>
+    <span class="ck">environment:</span>
+      <span class="ck">MYSQL_ROOT_PASSWORD:</span> <span class="cv">rootpassword</span>
+      <span class="ck">MYSQL_DATABASE:</span> <span class="cv">cloudeats_db</span>   <span class="cm"># Creates this database on first run</span>
+      <span class="ck">MYSQL_USER:</span> <span class="cv">cloudeats_user</span>     <span class="cm"># Creates this user on first run</span>
+      <span class="ck">MYSQL_PASSWORD:</span> <span class="cv">cloudeats_password</span>
+    <span class="ck">volumes:</span>
+      - <span class="cv">mysql-data:/var/lib/mysql</span>  <span class="cm"># CRITICAL: persist data across restarts</span>
+    <span class="ck">healthcheck:</span>
+      <span class="ck">test:</span> <span class="cs">["CMD", "mysqladmin", "ping", "-h", "localhost"]</span>
+      <span class="ck">interval:</span> <span class="cv">5s</span>
+      <span class="ck">timeout:</span> <span class="cv">5s</span>
+      <span class="ck">retries:</span> <span class="cv">10</span>
+    <span class="ck">networks:</span>
+      - <span class="cv">cloudeats-network</span>
+
+<span class="ck">volumes:</span>
+  <span class="cv">mysql-data:</span>                   <span class="cm"># Named volume — managed by Docker, persists on disk</span>
+
+<span class="ck">networks:</span>
+  <span class="cv">cloudeats-network:</span>            <span class="cm"># Both services share this network = can talk to each other</span></pre>
+  </div>
+
+  <!-- Key concepts highlighted -->
+  <p style="margin-top:1rem;margin-bottom:0.5rem"><strong>Four things to understand about this file:</strong></p>
+
+  <div class="card-grid cols2">
+    <div class="concept-card highlight-blue">
+      <span class="cc-icon">🌐</span>
+      <div class="cc-title">Service Name = Hostname</div>
+      <div class="cc-body">When <code>backend</code> connects to the database, it uses hostname <code>db</code> — the service name in the YAML. Docker's built-in DNS resolves <code>db</code> to the database container's IP automatically. No hard-coded IPs that change every restart.</div>
+      <span class="cc-tag">Docker DNS · same as Week 2 Lab 2.2</span>
+    </div>
+    <div class="concept-card highlight-amber">
+      <span class="cc-icon">💾</span>
+      <div class="cc-title">Named Volume = Persistent Data</div>
+      <div class="cc-body">MySQL stores data files in <code>/var/lib/mysql</code> inside the container. Without a volume, this folder disappears when the container stops — <strong>all your data is gone</strong>. The named volume <code>mysql-data</code> stores that folder outside the container on the host machine.</div>
+      <span class="cc-tag" style="background:rgba(255,183,64,0.12);color:var(--amber)">Critical!</span>
+    </div>
+    <div class="concept-card highlight-green">
+      <span class="cc-icon">🏥</span>
+      <div class="cc-title">depends_on + healthcheck</div>
+      <div class="cc-body">MySQL takes ~5–10 seconds to fully start after the container begins. Without <code>healthcheck</code>, the backend starts and immediately tries to connect — MySQL isn't ready yet, connection fails. The healthcheck pings MySQL every 5 seconds; backend only starts when MySQL responds.</div>
+      <span class="cc-tag" style="background:rgba(0,229,160,0.1);color:var(--green)">Race condition fix</span>
+    </div>
+    <div class="concept-card highlight-purple">
+      <span class="cc-icon">🔐</span>
+      <div class="cc-title">Environment Variables</div>
+      <div class="cc-body">Passwords in the YAML file work for local development. In production (Week 8), these move to a <code>.env</code> file excluded from Git, or to a secrets manager like AWS Secrets Manager. Never commit real passwords to version control.</div>
+      <span class="cc-tag" style="background:rgba(180,110,245,0.1);color:var(--purple)">Week 8 preview</span>
+    </div>
+  </div>
+
+  <!-- Volume data loss demo callout -->
+  <div class="callout red" style="margin-top:1rem">
+    <span>⚠️</span>
+    <div><strong>Common mistake — data loss demo:</strong> Run <code>docker compose down</code> (without a volume) then <code>docker compose up -d</code> — all menu items gone. With the named volume: <code>docker compose down &amp;&amp; docker compose up -d</code> — menu items still there. This is Lab 3.1's key checkpoint.</div>
+  </div>
+
+  <!-- Node.js connection code -->
+  <p style="margin-top:1.25rem;margin-bottom:0.4rem"><strong>How Node.js connects to MySQL using the service name:</strong></p>
+
+  <div class="code-block">
+    <div class="code-header"><div class="code-lang">JavaScript · db.js (Backend)</div><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><span class="ck">const</span> mysql = <span class="cv">require</span>(<span class="cs">'mysql2/promise'</span>);
+
+<span class="ck">const</span> pool = mysql.<span class="cv">createPool</span>({
+  host:     process.env.<span class="cv">DB_HOST</span>,      <span class="cm">// 'db' — the Docker service name</span>
+  user:     process.env.<span class="cv">DB_USER</span>,      <span class="cm">// 'cloudeats_user'</span>
+  password: process.env.<span class="cv">DB_PASSWORD</span>,  <span class="cm">// from docker-compose.yml environment</span>
+  database: process.env.<span class="cv">DB_NAME</span>,      <span class="cm">// 'cloudeats_db'</span>
+  waitForConnections: <span class="cc">true</span>,
+  connectionLimit: <span class="cc">10</span>,
+  queueLimit: <span class="cc">0</span>
+});
+
+module.exports = pool;</pre>
+  </div>
+
+  <div class="level-block beginner">
+    <div class="level-block-label">🟢 Beginner — One Command to Remember</div>
+    <code>docker compose up -d</code> starts everything. <code>docker compose down</code> stops everything. You don't need to touch individual containers. The YAML file is your infrastructure recipe.
+  </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">🟣 Advanced — Why Connection Pools?</div>
+    <code>createPool</code> instead of <code>createConnection</code> — a pool maintains multiple open connections. Without pooling, every API request creates a new TCP connection to MySQL (slow) and closes it after (wasteful). A pool reuses existing connections. <code>connectionLimit: 10</code> means up to 10 concurrent database operations can run simultaneously. Week 9 covers monitoring these.
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- 2.2 Schema Design -->
+  <div class="sec-header">
+    <span class="sec-pill green">2.2</span>
+    <span class="sec-title">CloudEats Schema Design</span>
+    <span class="sec-time">25 min</span>
+  </div>
+
+  <p>These are the three tables built across Labs 3.1 and 3.2. Study each SQL statement — every keyword appears in the quiz.</p>
+
+  <!-- Table 1: menu_items -->
+  <p style="margin-bottom:0.4rem;font-size:0.9rem;font-weight:700;color:var(--amber)">① menu_items (Lab 3.1)</p>
+  <div class="code-block">
+    <div class="code-header"><div class="code-lang">SQL · Table 1 — menu_items</div><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><span class="ck">CREATE TABLE IF NOT EXISTS</span> <span class="cv">menu_items</span> (
+  <span class="cv">id</span>          <span class="cc">INT AUTO_INCREMENT PRIMARY KEY</span>,  <span class="cm">-- Auto-assigned unique ID</span>
+  <span class="cv">name</span>        <span class="cc">VARCHAR(255)</span> <span class="ck">NOT NULL</span>,          <span class="cm">-- Required — no nameless items</span>
+  <span class="cv">category</span>    <span class="cc">VARCHAR(100)</span> <span class="ck">NOT NULL</span>,
+  <span class="cv">price</span>       <span class="cc">DECIMAL(10, 2)</span> <span class="ck">NOT NULL</span>,       <span class="cm">-- Exact decimal for money</span>
+  <span class="cv">description</span> <span class="cc">TEXT</span>,                            <span class="cm">-- Optional long text</span>
+  <span class="cv">badge</span>       <span class="cc">VARCHAR(50)</span>,                     <span class="cm">-- Optional label: 'New', 'Popular'</span>
+  <span class="cv">created_at</span>  <span class="cc">TIMESTAMP</span> <span class="ck">DEFAULT CURRENT_TIMESTAMP</span>  <span class="cm">-- MySQL fills this automatically</span>
+);</pre>
+  </div>
+
+  <div class="annotation"><span class="ann-arrow">↳</span><span><code>IF NOT EXISTS</code> — safe to run multiple times. If the table already exists, this line is silently skipped instead of throwing an error.</span></div>
+  <div class="annotation"><span class="ann-arrow">↳</span><span><code>DECIMAL(10,2)</code> — up to 10 digits total, 2 after the decimal point. Max price = RM99,999,999.99. Use this for all monetary values, never <code>FLOAT</code>.</span></div>
+
+  <!-- Table 2: users -->
+  <p style="margin-bottom:0.4rem;font-size:0.9rem;font-weight:700;color:var(--green);margin-top:1.25rem">② users (Lab 3.2)</p>
+  <div class="code-block">
+    <div class="code-header"><div class="code-lang">SQL · Table 2 — users</div><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><span class="ck">CREATE TABLE IF NOT EXISTS</span> <span class="cv">users</span> (
+  <span class="cv">id</span>            <span class="cc">INT AUTO_INCREMENT PRIMARY KEY</span>,
+  <span class="cv">email</span>         <span class="cc">VARCHAR(255)</span> <span class="ck">UNIQUE NOT NULL</span>,      <span class="cm">-- No duplicate accounts</span>
+  <span class="cv">password_hash</span> <span class="cc">VARCHAR(255)</span> <span class="ck">NOT NULL</span>,             <span class="cm">-- bcrypt hash, NEVER plain text</span>
+  <span class="cv">full_name</span>     <span class="cc">VARCHAR(255)</span> <span class="ck">NOT NULL</span>,
+  <span class="cv">phone</span>         <span class="cc">VARCHAR(20)</span>,                         <span class="cm">-- Optional</span>
+  <span class="cv">created_at</span>    <span class="cc">TIMESTAMP</span> <span class="ck">DEFAULT CURRENT_TIMESTAMP</span>,
+  <span class="cv">updated_at</span>    <span class="cc">TIMESTAMP</span> <span class="ck">DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</span>,
+  <span class="ck">INDEX</span> <span class="cv">idx_email</span> (<span class="cv">email</span>)                         <span class="cm">-- Fast lookup by email on login</span>
+);</pre>
+  </div>
+
+  <div class="annotation"><span class="ann-arrow">↳</span><span><code>UNIQUE</code> on email — MySQL rejects a second registration with the same email. The database enforces this, not just the application code.</span></div>
+  <div class="annotation"><span class="ann-arrow">↳</span><span><code>INDEX idx_email</code> — without this, finding a user by email scans every row. With 10 rows: doesn't matter. With 1 million rows: the difference between 1ms and 10 seconds.</span></div>
+  <div class="annotation"><span class="ann-arrow">↳</span><span><code>ON UPDATE CURRENT_TIMESTAMP</code> — MySQL automatically updates <code>updated_at</code> whenever any column in that row changes. Free audit trail.</span></div>
+
+  <!-- Table 3: orders -->
+  <p style="margin-bottom:0.4rem;font-size:0.9rem;font-weight:700;color:var(--purple);margin-top:1.25rem">③ orders (Lab 3.2)</p>
+  <div class="code-block">
+    <div class="code-header"><div class="code-lang">SQL · Table 3 — orders</div><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><span class="ck">CREATE TABLE IF NOT EXISTS</span> <span class="cv">orders</span> (
+  <span class="cv">id</span>               <span class="cc">INT AUTO_INCREMENT PRIMARY KEY</span>,
+  <span class="cv">user_id</span>          <span class="cc">INT</span> <span class="ck">NOT NULL</span>,
+  <span class="cv">total_amount</span>     <span class="cc">DECIMAL(10, 2)</span> <span class="ck">NOT NULL</span>,
+  <span class="cv">status</span>           <span class="cc">ENUM</span>(<span class="cs">'pending'</span>,<span class="cs">'confirmed'</span>,<span class="cs">'preparing'</span>,<span class="cs">'delivered'</span>,<span class="cs">'cancelled'</span>)
+                   <span class="ck">DEFAULT</span> <span class="cs">'pending'</span>,               <span class="cm">-- Default state for new orders</span>
+  <span class="cv">delivery_address</span> <span class="cc">TEXT</span>,
+  <span class="cv">notes</span>            <span class="cc">TEXT</span>,
+  <span class="cv">created_at</span>       <span class="cc">TIMESTAMP</span> <span class="ck">DEFAULT CURRENT_TIMESTAMP</span>,
+  <span class="cv">updated_at</span>       <span class="cc">TIMESTAMP</span> <span class="ck">DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</span>,
+
+  <span class="ck">FOREIGN KEY</span> (<span class="cv">user_id</span>) <span class="ck">REFERENCES</span> <span class="cv">users</span>(<span class="cv">id</span>) <span class="ck">ON DELETE CASCADE</span>,
+  <span class="cm">-- ↑ orders.user_id must exist in users.id | delete user → delete all their orders</span>
+
+  <span class="ck">INDEX</span> <span class="cv">idx_user_id</span> (<span class="cv">user_id</span>),   <span class="cm">-- Fast: "show me all orders for user #42"</span>
+  <span class="ck">INDEX</span> <span class="cv">idx_status</span>  (<span class="cv">status</span>)     <span class="cm">-- Fast: "show me all pending orders"</span>
+);</pre>
+  </div>
+
+  <div class="annotation"><span class="ann-arrow">↳</span><span><code>FOREIGN KEY</code> is enforced at the <em>database level</em>. MySQL will reject an INSERT into <code>orders</code> if <code>user_id</code> doesn't exist in <code>users.id</code>. The database is the last line of defence.</span></div>
+  <div class="annotation"><span class="ann-arrow">↳</span><span><code>ENUM</code> restricts status to exactly these five values. <code>INSERT INTO orders SET status = 'shipped'</code> fails — preventing invalid states from ever entering the database.</span></div>
+
+  <!-- Full schema relationship SVG -->
+  <svg viewBox="0 0 600 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin:1rem 0">
+    <defs>
+      <marker id="arr3" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(180,110,245,0.7)"/></marker>
+      <marker id="arr4" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(0,229,160,0.7)"/></marker>
+    </defs>
+    <text x="300" y="16" font-size="9" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle" font-weight="700">CloudEats Schema — Entity Relationship</text>
+    <!-- menu_items -->
+    <rect x="10" y="25" width="160" height="130" rx="7" fill="rgba(255,183,64,0.05)" stroke="rgba(255,183,64,0.3)" stroke-width="1.5"/>
+    <rect x="10" y="25" width="160" height="22" rx="7" fill="rgba(255,183,64,0.12)"/>
+    <rect x="10" y="40" width="160" height="7" rx="0" fill="rgba(255,183,64,0.12)"/>
+    <text x="90" y="40" font-size="9.5" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle" font-weight="700">🍽️  menu_items</text>
+    <text x="18" y="60" font-size="8" font-family="Fira Code,monospace" fill="var(--amber)">id</text>
+    <text x="55" y="60" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)">INT · PK</text>
+    <text x="18" y="74" font-size="8" font-family="Fira Code,monospace" fill="#c5d5ef">name</text>
+    <text x="55" y="74" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)">VARCHAR(255) NN</text>
+    <text x="18" y="88" font-size="8" font-family="Fira Code,monospace" fill="#c5d5ef">category</text>
+    <text x="55" y="88" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)">VARCHAR(100) NN</text>
+    <text x="18" y="102" font-size="8" font-family="Fira Code,monospace" fill="#c5d5ef">price</text>
+    <text x="55" y="102" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)">DECIMAL(10,2)</text>
+    <text x="18" y="116" font-size="8" font-family="Fira Code,monospace" fill="#c5d5ef">description</text>
+    <text x="55" y="116" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)">TEXT</text>
+    <text x="18" y="130" font-size="8" font-family="Fira Code,monospace" fill="#c5d5ef">badge</text>
+    <text x="55" y="130" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)">VARCHAR(50)</text>
+    <text x="18" y="144" font-size="8" font-family="Fira Code,monospace" fill="#c5d5ef">created_at</text>
+    <text x="75" y="144" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)">TIMESTAMP</text>
+    <text x="90" y="160" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(255,183,64,0.5)" text-anchor="middle">Lab 3.1</text>
+    <!-- users -->
+    <rect x="210" y="25" width="175" height="130" rx="7" fill="rgba(0,229,160,0.05)" stroke="rgba(0,229,160,0.3)" stroke-width="1.5"/>
+    <rect x="210" y="25" width="175" height="22" rx="7" fill="rgba(0,229,160,0.12)"/>
+    <rect x="210" y="40" width="175" height="7" rx="0" fill="rgba(0,229,160,0.12)"/>
+    <text x="297" y="40" font-size="9.5" font-family="Sora,sans-serif" fill="var(--green)" text-anchor="middle" font-weight="700">👤  users</text>
+    <text x="218" y="60" font-size="8" font-family="Fira Code,monospace" fill="var(--amber)">id</text>
+    <text x="235" y="60" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)">INT · PK</text>
+    <text x="218" y="74" font-size="8" font-family="Fira Code,monospace" fill="#c5d5ef">email</text>
+    <text x="255" y="74" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)">VARCHAR · UNIQUE</text>
+    <text x="218" y="88" font-size="8" font-family="Fira Code,monospace" fill="#c5d5ef">password_hash</text>
+    <text x="218" y="102" font-size="8" font-family="Fira Code,monospace" fill="#c5d5ef">full_name</text>
+    <text x="218" y="116" font-size="8" font-family="Fira Code,monospace" fill="#c5d5ef">phone</text>
+    <text x="218" y="130" font-size="8" font-family="Fira Code,monospace" fill="#c5d5ef">created_at</text>
+    <text x="218" y="144" font-size="8" font-family="Fira Code,monospace" fill="#c5d5ef">updated_at</text>
+    <text x="297" y="160" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(0,229,160,0.5)" text-anchor="middle">Lab 3.2</text>
+    <!-- orders -->
+    <rect x="425" y="25" width="165" height="130" rx="7" fill="rgba(180,110,245,0.05)" stroke="rgba(180,110,245,0.3)" stroke-width="1.5"/>
+    <rect x="425" y="25" width="165" height="22" rx="7" fill="rgba(180,110,245,0.12)"/>
+    <rect x="425" y="40" width="165" height="7" rx="0" fill="rgba(180,110,245,0.12)"/>
+    <text x="507" y="40" font-size="9.5" font-family="Sora,sans-serif" fill="var(--purple)" text-anchor="middle" font-weight="700">📦  orders</text>
+    <text x="433" y="60" font-size="8" font-family="Fira Code,monospace" fill="var(--amber)">id</text>
+    <text x="450" y="60" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)">INT · PK</text>
+    <text x="433" y="74" font-size="8" font-family="Fira Code,monospace" fill="var(--purple)">user_id</text>
+    <text x="480" y="74" font-size="7.5" font-family="Fira Code,monospace" fill="var(--purple)">FK → users.id</text>
+    <text x="433" y="88" font-size="8" font-family="Fira Code,monospace" fill="#c5d5ef">total_amount</text>
+    <text x="433" y="102" font-size="8" font-family="Fira Code,monospace" fill="#c5d5ef">status</text>
+    <text x="480" y="102" font-size="7.5" font-family="Fira Code,monospace" fill="var(--muted)">ENUM(...)</text>
+    <text x="433" y="116" font-size="8" font-family="Fira Code,monospace" fill="#c5d5ef">delivery_address</text>
+    <text x="433" y="130" font-size="8" font-family="Fira Code,monospace" fill="#c5d5ef">created_at</text>
+    <text x="433" y="144" font-size="8" font-family="Fira Code,monospace" fill="#c5d5ef">updated_at</text>
+    <text x="507" y="160" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(180,110,245,0.5)" text-anchor="middle">Lab 3.2</text>
+    <!-- FK arrow from orders.user_id to users.id -->
+    <line x1="424" y1="74" x2="387" y2="74" stroke="rgba(180,110,245,0.6)" stroke-width="1.5" marker-end="url(#arr3)" stroke-dasharray="4,3"/>
+    <text x="405" y="68" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(180,110,245,0.5)" text-anchor="middle">many</text>
+    <text x="225" y="68" font-size="7.5" font-family="Sora,sans-serif" fill="rgba(0,229,160,0.5)" text-anchor="middle">one</text>
+  </svg>
+
+  <hr class="section-divider">
+
+  <!-- 2.3 Password Security -->
+  <div class="sec-header">
+    <span class="sec-pill red">2.3</span>
+    <span class="sec-title">Password Security — Why We Hash with bcrypt</span>
+    <span class="sec-time">15 min</span>
+  </div>
+
+  <div class="callout red">
+    <span>🚨</span>
+    <div><strong>Real incident context:</strong> In 2019, a major e-commerce platform stored user passwords in plain text. When attackers breached the database, they instantly had access to millions of passwords — and because people reuse passwords, they then accessed victims' banking and email accounts too. <em>This is exactly what bcrypt prevents.</em></div>
+  </div>
+
+  <div class="compare-grid" style="margin-top:0.85rem">
+    <div class="compare-side bad">
+      <div class="cs-label red">❌ Plain Text (Never Do This)</div>
+      <div style="overflow-x:auto;margin:0.5rem 0">
+        <table class="data-table">
+          <thead><tr><th>id</th><th>email</th><th>password</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>ali@example.com</td><td style="color:var(--red)">MyPassword1</td></tr>
+            <tr><td>2</td><td>siti@example.com</td><td style="color:var(--red)">CuteKitten!</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cs-item"><div class="cs-dot dot-red"></div>Database breached = instant access to all passwords</div>
+      <div class="cs-item"><div class="cs-dot dot-red"></div>Attackers try these on Gmail, banking apps, etc.</div>
+      <div class="cs-item"><div class="cs-dot dot-red"></div>Legal liability · reputational damage · user lawsuits</div>
+    </div>
+    <div class="compare-side good">
+      <div class="cs-label green">✅ bcrypt Hash (What We Use)</div>
+      <div style="overflow-x:auto;margin:0.5rem 0">
+        <table class="data-table">
+          <thead><tr><th>id</th><th>email</th><th>password_hash</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>ali@example.com</td><td style="color:var(--green);font-size:0.65rem">$2b$10$XYZ8fGhJ2kL...</td></tr>
+            <tr><td>2</td><td>siti@example.com</td><td style="color:var(--green);font-size:0.65rem">$2b$10$ABCdEfGhI3...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Database breached = useless garbage to attackers</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Hash cannot be reversed — it's a one-way function</div>
+      <div class="cs-item"><div class="cs-dot dot-green"></div>Different hash per user, even for identical passwords</div>
+    </div>
+  </div>
+
+  <div class="img-ph">
+    <div class="img-ph-icon">📸</div>
+    <div>
+      <div class="img-ph-label">Instructor Demo · MySQL Terminal — Hashed Passwords in Table</div>
+      <div class="img-ph-desc">Terminal showing: <code>docker exec -it [db] mysql -u cloudeats_user -p cloudeats_db</code> → then <code>SELECT id, email, password_hash FROM users\G</code>. Output shows two rows — <code>password_hash: $2b$10$XYZ...</code> — a 60-character string that is clearly not the original password. Point out the <code>$2b$10$</code> prefix: <code>$2b$</code> = bcrypt v2b algorithm, <code>$10$</code> = 10 salt rounds, remaining characters = salt + hash combined.</div>
+    </div>
+  </div>
+
+  <!-- How bcrypt works -->
+  <p style="margin-top:1.25rem;margin-bottom:0.75rem"><strong>What bcrypt does — step by step:</strong></p>
+
+  <div class="card-grid cols4">
+    <div class="concept-card highlight-blue">
+      <span class="cc-icon">① </span>
+      <div class="cc-title">Take Password</div>
+      <div class="cc-body">User submits <code>"MyPassword1"</code> in the registration form. This is the only moment the plain text exists — in memory, briefly.</div>
+    </div>
+    <div class="concept-card highlight-amber">
+      <span class="cc-icon">② </span>
+      <div class="cc-title">Add a Salt</div>
+      <div class="cc-body">bcrypt generates a random 22-character string (the <em>salt</em>) and mixes it into the password. Two users with the same password get completely different hashes.</div>
+    </div>
+    <div class="concept-card highlight-green">
+      <span class="cc-icon">③ </span>
+      <div class="cc-title">Hash (slowly)</div>
+      <div class="cc-body">bcrypt runs a slow algorithm <em>intentionally</em> — 2<sup>10</sup> = 1,024 rounds. Takes ~100ms on your laptop. A human doesn't notice. An attacker running billions of guesses is stopped.</div>
+    </div>
+    <div class="concept-card highlight-purple">
+      <span class="cc-icon">④ </span>
+      <div class="cc-title">Store the Hash</div>
+      <div class="cc-body">The 60-character hash string goes into <code>password_hash</code>. The original password is discarded — <em>never stored, not even temporarily</em>.</div>
+    </div>
+  </div>
+
+  <!-- Code -->
+  <p style="margin-top:1rem;margin-bottom:0.4rem"><strong>bcrypt in Node.js — registration and login:</strong></p>
+  <div class="code-block">
+    <div class="code-header"><div class="code-lang">JavaScript · auth.js (Registration + Login)</div><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><span class="ck">const</span> bcrypt = <span class="cv">require</span>(<span class="cs">'bcrypt'</span>);
+<span class="ck">const</span> SALT_ROUNDS = <span class="cc">10</span>;  <span class="cm">// 2^10 = 1,024 hashing rounds — never lower this below 10</span>
+
+<span class="cm">// ── REGISTRATION ─────────────────────────────────────────</span>
+app.<span class="cv">post</span>(<span class="cs">'/api/auth/register'</span>, <span class="ck">async</span> (req, res) => {
+  <span class="ck">const</span> { email, password, full_name } = req.body;
+
+  <span class="cm">// 1. Hash the password — this takes ~100ms (intentionally slow)</span>
+  <span class="ck">const</span> password_hash = <span class="ck">await</span> bcrypt.<span class="cv">hash</span>(password, SALT_ROUNDS);
+
+  <span class="cm">// 2. Store ONLY the hash — plain text password is now gone from memory</span>
+  <span class="ck">await</span> db.<span class="cv">query</span>(
+    <span class="cs">'INSERT INTO users (email, password_hash, full_name) VALUES (?, ?, ?)'</span>,
+    [email, password_hash, full_name]
+  );
+
+  res.<span class="cv">status</span>(<span class="cc">201</span>).<span class="cv">json</span>({ message: <span class="cs">'Account created successfully'</span> });
+});
+
+<span class="cm">// ── LOGIN ─────────────────────────────────────────────────</span>
+app.<span class="cv">post</span>(<span class="cs">'/api/auth/login'</span>, <span class="ck">async</span> (req, res) => {
+  <span class="ck">const</span> { email, password } = req.body;
+
+  <span class="cm">// 1. Look up user by email (fast — we have an INDEX on email)</span>
+  <span class="ck">const</span> [rows] = <span class="ck">await</span> db.<span class="cv">query</span>(<span class="cs">'SELECT * FROM users WHERE email = ?'</span>, [email]);
+  <span class="ck">const</span> user = rows[<span class="cc">0</span>];
+
+  <span class="ck">if</span> (!user) <span class="ck">return</span> res.<span class="cv">status</span>(<span class="cc">401</span>).<span class="cv">json</span>({ error: <span class="cs">'Invalid credentials'</span> });
+
+  <span class="cm">// 2. Compare submitted password against stored hash — no decryption!</span>
+  <span class="ck">const</span> match = <span class="ck">await</span> bcrypt.<span class="cv">compare</span>(password, user.password_hash);
+
+  <span class="ck">if</span> (!match) <span class="ck">return</span> res.<span class="cv">status</span>(<span class="cc">401</span>).<span class="cv">json</span>({ error: <span class="cs">'Invalid credentials'</span> });
+
+  res.<span class="cv">json</span>({ message: <span class="cs">'Login successful'</span>, userId: user.id });
+});</pre>
+  </div>
+
+  <!-- Why the same error message -->
+  <div class="callout amber">
+    <span>🔐</span>
+    <div><strong>Security detail:</strong> Both "user not found" and "wrong password" return the same error message: <em>"Invalid credentials"</em>. This is intentional — if you return "user not found" separately, attackers can enumerate which emails are registered in your system. One generic message reveals nothing.</div>
+  </div>
+
+  <!-- Salt rounds explanation -->
+  <div class="level-block average">
+    <div class="level-block-label">🔵 Average — SALT_ROUNDS = 10</div>
+    <code>SALT_ROUNDS = 10</code> means bcrypt runs 2<sup>10</sup> = 1,024 rounds. ~100ms per hash on modern hardware. 10 million brute-force attempts × 100ms = 11.5 days. For comparison, without bcrypt, MD5 hashing is so fast attackers can try <em>10 billion passwords per second</em>.
+  </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">🟣 Advanced — Rainbow Tables</div>
+    A rainbow table is a pre-computed lookup: <em>hash → original password</em> for billions of common passwords. The bcrypt salt defeats this completely: even if two users both have the password <code>"hello123"</code>, their hashes are different (because their salts are different). An attacker would need a separate rainbow table for every single user — computationally infeasible.
+  </div>
+
+  <!-- Week connection -->
+  <div class="callout purple" style="margin-top:1rem">
+    <span>🗺️</span>
+    <div><strong>Week 8 connection — JWT:</strong> This login endpoint currently returns a plain JSON success message. In Week 8, it will instead return a <em>JSON Web Token (JWT)</em> — a signed credential the browser sends with every subsequent request to prove the user is logged in. The <code>users</code> table and bcrypt you build this week are the exact foundation of that system.</div>
+  </div>
+
+</div><!-- /panel-h2 -->
+
+
+<!-- ══════════════════════════════════════════════════
+     LABS THIS WEEK
+═══════════════════════════════════════════════════ -->
+<div class="tab-panel" id="panel-labs">
+
+  <div class="sec-header">
+    <span class="sec-pill green">Hours 3 &amp; 4</span>
+    <span class="sec-title">Labs This Week — Overview</span>
+  </div>
+
+  <div class="callout blue" style="margin-bottom:1.5rem">
+    <span>📖</span>
+    <div>Labs 3.1 and 3.2 each have their own dedicated HTML page with step-by-step instructions, checkpoints, and troubleshooting. The cards below summarise what you'll build and what to look out for.</div>
+  </div>
+
+  <!-- Lab 3.1 -->
+  <div class="lab-card">
+    <div class="lab-card-header">
+      <span class="lab-num">Lab 3.1</span>
+      <span class="lab-title">🐳 Docker Compose &amp; MySQL</span>
+      <span class="lab-duration">⏱ 60 min</span>
+    </div>
+    <div class="level-row">
+      <span class="level-pill beginner">🟢 Beginner</span>
+      <span class="level-pill average">🔵 Average</span>
+    </div>
+    <p style="margin:0.5rem 0;font-size:0.83rem;color:var(--muted)"><strong style="color:var(--text)">What you'll build:</strong> Extend the Week 2 static server by adding MySQL to <code>docker-compose.yml</code>. Connect Node.js to MySQL using the service name. Load menu items from the database instead of hardcoding them.</p>
+    <ul class="checklist">
+      <li>Add <code>db</code> service to <code>docker-compose.yml</code> with named volume and healthcheck</li>
+      <li>Write SQL <code>CREATE TABLE</code> for <code>menu_items</code></li>
+      <li>Connect Node.js to MySQL using environment variables</li>
+      <li>Implement <code>GET /api/menu</code> that queries the database</li>
+      <li><strong>Key checkpoint:</strong> <code>docker compose down &amp;&amp; docker compose up -d</code> — menu items still there</li>
+    </ul>
+    <div class="callout amber" style="margin-top:0.75rem">
+      <span>⚠️</span>
+      <div><strong>Common issue:</strong> "Cannot connect to database" — usually the backend started before MySQL was ready. Fix: verify the <code>healthcheck</code> and <code>depends_on: condition: service_healthy</code> are both in the YAML. Also check <code>DB_HOST</code> is <code>db</code>, not <code>localhost</code>.</div>
+    </div>
+    <div style="margin-top:0.85rem">
+      <a href="../week03/lab1_docker_compose_mysql.html" style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.8rem;font-weight:600;background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.3);color:var(--green);padding:0.4rem 0.85rem;border-radius:6px;text-decoration:none">📄 Open Lab 3.1 →</a>
+    </div>
+  </div>
+
+  <!-- Lab 3.2 -->
+  <div class="lab-card">
+    <div class="lab-card-header">
+      <span class="lab-num">Lab 3.2</span>
+      <span class="lab-title">👤 User Registration System</span>
+      <span class="lab-duration">⏱ 60 min</span>
+    </div>
+    <div class="level-row">
+      <span class="level-pill beginner">🟢 Beginner</span>
+      <span class="level-pill average">🔵 Average</span>
+      <span class="level-pill advanced">🟣 Advanced</span>
+    </div>
+    <p style="margin:0.5rem 0;font-size:0.83rem;color:var(--muted)"><strong style="color:var(--text)">What you'll build:</strong> Add <code>users</code> and <code>orders</code> tables. Implement <code>POST /api/auth/register</code> with bcrypt password hashing. Build a simple HTML registration form to test it.</p>
+    <ul class="checklist">
+      <li>Write SQL <code>CREATE TABLE</code> for <code>users</code> (with UNIQUE email + INDEX) and <code>orders</code> (with FOREIGN KEY)</li>
+      <li>Install <code>bcrypt</code> npm package and implement registration endpoint</li>
+      <li>Hash passwords before storing — verify hash starts with <code>$2b$</code></li>
+      <li>Build HTML registration form that calls the API</li>
+      <li><strong>Key checkpoint:</strong> registered user in MySQL has <code>password_hash</code> starting with <code>$2b$10$</code>, not plain text</li>
+    </ul>
+    <div class="callout amber" style="margin-top:0.75rem">
+      <span>⚠️</span>
+      <div><strong>Common issues:</strong> <code>ER_DUP_ENTRY</code> — email already registered (expected — this is the UNIQUE constraint working). <code>bcrypt is not defined</code> — run <code>npm install bcrypt</code> inside the backend folder, then rebuild: <code>docker compose up -d --build</code>.</div>
+    </div>
+    <div style="margin-top:0.85rem">
+      <a href="../week03/lab2_user_registration.html" style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.8rem;font-weight:600;background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.3);color:var(--green);padding:0.4rem 0.85rem;border-radius:6px;text-decoration:none">📄 Open Lab 3.2 →</a>
+    </div>
+  </div>
+
+  <!-- Pacing guide -->
+  <hr class="section-divider">
+  <div class="sec-header">
+    <span class="sec-pill purple">Pacing</span>
+    <span class="sec-title">Beginner / Average / Advanced Expectations</span>
+  </div>
+
+  <table class="summary-table">
+    <thead><tr><th>Level</th><th>Lab 3.1 Target</th><th>Lab 3.2 Target</th><th>Stretch Goal</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="level-pill beginner" style="font-size:0.7rem">🟢 Beginner</span></td>
+        <td>Complete Parts 1–3. MySQL running, GET /api/menu returns data from DB. Data persists across restart. Follow instructions step by step.</td>
+        <td>Complete Parts 1–2. Users table created, registration works. Confirm hash in MySQL.</td>
+        <td>Can explain what a foreign key does in plain English.</td>
+      </tr>
+      <tr>
+        <td><span class="level-pill average" style="font-size:0.7rem">🔵 Average</span></td>
+        <td>Full lab. Can explain why the healthcheck is needed. Can trace what happens when a menu item is added.</td>
+        <td>Full lab. Can explain why <code>bcrypt.compare()</code> doesn't decrypt. Can describe what UNIQUE on email prevents.</td>
+        <td>Try adding a new column to the schema. What SQL do you need?</td>
+      </tr>
+      <tr>
+        <td><span class="level-pill advanced" style="font-size:0.7rem">🟣 Advanced</span></td>
+        <td>Full lab. Modify the init SQL to add a 4th table. Explain the difference between <code>docker compose stop</code> and <code>docker compose down</code> in terms of data.</td>
+        <td>Full lab + implement <code>POST /api/auth/login</code> endpoint independently (before Week 8). Test with Postman or curl.</td>
+        <td>Research: what is a connection pool? What happens if <code>connectionLimit</code> is 1?</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div><!-- /panel-labs -->
+
+
+<!-- ══════════════════════════════════════════════════
+     QUIZ PREP
+═══════════════════════════════════════════════════ -->
+<div class="tab-panel" id="panel-quiz">
+
+  <div class="sec-header">
+    <span class="sec-pill blue">Mid-Term</span>
+    <span class="sec-title">Quiz Preparation — Week 3 Topics</span>
+  </div>
+
+  <div class="callout amber" style="margin-bottom:1.25rem">
+    <span>📋</span>
+    <div>The mid-term quiz is in Week 5. These are the Week 3 question types based on learning objectives. Click an answer to check it.</div>
+  </div>
+
+  <div class="kc-question">
+    <div class="kc-q">1. A <code>menu_items</code> table has an <code>id</code> column with <code>INT AUTO_INCREMENT PRIMARY KEY</code>. What does AUTO_INCREMENT do?</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>You must manually provide a unique number for every row you insert</li>
+      <li onclick="checkAnswer(this,true)"><div class="kc-radio"></div>MySQL automatically assigns the next available integer — you never need to set the id yourself</li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>The id column automatically increments every minute based on the system clock</li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>AUTO_INCREMENT stores timestamps instead of integers</li>
+    </ul>
+  </div>
+
+  <div class="kc-question">
+    <div class="kc-q">2. The <code>orders</code> table has: <code>FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE</code>. What happens if you delete the user with id = 5?</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>MySQL returns an error — you cannot delete a user who has orders</li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>The user is deleted but all their orders remain in the database, now pointing to nothing</li>
+      <li onclick="checkAnswer(this,true)"><div class="kc-radio"></div>The user is deleted and all orders with user_id = 5 are automatically deleted too — no orphan rows</li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>The user's id changes to NULL in the orders table</li>
+    </ul>
+  </div>
+
+  <div class="kc-question">
+    <div class="kc-q">3. True or False: <code>bcrypt.compare()</code> works by decrypting the stored hash and comparing it to the submitted password.</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>True — bcrypt stores a reversible encrypted string</li>
+      <li onclick="checkAnswer(this,true)"><div class="kc-radio"></div>False — bcrypt is a one-way function. compare() re-hashes the submitted password using the same salt embedded in the stored hash, then compares the two hashes. The original password can never be recovered.</li>
+    </ul>
+  </div>
+
+  <div class="kc-question">
+    <div class="kc-q">4. In <code>docker-compose.yml</code>, the backend connects to MySQL using <code>DB_HOST: db</code>. What is <code>db</code> here?</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>The IP address 127.0.0.1 (localhost) assigned to the MySQL container</li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>A shorthand that Docker translates to <code>0.0.0.0</code></li>
+      <li onclick="checkAnswer(this,true)"><div class="kc-radio"></div>The service name defined in docker-compose.yml — Docker's built-in DNS resolves it to the database container's current IP address automatically</li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>A hardcoded alias you must configure in <code>/etc/hosts</code> inside each container</li>
+    </ul>
+  </div>
+
+  <div class="kc-question">
+    <div class="kc-q">5. Why does the CloudEats <code>docker-compose.yml</code> use a <strong>named volume</strong> for MySQL (<code>mysql-data:/var/lib/mysql</code>)?</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>To make MySQL start faster on subsequent runs</li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>Named volumes allow multiple containers to read the same database simultaneously</li>
+      <li onclick="checkAnswer(this,true)"><div class="kc-radio"></div>Without a volume, MySQL's data files exist only inside the container and are deleted when the container stops. The named volume stores the data on the host machine so it survives container restarts and rebuilds.</li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>Named volumes encrypt the database files for security purposes</li>
+    </ul>
+  </div>
+
+  <div class="kc-question">
+    <div class="kc-q">6. You design a table for product prices. Which data type should you use?</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div><code>FLOAT</code> — it stores decimal numbers and takes less space</li>
+      <li onclick="checkAnswer(this,true)"><div class="kc-radio"></div><code>DECIMAL(10,2)</code> — it stores exact decimal values. FLOAT uses binary floating-point and can introduce rounding errors that make RM12.50 become RM12.4999999...</li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div><code>VARCHAR(10)</code> — storing numbers as text avoids rounding issues</li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div><code>INT</code> — prices never have decimal places in practice</li>
+    </ul>
+  </div>
+
+  <div class="kc-question">
+    <div class="kc-q">7. The <code>users</code> table has an <code>INDEX idx_email (email)</code>. A second user tries to register with the same email. What prevents duplicate accounts?</div>
+    <ul class="kc-options">
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>The INDEX automatically rejects duplicate email values</li>
+      <li onclick="checkAnswer(this,true)"><div class="kc-radio"></div>The <code>UNIQUE</code> constraint on the email column rejects the duplicate. The INDEX speeds up lookups but does not enforce uniqueness on its own — UNIQUE does both.</li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>The Node.js application code checks for duplicates before inserting</li>
+      <li onclick="checkAnswer(this,false)"><div class="kc-radio"></div>MySQL ignores the second INSERT and inserts NULL instead</li>
+    </ul>
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- Summary table -->
+  <div class="sec-header">
+    <span class="sec-pill green">Summary</span>
+    <span class="sec-title">Week 3 Key Takeaways</span>
+  </div>
+
+  <table class="summary-table">
+    <thead><tr><th>Topic</th><th>Key Takeaway</th><th>Where Used</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Relational Database</strong></td><td>Data in tables: rows = records, columns = fields. Separate data from code.</td><td>All labs from Week 3+</td></tr>
+      <tr><td><strong>Primary Key</strong></td><td>Unique identifier per row. <code>INT AUTO_INCREMENT</code> — MySQL handles it automatically.</td><td>Every table</td></tr>
+      <tr><td><strong>Foreign Key</strong></td><td>Links two tables at database level. MySQL enforces integrity — rejects inserts that violate the relationship.</td><td><code>orders.user_id → users.id</code></td></tr>
+      <tr><td><strong>Normalisation</strong></td><td>Store data once, reference it with a key. Prevents update anomalies across duplicate data.</td><td>users → orders relationship</td></tr>
+      <tr><td><strong>Docker Compose</strong></td><td>One YAML file, one command (<code>docker compose up -d</code>) starts all services. Service name = hostname.</td><td>Lab 3.1, all future labs</td></tr>
+      <tr><td><strong>Named Volume</strong></td><td><code>mysql-data:/var/lib/mysql</code> — data persists outside the container across restarts and rebuilds.</td><td>Lab 3.1</td></tr>
+      <tr><td><strong>depends_on + healthcheck</strong></td><td>Ensures MySQL is fully ready before the backend attempts its first connection. Fixes the race condition.</td><td>Lab 3.1</td></tr>
+      <tr><td><strong>bcrypt hashing</strong></td><td>One-way hash. Salt prevents rainbow table attacks. <code>compare()</code> never decrypts. Never store plain text passwords.</td><td>Lab 3.2, extended in Week 8</td></tr>
+      <tr><td><strong>UNIQUE constraint</strong></td><td>Database-level enforcement. Rejects duplicate emails regardless of application code.</td><td><code>users.email</code></td></tr>
+      <tr><td><strong>ENUM type</strong></td><td>Restricts a column to a fixed set of values. Prevents invalid states from entering the database.</td><td><code>orders.status</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout purple" style="margin-top:1rem">
+    <span>🔮</span>
+    <div><strong>What's coming in Week 4:</strong> You'll write SQL <code>SELECT</code>, <code>JOIN</code>, and <code>INSERT</code> queries against the exact tables you built this week. You'll also add Redis (for the shopping cart) and MongoDB (for order history) — learning why different data problems need different types of databases.</div>
+  </div>
+
+</div><!-- /panel-quiz -->
+
+</div><!-- /tab-content -->
+
+<footer style="border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;color:var(--muted);font-size:0.78rem;max-width:1100px;margin:0 auto">
+  Cloud Computing · Week 3 · Databases in the Cloud &nbsp;|&nbsp; CloudEats Academy &nbsp;|&nbsp;
+  <a href="../week02/index.html" style="color:var(--muted);text-decoration:none">← Week 2</a>
+  &nbsp;|&nbsp;
+  <span class="ghp-badge">🐙 GitHub Pages Ready</span>
+  &nbsp;|&nbsp;
+  <a href="#" style="color:var(--muted);text-decoration:none">Week 4 →</a>
+</footer>
+
+<script>
+  function showTab(id) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + id).classList.add('active');
+    event.target.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function copyCode(btn) {
+    const pre = btn.closest('.code-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'Copied!'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  function checkAnswer(li, correct) {
+    const parent = li.closest('ul');
+    parent.querySelectorAll('li').forEach(i => i.classList.remove('correct', 'wrong'));
+    li.classList.add(correct ? 'correct' : 'wrong');
+    if (!correct) parent.querySelectorAll('li').forEach(i => {
+      if (i.getAttribute('onclick')?.includes('true')) i.classList.add('correct');
+    });
+  }
+</script>
+</body>
+</html>

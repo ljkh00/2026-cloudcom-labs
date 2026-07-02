@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 4.2 · Redis Cart &amp; MongoDB Orders · CloudEats Academy</title>
+<meta name="description" content="Add Redis for shopping cart caching and MongoDB for order storage to the CloudEats stack. Week 4 Lab 2 of the CloudEats cloud computing diploma course.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Lab 4.2 · Redis Cart &amp; MongoDB Orders · CloudEats Academy">
+<meta property="og:description" content="Polyglot persistence in practice — wire Redis and MongoDB into a Docker Compose stack, then build cart and order APIs. Three pace levels.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07090f; --bg2: #0d1117; --bg3: #141b27;
+    --surface: #1a2235; --surface2: #1f2c42; --border: #2a3d5a;
+    --accent: #00c8ff; --green: #00e5a0; --amber: #ffb740;
+    --red: #ff5e7a; --purple: #b46ef5;
+    --text: #e8edf5; --muted: #6b7fa0;
+    --beginner: #00e5a0; --average: #00c8ff; --advanced: #b46ef5;
+    --lab-color: #00c8ff;
+    --radius: 10px; --code-bg: #0b1120;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+
+  /* ── HEADER ── */
+  .site-header { background: linear-gradient(135deg, #050d1c, #091628); border-bottom: 1px solid var(--border); padding: 0 2rem; position: sticky; top: 0; z-index: 100; }
+  .header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 58px; gap: 1rem; }
+  .header-left { display: flex; align-items: center; gap: 0.75rem; }
+  .lab-badge { background: var(--accent); color: #000; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; padding: 0.2rem 0.55rem; border-radius: 4px; text-transform: uppercase; }
+  .header-title { font-size: 0.9rem; font-weight: 600; }
+  .ghp-badge { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.68rem; font-weight: 700; padding: 0.2rem 0.6rem; background: rgba(0,200,255,0.1); border: 1px solid rgba(0,200,255,0.3); color: var(--accent); border-radius: 20px; }
+
+  /* ── PACE SELECTOR ── */
+  .pace-bar { display: flex; gap: 0.35rem; background: var(--bg3); padding: 0.25rem; border-radius: 8px; border: 1px solid var(--border); }
+  .pace-btn { font-family: 'Sora', sans-serif; font-size: 0.7rem; font-weight: 600; padding: 0.28rem 0.7rem; border: none; border-radius: 5px; cursor: pointer; background: transparent; color: var(--muted); transition: all 0.2s; }
+  .pace-btn.active[data-pace="beginner"] { background: var(--beginner); color: #000; }
+  .pace-btn.active[data-pace="average"]  { background: var(--average);  color: #000; }
+  .pace-btn.active[data-pace="advanced"] { background: var(--advanced); color: #fff; }
+
+  /* ── HERO ── */
+  .lab-hero { background: linear-gradient(160deg, #060f20, #06101f); border-bottom: 1px solid var(--border); padding: 2rem 2rem 1.75rem; position: relative; overflow: hidden; }
+  .lab-hero::before { content: ''; position: absolute; top: -80px; right: -80px; width: 360px; height: 360px; background: radial-gradient(ellipse, rgba(0,200,255,0.07), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; }
+  .hero-crumb { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.4rem; }
+  .hero-crumb a { color: var(--accent); text-decoration: none; }
+  .lab-hero h1 { font-size: clamp(1.3rem, 2.5vw, 1.8rem); font-weight: 800; background: linear-gradient(135deg, #e8edf5 40%, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.4rem; }
+  .hero-meta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.85rem; }
+  .meta-chip { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.25rem 0.65rem; color: var(--muted); }
+  .meta-chip strong { color: var(--text); }
+  .prereq-bar { margin-top: 0.85rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .prereq-label { font-size: 0.7rem; font-weight: 700; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .prereq-chip { font-size: 0.72rem; background: rgba(0,200,255,0.08); border: 1px solid rgba(0,200,255,0.2); color: var(--accent); padding: 0.15rem 0.55rem; border-radius: 20px; }
+
+  /* ── PAGE LAYOUT ── */
+  .page-body { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 220px 1fr; }
+
+  /* ── SIDEBAR ── */
+  .sidebar { position: sticky; top: 58px; height: calc(100vh - 58px); overflow-y: auto; padding: 1.5rem 1rem 2rem; border-right: 1px solid var(--border); background: var(--bg2); }
+  .sidebar-title { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.85rem; }
+  .sidebar-nav { list-style: none; }
+  .sidebar-nav li { margin-bottom: 0.1rem; }
+  .sidebar-nav a { display: block; font-size: 0.75rem; padding: 0.35rem 0.65rem; border-radius: 6px; color: var(--muted); text-decoration: none; border: 1px solid transparent; transition: all 0.15s; }
+  .sidebar-nav a:hover { background: var(--surface); color: var(--text); }
+  .sidebar-nav a.active { background: var(--surface); color: var(--accent); border-color: rgba(0,200,255,0.2); }
+  .part-divider { font-size: 0.63rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(107,127,160,0.45); padding: 0.65rem 0.65rem 0.2rem; }
+  .progress-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; margin-bottom: 1.25rem; }
+  .progress-title { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.65rem; }
+  .progress-bar-wrap { background: var(--bg3); border-radius: 4px; height: 6px; margin-bottom: 0.4rem; }
+  .progress-bar { height: 6px; border-radius: 4px; background: linear-gradient(90deg, var(--accent), var(--purple)); transition: width 0.4s; }
+  .progress-label { font-size: 0.71rem; color: var(--muted); }
+  .progress-label span { color: var(--accent); font-weight: 600; }
+
+  /* ── DB SWITCHER (sidebar) ── */
+  .db-indicator { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 0.65rem 0.75rem; margin-bottom: 1rem; }
+  .db-ind-label { font-size: 0.63rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+  .db-tag { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 4px; margin: 0.15rem 0.15rem 0 0; }
+  .db-tag.mysql  { background: rgba(255,183,64,0.12); color: var(--amber); border: 1px solid rgba(255,183,64,0.25); }
+  .db-tag.redis  { background: rgba(255,94,122,0.12); color: var(--red); border: 1px solid rgba(255,94,122,0.25); }
+  .db-tag.mongo  { background: rgba(0,229,160,0.12); color: var(--green); border: 1px solid rgba(0,229,160,0.25); }
+
+  /* ── MAIN ── */
+  .lab-content { padding: 2rem 2rem 4rem; min-width: 0; }
+  section { margin-bottom: 2.5rem; }
+
+  /* ── PART HEADER ── */
+  .part-header { display: flex; align-items: center; gap: 0.75rem; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 0.75rem 1rem; margin-bottom: 1.25rem; }
+  .part-header.redis-border { border-left-color: var(--red); }
+  .part-header.mongo-border { border-left-color: var(--green); }
+  .part-pill { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; border-radius: 20px; padding: 0.18rem 0.55rem; white-space: nowrap; }
+  .part-pill.blue  { background: rgba(0,200,255,0.1); color: var(--accent); border: 1px solid rgba(0,200,255,0.25); }
+  .part-pill.red   { background: rgba(255,94,122,0.1); color: var(--red); border: 1px solid rgba(255,94,122,0.25); }
+  .part-pill.green { background: rgba(0,229,160,0.1); color: var(--green); border: 1px solid rgba(0,229,160,0.25); }
+  .part-pill.amber { background: rgba(255,183,64,0.1); color: var(--amber); border: 1px solid rgba(255,183,64,0.25); }
+  .part-title { font-size: 1rem; font-weight: 700; }
+  .part-time { font-size: 0.72rem; color: var(--muted); margin-left: auto; white-space: nowrap; }
+
+  /* ── STEPS ── */
+  .step { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0.85rem; overflow: hidden; }
+  .step-header { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1rem; cursor: pointer; user-select: none; }
+  .step-header:hover { background: var(--surface2); }
+  .step:not(.open) .step-header::after { content: 'click to expand'; font-size: 0.62rem; color: var(--muted); opacity: 0.5; margin-left: auto; letter-spacing: 0.04em; pointer-events: none; }
+  .step.open .step-header::after { content: ''; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; color: var(--muted); }
+  .step-title { font-size: 0.9rem; font-weight: 600; flex: 1; }
+  .step-toggle { font-size: 0.75rem; color: var(--muted); transition: transform 0.2s; }
+  .step.open .step-toggle { transform: rotate(90deg); }
+  .step-body { display: none; padding: 0 1rem 1.25rem; border-top: 1px solid var(--border); }
+  .step.open .step-body { display: block; }
+
+  /* ── CODE ── */
+  code { font-family: 'Fira Code', monospace; font-size: 0.84em; background: var(--code-bg); padding: 0.08rem 0.35rem; border-radius: 3px; color: var(--green); }
+  .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; margin: 0.75rem 0; overflow: hidden; }
+  .code-block.redis-block  { border-color: rgba(255,94,122,0.25); }
+  .code-block.mongo-block  { border-color: rgba(0,229,160,0.25); }
+  .code-block.yaml-block   { border-color: rgba(255,183,64,0.25); }
+  .code-header { display: flex; align-items: center; justify-content: space-between; padding: 0.45rem 0.9rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); }
+  .code-lang { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .copy-btn { font-family: 'Sora', sans-serif; font-size: 0.68rem; font-weight: 600; padding: 0.18rem 0.55rem; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 4px; cursor: pointer; transition: all 0.15s; }
+  .copy-btn:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+  .copy-btn.copied { background: var(--green); color: #000; border-color: var(--green); }
+  pre { font-family: 'Fira Code', monospace; font-size: 0.79rem; line-height: 1.65; padding: 0.9rem; overflow-x: auto; color: #c5d5ef; white-space: pre; }
+  .ck  { color: var(--accent); }
+  .cv  { color: var(--green); }
+  .cc  { color: var(--amber); }
+  .cn  { color: #ff8fab; }
+  .ct  { color: var(--purple); }
+  .cm  { color: var(--muted); font-style: italic; }
+  .cr  { color: var(--red); }        /* redis keyword */
+  .cg  { color: var(--green); }      /* mongo/green */
+
+  /* ── CALLOUTS ── */
+  .callout { border-radius: 8px; padding: 0.75rem 1rem; margin: 0.75rem 0; display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.82rem; line-height: 1.55; }
+  .callout.blue   { background: rgba(0,200,255,0.05);  border: 1px solid rgba(0,200,255,0.2);  color: #a0d8f0; }
+  .callout.green  { background: rgba(0,229,160,0.05);  border: 1px solid rgba(0,229,160,0.2);  color: #8ee8c4; }
+  .callout.amber  { background: rgba(255,183,64,0.06); border: 1px solid rgba(255,183,64,0.2); color: #d9c07a; }
+  .callout.purple { background: rgba(180,110,245,0.05);border: 1px solid rgba(180,110,245,0.2);color: #c5a8f5; }
+  .callout.red    { background: rgba(255,94,122,0.05); border: 1px solid rgba(255,94,122,0.2); color: #f0a0b0; }
+
+  /* ── WHAT HAPPENED (concept reveal) ── */
+  .what-happened { border-radius: 0 8px 8px 0; padding: 0.75rem 1rem; margin: 0.75rem 0; font-size: 0.82rem; line-height: 1.6; }
+  .what-happened.blue  { background: rgba(0,200,255,0.04); border: 1px solid rgba(0,200,255,0.2); border-left: 3px solid var(--accent); color: #a0d8f0; }
+  .what-happened.red   { background: rgba(255,94,122,0.04); border: 1px solid rgba(255,94,122,0.2); border-left: 3px solid var(--red); color: #f0a0b0; }
+  .what-happened.green { background: rgba(0,229,160,0.04); border: 1px solid rgba(0,229,160,0.2); border-left: 3px solid var(--green); color: #8ee8c4; }
+  .wh-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.4rem; }
+  .what-happened.blue  .wh-label { color: var(--accent); }
+  .what-happened.red   .wh-label { color: var(--red); }
+  .what-happened.green .wh-label { color: var(--green); }
+
+  /* ── EXPECTED OUTPUT ── */
+  .out-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.3rem; margin-top: 0.85rem; }
+  .expected-out { font-family: 'Fira Code', monospace; font-size: 0.77rem; background: var(--bg2); border: 1px solid rgba(0,200,255,0.12); border-radius: 6px; padding: 0.65rem 0.85rem; margin-top: 0.35rem; color: #9ab8d0; line-height: 1.65; white-space: pre; overflow-x: auto; }
+  .expected-out.redis-out { border-color: rgba(255,94,122,0.15); color: #e0a0a8; }
+  .expected-out.mongo-out { border-color: rgba(0,229,160,0.15); color: #90d8b0; }
+
+  /* ── CHECKPOINT ── */
+  .checkpoint { background: rgba(0,200,255,0.05); border: 1px solid rgba(0,200,255,0.25); border-radius: 10px; padding: 1rem 1.25rem; margin: 1.25rem 0; display: flex; gap: 0.85rem; align-items: flex-start; }
+  .checkpoint-icon { font-size: 1.5rem; flex-shrink: 0; }
+  .checkpoint-text strong { font-size: 0.92rem; color: var(--accent); display: block; margin-bottom: 0.35rem; }
+  .checkpoint-text { font-size: 0.83rem; color: var(--muted); line-height: 1.6; }
+
+  /* ── IMAGE PLACEHOLDER ── */
+  .img-ph { border: 2px dashed rgba(0,200,255,0.2); border-radius: 8px; background: rgba(0,200,255,0.02); padding: 0.85rem 1.1rem; margin: 0.85rem 0; display: flex; gap: 0.75rem; align-items: flex-start; }
+  .img-ph-icon { font-size: 1.2rem; flex-shrink: 0; line-height: 1.2; }
+  .img-ph-label { font-size: 0.67rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.18rem; }
+  .img-ph-desc { font-size: 0.79rem; color: var(--muted); line-height: 1.5; }
+
+  /* ── TROUBLESHOOT ── */
+  .trouble { background: rgba(255,94,122,0.04); border: 1px solid rgba(255,94,122,0.2); border-radius: 8px; margin: 0.6rem 0; overflow: hidden; }
+  .trouble-header { display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 0.85rem; cursor: pointer; font-size: 0.82rem; font-weight: 600; color: var(--red); user-select: none; }
+  .trouble-header:hover { background: rgba(255,94,122,0.06); }
+  .trouble-toggle { margin-left: auto; font-size: 0.75rem; transition: transform 0.2s; }
+  .trouble.open .trouble-toggle { transform: rotate(90deg); }
+  .trouble-body { display: none; padding: 0.5rem 0.85rem 0.85rem; font-size: 0.81rem; color: var(--muted); line-height: 1.65; }
+  .trouble.open .trouble-body { display: block; }
+
+  /* ── PACE BLOCKS ── */
+  .pace-block { border-radius: 8px; padding: 0.75rem 1rem; margin: 0.75rem 0; font-size: 0.82rem; line-height: 1.6; }
+  .pace-block .pace-label { font-size: 0.64rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.35rem; }
+  .pace-block.beginner { background: rgba(0,229,160,0.04); border: 1px solid rgba(0,229,160,0.18); border-left: 3px solid var(--beginner); }
+  .pace-block.average  { background: rgba(0,200,255,0.04); border: 1px solid rgba(0,200,255,0.18); border-left: 3px solid var(--average); }
+  .pace-block.advanced { background: rgba(180,110,245,0.04); border: 1px solid rgba(180,110,245,0.18); border-left: 3px solid var(--advanced); }
+  .pace-block.beginner .pace-label { color: var(--beginner); }
+  .pace-block.average  .pace-label { color: var(--average); }
+  .pace-block.advanced .pace-label { color: var(--advanced); }
+
+  /* ── TASK LIST ── */
+  .task-list { list-style: none; margin: 0.5rem 0; }
+  .task-list li { display: flex; align-items: flex-start; gap: 0.65rem; font-size: 0.82rem; padding: 0.35rem 0; border-bottom: 1px solid rgba(42,61,90,0.25); cursor: pointer; }
+  .task-list li:last-child { border-bottom: none; }
+  .check-box { width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: #000; transition: all 0.15s; margin-top: 0.05rem; }
+  .task-list li.done .check-box { background: var(--accent); border-color: var(--accent); }
+  .task-list li.done { color: var(--muted); text-decoration: line-through; }
+
+  /* ── COMPARE TABLE ── */
+  .compare-table { width: 100%; border-collapse: collapse; font-size: 0.81rem; margin: 0.85rem 0; }
+  .compare-table th { padding: 0.5rem 0.85rem; background: var(--bg3); font-size: 0.69rem; letter-spacing: 0.07em; text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--border); }
+  .compare-table th.redis-h { color: var(--red); }
+  .compare-table th.mongo-h { color: var(--green); }
+  .compare-table th.topic-h { color: var(--muted); }
+  .compare-table td { padding: 0.5rem 0.85rem; border-bottom: 1px solid rgba(42,61,90,0.3); vertical-align: top; font-size: 0.8rem; }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .compare-table td.redis-cell { color: #f0a0b0; }
+  .compare-table td.mongo-cell { color: #8ee8c4; }
+
+  /* ── FLOW STEPS (end-to-end) ── */
+  .flow-step { display: flex; gap: 0.85rem; align-items: flex-start; margin-bottom: 0.85rem; }
+  .flow-num { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; }
+  .flow-num.redis-num  { background: rgba(255,94,122,0.15); color: var(--red); border: 2px solid rgba(255,94,122,0.35); }
+  .flow-num.mongo-num  { background: rgba(0,229,160,0.15); color: var(--green); border: 2px solid rgba(0,229,160,0.35); }
+  .flow-content { flex: 1; }
+  .flow-db-tag { display: inline-block; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; margin-bottom: 0.3rem; }
+  .flow-db-tag.redis { background: rgba(255,94,122,0.12); color: var(--red); border: 1px solid rgba(255,94,122,0.2); }
+  .flow-db-tag.mongo { background: rgba(0,229,160,0.12); color: var(--green); border: 1px solid rgba(0,229,160,0.2); }
+  .flow-desc { font-size: 0.81rem; color: var(--muted); line-height: 1.55; }
+
+  /* ── EXTENSION ── */
+  .extension-block { background: rgba(180,110,245,0.04); border: 1px solid rgba(180,110,245,0.2); border-radius: 10px; padding: 1.25rem; margin-top: 1.5rem; }
+  .ext-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.85rem; }
+  .ext-badge { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.2rem 0.55rem; background: rgba(180,110,245,0.12); color: var(--purple); border: 1px solid rgba(180,110,245,0.3); border-radius: 20px; }
+  .ext-title { font-size: 0.95rem; font-weight: 700; color: var(--purple); }
+
+  /* ── INFO TABLE ── */
+  .info-table { width: 100%; border-collapse: collapse; font-size: 0.81rem; margin: 0.75rem 0; }
+  .info-table th { padding: 0.4rem 0.75rem; background: var(--bg3); color: var(--muted); font-size: 0.67rem; letter-spacing: 0.07em; text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--border); }
+  .info-table td { padding: 0.42rem 0.75rem; border-bottom: 1px solid rgba(42,61,90,0.3); vertical-align: top; }
+  .info-table tr:last-child td { border-bottom: none; }
+
+  a { color: var(--accent); } a:hover { text-decoration: underline; }
+  strong { color: var(--text); font-weight: 600; }
+  p { margin-bottom: 0.75rem; font-size: 0.85rem; line-height: 1.7; }
+  p:last-child { margin-bottom: 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 768px) {
+    .page-body { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .lab-content { padding: 1.25rem 1rem 3rem; }
+  }
+</style>
+</head>
+<body class="pace-average">
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <span class="lab-badge">Lab 4.2</span>
+      <span class="header-title">Redis Cart &amp; MongoDB Orders</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.85rem">
+      <div class="pace-bar">
+        <button class="pace-btn" data-pace="beginner" onclick="setPace('beginner')">🟢 Beginner</button>
+        <button class="pace-btn active" data-pace="average" onclick="setPace('average')">🔵 Average</button>
+        <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced')">🟣 Advanced</button>
+      </div>
+      <span class="ghp-badge">🐙 GitHub Pages Ready</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<div class="lab-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb"><a href="../week04/index.html">← Week 4 Lecture</a> › <a href="../week04/lab1_relational_db_queries.html">Lab 4.1</a> › Lab 4.2</div>
+    <h1>⚡ Redis Cart &amp; 📦 MongoDB Orders</h1>
+    <p style="color:var(--muted);font-size:0.86rem;margin:0.25rem 0 0">Two databases, two shells, one customer journey — see why each exists.</p>
+    <div class="hero-meta">
+      <div class="meta-chip">⏱ <strong>60 min</strong></div>
+      <div class="meta-chip">⚡ <strong>Redis 7</strong> · redis-cli shell</div>
+      <div class="meta-chip">📦 <strong>MongoDB 7</strong> · mongosh shell</div>
+      <div class="meta-chip">🖥️ <strong>Shell only</strong> · no code files today</div>
+    </div>
+    <div class="prereq-bar">
+      <span class="prereq-label">Prerequisites:</span>
+      <span class="prereq-chip">✅ Lab 4.1 completed</span>
+      <span class="prereq-chip">✅ Docker Compose running</span>
+      <span class="prereq-chip">✅ mysql · users · orders tables exist</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── PAGE BODY ── -->
+<div class="page-body">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="progress-box">
+      <div class="progress-title">Your Progress</div>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+      <div class="progress-label"><span id="progressCount">0</span> / 8 tasks done</div>
+    </div>
+
+    <div class="db-indicator">
+      <div class="db-ind-label">Databases today</div>
+      <span class="db-tag mysql">🗄️ MySQL</span>
+      <span class="db-tag redis">⚡ Redis</span>
+      <span class="db-tag mongo">📦 MongoDB</span>
+    </div>
+
+    <div class="sidebar-title">Lab Navigation</div>
+    <ul class="sidebar-nav">
+      <li class="part-divider">Overview</li>
+      <li><a href="#overview">Scenario &amp; Goals</a></li>
+      <li class="part-divider">Part 1 · Setup</li>
+      <li><a href="#p1">Add Redis + MongoDB</a></li>
+      <li class="part-divider">Part 2 · Redis</li>
+      <li><a href="#p2s1">Enter the Redis Shell</a></li>
+      <li><a href="#p2s2">Cart: SET &amp; GET</a></li>
+      <li><a href="#p2s3">TTL: Auto-Expiry</a></li>
+      <li class="part-divider">Part 3 · MongoDB</li>
+      <li><a href="#p3s1">Enter the Mongo Shell</a></li>
+      <li><a href="#p3s2">Place an Order</a></li>
+      <li><a href="#p3s3">Update Order Status</a></li>
+      <li class="part-divider">Part 4 · Full Flow</li>
+      <li><a href="#p4">Cart → Order → Clear</a></li>
+      <li class="part-divider">Part 5 · Compare</li>
+      <li><a href="#p5">Redis vs MongoDB</a></li>
+      <li class="part-divider">Wrap-Up</li>
+      <li><a href="#wrapup">Key Takeaways</a></li>
+    </ul>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="lab-content">
+
+    <!-- ══ OVERVIEW ══ -->
+    <section id="overview">
+      <div class="part-header">
+        <div class="part-pill blue">Overview</div>
+        <div class="part-title">Scenario &amp; Goals</div>
+      </div>
+
+      <div class="callout blue">
+        <span>📖</span>
+        <div><strong>The story:</strong> Ali Hassan is hungry. He opens CloudEats, adds Nasi Lemak and Teh Tarik to his cart, and places the order. Behind the scenes, <em>two completely different databases</em> are involved — for two completely different reasons. Today you play both databases manually, so you see exactly what each one holds and why.</div>
+      </div>
+
+      <div class="callout amber">
+        <span>🧠</span>
+        <div><strong>Today's focus:</strong> Not the commands. The <em>difference</em> in how Redis and MongoDB store data, and why each is the right tool for its job. The commands are just a way to see that difference in action.</div>
+      </div>
+
+      <p style="margin-bottom:0.5rem"><strong>What you will accomplish:</strong></p>
+      <ul class="task-list" id="checklistItems">
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Add Redis and MongoDB services to docker-compose.yml</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Store and retrieve a shopping cart in Redis using SET and GET</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Set a TTL and watch a key expire automatically</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Insert a full order document into MongoDB with nested items</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Update an order's status and add a history entry with $push</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Run the full cart → place order → clear cart flow</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Explain in your own words why the cart is in Redis but the order is in MongoDB</li>
+        <li onclick="toggleCheck(this)"><div class="check-box"></div>Identify where each database fits in the CloudEats architecture</li>
+      </ul>
+    </section>
+
+    <!-- ══ PART 1: SETUP ══ -->
+    <section id="p1">
+      <div class="part-header">
+        <div class="part-pill blue">Part 1</div>
+        <div class="part-title">Add Redis &amp; MongoDB to Docker Compose</div>
+        <div class="part-time">⏱ 10 min</div>
+      </div>
+
+      <!-- ── EXPAND / COLLAPSE CONTROLS ── -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.85rem;padding:0.4rem 0;">
+        <span style="font-size:0.75rem;color:var(--muted)"><strong style="color:var(--text)">8 steps</strong> across 4 parts</span>
+        <div style="display:flex;gap:0.5rem">
+          <button onclick="expandAll()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↓ Expand All</button>
+          <button onclick="collapseAll()" style="font-family:'Sora',sans-serif;font-size:0.7rem;font-weight:600;padding:0.25rem 0.75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.color='var(--muted)';this.style.borderColor='var(--muted)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↑ Collapse All</button>
+        </div>
+      </div>
+
+      <div class="step open" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">1</div>
+          <div class="step-title">Add two new services to docker-compose.yml</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Open your <code>docker-compose.yml</code>. Add the <code>redis</code> and <code>mongo</code> blocks inside the <code>services:</code> section, alongside your existing <code>db</code> and <code>backend</code> services.</p>
+
+          <div class="code-block yaml-block">
+            <div class="code-header"><span class="code-lang">yaml · Add inside services:</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="cm">  # ── Add these two services ─────────────────────</span>
+
+  <span class="cc">redis:</span>
+    <span class="ck">image:</span> <span class="cv">redis:7-alpine</span>
+    <span class="ck">container_name:</span> <span class="cv">cloudeats-redis</span>
+    <span class="ck">ports:</span>
+      - <span class="cv">"6379:6379"</span>
+    <span class="ck">networks:</span>
+      - <span class="cv">cloudeats-network</span>
+
+  <span class="cc">mongo:</span>
+    <span class="ck">image:</span> <span class="cv">mongo:7</span>
+    <span class="ck">container_name:</span> <span class="cv">cloudeats-mongo</span>
+    <span class="ck">ports:</span>
+      - <span class="cv">"27017:27017"</span>
+    <span class="ck">volumes:</span>
+      - <span class="cv">mongo-data:/data/db</span>
+    <span class="ck">networks:</span>
+      - <span class="cv">cloudeats-network</span></pre>
+          </div>
+
+          <p>Also add <code>mongo-data</code> to the <code>volumes:</code> section at the bottom of the file:</p>
+          <div class="code-block yaml-block">
+            <div class="code-header"><span class="code-lang">yaml · Under volumes:</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="ck">volumes:</span>
+  <span class="cv">mysql-data:</span>    <span class="cm"># already exists</span>
+  <span class="cv">mongo-data:</span>    <span class="cm"># ← add this line</span></pre>
+          </div>
+
+          <div class="what-happened blue">
+            <div class="wh-label">🔍 Why is Redis using alpine but MongoDB is not?</div>
+            <code>redis:7-alpine</code> uses the minimal Alpine Linux base image — smaller and faster to download, fine for Redis since it has no complex dependencies. <code>mongo:7</code> uses the full Debian base because MongoDB's tooling expects a fuller environment. You'll see this pattern often: use <code>-alpine</code> where possible to keep images small.
+          </div>
+
+          <div class="what-happened blue" style="margin-top:0.5rem">
+            <div class="wh-label">🔍 Why does MongoDB have a named volume but Redis does not?</div>
+            Orders are <em>permanent</em> records — we need them to survive a container restart. MongoDB needs a volume for persistence. Redis carts are <em>temporary</em> — if Redis restarts, carts reset. That's acceptable. Customers just start a new cart. No data loss that matters.
+          </div>
+
+          <p style="margin-top:0.85rem">Start the new services:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>docker compose up -d redis mongo</pre>
+          </div>
+
+          <div class="out-label">Verify all containers are running</div>
+          <div class="expected-out">docker compose ps
+
+NAME                  STATUS    PORTS
+cloudeats-backend     Up        0.0.0.0:3000->3000/tcp
+cloudeats-db          Up        3306/tcp
+cloudeats-mongo       Up        0.0.0.0:27017->27017/tcp
+cloudeats-redis       Up        0.0.0.0:6379->6379/tcp</div>
+
+          <div class="trouble" onclick="toggleTrouble(this, event)">
+            <div class="trouble-header"><span>🔴</span> Port 27017 already in use<div class="trouble-toggle">▶</div></div>
+            <div class="trouble-body">Another MongoDB instance may be running on your machine. Stop it first, or change the host port mapping to <code>"27018:27017"</code> in docker-compose.yml. The container still uses 27017 internally — only the host port changes.</div>
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Student Screenshot · docker compose ps — All 4 containers up</div>
+              <div class="img-ph-desc">Your terminal showing all four containers with status Up: backend, db (MySQL), mongo, and redis. This is your starting state for Parts 2 and 3.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="checkpoint">
+        <div class="checkpoint-icon">✅</div>
+        <div class="checkpoint-text">
+          <strong>Part 1 Checkpoint</strong>
+          Four containers running: backend, MySQL, Redis, MongoDB. Move to Part 2.
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PART 2: REDIS ══ -->
+    <section id="p2s1">
+      <div class="part-header redis-border">
+        <div class="part-pill red">Part 2</div>
+        <div class="part-title">⚡ Redis — The Shopping Cart</div>
+        <div class="part-time">⏱ 15 min</div>
+      </div>
+
+      <div class="callout red">
+        <span>💡</span>
+        <div><strong>The idea before you start:</strong> Redis is like a whiteboard. Writing and reading happen in under 1 millisecond. You write a note, read it back, and wipe it when done. It is not for permanent storage — it is for data that needs to be very fast and temporary.</div>
+      </div>
+
+      <!-- Step 2 — Enter Redis -->
+      <div class="step open" onclick="toggleStep(this, event)" id="p2s1-step">
+        <div class="step-header">
+          <div class="step-num">2</div>
+          <div class="step-title">Enter the Redis shell</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <div class="code-block redis-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>docker exec -it cloudeats-redis redis-cli</pre>
+          </div>
+
+          <div class="out-label">You should see the Redis prompt</div>
+          <div class="expected-out redis-out">127.0.0.1:6379></div>
+
+          <div class="what-happened red">
+            <div class="wh-label">🔍 What's different from the MySQL shell?</div>
+            In MySQL you typed SQL sentences. In Redis you type <strong>command + key + value</strong> — short, direct instructions. There is no schema, no tables, no column definitions. Redis is deliberately simple: give it a name (key) and a value, and it remembers it — until you delete it or it expires.
+          </div>
+
+          <div class="trouble" onclick="toggleTrouble(this, event)">
+            <div class="trouble-header"><span>🔴</span> "No such container" error<div class="trouble-toggle">▶</div></div>
+            <div class="trouble-body">Run <code>docker compose ps</code> and use the exact Redis container name from the output. It may be <code>cloudeats-redis</code> or follow the <code>project-service-1</code> pattern like <code>cloudeats-app-redis-1</code>.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 — SET and GET -->
+      <div class="step open" onclick="toggleStep(this, event)" id="p2s2">
+        <div class="step-header">
+          <div class="step-num">3</div>
+          <div class="step-title">Store Ali's shopping cart — SET and GET</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Ali adds Nasi Lemak and Teh Tarik to his cart. Store the cart:</p>
+          <div class="code-block redis-block">
+            <div class="code-header"><span class="code-lang">Redis shell · Store the cart</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="cr">SET</span> cart:user1 <span class="cv">'{"items":[{"name":"Nasi Lemak","qty":2,"price":8.00},{"name":"Teh Tarik","qty":1,"price":3.00}],"total":19.00}'</span></pre>
+          </div>
+          <div class="expected-out redis-out">OK</div>
+
+          <p style="margin-top:0.85rem">Read the cart back:</p>
+          <div class="code-block redis-block">
+            <div class="code-header"><span class="code-lang">Redis shell · Read the cart</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="cr">GET</span> cart:user1</pre>
+          </div>
+          <div class="expected-out redis-out">"{\"items\":[{\"name\":\"Nasi Lemak\",\"qty\":2,\"price\":8.00},{\"name\":\"Teh Tarik\",\"qty\":1,\"price\":3.00}],\"total\":19.00}"</div>
+
+          <div class="what-happened red">
+            <div class="wh-label">🔍 What is cart:user1?</div>
+            <code>cart:user1</code> is just a <strong>key name</strong> — a string we invented. The colon in the middle is a naming convention (like a folder path) to group related keys. The value is the entire cart stored as a JSON string. Redis does not know or care what the JSON contains — it just stores and returns the whole string as-is. The application code is responsible for parsing it.
+          </div>
+
+          <div class="pace-block beginner">
+            <div class="pace-label">🟢 Beginner</div>
+            Think of it as a labelled box. The label is <code>cart:user1</code>. The contents are the JSON string. You put things in by label (<code>SET</code>), take them out by label (<code>GET</code>). That's the entire Redis data model.
+          </div>
+          <div class="pace-block average">
+            <div class="pace-label">🔵 Average</div>
+            Try storing a second user's cart: <code>SET cart:user2 '{"items":[],"total":0}'</code>. Each user gets their own key. This is how Redis separates data between users — by key naming, not by table rows.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4 — TTL -->
+      <div class="step open" onclick="toggleStep(this, event)" id="p2s3">
+        <div class="step-header">
+          <div class="step-num">4</div>
+          <div class="step-title">Set an expiry — TTL (Time To Live)</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Overwrite the cart with an expiry time of 60 seconds, so you can watch it disappear:</p>
+          <div class="code-block redis-block">
+            <div class="code-header"><span class="code-lang">Redis shell · Set cart with 60-second TTL</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="cr">SET</span> cart:user1 <span class="cv">'{"items":[{"name":"Nasi Lemak","qty":2,"price":8.00}],"total":16.00}'</span> <span class="cr">EX</span> <span class="cn">60</span></pre>
+          </div>
+
+          <p style="margin-top:0.75rem">Check how many seconds are left:</p>
+          <div class="code-block redis-block">
+            <div class="code-header"><span class="code-lang">Redis shell · Check remaining seconds</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="cr">TTL</span> cart:user1</pre>
+          </div>
+          <div class="expected-out redis-out">(integer) 54</div>
+
+          <p style="margin-top:0.75rem">Run <code>TTL cart:user1</code> a few more times — watch the number count down. After 60 seconds, run <code>GET cart:user1</code>:</p>
+          <div class="code-block redis-block">
+            <div class="code-header"><span class="code-lang">Redis shell · After expiry</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="cr">GET</span> cart:user1</pre>
+          </div>
+          <div class="expected-out redis-out">(nil)</div>
+
+          <div class="what-happened red">
+            <div class="wh-label">🔍 What just happened — and why does it matter?</div>
+            Redis automatically deleted the key when the timer ran out. No code ran. No scheduled job fired. Redis handles expiry internally.<br><br>
+            This solves a real problem: <strong>abandoned carts</strong>. If Ali adds items to his cart and never checks out, the cart disappears by itself after 30 minutes (or 1 hour in production). Without TTL, you'd need a scheduled script to clean up expired carts — extra code, extra complexity, more things to break.
+          </div>
+
+          <div class="callout red">
+            <span>❗</span>
+            <div>A TTL of <code>-1</code> means the key has <em>no expiry</em> — it stays until you delete it. A TTL of <code>-2</code> means the key does not exist. Run <code>TTL cart:user1</code> after the key expires and you'll see <code>-2</code>.</div>
+          </div>
+
+          <div class="pace-block advanced">
+            <div class="pace-label">🟣 Advanced</div>
+            In production, the cart TTL would be set in the application code as an environment variable (e.g. <code>CART_TTL=1800</code> for 30 minutes). Changing the TTL would require only a config change and restart — no database migration, no schema change.
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Student Screenshot · TTL countdown in Redis shell</div>
+              <div class="img-ph-desc">Three consecutive terminal commands and their output: <code>TTL cart:user1</code> returning 54, then 41, then (after expiry) <code>GET cart:user1</code> returning <code>(nil)</code>. This sequence shows auto-expiry in action.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="checkpoint">
+        <div class="checkpoint-icon">✅</div>
+        <div class="checkpoint-text">
+          <strong>Part 2 Checkpoint</strong>
+          You've stored a cart, read it, watched it expire automatically. The key concept: Redis is fast and temporary. TTL means you never have to clean up old carts manually. Type <code>exit</code> to leave the Redis shell.
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PART 3: MONGODB ══ -->
+    <section id="p3s1">
+      <div class="part-header mongo-border">
+        <div class="part-pill green">Part 3</div>
+        <div class="part-title">📦 MongoDB — The Order History</div>
+        <div class="part-time">⏱ 15 min</div>
+      </div>
+
+      <div class="callout green">
+        <span>💡</span>
+        <div><strong>The idea before you start:</strong> An order is permanent — it must survive restarts, backups, and audits. It also has a variable number of items and a growing status history. MongoDB stores the <em>whole order as one self-contained document</em>, so one read gives you everything about an order without any JOIN.</div>
+      </div>
+
+      <!-- Step 5 — Enter MongoDB -->
+      <div class="step open" onclick="toggleStep(this, event)" id="p3s1-step">
+        <div class="step-header">
+          <div class="step-num">5</div>
+          <div class="step-title">Enter the MongoDB shell</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <div class="code-block mongo-block">
+            <div class="code-header"><span class="code-lang">bash · Open a new terminal tab first</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>docker exec -it cloudeats-mongo mongosh</pre>
+          </div>
+
+          <div class="out-label">You'll see the MongoDB shell prompt</div>
+          <div class="expected-out mongo-out">Current Mongosh Log ID: ...
+Connecting to: mongodb://127.0.0.1:27017/
+test></div>
+
+          <p style="margin-top:0.75rem">Switch to the CloudEats database (MongoDB creates it automatically if it doesn't exist):</p>
+          <div class="code-block mongo-block">
+            <div class="code-header"><span class="code-lang">mongosh</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="ck">use</span> cloudeats_db</pre>
+          </div>
+          <div class="expected-out mongo-out">switched to db cloudeats_db
+cloudeats_db></div>
+
+          <div class="what-happened green">
+            <div class="wh-label">🔍 What's different from MySQL and Redis?</div>
+            In MySQL you used SQL. In Redis you used short commands. In MongoDB you use <strong>JavaScript-like method calls</strong> — <code>db.orders.find()</code>, <code>db.orders.insertOne()</code>. The <code>db</code> refers to the current database. <code>orders</code> is the collection (like a table). The method says what to do.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 6 — insertOne -->
+      <div class="step open" onclick="toggleStep(this, event)" id="p3s2">
+        <div class="step-header">
+          <div class="step-num">6</div>
+          <div class="step-title">Place an order — insertOne with nested items</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Ali places his order. The entire order — including all items — goes into one document:</p>
+          <div class="code-block mongo-block">
+            <div class="code-header"><span class="code-lang">mongosh · Insert one order</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>db.orders.insertOne({
+  userId: <span class="cn">1</span>,
+  customerName: <span class="cv">"Ali Hassan"</span>,
+  items: [
+    { name: <span class="cv">"Nasi Lemak"</span>, qty: <span class="cn">2</span>, price: <span class="cn">8.00</span>  },
+    { name: <span class="cv">"Teh Tarik"</span>,  qty: <span class="cn">1</span>, price: <span class="cn">3.00</span>  }
+  ],
+  total: <span class="cn">19.00</span>,
+  status: <span class="cv">"pending"</span>,
+  deliveryAddress: <span class="cv">"No. 12, Jalan Bukit Bintang, KL"</span>,
+  placedAt: <span class="ck">new</span> Date()
+})</pre>
+          </div>
+          <div class="expected-out mongo-out">{
+  acknowledged: true,
+  insertedId: ObjectId('64f1a2b3c4d5e6f7a8b9c0d1')
+}</div>
+
+          <div class="what-happened green">
+            <div class="wh-label">🔍 Notice the items array — this is the key difference</div>
+            The <code>items</code> field holds an <strong>array of objects</strong> directly inside the order document. Order 101 might have 2 items. Order 102 might have 7. MongoDB doesn't care — each document can have a different number of items. In MySQL, you'd need a separate <code>order_items</code> table and a JOIN every time you read an order. Here, one read returns the complete picture.
+          </div>
+
+          <p style="margin-top:0.85rem">Read the order back — see the full document:</p>
+          <div class="code-block mongo-block">
+            <div class="code-header"><span class="code-lang">mongosh · Find all orders</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>db.orders.find().pretty()</pre>
+          </div>
+
+          <div class="what-happened green">
+            <div class="wh-label">🔍 What is .pretty()?</div>
+            Without <code>.pretty()</code>, the document prints on one long line — hard to read. <code>.pretty()</code> formats it with indentation so the nested structure is clearly visible. In newer versions of mongosh, output is already formatted by default.
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Student Screenshot · MongoDB insertOne + find result</div>
+              <div class="img-ph-desc">Terminal showing the <code>insertOne</code> output with the auto-generated ObjectId, then <code>db.orders.find().pretty()</code> displaying the full document with the <code>items</code> array visible as nested objects. Highlight that the items array is <em>inside</em> the single document.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 7 — updateOne + $push -->
+      <div class="step open" onclick="toggleStep(this, event)" id="p3s3">
+        <div class="step-header">
+          <div class="step-num">7</div>
+          <div class="step-title">Update the order status and record its history</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p>The restaurant confirms the order. Update the status field:</p>
+          <div class="code-block mongo-block">
+            <div class="code-header"><span class="code-lang">mongosh · Update order status</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>db.orders.updateOne(
+  { userId: <span class="cn">1</span> },
+  { <span class="ck">$set</span>: { status: <span class="cv">"confirmed"</span> } }
+)</pre>
+          </div>
+          <div class="expected-out mongo-out">{ acknowledged: true, matchedCount: 1, modifiedCount: 1 }</div>
+
+          <p style="margin-top:0.85rem">Now add a status history entry so the customer can track their order:</p>
+          <div class="code-block mongo-block">
+            <div class="code-header"><span class="code-lang">mongosh · Push a history entry into the order</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>db.orders.updateOne(
+  { userId: <span class="cn">1</span> },
+  { <span class="ck">$push</span>: {
+      statusHistory: {
+        status: <span class="cv">"confirmed"</span>,
+        at: <span class="ck">new</span> Date()
+      }
+  }}
+)</pre>
+          </div>
+
+          <p style="margin-top:0.75rem">Read the order again to see both changes:</p>
+          <div class="code-block mongo-block">
+            <div class="code-header"><span class="code-lang">mongosh</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>db.orders.find({ userId: <span class="cn">1</span> }).pretty()</pre>
+          </div>
+
+          <div class="what-happened green">
+            <div class="wh-label">🔍 What do $set and $push do — and why not just rewrite the whole document?</div>
+            <strong>$set</strong> changes only the <code>status</code> field. Everything else in the document — items, total, address — is untouched. You're performing a surgical update, not replacing the whole record.<br><br>
+            <strong>$push</strong> appends a new object to the <code>statusHistory</code> array. Every time the status changes, you push a new entry. After delivery, the history might have 5 entries: pending → confirmed → preparing → out_for_delivery → delivered. All of these live inside the same single document. In MySQL, each of these would be a separate row in a separate table.
+          </div>
+
+          <div class="pace-block beginner">
+            <div class="pace-label">🟢 Beginner</div>
+            Think of $push like adding a new message to a WhatsApp thread. The thread is the order document. Each status update is a new message appended to the history inside it. The thread (document) grows over time without needing a new file.
+          </div>
+          <div class="pace-block advanced">
+            <div class="pace-label">🟣 Advanced</div>
+            MongoDB's <code>$push</code> with <code>$sort</code> and <code>$slice</code> lets you push to an array while keeping it sorted and capped at a max size — useful for "last 10 events" patterns without ever reading and rewriting the whole array.
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Student Screenshot · Order with status + statusHistory</div>
+              <div class="img-ph-desc">The <code>find().pretty()</code> output after both updates, showing <code>"status": "confirmed"</code> and a <code>statusHistory</code> array containing one entry with the status string and timestamp. The nested structure shows items array <em>and</em> statusHistory array coexisting in one document.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="checkpoint">
+        <div class="checkpoint-icon">✅</div>
+        <div class="checkpoint-text">
+          <strong>Part 3 Checkpoint</strong>
+          You've inserted an order with nested items, updated a field with $set, and grown an array with $push — all inside one document. The key concept: one document holds the complete, evolving state of one order.
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PART 4: END-TO-END FLOW ══ -->
+    <section id="p4">
+      <div class="part-header">
+        <div class="part-pill blue">Part 4</div>
+        <div class="part-title">The Full Flow — Cart to Order to Clear</div>
+        <div class="part-time">⏱ 15 min</div>
+      </div>
+
+      <div class="callout blue">
+        <span>🔄</span>
+        <div>Now put both databases together. Run this flow manually — the same sequence that happens automatically when a customer places an order in a real app. Use two terminal tabs: one for Redis, one for MongoDB.</div>
+      </div>
+
+      <div class="step open" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">8</div>
+          <div class="step-title">Simulate the full customer journey across both databases</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+
+          <!-- Flow steps -->
+          <div class="flow-step">
+            <div class="flow-num redis-num">1</div>
+            <div class="flow-content">
+              <span class="flow-db-tag redis">⚡ Redis shell</span>
+              <div class="flow-desc">Siti adds Roti Canai to her cart.</div>
+              <div class="code-block redis-block" style="margin-top:0.4rem">
+                <div class="code-header"><span class="code-lang">redis-cli</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+                <pre><span class="cr">SET</span> cart:user2 <span class="cv">'{"items":[{"name":"Roti Canai","qty":2,"price":3.50}],"total":7.00}'</span> <span class="cr">EX</span> <span class="cn">3600</span></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="flow-step">
+            <div class="flow-num redis-num">2</div>
+            <div class="flow-content">
+              <span class="flow-db-tag redis">⚡ Redis shell</span>
+              <div class="flow-desc">She reviews her cart before checking out.</div>
+              <div class="code-block redis-block" style="margin-top:0.4rem">
+                <div class="code-header"><span class="code-lang">redis-cli</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+                <pre><span class="cr">GET</span> cart:user2</pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="flow-step">
+            <div class="flow-num mongo-num">3</div>
+            <div class="flow-content">
+              <span class="flow-db-tag mongo">📦 mongosh</span>
+              <div class="flow-desc">She confirms the order. The cart contents become a permanent MongoDB document.</div>
+              <div class="code-block mongo-block" style="margin-top:0.4rem">
+                <div class="code-header"><span class="code-lang">mongosh</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+                <pre>db.orders.insertOne({
+  userId: <span class="cn">2</span>,
+  customerName: <span class="cv">"Siti Aminah"</span>,
+  items: [{ name: <span class="cv">"Roti Canai"</span>, qty: <span class="cn">2</span>, price: <span class="cn">3.50</span> }],
+  total: <span class="cn">7.00</span>,
+  status: <span class="cv">"pending"</span>,
+  placedAt: <span class="ck">new</span> Date()
+})</pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="flow-step">
+            <div class="flow-num redis-num">4</div>
+            <div class="flow-content">
+              <span class="flow-db-tag redis">⚡ Redis shell</span>
+              <div class="flow-desc">Checkout complete — delete the cart. Redis is cleared immediately.</div>
+              <div class="code-block redis-block" style="margin-top:0.4rem">
+                <div class="code-header"><span class="code-lang">redis-cli</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+                <pre><span class="cr">DEL</span> cart:user2
+<span class="cr">GET</span> cart:user2   <span class="cm"># should return (nil)</span></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="flow-step">
+            <div class="flow-num mongo-num">5</div>
+            <div class="flow-content">
+              <span class="flow-db-tag mongo">📦 mongosh</span>
+              <div class="flow-desc">The order is still here — permanently stored. Update its status as the kitchen works.</div>
+              <div class="code-block mongo-block" style="margin-top:0.4rem">
+                <div class="code-header"><span class="code-lang">mongosh</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+                <pre>db.orders.updateOne(
+  { userId: <span class="cn">2</span> },
+  { <span class="ck">$set</span>: { status: <span class="cv">"preparing"</span> } }
+)
+db.orders.find({ userId: <span class="cn">2</span> }).pretty()</pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="what-happened blue">
+            <div class="wh-label">🔍 The most important thing you just did</div>
+            Step 3 is the checkout moment. The cart — which lived in Redis — became an order in MongoDB. The cart was temporary. The order is permanent. After step 4, the cart is completely gone from Redis. But the order in MongoDB stays forever, trackable, updatable, retrievable years later. <strong>This transition is the architectural boundary between Redis and MongoDB.</strong>
+          </div>
+
+          <div class="img-ph">
+            <div class="img-ph-icon">📸</div>
+            <div>
+              <div class="img-ph-label">Student Screenshot · Two terminals side by side</div>
+              <div class="img-ph-desc">Two terminal windows open: (Left) Redis shell showing <code>DEL cart:user2</code> → <code>1</code> then <code>GET cart:user2</code> → <code>(nil)</code>. (Right) MongoDB shell showing <code>db.orders.find({userId:2}).pretty()</code> with the full order document still present. The contrast — cart gone, order permanent — is the key visual.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="checkpoint">
+        <div class="checkpoint-icon">✅</div>
+        <div class="checkpoint-text">
+          <strong>Part 4 Checkpoint</strong>
+          Cart is gone from Redis. Order is alive in MongoDB. The flow is: Redis holds the working state → MongoDB holds the permanent record. Two databases, one journey.
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PART 5: COMPARE ══ -->
+    <section id="p5">
+      <div class="part-header">
+        <div class="part-pill amber">Part 5</div>
+        <div class="part-title">Redis vs MongoDB — The Comparison</div>
+        <div class="part-time">⏱ 5 min</div>
+      </div>
+
+      <div class="callout amber">
+        <span>🧠</span>
+        <div><strong>Stop and think:</strong> You've used both databases. Before reading the table below, try to answer this: <em>why is the cart in Redis but the order in MongoDB?</em> If you can answer that in your own words, you understand the lesson.</div>
+      </div>
+
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th class="topic-h">Topic</th>
+            <th class="redis-h">⚡ Redis (Shopping Cart)</th>
+            <th class="mongo-h">📦 MongoDB (Orders)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>How long does the data last?</strong></td>
+            <td class="redis-cell">Minutes to hours. TTL deletes it automatically.</td>
+            <td class="mongo-cell">Permanently. Survives restarts. Stored on disk.</td>
+          </tr>
+          <tr>
+            <td><strong>What is stored?</strong></td>
+            <td class="redis-cell">One JSON string per user. Simple key → value.</td>
+            <td class="mongo-cell">Full document with nested items array, status history, addresses.</td>
+          </tr>
+          <tr>
+            <td><strong>How fast is it?</strong></td>
+            <td class="redis-cell">Under 1ms. Lives in RAM.</td>
+            <td class="mongo-cell">Milliseconds. Lives on disk with indexing.</td>
+          </tr>
+          <tr>
+            <td><strong>What happens if the container restarts?</strong></td>
+            <td class="redis-cell">Cart is lost. Customer starts a fresh cart.</td>
+            <td class="mongo-cell">Order is safe. Named volume preserves the data.</td>
+          </tr>
+          <tr>
+            <td><strong>Can items vary per record?</strong></td>
+            <td class="redis-cell">The JSON string can contain anything — but Redis doesn't query inside it.</td>
+            <td class="mongo-cell">Yes. Each order document can have a different number of items. MongoDB can query inside the array.</td>
+          </tr>
+          <tr>
+            <td><strong>Cloud equivalent</strong></td>
+            <td class="redis-cell">AWS ElastiCache, Azure Cache for Redis</td>
+            <td class="mongo-cell">MongoDB Atlas, AWS DocumentDB</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Architecture SVG recap -->
+      <svg viewBox="0 0 660 110" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin:1rem 0">
+        <defs><marker id="fa" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(107,127,160,0.5)"/></marker>
+        <marker id="fa-r" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(255,94,122,0.5)"/></marker>
+        <marker id="fa-g" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="rgba(0,229,160,0.5)"/></marker></defs>
+
+        <!-- Customer -->
+        <rect x="10" y="32" width="80" height="46" rx="6" fill="rgba(107,127,160,0.06)" stroke="rgba(107,127,160,0.25)" stroke-width="1.5"/>
+        <text x="50" y="50" font-size="14" text-anchor="middle">👤</text>
+        <text x="50" y="66" font-size="8" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle" font-weight="600">Customer</text>
+        <text x="50" y="75" font-size="6.5" font-family="Sora,sans-serif" fill="rgba(107,127,160,0.5)" text-anchor="middle">Ali / Siti</text>
+
+        <line x1="90" y1="55" x2="120" y2="55" stroke="rgba(107,127,160,0.4)" stroke-width="1.5" marker-end="url(#fa)"/>
+
+        <!-- API -->
+        <rect x="123" y="20" width="100" height="70" rx="6" fill="rgba(255,183,64,0.05)" stroke="rgba(255,183,64,0.25)" stroke-width="1.5"/>
+        <text x="173" y="44" font-size="14" text-anchor="middle">⚙️</text>
+        <text x="173" y="59" font-size="8" font-family="Sora,sans-serif" fill="rgba(255,183,64,0.85)" text-anchor="middle" font-weight="700">Node.js API</text>
+        <text x="173" y="71" font-size="6.5" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">:3000</text>
+        <text x="173" y="82" font-size="6.5" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">(future weeks)</text>
+
+        <!-- Redis arrow (up) -->
+        <line x1="223" y1="42" x2="270" y2="28" stroke="rgba(255,94,122,0.5)" stroke-width="1.5" marker-end="url(#fa-r)"/>
+        <text x="246" y="27" font-size="6.5" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">add/get cart</text>
+
+        <!-- MongoDB arrow (down) -->
+        <line x1="223" y1="68" x2="270" y2="82" stroke="rgba(0,229,160,0.5)" stroke-width="1.5" marker-end="url(#fa-g)"/>
+        <text x="246" y="93" font-size="6.5" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">place order</text>
+
+        <!-- Redis box -->
+        <rect x="273" y="10" width="180" height="46" rx="6" fill="rgba(255,94,122,0.06)" stroke="rgba(255,94,122,0.3)" stroke-width="1.5"/>
+        <text x="363" y="30" font-size="10" text-anchor="middle">⚡</text>
+        <text x="363" y="43" font-size="8.5" font-family="Sora,sans-serif" fill="rgba(255,94,122,0.9)" text-anchor="middle" font-weight="700">Redis — Shopping Cart</text>
+        <text x="363" y="53" font-size="7" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">cart:user1 → JSON · TTL: 30min</text>
+
+        <!-- MongoDB box -->
+        <rect x="273" y="64" width="180" height="46" rx="6" fill="rgba(0,229,160,0.06)" stroke="rgba(0,229,160,0.3)" stroke-width="1.5"/>
+        <text x="363" y="82" font-size="10" text-anchor="middle">📦</text>
+        <text x="363" y="95" font-size="8.5" font-family="Sora,sans-serif" fill="rgba(0,229,160,0.9)" text-anchor="middle" font-weight="700">MongoDB — Order History</text>
+        <text x="363" y="105" font-size="7" font-family="Fira Code,monospace" fill="var(--muted)" text-anchor="middle">orders collection · nested items · status history</text>
+
+        <!-- Checkout arrow (Redis → MongoDB) -->
+        <path d="M 453 33 Q 490 55 453 77" fill="none" stroke="rgba(255,183,64,0.4)" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#fa)"/>
+        <text x="510" y="45" font-size="7" font-family="Sora,sans-serif" fill="var(--amber)" text-anchor="middle" font-weight="600">Checkout:</text>
+        <text x="510" y="57" font-size="7" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">cart → order</text>
+        <text x="510" y="68" font-size="7" font-family="Sora,sans-serif" fill="var(--muted)" text-anchor="middle">then DEL cart</text>
+
+        <!-- MySQL box (faded - already exists) -->
+        <rect x="560" y="32" width="90" height="46" rx="6" fill="rgba(107,127,160,0.04)" stroke="rgba(107,127,160,0.2)" stroke-width="1" stroke-dasharray="3,3"/>
+        <text x="605" y="52" font-size="8" font-family="Sora,sans-serif" fill="rgba(107,127,160,0.5)" text-anchor="middle">🗄️ MySQL</text>
+        <text x="605" y="64" font-size="6.5" font-family="Sora,sans-serif" fill="rgba(107,127,160,0.35)" text-anchor="middle">users · menu</text>
+        <text x="605" y="74" font-size="6.5" font-family="Sora,sans-serif" fill="rgba(107,127,160,0.35)" text-anchor="middle">(from Lab 3)</text>
+      </svg>
+
+    </section>
+
+    <!-- ══ EXTENSION ══ -->
+    <div class="extension-block">
+      <div class="ext-header">
+        <span class="ext-badge">🟣 Advanced Extension</span>
+        <span class="ext-title">TTL experiment + query inside MongoDB — 15 min</span>
+      </div>
+
+      <p style="font-size:0.83rem;color:var(--muted);margin-bottom:0.85rem">Completed Parts 1–5? Try these to push further.</p>
+
+      <p><strong>Experiment 1 — Very short TTL</strong></p>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.5rem">Set a cart with a 10-second TTL, watch it disappear, then try to GET it:</p>
+      <div class="code-block redis-block">
+        <div class="code-header"><span class="code-lang">redis-cli</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cr">SET</span> cart:test <span class="cv">"test data"</span> <span class="cr">EX</span> <span class="cn">10</span>
+<span class="cm"># Run TTL every 2 seconds — watch it count down</span>
+<span class="cr">TTL</span> cart:test
+<span class="cm"># After 10 seconds:</span>
+<span class="cr">GET</span> cart:test   <span class="cm"># returns (nil)</span>
+<span class="cr">TTL</span> cart:test   <span class="cm"># returns -2 (key does not exist)</span></pre>
+      </div>
+
+      <p style="margin-top:1rem"><strong>Experiment 2 — Query by status in MongoDB</strong></p>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.5rem">Insert two more orders, then filter by status — like a WHERE clause, but for documents:</p>
+      <div class="code-block mongo-block">
+        <div class="code-header"><span class="code-lang">mongosh</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm">// Add a delivered order</span>
+db.orders.insertOne({ userId: <span class="cn">3</span>, status: <span class="cv">"delivered"</span>, total: <span class="cn">45.00</span>, items: [], placedAt: <span class="ck">new</span> Date() })
+
+<span class="cm">// Find only pending orders</span>
+db.orders.find({ status: <span class="cv">"pending"</span> }).pretty()
+
+<span class="cm">// Find orders with total above RM 15</span>
+db.orders.find({ total: { <span class="ck">$gt</span>: <span class="cn">15</span> } }).pretty()
+
+<span class="cm">// Count total orders in the collection</span>
+db.orders.countDocuments()</pre>
+      </div>
+
+      <div class="callout purple" style="margin-top:1rem">
+        <span>🏆</span>
+        <div><strong>Challenge:</strong> Can you find all orders that contain "Nasi Lemak" in their items array? Hint: look up <code>$elemMatch</code> in MongoDB. This is the power of document databases — you can query <em>inside</em> nested arrays without a JOIN.</div>
+      </div>
+    </div>
+
+    <!-- ══ WRAP-UP ══ -->
+    <section id="wrapup" style="margin-top:2rem">
+      <div class="part-header">
+        <div class="part-pill blue">Wrap-Up</div>
+        <div class="part-title">What to Remember</div>
+      </div>
+
+      <div class="callout amber">
+        <span>🧠</span>
+        <div>
+          <strong>The one question that captures the whole lab:</strong><br>
+          <em>Why is the cart in Redis but the order in MongoDB?</em><br><br>
+          <strong>Answer:</strong> The cart is <em>temporary and needs to be fast</em> — Redis stores it in RAM with auto-expiry. The order is <em>permanent and has a complex nested structure</em> — MongoDB stores it as a document that can hold a variable number of items and a growing status history, all in one place.
+        </div>
+      </div>
+
+      <table class="info-table" style="margin-top:1rem">
+        <thead><tr><th>Concept</th><th>What it means</th><th>Where it appeared</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Key-Value store</strong></td><td>One name → one value. Redis stores your entire cart as a single string under a key like <code>cart:user1</code>.</td><td>Part 2</td></tr>
+          <tr><td><strong>TTL (Time To Live)</strong></td><td>A countdown timer on a key. Redis deletes it automatically when the timer hits zero. No cleanup code needed.</td><td>Part 2, Step 4</td></tr>
+          <tr><td><strong>Document database</strong></td><td>Each record (document) is a self-contained JSON object. Nested arrays like items and statusHistory live inside the document — no JOIN needed.</td><td>Part 3</td></tr>
+          <tr><td><strong>$set</strong></td><td>MongoDB update operator. Changes a specific field without touching anything else in the document.</td><td>Part 3, Step 7</td></tr>
+          <tr><td><strong>$push</strong></td><td>MongoDB update operator. Appends a new item to an array inside a document. Used for the growing status history.</td><td>Part 3, Step 7</td></tr>
+          <tr><td><strong>Checkout transition</strong></td><td>The moment the cart (Redis, temporary) becomes an order (MongoDB, permanent). DEL clears Redis; insertOne creates the MongoDB record.</td><td>Part 4</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout purple" style="margin-top:1rem">
+        <span>🔮</span>
+        <div><strong>Coming in Week 5:</strong> We split CloudEats into microservices. The Cart Service will own Redis. The Order Service will own MongoDB. The User Service will own MySQL. Each service talks to the others through APIs — they never share a database. You now understand <em>why</em> the services are split the way they are, because you've seen each database's role up close.</div>
+      </div>
+
+      <div class="callout green" style="margin-top:0.75rem">
+        <span>🚪</span>
+        <div>Exit both shells when done: type <code>exit</code> in the Redis shell, and <code>quit</code> or <code>exit</code> in mongosh.</div>
+      </div>
+    </section>
+
+  </main>
+</div><!-- /page-body -->
+
+<footer style="border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;color:var(--muted);font-size:0.78rem;max-width:1100px;margin:0 auto">
+  Cloud Computing · Lab 4.2 · Redis Cart &amp; MongoDB Orders &nbsp;|&nbsp; CloudEats Academy &nbsp;|&nbsp;
+  <a href="../week04/lab1_relational_db_queries.html" style="color:var(--muted);text-decoration:none">← Lab 4.1</a>
+  &nbsp;|&nbsp;
+  <span class="ghp-badge">🐙 GitHub Pages Ready</span>
+  &nbsp;|&nbsp;
+  <a href="#" style="color:var(--muted);text-decoration:none">Week 5 →</a>
+</footer>
+
+<script>
+  function setPace(pace) {
+    document.body.className = 'pace-' + pace;
+    document.querySelectorAll('.pace-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-pace="${pace}"]`).classList.add('active');
+    if (pace === 'beginner') expandAll();
+  }
+
+  function expandAll() {
+    document.querySelectorAll('.step').forEach(s => s.classList.add('open'));
+  }
+  function collapseAll() {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('open'));
+  }
+
+  function toggleStep(el, event) {
+    if (event && !event.target.closest('.step-header')) return;
+    el.classList.toggle('open');
+  }
+  function toggleTrouble(el, event) {
+    if (event && !event.target.closest('.trouble-header')) return;
+    el.classList.toggle('open');
+  }
+
+  function copyCode(btn, event) {
+    if (event) event.stopPropagation();
+    const pre = btn.closest('.code-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'Copied!'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  function toggleCheck(li) {
+    li.classList.toggle('done');
+    li.querySelector('.check-box').textContent = li.classList.contains('done') ? '✓' : '';
+    updateProgress();
+  }
+  function updateProgress() {
+    const items = document.querySelectorAll('#checklistItems li');
+    const done  = document.querySelectorAll('#checklistItems li.done').length;
+    document.getElementById('progressBar').style.width = Math.round((done / items.length) * 100) + '%';
+    document.getElementById('progressCount').textContent = done;
+  }
+
+  const sections  = document.querySelectorAll('section[id], div[id]');
+  const sideLinks = document.querySelectorAll('.sidebar-nav a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 110) current = s.id; });
+    sideLinks.forEach(a => {
+      a.classList.remove('active');
+      if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+    });
+  });
+  /* Default pace is beginner — expand all steps on first load */
+  document.addEventListener('DOMContentLoaded', () => { expandAll(); });
+</script>
+</body>
+</html>

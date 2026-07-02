@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 8.1 · JWT Authentication · CloudEats Academy</title>
+<meta name="description" content="Secure the CloudEats API with JSON Web Tokens. Move secrets to .env, implement jwt.sign() on login, and build authenticateToken middleware to protect routes. Diploma level, three pace tracks.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Lab 8.1 · JWT Authentication · CloudEats Academy">
+<meta property="og:description" content="Protect your Node.js API routes with JWT tokens — the authentication pattern used by every modern web application. Build it step by step with CloudEats.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090f;--bg2:#0d1117;--bg3:#141b27;
+  --surface:#1a2235;--surface2:#1f2c42;--border:#2a3d5a;
+  --accent:#00c8ff;--green:#00e5a0;--amber:#ffb740;
+  --red:#ff5e7a;--purple:#b46ef5;
+  --text:#e8edf5;--muted:#6b7fa0;
+  --beginner:#00e5a0;--average:#00c8ff;--advanced:#b46ef5;
+  --lab-color:#ff5e7a;--radius:10px;--code-bg:#0b1120;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;}
+/* ── Header ── */
+.site-header{background:linear-gradient(135deg,#050d1c,#091628);border-bottom:1px solid var(--border);padding:0 1.5rem;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;gap:1rem;}
+.lab-badge{background:var(--lab-color);color:#fff;font-size:.62rem;font-weight:700;letter-spacing:.1em;padding:.2rem .55rem;border-radius:4px;text-transform:uppercase;}
+.header-title{font-size:.88rem;font-weight:600;}
+.ghp-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.67rem;font-weight:700;padding:.18rem .55rem;background:rgba(255,94,122,.08);border:1px solid rgba(255,94,122,.25);color:var(--red);border-radius:20px;}
+.pace-switcher{display:flex;gap:.3rem;background:var(--bg3);padding:.22rem;border-radius:8px;border:1px solid var(--border);}
+.pace-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.25rem .65rem;border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--muted);transition:all .18s;}
+.pace-btn.active[data-pace="beginner"]{background:rgba(0,229,160,.18);color:var(--beginner);}
+.pace-btn.active[data-pace="average"]{background:rgba(0,200,255,.18);color:var(--average);}
+.pace-btn.active[data-pace="advanced"]{background:rgba(180,110,245,.18);color:var(--advanced);}
+/* ── Hero ── */
+.lab-hero{background:linear-gradient(160deg,#060f20,#07111e);border-bottom:1px solid var(--border);padding:2rem 1.5rem 1.75rem;position:relative;overflow:hidden;}
+.lab-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:350px;height:350px;background:radial-gradient(ellipse,rgba(255,94,122,.06),transparent 70%);pointer-events:none;}
+.hero-inner{max-width:1200px;margin:0 auto;}
+.hero-crumb{font-size:.7rem;color:var(--muted);margin-bottom:.4rem;}
+.hero-crumb a{color:var(--red);text-decoration:none;}
+.lab-hero h1{font-size:clamp(1.25rem,2.5vw,1.75rem);font-weight:800;background:linear-gradient(135deg,#e8edf5 40%,var(--red));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.35rem;}
+.hero-sub{color:var(--muted);font-size:.84rem;margin-bottom:.85rem;}
+.hero-meta{display:flex;flex-wrap:wrap;gap:.55rem;}
+.meta-chip{display:flex;align-items:center;gap:.35rem;font-size:.74rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.22rem .6rem;color:var(--muted);}
+.meta-chip strong{color:var(--text);}
+/* ── Pace guide ── */
+.pace-guide{max-width:1200px;margin:0 auto;padding:1rem 1.5rem 0;}
+.pace-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.65rem;margin-bottom:.5rem;}
+.pace-card{border-radius:8px;padding:.75rem;font-size:.78rem;line-height:1.5;}
+.pace-card.b{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);}
+.pace-card.a{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);}
+.pace-card.adv{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);}
+.pc-label{font-size:.65rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.3rem;}
+.b .pc-label{color:var(--beginner);}.a .pc-label{color:var(--average);}.adv .pc-label{color:var(--advanced);}
+.pc-scope{color:var(--muted);font-size:.76rem;}
+/* ── Layout ── */
+.page-body{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 200px);}
+.sidebar{position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;padding:1.25rem .85rem 2rem;border-right:1px solid var(--border);background:var(--bg2);}
+.sb-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.85rem;}
+.progress-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:.65rem;margin-bottom:1rem;}
+.prog-track{background:var(--bg2);border-radius:3px;height:5px;margin:.4rem 0;}
+.prog-fill{height:5px;border-radius:3px;background:linear-gradient(90deg,var(--red),var(--purple));transition:width .35s;width:0%;}
+.prog-text{font-size:.69rem;color:var(--muted);}
+.prog-text span{color:var(--red);font-weight:600;}
+.sb-nav{list-style:none;}
+.sb-nav li a{display:block;font-size:.73rem;padding:.32rem .6rem;border-radius:5px;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all .13s;margin-bottom:.08rem;}
+.sb-nav li a:hover{background:var(--surface);color:var(--text);}
+.sb-nav li a.active{background:rgba(255,94,122,.08);color:var(--red);border-color:rgba(255,94,122,.18);}
+.sb-section{font-size:.61rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(107,127,160,.45);padding:.6rem .6rem .18rem;list-style:none;}
+.lab-content{padding:1.75rem 1.75rem 4rem;min-width:0;}
+/* ── Part headers ── */
+.part-head{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;border-radius:8px;margin-bottom:1.1rem;}
+.ph-red{background:rgba(255,94,122,.04);border:1px solid rgba(255,94,122,.22);border-left:4px solid var(--red);}
+.ph-green{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.22);border-left:4px solid var(--green);}
+.ph-blue{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.22);border-left:4px solid var(--accent);}
+.ph-purple{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.22);border-left:4px solid var(--purple);}
+.part-pill{font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.16rem .5rem;border-radius:4px;white-space:nowrap;}
+.pp-red{background:rgba(255,94,122,.15);color:var(--red);}
+.pp-green{background:rgba(0,229,160,.15);color:var(--green);}
+.pp-blue{background:rgba(0,200,255,.15);color:var(--accent);}
+.pp-purple{background:rgba(180,110,245,.15);color:var(--purple);}
+.part-title{font-size:.98rem;font-weight:700;}
+.part-time{font-size:.71rem;color:var(--muted);margin-left:auto;white-space:nowrap;}
+/* ── Steps ── */
+.step{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:.85rem;overflow:hidden;}
+.step-header{display:flex;align-items:center;gap:.75rem;padding:.85rem 1rem;cursor:pointer;user-select:none;transition:background .13s;}
+.step-header:hover{background:var(--surface2);}
+.step-num{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;color:var(--muted);}
+.step.open .step-num{border-color:var(--red);color:var(--red);}
+.step-title{font-size:.86rem;font-weight:600;}
+.step-body{display:none;padding:1rem 1rem 1.1rem;border-top:1px solid var(--border);}
+.step.open .step-body{display:block;}
+.step:not(.open) .step-header::after{content:'click to expand';font-size:.62rem;color:var(--muted);opacity:.5;margin-left:auto;letter-spacing:.04em;pointer-events:none;}
+.step.open .step-header::after{content:'';}
+/* ── Code ── */
+code{font-family:'Fira Code',monospace;font-size:.84em;background:var(--code-bg);padding:.08rem .35rem;border-radius:3px;color:var(--green);}
+.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;margin:.75rem 0;overflow:hidden;}
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:.45rem .9rem;background:rgba(0,0,0,.3);border-bottom:1px solid var(--border);}
+.code-lang{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.file-chip{font-size:.68rem;font-weight:600;color:var(--amber);background:rgba(255,183,64,.1);border:1px solid rgba(255,183,64,.25);padding:.1rem .4rem;border-radius:4px;}
+.copy-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.18rem .55rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;transition:all .15s;}
+.copy-btn:hover{background:var(--red);color:#fff;border-color:var(--red);}
+.copy-btn.copied{background:var(--green);color:#000;border-color:var(--green);}
+pre{font-family:'Fira Code',monospace;font-size:.79rem;line-height:1.65;padding:.9rem;overflow-x:auto;color:#c5d5ef;white-space:pre;}
+/* ── Callouts ── */
+.callout{border-radius:8px;padding:.75rem 1rem;margin:.75rem 0;display:flex;gap:.6rem;align-items:flex-start;font-size:.82rem;line-height:1.55;}
+.callout.blue{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);color:#a0d8f0;}
+.callout.green{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);color:#8ee8c4;}
+.callout.amber{background:rgba(255,183,64,.06);border:1px solid rgba(255,183,64,.2);color:#d9c07a;}
+.callout.red{background:rgba(255,94,122,.05);border:1px solid rgba(255,94,122,.2);color:#f0a0b0;}
+.callout-icon{font-size:1rem;flex-shrink:0;line-height:1.4;}
+/* ── Expected output ── */
+.expected-output{background:#060d18;border:1px solid rgba(0,229,160,.2);border-left:3px solid var(--green);border-radius:6px;padding:.65rem .9rem;margin:.65rem 0;}
+.eo-label{font-size:.62rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:.35rem;}
+.eo-body{font-family:'Fira Code',monospace;font-size:.77rem;color:#8ee8c4;line-height:1.6;white-space:pre-wrap;}
+/* ── Trouble ── */
+.trouble{background:rgba(255,94,122,.03);border:1px solid rgba(255,94,122,.2);border-radius:8px;margin:.75rem 0;overflow:hidden;}
+.trouble-header{display:flex;align-items:center;gap:.6rem;padding:.6rem .9rem;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--red);}
+.trouble-body{display:none;padding:.75rem .9rem;border-top:1px solid rgba(255,94,122,.15);font-size:.8rem;line-height:1.6;}
+.trouble.open .trouble-body{display:block;}
+/* ── Why box ── */
+.why-box{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.2);border-left:3px solid var(--accent);border-radius:6px;padding:.7rem 1rem;margin:.75rem 0;font-size:.81rem;color:#a0d8f0;}
+.why-box strong{color:var(--accent);}
+/* ── Checkpoint ── */
+.checkpoint{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.25);border-radius:8px;padding:.85rem 1rem;margin:1.25rem 0;}
+.checkpoint-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:.4rem;}
+/* ── Level blocks ── */
+.level-block{border-radius:8px;padding:.65rem .9rem;margin:.55rem 0;font-size:.8rem;line-height:1.55;}
+.level-block.beginner{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.18);border-left:3px solid var(--beginner);}
+.level-block.average{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.18);border-left:3px solid var(--average);}
+.level-block.advanced{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.18);border-left:3px solid var(--advanced);}
+.level-block-label{font-size:.63rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.25rem;}
+.level-block.beginner .level-block-label{color:var(--beginner);}
+.level-block.average .level-block-label{color:var(--average);}
+.level-block.advanced .level-block-label{color:var(--advanced);}
+/* ── Badge ── */
+.badge{display:inline-block;font-size:.68rem;font-weight:700;padding:.14rem .45rem;border-radius:4px;}
+.badge.green{background:rgba(0,229,160,.15);color:var(--green);}
+.badge.red{background:rgba(255,94,122,.15);color:var(--red);}
+.badge.amber{background:rgba(255,183,64,.15);color:var(--amber);}
+/* ── Summary table ── */
+.summary-table{width:100%;border-collapse:collapse;font-size:.8rem;margin:.85rem 0;}
+.summary-table th{background:var(--bg3);padding:.5rem .75rem;text-align:left;font-size:.72rem;font-weight:700;color:var(--muted);border-bottom:2px solid var(--border);}
+.summary-table td{padding:.5rem .75rem;border-bottom:1px solid var(--border);vertical-align:top;}
+.summary-table tr:last-child td{border-bottom:none;}
+/* ── Expand/collapse bar ── */
+.ctrl-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;padding:.4rem 0;}
+.ctrl-bar span{font-size:.75rem;color:var(--muted);}
+.ctrl-btns{display:flex;gap:.5rem;}
+.ctrl-btn{font-family:'Sora',sans-serif;font-size:.7rem;font-weight:600;padding:.25rem .75rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all .15s;}
+.ctrl-btn:hover{color:var(--accent);border-color:var(--accent);}
+p{font-size:.85rem;line-height:1.7;margin-bottom:.7rem;}
+p:last-child{margin-bottom:0;}
+ul,ol{padding-left:1.4rem;font-size:.84rem;line-height:1.75;margin-bottom:.6rem;}
+strong{color:var(--text);}
+@media(max-width:700px){.page-body{grid-template-columns:1fr;}.sidebar{display:none;}}
+</style>
+</head>
+<body class="pace-beginner">
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="header-inner">
+    <div style="display:flex;align-items:center;gap:.75rem;">
+      <span class="lab-badge">Lab 8.1</span>
+      <span class="header-title">JWT Authentication</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:.75rem;">
+      <span class="ghp-badge">🔒 Security Week</span>
+      <div class="pace-switcher">
+        <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner')">🌱</button>
+        <button class="pace-btn" data-pace="average" onclick="setPace('average')">⚡</button>
+        <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced')">🚀</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<section class="lab-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb"><a href="../week08/index.html">Week 8 Notes</a> › Lab 8.1</div>
+    <h1>🔐 Lab 8.1 — JWT Authentication</h1>
+    <p class="hero-sub">Move secrets to .env, make login return a signed JWT token, and protect your API routes so only logged-in users can access them.</p>
+    <div class="hero-meta">
+      <div class="meta-chip">⏱ <strong>60 min</strong></div>
+      <div class="meta-chip">🧑‍🤝‍🧑 <strong>Pairs</strong></div>
+      <div class="meta-chip">📦 <strong>Prereq:</strong>&nbsp;Lab 7.2 complete, stack running</div>
+      <div class="meta-chip">🛠 <strong>Tools:</strong>&nbsp;jsonwebtoken · dotenv · curl</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PACE GUIDE ── -->
+<div class="pace-guide">
+  <div class="pace-cards">
+    <div class="pace-card b">
+      <div class="pc-label">🌱 Beginner — aim for</div>
+      <div class="pc-scope">Parts 1–3: .env created, JWT returned on login, middleware protecting at least one route. Can explain what 401 means.</div>
+    </div>
+    <div class="pace-card a">
+      <div class="pc-label">⚡ Average — aim for</div>
+      <div class="pc-scope">Full lab (Parts 1–5). All protected routes return 401 without token and 200 with valid token. Can explain why JWT_SECRET must stay in .env.</div>
+    </div>
+    <div class="pace-card adv">
+      <div class="pc-label">🚀 Advanced — aim for</div>
+      <div class="pc-scope">Full lab + challenge extension. Token expiry tested with 1-minute token. Can explain stateless vs stateful authentication trade-offs.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PREREQUISITE CALLOUT ── -->
+<div style="max-width:1200px;margin:0 auto;padding:1rem 1.5rem 0;">
+  <div class="callout blue">
+    <span class="callout-icon">📋</span>
+    <div><strong>Before you start:</strong> You should have completed Lab 7.2 (automated deployment). Your CloudEats Docker stack should be running — confirm with <code>docker compose ps</code> and check all services show <code>Up</code>. The <code>users</code> table in MySQL must exist from Lab 3.2 with at least one registered user.</div>
+  </div>
+</div>
+
+<!-- ── BODY ── -->
+<div class="page-body">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sb-title">Lab Progress</div>
+    <div class="progress-wrap">
+      <div class="prog-text">Completed: <span id="prog-count">0</span> / 15 steps</div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+    </div>
+    <ul class="sb-nav">
+      <li class="sb-section">Part 1</li>
+      <li><a href="#p1">The Security Problem</a></li>
+      <li class="sb-section">Part 2</li>
+      <li><a href="#p2">Install &amp; .env</a></li>
+      <li><a href="#p2b">JWT on Login</a></li>
+      <li class="sb-section">Part 3</li>
+      <li><a href="#p3">Middleware</a></li>
+      <li class="sb-section">Part 4</li>
+      <li><a href="#p4">Protect Routes</a></li>
+      <li class="sb-section">Part 5</li>
+      <li><a href="#p5">Test &amp; Verify</a></li>
+      <li class="sb-section">Links</li>
+      <li><a href="../week08/lab2_rbac_access_control.html">Lab 8.2 →</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main content -->
+  <main class="lab-content">
+
+    <!-- ══ PART 1 ══ -->
+    <section id="p1">
+      <div class="part-head ph-red">
+        <span class="part-pill pp-red">Part 1</span>
+        <span class="part-title">The Security Problem</span>
+        <span class="part-time">⏱ 10 min</span>
+      </div>
+
+      <div class="ctrl-bar">
+        <span><strong style="color:var(--text)">15 steps</strong> across 5 parts</span>
+        <div class="ctrl-btns">
+          <button class="ctrl-btn" onclick="expandAll()">↓ Expand All</button>
+          <button class="ctrl-btn" onclick="collapseAll()">↑ Collapse All</button>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p1-1">
+        <div class="step-header" onclick="toggleStep('step-p1-1')">
+          <div class="step-num">1</div>
+          <div class="step-title">Understand what is currently unprotected</div>
+        </div>
+        <div class="step-body">
+          <p>Right now, <strong>anyone on the network can call any CloudEats API endpoint without proving who they are</strong>. There is no login check. Try this in your terminal:</p>
+
+          <div class="level-block beginner">
+            <div class="level-block-label">🌱 Beginner — what is <code>curl</code>?</div>
+            <code>curl</code> is a command-line tool that sends HTTP requests. We use it to test APIs without a browser. It comes pre-installed on Linux (your VM).
+          </div>
+
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>curl http://localhost:8000/api/orders/1</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ You will see — any order data returned with no login</div>
+            <div class="eo-body">{"id":1,"userId":1,"items":[...],"total":12.50}   ← returned without any login!</div>
+          </div>
+
+          <p style="margin-top:.65rem;">This is the problem we are fixing today. By the end of this lab, that same request will return:</p>
+          <div class="expected-output" style="border-color:rgba(255,94,122,.3);">
+            <div class="eo-label" style="color:var(--red);">🔒 After this lab — protected</div>
+            <div class="eo-body" style="color:#f0a0b0;">{"error":"No token provided"}   ← HTTP 401</div>
+          </div>
+
+          <div class="why-box">
+            <strong>Why does this matter?</strong> Right now any script, bot, or malicious user can place orders as any user ID, read anyone's order history, and access every API endpoint. This is a critical security hole in any real application.
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ══ PART 2 ══ -->
+    <section id="p2">
+      <div class="part-head ph-blue">
+        <span class="part-pill pp-blue">Part 2</span>
+        <span class="part-title">Install Packages &amp; Create .env</span>
+        <span class="part-time">⏱ 12 min</span>
+      </div>
+
+      <div class="step open" id="step-p2-1">
+        <div class="step-header" onclick="toggleStep('step-p2-1')">
+          <div class="step-num">2</div>
+          <div class="step-title">Navigate to user-service and check your location</div>
+        </div>
+        <div class="step-body">
+          <div class="level-block beginner">
+            <div class="level-block-label">🌱 Beginner — always confirm where you are</div>
+            Before running any command, check you are in the right folder. The wrong folder is the most common cause of "file not found" errors.
+          </div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>pwd
+cd ~/cloudeats-app/services/user-service
+pwd</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Expected output</div>
+            <div class="eo-body">/home/student/cloudeats-app/services/user-service</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p2-2">
+        <div class="step-header" onclick="toggleStep('step-p2-2')">
+          <div class="step-num">3</div>
+          <div class="step-title">Install jsonwebtoken and dotenv</div>
+        </div>
+        <div class="step-body">
+          <p><code>jsonwebtoken</code> creates and verifies JWT tokens. <code>dotenv</code> loads variables from a <code>.env</code> file into <code>process.env</code> so your code can use them without hardcoding values.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>npm install jsonwebtoken dotenv</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Expected output</div>
+            <div class="eo-body">added 2 packages, and audited ... packages in Xs
+found 0 vulnerabilities</div>
+          </div>
+          <div class="trouble">
+            <div class="trouble-header" onclick="toggleTrouble(this.closest('.trouble'),event)">⚠️ Trouble: "npm: command not found"</div>
+            <div class="trouble-body">You are not inside the user-service folder. Run <code>cd ~/cloudeats-app/services/user-service</code> and try again. The <code>package.json</code> file must be in the current directory.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p2-3">
+        <div class="step-header" onclick="toggleStep('step-p2-3')">
+          <div class="step-num">4</div>
+          <div class="step-title">Create the .env file with your secrets</div>
+        </div>
+        <div class="step-body">
+          <p>A <code>.env</code> file (pronounced "dot env") stores configuration values and secrets. It is <strong>never committed to Git</strong>. The file lives on the server only.</p>
+          <div class="level-block beginner">
+            <div class="level-block-label">🌱 Beginner — what is a .env file?</div>
+            Think of it as a private notepad that your application reads at startup. You put secrets in here (like passwords and API keys) instead of writing them directly in your code.
+          </div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>nano .env</pre>
+          </div>
+          <p>Copy the entire block below into the file, then press <strong>Ctrl+O</strong> (save), <strong>Enter</strong>, <strong>Ctrl+X</strong> (exit):</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">.env</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre># CloudEats User Service — secrets
+# DO NOT COMMIT THIS FILE TO GIT
+
+PORT=3001
+NODE_ENV=development
+
+DB_HOST=mysql
+DB_USER=cloudeats_user
+DB_PASSWORD=cloudeats_pass
+DB_NAME=cloudeats
+
+JWT_SECRET=cloudeats-super-secret-key-change-in-production
+JWT_EXPIRES_IN=24h</pre>
+          </div>
+          <div class="callout amber">
+            <span class="callout-icon">⚠️</span>
+            <div><strong>Important:</strong> In a real project, <code>JWT_SECRET</code> should be a long random string (32+ characters). Never use a predictable phrase. For this lab a simple value is fine for learning, but remember to change it before any public deployment.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p2-4">
+        <div class="step-header" onclick="toggleStep('step-p2-4')">
+          <div class="step-num">5</div>
+          <div class="step-title">Add .env to .gitignore</div>
+        </div>
+        <div class="step-body">
+          <p>If <code>.env</code> is committed to GitHub, anyone who reads your repository can steal your <code>JWT_SECRET</code> and forge tokens for any user. Prevent this by listing <code>.env</code> in <code>.gitignore</code>:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>echo ".env" >> .gitignore
+cat .gitignore</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ .gitignore should contain .env</div>
+            <div class="eo-body">node_modules/
+.env</div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ══ PART 2B — JWT on Login ══ -->
+    <section id="p2b">
+      <div class="part-head ph-blue">
+        <span class="part-pill pp-blue">Part 2B</span>
+        <span class="part-title">Make Login Return a JWT Token</span>
+        <span class="part-time">⏱ 15 min</span>
+      </div>
+
+      <div class="step open" id="step-p2b-1">
+        <div class="step-header" onclick="toggleStep('step-p2b-1')">
+          <div class="step-num">6</div>
+          <div class="step-title">Add JWT imports to server.js</div>
+        </div>
+        <div class="step-body">
+          <p>Open <code>server.js</code> in the user-service. Find the existing <code>require</code> statements at the very top of the file and add the three new lines shown below:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — top of file</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>const express = require('express');
+const mysql   = require('mysql2');
+const bcrypt  = require('bcrypt');
+const cors    = require('cors');
+
+// ── ADD THESE THREE LINES ──
+const jwt = require('jsonwebtoken');
+require('dotenv').config();  // must be before any process.env use
+// ──────────────────────────
+
+const app  = express();
+const PORT = process.env.PORT || 3001;</pre>
+          </div>
+          <div class="level-block beginner">
+            <div class="level-block-label">🌱 Beginner — where exactly does this go?</div>
+            Open <code>server.js</code> with <code>nano server.js</code>. The very first lines of the file start with <code>const express = require(...);</code>. Add the new lines after the last existing <code>require()</code> call but before <code>const app = express();</code>.
+          </div>
+          <div class="callout red">
+            <span class="callout-icon">⚠️</span>
+            <div><strong><code>require('dotenv').config()</code> must come before any <code>process.env</code> access.</strong> If you load it later, variables will be undefined when the database connection is created.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p2b-2">
+        <div class="step-header" onclick="toggleStep('step-p2b-2')">
+          <div class="step-num">7</div>
+          <div class="step-title">Update database connection to use .env variables</div>
+        </div>
+        <div class="step-body">
+          <p>Find your existing <code>mysql.createConnection</code> block and replace the hardcoded values with <code>process.env</code> references:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — database connection</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>const db = mysql.createConnection({
+  host:     process.env.DB_HOST,
+  user:     process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME
+});</pre>
+          </div>
+          <div class="why-box">
+            <strong>Why?</strong> Hardcoded database passwords in source code are one of the most common causes of data breaches. If the code is on GitHub (even a private repo), the credentials are exposed. Environment variables keep secrets out of version control.
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p2b-3">
+        <div class="step-header" onclick="toggleStep('step-p2b-3')">
+          <div class="step-num">8</div>
+          <div class="step-title">Update the login endpoint to sign and return a JWT</div>
+        </div>
+        <div class="step-body">
+          <p>Find your existing <code>POST /api/auth/login</code> endpoint. Inside the callback, after you verify the bcrypt password, replace the response with this updated block that creates and returns a JWT:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — login endpoint (password verified block)</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>// --- ADD THIS AFTER bcrypt.compare() succeeds ---
+
+// Create JWT token — payload contains user identity
+const token = jwt.sign(
+  {
+    userId: user.id,
+    email:  user.email,
+    name:   user.name
+  },
+  process.env.JWT_SECRET,            // secret key from .env
+  { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+);
+
+// Respond with token — do NOT include the password!
+return res.json({
+  message: 'Login successful',
+  token:   token,
+  user: {
+    id:    user.id,
+    email: user.email,
+    name:  user.name
+  }
+});</pre>
+          </div>
+
+          <div class="level-block beginner">
+            <div class="level-block-label">🌱 Beginner — what is jwt.sign() doing?</div>
+            <p><code>jwt.sign(payload, secret, options)</code> creates a token:</p>
+            <ul>
+              <li><strong>payload</strong> = the data to put inside the token (userId, email)</li>
+              <li><strong>secret</strong> = the private key used to create the signature</li>
+              <li><strong>options</strong> = settings, like when it expires</li>
+            </ul>
+            The token is a long string starting with <code>eyJ</code>. The client stores this and sends it with every future request.
+          </div>
+
+          <div class="trouble">
+            <div class="trouble-header" onclick="toggleTrouble(this.closest('.trouble'),event)">⚠️ Trouble: Where exactly do I paste this?</div>
+            <div class="trouble-body">Look for the line <code>const isValidPassword = await bcrypt.compare(...);</code>. Just below the <code>if (!isValidPassword)</code> return block (that sends 401 for wrong password), paste this new block. It runs only when the password is correct.</div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ══ PART 3 ══ -->
+    <section id="p3">
+      <div class="part-head ph-green">
+        <span class="part-pill pp-green">Part 3</span>
+        <span class="part-title">Build the authenticateToken Middleware</span>
+        <span class="part-time">⏱ 10 min</span>
+      </div>
+
+      <div class="step open" id="step-p3-1">
+        <div class="step-header" onclick="toggleStep('step-p3-1')">
+          <div class="step-num">9</div>
+          <div class="step-title">Write the middleware function</div>
+        </div>
+        <div class="step-body">
+          <p>A <strong>middleware</strong> (a function that runs before a route handler) checks the token on every protected request. Add this function in <code>server.js</code> <strong>before any route definitions</strong> but after your imports and database setup:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — add before route definitions</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>// ── JWT AUTHENTICATION MIDDLEWARE ──
+function authenticateToken(req, res, next) {
+  // Get the Authorization header: "Bearer eyJ..."
+  const authHeader = req.headers['authorization'];
+  const token      = authHeader && authHeader.split(' ')[1];
+
+  // No token at all → 401 Unauthorized
+  if (!token) {
+    return res.status(401).json({ error: 'No token provided. Please log in.' });
+  }
+
+  // Verify the token using our secret
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      // Token is invalid OR has expired
+      return res.status(401).json({ error: 'Invalid or expired token. Please log in again.' });
+    }
+    // Token is valid — attach decoded user info to the request
+    req.user = decoded;  // { userId, email, name, iat, exp }
+    next();              // pass control to the actual route handler
+  });
+}</pre>
+          </div>
+
+          <div class="level-block beginner">
+            <div class="level-block-label">🌱 Beginner — what does "middleware" mean?</div>
+            Middleware is like a security guard standing at the door of each protected room. Before you can enter (reach the route handler), you must show your ID (the JWT). If you have no ID or it's fake, the guard turns you away. If it's valid, the guard waves you through.
+          </div>
+
+          <div class="level-block average">
+            <div class="level-block-label">⚡ Average — the next() function</div>
+            <code>next()</code> is what passes control to the next function in Express's chain. Calling <code>next()</code> at the end of middleware lets the request continue. If you call <code>res.json()</code> instead, the chain stops — the route handler never runs. This is how we block unauthorised requests.
+          </div>
+
+          <div class="level-block advanced">
+            <div class="level-block-label">🚀 Advanced — why split(' ')[1]?</div>
+            The Authorization header value looks like <code>Bearer eyJ...</code>. We split on the space to get just the token string (index 1). The word "Bearer" is a token type from the OAuth 2.0 standard (RFC 6750) — it signals this is a bearer token, meaning whoever holds it is allowed in.
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ══ PART 4 ══ -->
+    <section id="p4">
+      <div class="part-head ph-purple">
+        <span class="part-pill pp-purple">Part 4</span>
+        <span class="part-title">Apply Middleware to Protected Routes</span>
+        <span class="part-time">⏱ 10 min</span>
+      </div>
+
+      <div class="step open" id="step-p4-1">
+        <div class="step-header" onclick="toggleStep('step-p4-1')">
+          <div class="step-num">10</div>
+          <div class="step-title">Protect order and cart routes</div>
+        </div>
+        <div class="step-body">
+          <p>Find your existing order and cart route definitions and add <code>authenticateToken</code> as a second argument before the handler function:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — protecting routes</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>// ── BEFORE (unprotected) ──
+app.get('/api/orders/:userId',  (req, res) => { /* ... */ });
+app.post('/api/orders',         (req, res) => { /* ... */ });
+app.get('/api/cart/:userId',    (req, res) => { /* ... */ });
+
+// ── AFTER (protected by JWT middleware) ──
+app.get('/api/orders/:userId',  authenticateToken, (req, res) => { /* ... */ });
+app.post('/api/orders',         authenticateToken, (req, res) => { /* ... */ });
+app.get('/api/cart/:userId',    authenticateToken, (req, res) => { /* ... */ });</pre>
+          </div>
+          <p style="margin-top:.6rem;">Also add an ownership check inside the GET /api/orders/:userId handler so users can only see their own orders:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="file-chip">server.js — ownership check inside handler</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>app.get('/api/orders/:userId', authenticateToken, (req, res) => {
+  const userId = parseInt(req.params.userId);
+
+  // ← ADD THIS: user can only read their own orders
+  if (req.user.userId !== userId) {
+    return res.status(403).json({
+      error: 'Access denied. You can only view your own orders.'
+    });
+  }
+
+  // ... existing code to query and return orders ...
+});</pre>
+          </div>
+
+          <div class="level-block beginner">
+            <div class="level-block-label">🌱 Beginner — leave public routes alone</div>
+            Do <strong>NOT</strong> add <code>authenticateToken</code> to routes that should be public: <code>GET /api/menu</code> (anyone should see the menu), <code>POST /api/auth/login</code> (users need to log in to get a token), and <code>POST /api/auth/register</code>. Only protect routes that involve private user data.
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p4-2">
+        <div class="step-header" onclick="toggleStep('step-p4-2')">
+          <div class="step-num">11</div>
+          <div class="step-title">Rebuild and restart the container</div>
+        </div>
+        <div class="step-body">
+          <p>The code changes need to be baked into the Docker container:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal — from ~/cloudeats-app</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>cd ~/cloudeats-app
+docker compose build user-service
+docker compose up -d user-service</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Expected — service restarts cleanly</div>
+            <div class="eo-body">[+] Building ... (no errors)
+[+] Running 1/1
+ ✔ Container cloudeats-user-service  Started</div>
+          </div>
+          <div class="trouble">
+            <div class="trouble-header" onclick="toggleTrouble(this.closest('.trouble'),event)">⚠️ Trouble: Build errors about cannot find module 'jsonwebtoken'</div>
+            <div class="trouble-body">The npm install was done on the host, but the Docker container needs it too. The Dockerfile's <code>RUN npm install</code> step must run during the build. If you see this error, make sure <code>package.json</code> lists jsonwebtoken and dotenv, then rebuild: <code>docker compose build --no-cache user-service</code>.</div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ══ PART 5 ══ -->
+    <section id="p5">
+      <div class="part-head ph-red">
+        <span class="part-pill pp-red">Part 5</span>
+        <span class="part-title">Test and Verify — The Key Checkpoint</span>
+        <span class="part-time">⏱ 13 min</span>
+      </div>
+
+      <div class="step open" id="step-p5-1">
+        <div class="step-header" onclick="toggleStep('step-p5-1')">
+          <div class="step-num">12</div>
+          <div class="step-title">Test: no token → 401</div>
+        </div>
+        <div class="step-body">
+          <p>Try a protected route with no token. It must now return 401:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>curl -i http://localhost:8000/api/orders/1</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Expected — 401 Unauthorized</div>
+            <div class="eo-body">HTTP/1.1 401 Unauthorized
+{"error":"No token provided. Please log in."}</div>
+          </div>
+          <div class="callout green">
+            <span class="callout-icon">🎯</span>
+            <div>If you see 401, your middleware is working. The route is now protected.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p5-2">
+        <div class="step-header" onclick="toggleStep('step-p5-2')">
+          <div class="step-num">13</div>
+          <div class="step-title">Log in and capture the JWT token</div>
+        </div>
+        <div class="step-body">
+          <p>Log in with an existing account to receive a JWT (use an email + password you registered in Lab 3.2):</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>curl -s -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"your@email.com","password":"yourpassword"}'</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Expected — login returns token</div>
+            <div class="eo-body">{"message":"Login successful","token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoidXNlckBleGFtcGxlLmNvbSJ9.XXX","user":{"id":1,"email":"..."}}</div>
+          </div>
+          <p style="margin-top:.6rem;">Copy the token string (the <code>eyJ...</code> part only). Save it as a shell variable for convenience:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal — save token to variable</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEuLi4XXX"
+# Replace the above with your actual token from the login response</pre>
+          </div>
+          <div class="trouble">
+            <div class="trouble-header" onclick="toggleTrouble(this.closest('.trouble'),event)">⚠️ Trouble: Login returns "Invalid email or password"</div>
+            <div class="trouble-body">Check that you are using credentials that exist in the MySQL users table. If you are not sure, connect to MySQL and list users: <code>docker exec -it cloudeats-mysql mysql -ucloudeats_user -pcloudeats_pass cloudeats -e "SELECT id, email FROM users;"</code></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p5-3">
+        <div class="step-header" onclick="toggleStep('step-p5-3')">
+          <div class="step-num">14</div>
+          <div class="step-title">Test: valid token → 200</div>
+        </div>
+        <div class="step-body">
+          <p>Now repeat the protected request, this time including the JWT in the Authorization header:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>curl -i http://localhost:8000/api/orders/1 \
+  -H "Authorization: Bearer $TOKEN"</pre>
+          </div>
+          <div class="expected-output">
+            <div class="eo-label">✅ Expected — 200 OK with data</div>
+            <div class="eo-body">HTTP/1.1 200 OK
+{"id":1,"userId":1,"items":[...],"total":12.50}</div>
+          </div>
+          <div class="callout amber">
+            <span class="callout-icon">⚠️</span>
+            <div><strong>Common mistake:</strong> <code>Authorization: eyJ...</code> (missing <code>Bearer </code> prefix). The format must be exactly: <code>Bearer </code> followed by a space then the token. If you see "invalid token" double-check you included <code>Bearer </code>.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p5-4">
+        <div class="step-header" onclick="toggleStep('step-p5-4')">
+          <div class="step-num">15</div>
+          <div class="step-title">Decode your token at jwt.io (optional visual check)</div>
+        </div>
+        <div class="step-body">
+          <p>Visit <a href="https://jwt.io" target="_blank" rel="noopener">jwt.io</a> in a browser, paste your token into the debugger, and you will see the three parts decoded. You can confirm your userId, email, and expiry are stored correctly in the payload.</p>
+          <div class="level-block advanced">
+            <div class="level-block-label">🚀 Advanced — test token expiry</div>
+            Temporarily change <code>JWT_EXPIRES_IN=1m</code> in your .env file, rebuild the container, log in again, wait 65 seconds, then try the authenticated request. You should receive 401 "Invalid or expired token". Reset back to 24h when done.
+          </div>
+        </div>
+      </div>
+
+      <!-- Key checkpoint -->
+      <div class="checkpoint">
+        <div class="checkpoint-label">🎯 Lab 8.1 Key Checkpoint — all three must pass</div>
+        <ul>
+          <li>✅ <code>curl http://localhost:8000/api/orders/1</code> (no token) → <span class="badge red">401</span></li>
+          <li>✅ <code>curl</code> with <code>Authorization: Bearer [valid token]</code> → <span class="badge green">200</span></li>
+          <li>✅ <code>curl</code> with <code>Authorization: Bearer [tampered/expired token]</code> → <span class="badge red">401</span></li>
+        </ul>
+        <p style="margin-top:.6rem;font-size:.81rem;">When all three pass, your authentication layer is working correctly. Move on to Lab 8.2 to add role-based access control.</p>
+      </div>
+
+    </section>
+
+    <!-- ══ SUMMARY ══ -->
+    <section style="margin-top:1.75rem;">
+      <div class="part-head ph-green" style="margin-bottom:1rem;">
+        <span class="part-pill pp-green">Summary</span>
+        <span class="part-title">What You Built</span>
+      </div>
+      <table class="summary-table">
+        <thead><tr><th>Security practice</th><th>What we did</th><th>Why it matters</th></tr></thead>
+        <tbody>
+          <tr><td>Secret management</td><td>Moved DB password and JWT_SECRET to .env</td><td>Secrets are not in Git; can be changed without code changes</td></tr>
+          <tr><td>JWT token issuance</td><td><code>jwt.sign()</code> on successful login</td><td>Client gets a self-contained proof of identity</td></tr>
+          <tr><td>Route protection</td><td><code>authenticateToken</code> middleware on private routes</td><td>Unauthenticated requests are rejected before reaching the handler</td></tr>
+          <tr><td>Ownership check</td><td><code>req.user.userId !== userId</code> guard</td><td>User A cannot read User B's orders even with a valid token</td></tr>
+          <tr><td>Token expiry</td><td><code>expiresIn: '24h'</code></td><td>Stolen tokens stop working automatically after 24 hours</td></tr>
+        </tbody>
+      </table>
+
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.25rem;">
+        <a href="../week08/index.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;background:rgba(255,183,64,.08);border:1px solid rgba(255,183,64,.25);color:var(--amber);padding:.4rem .9rem;border-radius:7px;text-decoration:none;">← Week 8 Notes</a>
+        <a href="../week08/lab2_rbac_access_control.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;background:rgba(180,110,245,.1);border:1px solid rgba(180,110,245,.3);color:var(--purple);padding:.4rem .9rem;border-radius:7px;text-decoration:none;">Lab 8.2: RBAC →</a>
+      </div>
+    </section>
+
+  </main>
+</div><!-- /page-body -->
+
+<script>
+let completedSteps = 0;
+const TOTAL = 15;
+
+function toggleStep(id, event) {
+  if (event && !event.target.closest('.step-header')) return;
+  const el = document.getElementById(id);
+  if (!el) return;
+  const wasOpen = el.classList.contains('open');
+  el.classList.toggle('open');
+  if (!wasOpen) {
+    completedSteps = Math.min(completedSteps + 1, TOTAL);
+    updateProgress();
+  }
+}
+function toggleTrouble(el, event) {
+  if (event && !event.target.closest('.trouble-header')) return;
+  el.classList.toggle('open');
+}
+function copyCode(btn, event) {
+  if (event) event.stopPropagation();
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+function expandAll() {
+  document.querySelectorAll('.step').forEach(s => s.classList.add('open'));
+  completedSteps = TOTAL; updateProgress();
+}
+function collapseAll() {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('open'));
+}
+function updateProgress() {
+  const pct = Math.round((completedSteps / TOTAL) * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-count').textContent = completedSteps;
+}
+function setPace(pace) {
+  document.body.className = 'pace-' + pace;
+  document.querySelectorAll('.pace-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-pace="${pace}"]`).classList.add('active');
+  if (pace === 'beginner') expandAll();
+}
+document.addEventListener('DOMContentLoaded', () => { expandAll(); setPace('beginner'); });
+</script>
+</body>
+</html>

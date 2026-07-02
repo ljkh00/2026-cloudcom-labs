@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 7 · CI/CD and Infrastructure as Code · CloudEats Academy</title>
+<meta name="description" content="Learn Infrastructure as Code with Docker Compose, build a complete GitHub Actions CI/CD pipeline, and automate zero-downtime deployments for the CloudEats food ordering app.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Week 7 · CI/CD and Infrastructure as Code · CloudEats Academy">
+<meta property="og:description" content="Define your entire cloud stack in one file, then wire GitHub Actions to auto-deploy every passing commit — the DevOps workflow used at every modern software company.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090f;--bg2:#0d1117;--bg3:#141b27;
+  --surface:#1a2235;--surface2:#1f2c42;--border:#2a3d5a;
+  --accent:#00c8ff;--green:#00e5a0;--amber:#ffb740;
+  --red:#ff5e7a;--purple:#b46ef5;
+  --text:#e8edf5;--muted:#6b7fa0;
+  --beginner:#00e5a0;--average:#00c8ff;--advanced:#b46ef5;
+  --week-color:#ffb740;--radius:10px;--code-bg:#0b1120;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;}
+/* ── Header ── */
+.site-header{background:linear-gradient(135deg,#050d1c,#091628);border-bottom:1px solid var(--border);padding:0 2rem;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:58px;gap:1rem;}
+.header-left{display:flex;align-items:center;gap:.75rem;}
+.week-badge{background:var(--week-color);color:#000;font-size:.65rem;font-weight:700;letter-spacing:.1em;padding:.2rem .55rem;border-radius:4px;text-transform:uppercase;}
+.header-title{font-size:.9rem;font-weight:600;}
+.ghp-badge{display:inline-flex;align-items:center;gap:.35rem;font-size:.68rem;font-weight:700;padding:.2rem .6rem;background:rgba(255,183,64,.1);border:1px solid rgba(255,183,64,.3);color:var(--amber);border-radius:20px;}
+.week-nav{display:flex;gap:.4rem;align-items:center;}
+.week-nav a{font-size:.68rem;font-weight:600;padding:.2rem .55rem;border:1px solid var(--border);border-radius:4px;color:var(--muted);text-decoration:none;transition:all .15s;}
+.week-nav a:hover{color:var(--accent);border-color:var(--accent);}
+.week-nav a.current{background:rgba(255,183,64,.1);color:var(--amber);border-color:rgba(255,183,64,.3);}
+/* ── Hero ── */
+.page-hero{background:linear-gradient(160deg,#0a0e18,#0f1620);border-bottom:1px solid var(--border);padding:2.5rem 2rem 2rem;position:relative;overflow:hidden;}
+.page-hero::before{content:'';position:absolute;top:-80px;right:-80px;width:420px;height:420px;background:radial-gradient(ellipse,rgba(255,183,64,.07),transparent 70%);pointer-events:none;}
+.hero-inner{max-width:1100px;margin:0 auto;}
+.hero-crumb{font-size:.72rem;color:var(--muted);margin-bottom:.5rem;}
+.hero-crumb span{color:var(--amber);}
+.page-hero h1{font-size:clamp(1.5rem,3vw,2.1rem);font-weight:800;background:linear-gradient(135deg,#e8edf5 40%,var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.5rem;}
+.hero-sub{color:var(--muted);font-size:.88rem;margin-top:.3rem;}
+.hero-meta{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1rem;}
+.meta-chip{display:flex;align-items:center;gap:.4rem;font-size:.78rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.28rem .7rem;color:var(--muted);}
+.meta-chip strong{color:var(--text);}
+.pace-bar{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.25rem;align-items:center;}
+.pace-bar span{font-size:.73rem;color:var(--muted);margin-right:.25rem;}
+.pace-btn{font-family:'Sora',sans-serif;font-size:.75rem;font-weight:700;padding:.3rem .85rem;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);cursor:pointer;transition:all .18s;}
+.pace-btn.active[data-pace="beginner"]{background:rgba(0,229,160,.12);color:var(--beginner);border-color:rgba(0,229,160,.4);}
+.pace-btn.active[data-pace="average"]{background:rgba(0,200,255,.12);color:var(--average);border-color:rgba(0,200,255,.4);}
+.pace-btn.active[data-pace="advanced"]{background:rgba(180,110,245,.12);color:var(--advanced);border-color:rgba(180,110,245,.4);}
+/* ── Tabs ── */
+.tab-nav{max-width:1100px;margin:0 auto;padding:1.5rem 2rem 0;display:flex;gap:.4rem;flex-wrap:wrap;}
+.tab-btn{font-family:'Sora',sans-serif;font-size:.78rem;font-weight:600;padding:.5rem 1rem;border:1px solid var(--border);border-radius:8px 8px 0 0;background:var(--bg3);color:var(--muted);cursor:pointer;transition:all .15s;border-bottom:none;}
+.tab-btn:hover{color:var(--text);background:var(--surface);}
+.tab-btn.active{background:var(--surface);color:var(--amber);border-color:var(--border);border-bottom:1px solid var(--surface);position:relative;z-index:1;}
+.tab-content{max-width:1100px;margin:0 auto;padding:0 2rem 4rem;}
+.tab-panel{display:none;background:var(--surface);border:1px solid var(--border);border-radius:0 var(--radius) var(--radius) var(--radius);padding:2rem;margin-top:-1px;}
+.tab-panel.active{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+/* ── Section headers ── */
+.sec-header{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;padding-bottom:.6rem;border-bottom:1px solid var(--border);}
+.sec-pill{font-size:.67rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.18rem .55rem;border-radius:20px;white-space:nowrap;}
+.sec-pill.amber{background:rgba(255,183,64,.1);color:var(--amber);border:1px solid rgba(255,183,64,.2);}
+.sec-pill.blue{background:rgba(0,200,255,.1);color:var(--accent);border:1px solid rgba(0,200,255,.2);}
+.sec-pill.green{background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.2);}
+.sec-pill.purple{background:rgba(180,110,245,.1);color:var(--purple);border:1px solid rgba(180,110,245,.2);}
+.sec-pill.red{background:rgba(255,94,122,.1);color:var(--red);border:1px solid rgba(255,94,122,.2);}
+.sec-title{font-size:1.1rem;font-weight:700;}
+.sec-time{font-size:.73rem;color:var(--muted);margin-left:auto;}
+.section-divider{border:none;border-top:1px solid var(--border);margin:2rem 0;}
+/* ── Typography ── */
+p{margin-bottom:.75rem;font-size:.86rem;line-height:1.7;}
+p:last-child{margin-bottom:0;}
+strong{color:var(--text);font-weight:600;}
+a{color:var(--accent);}a:hover{text-decoration:underline;}
+/* ── Code ── */
+code{font-family:'Fira Code',monospace;font-size:.84em;background:var(--code-bg);padding:.08rem .35rem;border-radius:3px;color:var(--green);}
+.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;margin:.75rem 0;overflow:hidden;}
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:.45rem .9rem;background:rgba(0,0,0,.3);border-bottom:1px solid var(--border);}
+.code-lang{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.copy-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.18rem .55rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;transition:all .15s;}
+.copy-btn:hover{background:var(--amber);color:#000;border-color:var(--amber);}
+.copy-btn.copied{background:var(--green);color:#000;border-color:var(--green);}
+pre{font-family:'Fira Code',monospace;font-size:.79rem;line-height:1.65;padding:.9rem;overflow-x:auto;color:#c5d5ef;white-space:pre;}
+.ck{color:var(--accent);}.cv{color:var(--green);}.cm{color:var(--muted);font-style:italic;}.cp{color:var(--purple);}.ca{color:var(--amber);}
+/* ── Callouts ── */
+.callout{border-radius:8px;padding:.75rem 1rem;margin:.75rem 0;display:flex;gap:.6rem;align-items:flex-start;font-size:.82rem;line-height:1.55;}
+.callout.blue{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);color:#a0d8f0;}
+.callout.green{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);color:#8ee8c4;}
+.callout.amber{background:rgba(255,183,64,.06);border:1px solid rgba(255,183,64,.2);color:#d9c07a;}
+.callout.purple{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);color:#c5a8f5;}
+.callout.red{background:rgba(255,94,122,.05);border:1px solid rgba(255,94,122,.2);color:#f0a0b0;}
+.callout-icon{font-size:1rem;flex-shrink:0;line-height:1.4;}
+/* ── Why box ── */
+.why-box{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.2);border-left:3px solid var(--accent);border-radius:6px;padding:.7rem 1rem;margin:.75rem 0;font-size:.81rem;color:#a0d8f0;}
+.why-box strong{color:var(--accent);}
+/* ── Pace-level blocks ── */
+.level-row{display:flex;flex-wrap:wrap;gap:.4rem;margin:.75rem 0;}
+.level-pill{font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.15rem .5rem;border-radius:20px;white-space:nowrap;}
+.level-pill.beginner{background:rgba(0,229,160,.12);color:var(--beginner);border:1px solid rgba(0,229,160,.3);}
+.level-pill.average{background:rgba(0,200,255,.12);color:var(--average);border:1px solid rgba(0,200,255,.3);}
+.level-pill.advanced{background:rgba(180,110,245,.12);color:var(--advanced);border:1px solid rgba(180,110,245,.3);}
+.level-block{border-radius:8px;padding:.75rem 1rem;margin:.6rem 0;font-size:.82rem;line-height:1.55;}
+.level-block.beginner{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.18);border-left:3px solid var(--beginner);}
+.level-block.average{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.18);border-left:3px solid var(--average);}
+.level-block.advanced{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.18);border-left:3px solid var(--advanced);}
+.level-block-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem;}
+.level-block.beginner .level-block-label{color:var(--beginner);}
+.level-block.average .level-block-label{color:var(--average);}
+.level-block.advanced .level-block-label{color:var(--advanced);}
+/* ── Card grids ── */
+.card-grid{display:grid;gap:.85rem;margin:.85rem 0;}
+.card-grid.cols2{grid-template-columns:repeat(2,1fr);}
+.card-grid.cols3{grid-template-columns:repeat(3,1fr);}
+.concept-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem;}
+.concept-card.hl-amber{border-color:rgba(255,183,64,.35);background:rgba(255,183,64,.04);}
+.concept-card.hl-blue{border-color:rgba(0,200,255,.35);background:rgba(0,200,255,.04);}
+.concept-card.hl-green{border-color:rgba(0,229,160,.35);background:rgba(0,229,160,.04);}
+.concept-card.hl-purple{border-color:rgba(180,110,245,.35);background:rgba(180,110,245,.04);}
+.concept-card.hl-red{border-color:rgba(255,94,122,.35);background:rgba(255,94,122,.04);}
+.cc-icon{font-size:1.6rem;margin-bottom:.4rem;display:block;}
+.cc-title{font-size:.88rem;font-weight:700;margin-bottom:.3rem;}
+.cc-body{font-size:.79rem;color:var(--muted);line-height:1.55;}
+.cc-tag{display:inline-block;font-size:.68rem;font-weight:600;padding:.1rem .45rem;border-radius:4px;margin-top:.5rem;}
+.cc-tag.amber{background:rgba(255,183,64,.1);color:var(--amber);}
+.cc-tag.blue{background:rgba(0,200,255,.1);color:var(--accent);}
+.cc-tag.green{background:rgba(0,229,160,.1);color:var(--green);}
+.cc-tag.purple{background:rgba(180,110,245,.1);color:var(--purple);}
+/* ── Compare grid ── */
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:.85rem 0;}
+.compare-side{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem;}
+.compare-side.bad{border-top:3px solid var(--red);}
+.compare-side.good{border-top:3px solid var(--green);}
+.compare-side.amber-top{border-top:3px solid var(--amber);}
+.compare-side.blue-top{border-top:3px solid var(--accent);}
+.cs-label{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.65rem;}
+.cs-label.red{color:var(--red);}.cs-label.green{color:var(--green);}.cs-label.amber{color:var(--amber);}.cs-label.blue{color:var(--accent);}
+.cs-item{display:flex;gap:.5rem;align-items:flex-start;font-size:.8rem;margin-bottom:.45rem;color:var(--muted);}
+.cs-item:last-child{margin-bottom:0;}
+.cs-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:.38rem;}
+.dot-red{background:var(--red);}.dot-green{background:var(--green);}.dot-amber{background:var(--amber);}.dot-blue{background:var(--accent);}.dot-purple{background:var(--purple);}
+/* ── Tables ── */
+.summary-table{width:100%;border-collapse:collapse;font-size:.82rem;margin:.85rem 0;}
+.summary-table th{padding:.5rem .85rem;background:var(--bg3);color:var(--muted);font-size:.69rem;letter-spacing:.07em;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border);}
+.summary-table td{padding:.5rem .85rem;border-bottom:1px solid rgba(42,61,90,.3);vertical-align:top;line-height:1.55;}
+.summary-table tr:last-child td{border-bottom:none;}
+.summary-table tr:hover td{background:rgba(255,255,255,.02);}
+/* ── Pipeline flow ── */
+.pipeline-wrap{margin:1.25rem 0;}
+.pipe-step{display:flex;align-items:center;gap:.85rem;padding:.7rem 1rem;border-radius:8px;border:1px solid var(--border);background:var(--bg3);font-size:.83rem;margin-bottom:.35rem;}
+.pipe-step.ci{border-left:3px solid var(--green);}
+.pipe-step.cd{border-left:3px solid var(--accent);}
+.pipe-step.gate{border-left:3px solid var(--amber);}
+.pipe-step.fail{border-left:3px solid var(--red);}
+.pipe-icon{font-size:1.1rem;flex-shrink:0;width:26px;text-align:center;}
+.pipe-label{flex:1;line-height:1.45;}
+.pipe-badge{font-size:.62rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:.1rem .42rem;border-radius:4px;margin-left:auto;flex-shrink:0;}
+.pb-ci{background:rgba(0,229,160,.1);color:var(--green);}
+.pb-cd{background:rgba(0,200,255,.1);color:var(--accent);}
+.pb-gate{background:rgba(255,183,64,.1);color:var(--amber);}
+.pb-fail{background:rgba(255,94,122,.1);color:var(--red);}
+.pipe-arrow{text-align:center;color:var(--border);font-size:.9rem;margin:.05rem 0;}
+/* ── SSH diagram ── */
+.ssh-diagram{display:grid;grid-template-columns:1fr auto 1fr;gap:.85rem;align-items:center;margin:1rem 0;}
+.ssh-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center;font-size:.8rem;}
+.ssh-box h4{font-size:.84rem;font-weight:700;margin-bottom:.5rem;}
+.key-chip{display:inline-block;font-size:.7rem;font-family:'Fira Code',monospace;padding:.2rem .5rem;border-radius:4px;margin:.2rem .15rem;}
+.key-private{background:rgba(255,183,64,.1);border:1px solid rgba(255,183,64,.25);color:var(--amber);}
+.key-public{background:rgba(0,200,255,.1);border:1px solid rgba(0,200,255,.25);color:var(--accent);}
+.ssh-arrow{text-align:center;font-size:1.5rem;color:var(--muted);}
+/* ── CI/CD interactive demo ── */
+.ci-pipeline{display:flex;flex-direction:column;gap:.4rem;margin:1rem 0;}
+.ci-step{display:flex;align-items:center;gap:.75rem;padding:.65rem .9rem;border-radius:8px;border:1px solid var(--border);background:var(--bg3);font-size:.81rem;transition:all .3s;}
+.ci-step.pending{color:var(--muted);}
+.ci-step.running{border-color:rgba(255,183,64,.4);background:rgba(255,183,64,.04);color:var(--amber);}
+.ci-step.pass{border-color:rgba(0,229,160,.35);background:rgba(0,229,160,.05);color:var(--green);}
+.ci-step.fail-state{border-color:rgba(255,94,122,.35);background:rgba(255,94,122,.05);color:var(--red);}
+.ci-icon{width:22px;text-align:center;font-size:1rem;flex-shrink:0;}
+.ci-controls{display:flex;gap:.6rem;margin-bottom:.75rem;flex-wrap:wrap;}
+.ci-run-btn{font-family:'Sora',sans-serif;font-size:.8rem;font-weight:700;padding:.5rem 1.2rem;background:rgba(255,183,64,.12);color:var(--amber);border:1px solid rgba(255,183,64,.4);border-radius:6px;cursor:pointer;transition:all .18s;}
+.ci-run-btn:hover{background:rgba(255,183,64,.2);}
+.ci-run-btn:disabled{opacity:.4;cursor:not-allowed;}
+.ci-fail-btn{font-family:'Sora',sans-serif;font-size:.8rem;font-weight:700;padding:.5rem 1.2rem;background:rgba(255,94,122,.1);color:var(--red);border:1px solid rgba(255,94,122,.35);border-radius:6px;cursor:pointer;transition:all .18s;}
+.ci-fail-btn:hover{background:rgba(255,94,122,.18);}
+/* ── Lab cards ── */
+.lab-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1rem;}
+.lab-card-header{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;}
+.lab-num{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.18rem .55rem;border-radius:20px;}
+.lab-num.amber{background:rgba(255,183,64,.12);color:var(--amber);border:1px solid rgba(255,183,64,.25);}
+.lab-num.blue{background:rgba(0,200,255,.12);color:var(--accent);border:1px solid rgba(0,200,255,.25);}
+.lab-title{font-size:1rem;font-weight:700;}
+.checklist{list-style:none;margin:.5rem 0;}
+.checklist li{display:flex;gap:.55rem;font-size:.81rem;color:var(--muted);padding:.28rem 0;line-height:1.45;}
+.checklist li::before{content:'▷';color:var(--green);flex-shrink:0;}
+/* ── Assessment ── */
+.kc-question{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:.85rem;}
+.kc-q{font-size:.88rem;font-weight:600;margin-bottom:.7rem;line-height:1.5;}
+.kc-options{list-style:none;}
+.kc-options li{display:flex;align-items:center;gap:.55rem;font-size:.81rem;padding:.4rem .7rem;border-radius:6px;cursor:pointer;transition:all .15s;margin-bottom:.25rem;border:1px solid transparent;line-height:1.45;}
+.kc-options li:hover{background:var(--surface2);}
+.kc-options li.correct{background:rgba(0,229,160,.1);border-color:rgba(0,229,160,.3);color:var(--green);}
+.kc-options li.wrong{background:rgba(255,94,122,.08);border-color:rgba(255,94,122,.25);color:var(--red);}
+.kc-radio{width:14px;height:14px;border:2px solid var(--border);border-radius:50%;flex-shrink:0;transition:all .15s;}
+.kc-options li.correct .kc-radio{background:var(--green);border-color:var(--green);}
+.kc-options li.wrong .kc-radio{background:var(--red);border-color:var(--red);}
+.kc-explain{font-size:.76rem;color:var(--muted);margin-top:.5rem;padding:.5rem .65rem;background:var(--bg2);border-radius:5px;display:none;line-height:1.5;}
+.kc-explain.show{display:block;}
+/* ── GHP section ── */
+.ghp-section{background:linear-gradient(135deg,rgba(255,183,64,.04),rgba(180,110,245,.04));border:1px solid rgba(255,183,64,.22);border-radius:10px;padding:1.25rem;margin:1.5rem 0;}
+.ghp-section-title{font-size:.9rem;font-weight:700;margin-bottom:.65rem;display:flex;align-items:center;gap:.5rem;}
+.ghp-steps{counter-reset:ghp;list-style:none;}
+.ghp-steps li{counter-increment:ghp;display:flex;gap:.75rem;align-items:flex-start;font-size:.81rem;color:var(--muted);padding:.4rem 0;border-bottom:1px solid rgba(42,61,90,.25);}
+.ghp-steps li:last-child{border-bottom:none;}
+.ghp-steps li::before{content:counter(ghp);width:22px;height:22px;border-radius:50%;background:rgba(255,183,64,.12);color:var(--amber);font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+/* ── Misc ── */
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+@media(max-width:768px){
+  .tab-content{padding:0 1rem 3rem;}
+  .tab-panel{padding:1.25rem;}
+  .card-grid.cols2,.card-grid.cols3,.compare-grid,.ssh-diagram{grid-template-columns:1fr;}
+  .week-nav{display:none;}
+  .header-title{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <span class="week-badge">Week 7</span>
+      <span class="header-title">CI/CD &amp; Infrastructure as Code</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem">
+      <nav class="week-nav">
+        <a href="../week01/index.html">W1</a>
+        <a href="../week02/index.html">W2</a>
+        <a href="../week03/index.html">W3</a>
+        <a href="../week04/index.html">W4</a>
+        <a href="../week05/index.html">W5</a>
+        <a href="../week06/index.html">W6</a>
+        <a class="current" href="#">W7</a>
+      </nav>
+      <span class="ghp-badge">&#127758; GitHub Pages Ready</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ HERO ═══ -->
+<div class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb">CloudEats Academy &rsaquo; <span>Week 7</span></div>
+    <h1>CI/CD &amp; Infrastructure as Code</h1>
+    <p class="hero-sub">Define your entire cloud stack in a single file &middot; Automate deployments on every commit &middot; Zero-downtime production updates &middot; The workflow every software company uses</p>
+    <div class="hero-meta">
+      <div class="meta-chip">&#9200; <strong>4 hours</strong>&nbsp;Contact</div>
+      <div class="meta-chip">&#128300; <strong>Labs 7.1 &amp; 7.2</strong>&nbsp;This Week</div>
+      <div class="meta-chip">&#128073; <strong>Prereq:</strong>&nbsp;Week 6 Labs complete</div>
+      <div class="meta-chip">&#8594; <strong>Next:</strong>&nbsp;Week 8 Security</div>
+    </div>
+    <div class="pace-bar">
+      <span>Your pace:</span>
+      <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner')">&#127807; Beginner</button>
+      <button class="pace-btn" data-pace="average" onclick="setPace('average')">&#9889; Average</button>
+      <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced')">&#128640; Advanced</button>
+    </div>
+  </div>
+</div>
+
+<!-- prereq callout -->
+<div style="max-width:1100px;margin:1.25rem auto;padding:0 2rem">
+  <div class="callout amber">
+    <span class="callout-icon">&#128073;</span>
+    <div><strong>Before you start:</strong> You need a working GitHub Actions CI workflow from <a href="../week06/lab2_automated_testing.html">Lab 6.2</a> that runs <code>npm test</code> on push. If you haven't done Lab 6.2 yet, complete it first — this week extends that workflow with automated deployment.</div>
+  </div>
+</div>
+
+<!-- ═══ TABS ═══ -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('h1',this)">&#128218; Hour 1 &middot; Infrastructure as Code</button>
+  <button class="tab-btn" onclick="showTab('h3',this)">&#9889; Hour 3 &middot; CI/CD Pipeline</button>
+  <button class="tab-btn" onclick="showTab('labs',this)">&#128300; Labs This Week</button>
+  <button class="tab-btn" onclick="showTab('quiz',this)">&#128221; Week Quiz</button>
+  <button class="tab-btn" onclick="showTab('summary',this)">&#128203; Summary &amp; Connections</button>
+</div>
+
+<div class="tab-content">
+
+<!-- ══════════════════════════ HOUR 1 ══════════════════════════ -->
+<div class="tab-panel active" id="panel-h1">
+
+  <!-- 1.1 ClickOps vs IaC -->
+  <div class="sec-header">
+    <span class="sec-pill amber">1.1</span>
+    <span class="sec-title">What is Infrastructure as Code?</span>
+    <span class="sec-time">20 min</span>
+  </div>
+
+  <p><strong>Infrastructure as Code (IaC)</strong> means describing your servers, networks, and services in files &mdash; the same way you write application code. Those files are committed to Git, reviewed in pull requests, and applied to create real infrastructure. The traditional alternative is <strong>ClickOps</strong>: a developer logs into a server and manually types commands or clicks through a GUI.</p>
+
+  <div class="compare-grid">
+    <div class="compare-side bad">
+      <div class="cs-label red">&#10060; ClickOps &mdash; The Old Way</div>
+      <div class="cs-item"><span class="cs-dot dot-red"></span><span><strong>No history</strong> &mdash; "Who changed that? When? Why?" &mdash; unknown forever</span></div>
+      <div class="cs-item"><span class="cs-dot dot-red"></span><span><strong>Not reproducible</strong> &mdash; setting up an identical environment requires remembering every step and order</span></div>
+      <div class="cs-item"><span class="cs-dot dot-red"></span><span><strong>Error-prone</strong> &mdash; a missed flag or typo affects production with no undo button</span></div>
+      <div class="cs-item"><span class="cs-dot dot-red"></span><span><strong>Slow onboarding</strong> &mdash; new team member takes hours or days to replicate the environment</span></div>
+      <div class="cs-item"><span class="cs-dot dot-red"></span><span><strong>Dev ≠ Production</strong> &mdash; environments diverge over time; bugs appear only in prod</span></div>
+    </div>
+    <div class="compare-side good">
+      <div class="cs-label green">&#10004; Infrastructure as Code</div>
+      <div class="cs-item"><span class="cs-dot dot-green"></span><span><strong>Git history</strong> &mdash; every infrastructure change is a commit with an author, date, and reason</span></div>
+      <div class="cs-item"><span class="cs-dot dot-green"></span><span><strong>Reproducible</strong> &mdash; run the same file on any machine, get the same result every time</span></div>
+      <div class="cs-item"><span class="cs-dot dot-green"></span><span><strong>Reviewable</strong> &mdash; infrastructure changes go through pull requests like code changes</span></div>
+      <div class="cs-item"><span class="cs-dot dot-green"></span><span><strong>Fast onboarding</strong> &mdash; new developer types one command and has a running environment</span></div>
+      <div class="cs-item"><span class="cs-dot dot-green"></span><span><strong>Dev = Production</strong> &mdash; same docker-compose.yml runs everywhere; no environment surprises</span></div>
+    </div>
+  </div>
+
+  <div class="level-row">
+    <span class="level-pill beginner">&#127807; Beginner</span>
+    <span class="level-pill average">&#9889; Average</span>
+    <span class="level-pill advanced">&#128640; Advanced</span>
+  </div>
+  <div class="level-block beginner">
+    <div class="level-block-label">&#127807; Beginner &mdash; The Recipe Analogy</div>
+    Imagine a chef who memorises every recipe. If the chef is sick, nobody can cook the food. If a customer asks "how was this made?", there's no answer. IaC is like writing the recipe down. Anyone with the recipe gets the same dish, every time, in any kitchen &mdash; and the recipe is checked into Git so you always know who last changed the salt quantity.
+  </div>
+  <div class="level-block average">
+    <div class="level-block-label">&#9889; Average &mdash; The Core Principle</div>
+    If you need more than one command to reproduce your infrastructure, it belongs in a file. If it's in a file, it belongs in Git. If it's in Git, it can be reviewed, rolled back, and shared. Apply this rule and you've already adopted the IaC mindset &mdash; the specific tool (Compose, Terraform, Ansible) comes second.
+  </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">&#128640; Advanced &mdash; Immutable Infrastructure</div>
+    The IaC philosophy taken to its conclusion is <em>immutable infrastructure</em>: servers are never modified in place after deployment. When a change is needed, build a new image with the change, deploy the new image, destroy the old one. Docker containers are naturally immutable (the image defines the state); Kubernetes and AWS ECS enforce this by design. The docker-compose.yml you write in Lab 7.1 is the first step toward this pattern.
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- 1.2 Declarative vs Imperative -->
+  <div class="sec-header">
+    <span class="sec-pill amber">1.2</span>
+    <span class="sec-title">Declarative vs Imperative Infrastructure</span>
+    <span class="sec-time">15 min</span>
+  </div>
+
+  <p>There are two fundamentally different ways to express what you want a computer to do. Modern IaC tools are almost always declarative:</p>
+
+  <div class="compare-grid">
+    <div class="compare-side amber-top">
+      <div class="cs-label amber">Imperative &mdash; &ldquo;How&rdquo;</div>
+      <div class="cs-item"><span class="cs-dot dot-amber"></span><span>Give step-by-step instructions: "Do step 1, then 2, then 3."</span></div>
+      <div class="cs-item"><span class="cs-dot dot-amber"></span><span>A bash script: install MySQL, create user, create database.</span></div>
+      <div class="cs-item"><span class="cs-dot dot-amber"></span><span>Run it twice &rarr; step 2 fails: "User already exists."</span></div>
+      <div class="cs-item"><span class="cs-dot dot-amber"></span><span>You handle every possible state manually. Fragile.</span></div>
+      <div class="cs-item"><span class="cs-dot dot-amber"></span><span>The <code>sleep 30</code> hack &mdash; guess how long MySQL takes.</span></div>
+    </div>
+    <div class="compare-side blue-top">
+      <div class="cs-label blue">Declarative &mdash; &ldquo;What&rdquo;</div>
+      <div class="cs-item"><span class="cs-dot dot-blue"></span><span>Describe the desired end state: "I want MySQL with this config."</span></div>
+      <div class="cs-item"><span class="cs-dot dot-blue"></span><span>Docker Compose checks what already exists, applies only the diff.</span></div>
+      <div class="cs-item"><span class="cs-dot dot-blue"></span><span>Run it twice &rarr; same result. No errors. <strong>Idempotent.</strong></span></div>
+      <div class="cs-item"><span class="cs-dot dot-blue"></span><span>The tool handles state. You describe intent.</span></div>
+      <div class="cs-item"><span class="cs-dot dot-blue"></span><span><code>condition: service_healthy</code> &mdash; waits precisely, not blindly.</span></div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Side-by-side: bash script vs docker-compose.yml</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+    <pre><span class="cm"># ─── Imperative (bash) ───────────────</span>   <span class="cm"># ─── Declarative (Compose) ────────────</span>
+apt-get install mysql                      <span class="ck">db</span>:
+mysql -e "CREATE USER 'app'@'%'..."          <span class="ck">image</span>: <span class="cv">mysql:8.0</span>
+mysql -e "CREATE DATABASE cloudeats"         <span class="ck">environment</span>:
+mysql -e "GRANT ALL ON cloudeats.* TO..."      <span class="ck">MYSQL_DATABASE</span>: <span class="cv">cloudeats</span>
+<span class="cm"># What if user already exists?                MYSQL_USER</span>: <span class="cv">app</span>
+<span class="cm"># Script fails. Fix. Re-run from scratch.   # Run again = no problem ✅</span></pre>
+  </div>
+
+  <div class="why-box">
+    <strong>Why this matters for CloudEats Lab 7.1:</strong> The docker-compose.yml is declarative. Run <code>docker compose up -d</code> after it's already running and nothing breaks &mdash; Docker reads the current state and applies only what's needed. This is why Docker Compose qualifies as a real IaC tool, not just a convenience wrapper around <code>docker run</code>.
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- 1.3 Tools Landscape -->
+  <div class="sec-header">
+    <span class="sec-pill amber">1.3</span>
+    <span class="sec-title">IaC Tools Landscape</span>
+    <span class="sec-time">10 min</span>
+  </div>
+
+  <p>Students should recognise these names &mdash; they appear in every DevOps job description. You don't need to know them all deeply; you need to know <em>what layer</em> each one operates at.</p>
+
+  <table class="summary-table">
+    <thead><tr><th>Tool</th><th>Manages</th><th>Style</th><th>This course?</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Docker Compose</strong></td>
+        <td>Multi-container environments on one host</td>
+        <td>Declarative YAML</td>
+        <td>&#10004; Labs 3.x, 7.1</td>
+      </tr>
+      <tr>
+        <td><strong>Dockerfile</strong></td>
+        <td>What goes <em>inside</em> a container image</td>
+        <td>Declarative (layered)</td>
+        <td>&#10004; Since Week 2</td>
+      </tr>
+      <tr>
+        <td><strong>Terraform</strong></td>
+        <td>Cloud resources: VMs, VPCs, databases, load balancers, DNS</td>
+        <td>Declarative HCL</td>
+        <td>&#10007; Requires billing account</td>
+      </tr>
+      <tr>
+        <td><strong>Ansible</strong></td>
+        <td>OS-level config: packages, users, firewall rules, services</td>
+        <td>Declarative YAML (playbooks)</td>
+        <td>&#10007; Complexity vs benefit</td>
+      </tr>
+      <tr>
+        <td><strong>Kubernetes</strong></td>
+        <td>Container orchestration at scale: hundreds of containers, auto-scaling, self-healing</td>
+        <td>Declarative YAML manifests</td>
+        <td>&#10007; Beyond course scope</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout amber">
+    <span class="callout-icon">&#128161;</span>
+    <div><strong>Why Compose and not Terraform?</strong> Terraform requires cloud-provider accounts with billing, IAM setup, and a steeper learning curve that would consume weeks. Docker Compose achieves the same <em>conceptual goal</em> inside the Proxmox lab: infrastructure as a file, committed to Git, applied with one command. Every concept you learn about Compose directly transfers to Terraform when you encounter it in industry.</div>
+  </div>
+
+  <div class="level-block advanced">
+    <div class="level-block-label">&#128640; Advanced &mdash; Pulumi and CDKs</div>
+    A newer pattern uses general-purpose programming languages (TypeScript, Python, Go) to define infrastructure instead of YAML. AWS CDK and Pulumi let you write <code>new Bucket("my-bucket")</code> in TypeScript and it provisions real AWS resources. The tradeoff: more power and testability, but less readable to non-developers. The declarative vs imperative debate applies here too &mdash; most CDK constructs compile down to CloudFormation (declarative) under the hood.
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- 1.4 Docker Compose Key Concepts -->
+  <div class="sec-header">
+    <span class="sec-pill amber">1.4</span>
+    <span class="sec-title">Docker Compose as IaC &mdash; Five Key Concepts</span>
+    <span class="sec-time">15 min</span>
+  </div>
+
+  <p>The docker-compose.yml built in Lab 7.1 uses five structural concepts. Every concept has a purpose &mdash; understand the purpose before the syntax.</p>
+
+  <div class="card-grid cols2">
+    <div class="concept-card hl-amber">
+      <span class="cc-icon">&#128230;</span>
+      <div class="cc-title">Services</div>
+      <div class="cc-body">Each container in the stack. Specifies the image (or Dockerfile path), exposed ports, environment variables, volumes, networks, and startup dependencies. CloudEats has seven: <code>mysql</code>, <code>redis</code>, <code>mongodb</code>, <code>user-service</code>, <code>menu-service</code>, <code>order-service</code>, <code>api-gateway</code>.</div>
+      <span class="cc-tag amber">Top-level key</span>
+    </div>
+    <div class="concept-card hl-blue">
+      <span class="cc-icon">&#128101;</span>
+      <div class="cc-title">Networks</div>
+      <div class="cc-body">The private bridge network containers share. Services on the same network find each other by <strong>service name as hostname</strong> &mdash; Docker provides internal DNS. <code>http://user-service:3001</code> resolves because both containers share <code>cloudeats-network</code>. Covered since Week 2.</div>
+      <span class="cc-tag blue">Internal DNS</span>
+    </div>
+    <div class="concept-card hl-green">
+      <span class="cc-icon">&#128190;</span>
+      <div class="cc-title">Volumes</div>
+      <div class="cc-body">Named volumes persist data outside the container lifecycle. <code>docker compose down</code> removes containers but <strong>not volumes</strong>. The MySQL database survives. <code>docker compose down -v</code> removes volumes too &mdash; use only when you want a clean slate. Three volumes in CloudEats: <code>mysql-data</code>, <code>redis-data</code>, <code>mongo-data</code>.</div>
+      <span class="cc-tag green">Survives down</span>
+    </div>
+    <div class="concept-card hl-purple">
+      <span class="cc-icon">&#10084;</span>
+      <div class="cc-title">Health Checks</div>
+      <div class="cc-body">A command Docker runs periodically inside the container to verify the service is genuinely ready &mdash; not just started, but accepting connections. Status: <code>starting</code> &rarr; <code>healthy</code> or <code>unhealthy</code>. Services with <code>depends_on condition: service_healthy</code> wait for the green light before launching.</div>
+      <span class="cc-tag purple">Ready, not just running</span>
+    </div>
+  </div>
+
+  <p style="margin-top:1.1rem"><strong>Environment variables and secrets</strong> &mdash; the fifth concept. Passwords are never hardcoded in docker-compose.yml:</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Environment variable substitution pattern</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+    <pre><span class="cm"># docker-compose.yml ── reference, never hardcode</span>
+<span class="ck">db</span>:
+  <span class="ck">image</span>: <span class="cv">mysql:8.0</span>
+  <span class="ck">environment</span>:
+    <span class="ck">MYSQL_ROOT_PASSWORD</span>: <span class="cv">${MYSQL_ROOT_PASSWORD:-secret123}</span>
+    <span class="cm">#                    └── reads .env  └── fallback if .env missing</span>
+
+<span class="cm"># .env file (in .gitignore ── never commit)</span>
+MYSQL_ROOT_PASSWORD=<span class="cv">MyRealProd!Pass999</span>
+
+<span class="cm"># In production: same docker-compose.yml, values from cloud secret manager</span>
+<span class="cm"># The file is identical; only the source of the value changes (Week 8)</span></pre>
+  </div>
+
+  <div class="callout green">
+    <span class="callout-icon">&#9989;</span>
+    <div><strong>After Lab 7.1</strong> your docker-compose.yml defines: 7 services &middot; 3 named volumes &middot; 1 bridge network &middot; health checks on all 3 databases &middot; <code>depends_on condition: service_healthy</code> so services wait properly. This single file <em>is</em> the infrastructure definition for CloudEats. Check it into Git &mdash; every infrastructure change is now a commit with a message.</div>
+  </div>
+
+</div><!-- /panel-h1 -->
+
+<!-- ══════════════════════════ HOUR 3 ══════════════════════════ -->
+<div class="tab-panel" id="panel-h3">
+
+  <!-- 3.1 Complete CI/CD Pipeline -->
+  <div class="sec-header">
+    <span class="sec-pill blue">3.1</span>
+    <span class="sec-title">The Complete CI/CD Pipeline</span>
+    <span class="sec-time">25 min</span>
+  </div>
+
+  <p>Week 6 built the <strong>CI</strong> half: tests run automatically on every push. Week 7 adds the <strong>CD</strong> half: when those tests pass, the code deploys automatically. Together they form a complete pipeline.</p>
+
+  <div class="compare-grid">
+    <div class="compare-side good">
+      <div class="cs-label green">CI &mdash; Continuous Integration (Lab 6.2)</div>
+      <div class="cs-item"><span class="cs-dot dot-green"></span><span>Developer pushes &rarr; tests run automatically</span></div>
+      <div class="cs-item"><span class="cs-dot dot-green"></span><span>Goal: catch bugs <em>before</em> they reach users</span></div>
+      <div class="cs-item"><span class="cs-dot dot-green"></span><span>Result: confidence the code builds and tests pass</span></div>
+      <div class="cs-item"><span class="cs-dot dot-green"></span><span>Already built: <code>npm test</code> in <code>ci.yml</code></span></div>
+    </div>
+    <div class="compare-side blue-top">
+      <div class="cs-label blue">CD &mdash; Continuous Deployment (Lab 7.2)</div>
+      <div class="cs-item"><span class="cs-dot dot-blue"></span><span>Tests pass &rarr; deploy to server automatically</span></div>
+      <div class="cs-item"><span class="cs-dot dot-blue"></span><span>Goal: get working code to users <em>as fast as possible</em></span></div>
+      <div class="cs-item"><span class="cs-dot dot-blue"></span><span>Result: <code>git push main</code> = live in 2&ndash;3 minutes</span></div>
+      <div class="cs-item"><span class="cs-dot dot-blue"></span><span>Adding: a <code>deploy</code> job to the same <code>ci.yml</code></span></div>
+    </div>
+  </div>
+
+  <p style="margin-top:1rem">The complete pipeline &mdash; every step in the order it happens:</p>
+
+  <div class="pipeline-wrap">
+    <div class="pipe-step ci">
+      <span class="pipe-icon">&#128104;&#8205;&#128187;</span>
+      <span class="pipe-label"><strong>1.</strong> Developer pushes code &rarr; <code>git push origin main</code></span>
+      <span class="pipe-badge pb-ci">trigger</span>
+    </div>
+    <div class="pipe-arrow">&#8595;</div>
+    <div class="pipe-step ci">
+      <span class="pipe-icon">&#129302;</span>
+      <span class="pipe-label"><strong>2.</strong> GitHub Actions workflow triggered automatically &mdash; a free VM spins up in GitHub's cloud</span>
+      <span class="pipe-badge pb-ci">CI</span>
+    </div>
+    <div class="pipe-arrow">&#8595;</div>
+    <div class="pipe-step ci">
+      <span class="pipe-icon">&#128230;</span>
+      <span class="pipe-label"><strong>3.</strong> Install dependencies: <code>npm install</code> &mdash; Run test suite: <code>npm test</code></span>
+      <span class="pipe-badge pb-ci">CI</span>
+    </div>
+    <div class="pipe-arrow">&#8595;</div>
+    <div class="pipe-step gate">
+      <span class="pipe-icon">&#128680;</span>
+      <span class="pipe-label"><strong>Quality Gate:</strong> Tests FAIL &rarr; pipeline stops. Notification sent. Code is <strong>not</strong> deployed. Tests PASS &rarr; continue to CD.</span>
+      <span class="pipe-badge pb-gate">gate</span>
+    </div>
+    <div class="pipe-arrow">&#8595;</div>
+    <div class="pipe-step cd">
+      <span class="pipe-icon">&#128272;</span>
+      <span class="pipe-label"><strong>4.</strong> GitHub Actions connects to the Proxmox VM via SSH using the private key stored in GitHub Secrets</span>
+      <span class="pipe-badge pb-cd">CD</span>
+    </div>
+    <div class="pipe-arrow">&#8595;</div>
+    <div class="pipe-step cd">
+      <span class="pipe-icon">&#128229;</span>
+      <span class="pipe-label"><strong>5.</strong> Pull latest code on the VM: <code>git pull origin main</code></span>
+      <span class="pipe-badge pb-cd">CD</span>
+    </div>
+    <div class="pipe-arrow">&#8595;</div>
+    <div class="pipe-step cd">
+      <span class="pipe-icon">&#128296;</span>
+      <span class="pipe-label"><strong>6.</strong> Rebuild changed services: <code>docker compose build &lt;service&gt;</code></span>
+      <span class="pipe-badge pb-cd">CD</span>
+    </div>
+    <div class="pipe-arrow">&#8595;</div>
+    <div class="pipe-step cd">
+      <span class="pipe-icon">&#9989;</span>
+      <span class="pipe-label"><strong>7.</strong> Rolling restart with zero downtime: <code>docker compose up -d --no-deps &lt;service&gt;</code> &rarr; health check confirms live</span>
+      <span class="pipe-badge pb-cd">CD</span>
+    </div>
+  </div>
+
+  <!-- Interactive CI/CD simulator -->
+  <p style="margin-top:1.25rem;font-weight:600;font-size:.86rem">Interactive: simulate a pipeline run</p>
+  <div class="ci-controls">
+    <button class="ci-run-btn" id="run-pass-btn" onclick="runPipeline(true)">&#9654; Simulate: Tests Pass</button>
+    <button class="ci-fail-btn" id="run-fail-btn" onclick="runPipeline(false)">&#9654; Simulate: Tests Fail</button>
+  </div>
+  <div class="ci-pipeline" id="ci-demo">
+    <div class="ci-step pending" id="ci-0"><span class="ci-icon">&#128104;&#8205;&#128187;</span> git push origin main</div>
+    <div class="ci-step pending" id="ci-1"><span class="ci-icon">&#129302;</span> GitHub Actions: workflow triggered</div>
+    <div class="ci-step pending" id="ci-2"><span class="ci-icon">&#128230;</span> npm install &amp;&amp; npm test</div>
+    <div class="ci-step pending" id="ci-3"><span class="ci-icon">&#128680;</span> Quality Gate</div>
+    <div class="ci-step pending" id="ci-4"><span class="ci-icon">&#128272;</span> SSH into VM (appleboy/ssh-action)</div>
+    <div class="ci-step pending" id="ci-5"><span class="ci-icon">&#128229;</span> git pull origin main</div>
+    <div class="ci-step pending" id="ci-6"><span class="ci-icon">&#128296;</span> docker compose build --service</div>
+    <div class="ci-step pending" id="ci-7"><span class="ci-icon">&#128640;</span> docker compose up -d --no-deps</div>
+  </div>
+
+  <div class="level-row">
+    <span class="level-pill beginner">&#127807; Beginner</span>
+    <span class="level-pill average">&#9889; Average</span>
+    <span class="level-pill advanced">&#128640; Advanced</span>
+  </div>
+  <div class="level-block beginner">
+    <div class="level-block-label">&#127807; Beginner &mdash; What &ldquo;no human needed&rdquo; really means</div>
+    After Lab 7.2 works, the only human action needed is <code>git push</code>. Everything after that &mdash; running tests, connecting to the server, pulling code, rebuilding containers, restarting services &mdash; happens automatically in GitHub's cloud. Your teammate could push code at 3am while you're asleep, and by 3:02am it would be tested and live on your VM. That's what CD means.
+  </div>
+  <div class="level-block average">
+    <div class="level-block-label">&#9889; Average &mdash; Deployment frequency is a quality metric</div>
+    Counter-intuitively, deploying <em>more often</em> reduces risk. Each deployment is smaller, easier to reason about, and easier to roll back. Netflix deploys thousands of times per day. Teams that deploy once a month have massive, scary releases with many things changing at once. CI/CD makes small, frequent deployments safe.
+  </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">&#128640; Advanced &mdash; GitOps and pull-based CD</div>
+    The Lab 7.2 approach is &ldquo;push-based&rdquo; CD: GitHub Actions pushes changes to the server via SSH. An emerging alternative is <em>GitOps</em> (Argo CD, Flux): an agent <em>running on the server</em> continuously watches the Git repo and pulls changes when it sees a new commit. This eliminates the need for SSH keys and works better at scale. The conceptual model is identical; only the direction of the connection changes.
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- 3.2 SSH Keys -->
+  <div class="sec-header">
+    <span class="sec-pill blue">3.2</span>
+    <span class="sec-title">SSH Keys for Automated Deployment</span>
+    <span class="sec-time">20 min</span>
+  </div>
+
+  <p>GitHub Actions must SSH into the Proxmox VM to deploy. It <strong>cannot type a password</strong> &mdash; there is no human available. Instead it uses an SSH key pair: a mathematical lock and key derived from the same algorithm.</p>
+
+  <div class="ssh-diagram">
+    <div class="ssh-box">
+      <h4>&#129302; GitHub Actions Runner</h4>
+      <div><span class="key-chip key-private">&#128273; Private Key</span></div>
+      <div style="font-size:.74rem;color:var(--muted);margin-top:.5rem">Stored as an encrypted<br>GitHub Secret. Never visible<br>in logs or to anyone.</div>
+    </div>
+    <div class="ssh-arrow">&#129354;</div>
+    <div class="ssh-box">
+      <h4>&#128187; Proxmox VM</h4>
+      <div><span class="key-chip key-public">&#128275; Public Key</span></div>
+      <div style="font-size:.74rem;color:var(--muted);margin-top:.5rem">Stored in<br><code>~/.ssh/authorized_keys</code><br>on the deployment server</div>
+    </div>
+  </div>
+
+  <p><strong>The handshake:</strong> when GitHub Actions connects, it presents the private key. The VM checks it against the stored public key. If they are a mathematically matching pair, access is granted &mdash; no password typed anywhere.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">SSH key setup &mdash; run once on your deployment VM</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+    <pre><span class="cm"># Generate an ed25519 key pair (modern, compact, secure)</span>
+ssh-keygen -t ed25519 -C "github-actions-cloudeats" \
+           -f ~/.ssh/github_actions_key -N ""
+<span class="cm"># -N ""   no passphrase — required for unattended automation</span>
+<span class="cm"># Creates: github_actions_key  (private — goes to GitHub Secrets)</span>
+<span class="cm">#          github_actions_key.pub (public — goes to authorized_keys)</span>
+
+<span class="cm"># Authorise GitHub Actions to connect</span>
+cat ~/.ssh/github_actions_key.pub >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys   <span class="cm"># owner read/write only</span>
+chmod 700 ~/.ssh                   <span class="cm"># owner access only</span>
+
+<span class="cm"># CRITICAL: test manually before adding to GitHub</span>
+ssh -i ~/.ssh/github_actions_key student@&lt;YOUR_VM_IP&gt;
+<span class="cm"># If this succeeds from your terminal, GitHub Actions will too</span></pre>
+  </div>
+
+  <div class="callout amber">
+    <span class="callout-icon">&#9888;</span>
+    <div><strong>Instructor note &mdash; highest-risk step for diploma students:</strong> SSH key setup accounts for &gt;80% of Lab 7.2 failures. Demonstrate the key generation and <code>authorized_keys</code> steps live on the projector before students attempt it. Make every pair do the manual SSH test before adding the key to GitHub. If the manual test works, GitHub Actions will work.</div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">GitHub Actions workflow &mdash; using the stored secret</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+    <pre><span class="cm"># In .github/workflows/ci.yml — the deploy job</span>
+<span class="ck">deploy</span>:
+  <span class="ck">runs-on</span>: <span class="cv">ubuntu-latest</span>
+  <span class="ck">needs</span>: <span class="cv">test</span>        <span class="cm"># ← only run if test job passes</span>
+  <span class="ck">if</span>: <span class="cv">github.ref == 'refs/heads/main'</span>
+  <span class="ck">steps</span>:
+    - <span class="ck">name</span>: <span class="cv">Deploy to VM</span>
+      <span class="ck">uses</span>: <span class="cv">appleboy/ssh-action@v1.0.0</span>
+      <span class="ck">with</span>:
+        <span class="ck">host</span>:     <span class="cv">${{ secrets.DEPLOY_HOST }}</span>
+        <span class="ck">username</span>: <span class="cv">${{ secrets.DEPLOY_USER }}</span>
+        <span class="ck">key</span>:      <span class="cv">${{ secrets.DEPLOY_KEY }}</span>
+        <span class="ck">script</span>: |
+          cd ~/cloudeats-app
+          git pull origin main
+          docker compose build user-service
+          docker compose up -d --no-deps --build user-service
+          curl -f http://localhost:8000/health || exit 1</pre>
+  </div>
+
+  <div class="why-box">
+    <strong>Why GitHub Secrets?</strong> Secrets are encrypted at rest and in transit. They appear as <code>***</code> in all workflow logs &mdash; nobody can read them, even repository admins. Anyone who forks your repo does not get your secrets. This is the same principle as AWS Secrets Manager and Azure Key Vault (Week 8). The pattern: never put a real credential in a file. Store it somewhere with access controls. Reference it by name.
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- 3.3 Zero-Downtime -->
+  <div class="sec-header">
+    <span class="sec-pill blue">3.3</span>
+    <span class="sec-title">Zero-Downtime Deployment</span>
+    <span class="sec-time">15 min</span>
+  </div>
+
+  <p>A na&iuml;ve deployment stops all containers, rebuilds everything, then restarts. During the rebuild, the app is unavailable. For CloudEats at lunchtime, even 30 seconds of downtime means lost orders and angry customers.</p>
+
+  <div class="card-grid cols2">
+    <div class="concept-card hl-green">
+      <span class="cc-icon">&#128260;</span>
+      <div class="cc-title">Rolling Update &mdash; used in Lab 7.2</div>
+      <div class="cc-body">Build the new image while the old container is still running and serving requests. Swap the container &mdash; the old one stops only after the new one is confirmed healthy. Total downtime: milliseconds (the container swap itself).</div>
+      <div class="code-block" style="margin:.65rem 0 0">
+        <div class="code-header"><span class="code-lang">Command</span></div>
+        <pre style="font-size:.72rem">docker compose up -d \
+  --no-deps \
+  --build \
+  user-service
+<span class="cm"># --no-deps: don't touch mysql/redis</span>
+<span class="cm"># --build:   rebuild image first</span>
+<span class="cm"># -d:        background mode</span></pre>
+      </div>
+    </div>
+    <div class="concept-card hl-blue">
+      <span class="cc-icon">&#128310;</span>
+      <div class="cc-title">Blue-Green Deployment &mdash; industry standard</div>
+      <div class="cc-body">Run two identical environments simultaneously. Blue handles all live traffic. Green receives the new deployment and is tested in isolation. When Green is healthy, the load balancer flips from Blue to Green in one atomic switch. Blue becomes the instant rollback target. Downtime: zero. Used by: Netflix, Spotify, AWS, every major SaaS product.</div>
+      <div style="margin-top:.6rem;font-size:.73rem;color:var(--accent)">Blue-green concepts appear in interviews &mdash; know the pattern even if the lab uses rolling.</div>
+    </div>
+  </div>
+
+  <div class="level-row">
+    <span class="level-pill average">&#9889; Average</span>
+    <span class="level-pill advanced">&#128640; Advanced</span>
+  </div>
+  <div class="level-block average">
+    <div class="level-block-label">&#9889; Average &mdash; Health check in the deploy script</div>
+    After restarting a service, the deploy script should verify it actually came up healthy before marking the pipeline successful: <code>curl -f http://localhost:8000/health || exit 1</code>. The <code>-f</code> flag tells curl to return a non-zero exit code on HTTP errors. The <code>|| exit 1</code> causes the pipeline step to fail, which triggers a notification &mdash; before any user notices the service is down.
+  </div>
+  <div class="level-block advanced">
+    <div class="level-block-label">&#128640; Advanced &mdash; Canary releases</div>
+    Between rolling and blue-green: route 5% of traffic to the new version and monitor error rates and latency in real-time. If metrics stay within bounds, gradually increase to 10%, 25%, 50%, 100%. If anything spikes, instant rollback with no user impact. Tools: Nginx split_clients, AWS CodeDeploy canary hooks, Kubernetes Argo Rollouts. The CloudEats API Gateway (a single nginx proxy) could implement a basic canary with split location blocks.
+  </div>
+
+</div><!-- /panel-h3 -->
+
+<!-- ══════════════════════════ LABS ══════════════════════════ -->
+<div class="tab-panel" id="panel-labs">
+
+  <div class="sec-header">
+    <span class="sec-pill amber">Labs</span>
+    <span class="sec-title">What You Build in the Labs This Week</span>
+  </div>
+
+  <div class="lab-card">
+    <div class="lab-card-header">
+      <span class="lab-num amber">Lab 7.1</span>
+      <span class="lab-title">Infrastructure as Code &mdash; Docker Compose</span>
+    </div>
+    <p style="font-size:.83rem;color:var(--muted);margin-bottom:.75rem">60 minutes &middot; Pairs &middot; VirtualBox VM &middot; No cloud account needed</p>
+    <p>Consolidate everything from previous labs into a single <code>docker-compose.yml</code> that deploys the complete CloudEats stack with one command. Add health checks so services never start before their databases are ready.</p>
+    <ul class="checklist">
+      <li>Write the complete seven-service <code>docker-compose.yml</code> from scratch</li>
+      <li>Add health checks to all three databases: MySQL (<code>mysqladmin ping</code>), Redis (<code>redis-cli ping</code>), MongoDB (<code>mongosh --eval db.adminCommand</code>)</li>
+      <li>Add <code>depends_on: condition: service_healthy</code> to each microservice</li>
+      <li>Create <code>.env</code> with all secrets; add to <code>.gitignore</code></li>
+      <li>Deploy with <code>docker compose up -d</code> &mdash; all seven services up in one command</li>
+      <li>Prove data persistence: write to Redis, delete container, restart, data survives</li>
+      <li>Commit <code>docker-compose.yml</code> to Git &mdash; the infrastructure is now version-controlled</li>
+    </ul>
+    <div style="margin-top:.85rem">
+      <a href="../week07/lab1_infrastructure_as_code.html">&#8594; Go to Lab 7.1</a>
+    </div>
+  </div>
+
+  <div class="lab-card">
+    <div class="lab-card-header">
+      <span class="lab-num blue">Lab 7.2</span>
+      <span class="lab-title">Deployment Automation &mdash; GitHub Actions CD</span>
+    </div>
+    <p style="font-size:.83rem;color:var(--muted);margin-bottom:.75rem">60 minutes &middot; Pairs &middot; Proxmox / Home VM &middot; Works in all three environments</p>
+    <p>Add a <code>deploy</code> job to the GitHub Actions workflow from Lab 6.2. After this lab, a <code>git push</code> to <code>main</code> automatically tests the code and, if tests pass, deploys to your VM &mdash; zero human steps after the push.</p>
+    <ul class="checklist">
+      <li>Fill in the lab config table: DEPLOY_HOST, DEPLOY_USER, DEPLOY_PORT, APP_DIR</li>
+      <li>Generate an SSH key pair on the deployment VM</li>
+      <li>Add the public key to <code>~/.ssh/authorized_keys</code>; test connection manually first</li>
+      <li>Add three GitHub Secrets: <code>DEPLOY_KEY</code>, <code>DEPLOY_HOST</code>, <code>DEPLOY_USER</code></li>
+      <li>Append the <code>deploy</code> job to <code>.github/workflows/ci.yml</code> using <code>appleboy/ssh-action@v1.0.0</code></li>
+      <li>Push a code change, watch the Actions tab, verify the change is live on the VM</li>
+    </ul>
+    <div style="margin-top:.85rem">
+      <a href="../week07/lab2_deployment_automation.html">&#8594; Go to Lab 7.2</a>
+    </div>
+  </div>
+
+  <div class="callout green">
+    <span class="callout-icon">&#127919;</span>
+    <div><strong>After both labs:</strong> a single <code>git push</code> triggers tests, and if they pass, deploys CloudEats to your VM &mdash; entirely automatically. This is the foundation of every professional cloud deployment workflow at every company from startups to Netflix.</div>
+  </div>
+
+  <div class="ghp-section">
+    <div class="ghp-section-title">&#127758; GitHub Pages Deployment Path</div>
+    <ul class="ghp-steps">
+      <li>Create a GitHub repository named <code>your-username.github.io</code> (or any repo with Pages enabled)</li>
+      <li>Add a <code>.nojekyll</code> file at the repo root (prevents Jekyll processing of files starting with <code>_</code>)</li>
+      <li>Place all HTML files flat at root or in week-numbered folders (<code>week07/lab1.html</code>)</li>
+      <li>Create an <code>index.html</code> homepage linking to all weeks &mdash; write it as a curriculum landing page, not a file list</li>
+      <li>In repository Settings &rarr; Pages: set source to <strong>Deploy from a branch</strong>, branch <code>main</code>, folder <code>/ (root)</code></li>
+      <li>Push &mdash; GitHub Pages builds and publishes. URL: <code>https://your-username.github.io/repo-name/</code></li>
+      <li>Verify all links use relative paths (no <code>localhost</code>, no absolute URLs)</li>
+    </ul>
+  </div>
+
+</div><!-- /panel-labs -->
+
+<!-- ══════════════════════════ QUIZ ══════════════════════════ -->
+<div class="tab-panel" id="panel-quiz">
+
+  <div class="sec-header">
+    <span class="sec-pill amber">Quiz</span>
+    <span class="sec-title">Week 7 Knowledge Check &mdash; Final Exam Patterns</span>
+  </div>
+
+  <p>These question patterns match what typically appears in the CloudEats Academy final. Select an answer to check if you're right.</p>
+
+  <!-- Q1 -->
+  <div class="kc-question">
+    <div class="kc-q">Q1 &mdash; A new developer joins the CloudEats team. With ClickOps, they spend two days setting up a broken local environment. With IaC (docker-compose.yml), setup takes 15 minutes. Which IaC property explains this difference?</div>
+    <ul class="kc-options">
+      <li onclick="answer(this,false,'A Docker container is smaller than a VM, not the core IaC advantage here.')"><span class="kc-radio"></span>Containerisation reduces file size</li>
+      <li onclick="answer(this,true,'Reproducibility is the key IaC property: the same file on any machine produces the same result. A new developer just runs docker compose up -d.')"><span class="kc-radio"></span>Reproducibility &mdash; the same file produces the same result on any machine</li>
+      <li onclick="answer(this,false,'Networks do not explain onboarding time.')"><span class="kc-radio"></span>Container networking uses DNS instead of IP addresses</li>
+      <li onclick="answer(this,false,'Two days vs 15 minutes is not about speed of execution, but about reproducibility.')"><span class="kc-radio"></span>Containers start faster than virtual machines</li>
+    </ul>
+    <div class="kc-explain" id="kc-explain-0"></div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="kc-question">
+    <div class="kc-q">Q2 &mdash; A docker-compose.yml contains <code>MYSQL_PASSWORD: ${MYSQL_PASSWORD:-secret123}</code>. The <code>.env</code> file sets <code>MYSQL_PASSWORD=Pr0d!Pass</code>. What value does MySQL receive?</div>
+    <ul class="kc-options">
+      <li onclick="answer(this,false,'The .env value takes precedence over the fallback.')"><span class="kc-radio"></span>secret123 (the fallback)</li>
+      <li onclick="answer(this,true,'The .env value Pr0d!Pass overrides the fallback. The :-default is only used when the variable is absent from .env entirely.')"><span class="kc-radio"></span>Pr0d!Pass (from .env)</li>
+      <li onclick="answer(this,false,'Both values are not combined.')"><span class="kc-radio"></span>Both values concatenated</li>
+      <li onclick="answer(this,false,'Docker Compose does read .env automatically when it is in the same directory.')"><span class="kc-radio"></span>Neither &mdash; docker-compose.yml does not read .env automatically</li>
+    </ul>
+    <div class="kc-explain" id="kc-explain-1"></div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="kc-question">
+    <div class="kc-q">Q3 &mdash; A developer pushes a commit to <code>main</code>. Two of the three tests fail. The GitHub Actions workflow has a <code>deploy</code> job with <code>needs: test</code>. What happens?</div>
+    <ul class="kc-options">
+      <li onclick="answer(this,false,'needs: test means the deploy job only runs if test passes. It does not run on failure.')"><span class="kc-radio"></span>The deploy job runs anyway &mdash; tests are informational</li>
+      <li onclick="answer(this,false,'Partial failure still counts as a failure for the test job.')"><span class="kc-radio"></span>The deploy job runs because one test passed</li>
+      <li onclick="answer(this,true,'The test job fails because not all tests passed. The deploy job has needs: test so it only runs if test succeeds. The pipeline stops at the quality gate.')"><span class="kc-radio"></span>The test job fails; the deploy job does not run; developer is notified</li>
+      <li onclick="answer(this,false,'GitHub does not automatically revert pushes.')"><span class="kc-radio"></span>GitHub automatically reverts the push</li>
+    </ul>
+    <div class="kc-explain" id="kc-explain-2"></div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="kc-question">
+    <div class="kc-q">Q4 &mdash; Why is an SSH private key stored as a GitHub Secret rather than written directly into the <code>.github/workflows/ci.yml</code> file?</div>
+    <ul class="kc-options">
+      <li onclick="answer(this,false,'SSH key file size is not the reason.')"><span class="kc-radio"></span>The private key is too large for a YAML value</li>
+      <li onclick="answer(this,false,'GitHub Actions does support SSH in workflow files; the issue is security, not compatibility.')"><span class="kc-radio"></span>GitHub Actions does not support SSH</li>
+      <li onclick="answer(this,true,'Anyone with read access to the repository can download every committed file. A committed private key means every GitHub user with repo access could SSH into your production server.')"><span class="kc-radio"></span>Anyone with read access to the repo could download a committed key and SSH into the server</li>
+      <li onclick="answer(this,false,'Git can store binary files; the concern is security exposure, not file type.')"><span class="kc-radio"></span>Git cannot store binary files like SSH keys</li>
+    </ul>
+    <div class="kc-explain" id="kc-explain-3"></div>
+  </div>
+
+  <!-- Q5 -->
+  <div class="kc-question">
+    <div class="kc-q">Q5 &mdash; A rolling deployment uses <code>docker compose up -d --no-deps --build user-service</code>. What does <code>--no-deps</code> do and why is it important?</div>
+    <ul class="kc-options">
+      <li onclick="answer(this,false,'--no-deps does not affect the build cache.')"><span class="kc-radio"></span>Skips the Docker build cache to force a fresh build</li>
+      <li onclick="answer(this,true,'--no-deps tells Compose not to recreate dependency containers (mysql, redis). Without it, Compose might restart the databases unnecessarily, causing brief data unavailability during the deploy.')"><span class="kc-radio"></span>Prevents Compose from recreating dependency containers (mysql, redis) that haven't changed</li>
+      <li onclick="answer(this,false,'--no-deps does not affect networking.')"><span class="kc-radio"></span>Bypasses the network layer for faster startup</li>
+      <li onclick="answer(this,false,'It does not skip health checks.')"><span class="kc-radio"></span>Disables health checks on dependent services</li>
+    </ul>
+    <div class="kc-explain" id="kc-explain-4"></div>
+  </div>
+
+</div><!-- /panel-quiz -->
+
+<!-- ══════════════════════════ SUMMARY ══════════════════════════ -->
+<div class="tab-panel" id="panel-summary">
+
+  <div class="sec-header">
+    <span class="sec-pill amber">Summary</span>
+    <span class="sec-title">Week 7 at a Glance</span>
+  </div>
+
+  <table class="summary-table">
+    <thead><tr><th>Topic</th><th>Key Takeaway</th><th>Exam Coverage</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Infrastructure as Code</strong></td>
+        <td>Describe infrastructure in files; commit to Git; reproducible, reviewable, version-controlled. The <code>.gitignore</code> and <code>.env</code> pattern keeps secrets out.</td>
+        <td>Define IaC and contrast with ClickOps with one example each</td>
+      </tr>
+      <tr>
+        <td><strong>Declarative vs Imperative</strong></td>
+        <td>Declarative = describe desired state; the tool figures out how. Idempotent: safe to re-run. Docker Compose is declarative. Bash scripts are imperative.</td>
+        <td>Given a snippet, identify whether it is declarative or imperative and explain why</td>
+      </tr>
+      <tr>
+        <td><strong>Docker Compose as IaC</strong></td>
+        <td>7 services &middot; 3 volumes &middot; 1 network &middot; health checks &middot; <code>depends_on condition: service_healthy</code> &middot; env vars from <code>.env</code></td>
+        <td>Identify which values in a Compose snippet should come from <code>.env</code></td>
+      </tr>
+      <tr>
+        <td><strong>CI vs CD</strong></td>
+        <td>CI: test on push. CD: deploy when tests pass. Combined = complete pipeline. <code>needs: test</code> is the quality gate that links them.</td>
+        <td>Describe step-by-step what happens when a developer pushes to main with CD configured</td>
+      </tr>
+      <tr>
+        <td><strong>SSH key authentication</strong></td>
+        <td>Private key in GitHub Secrets (encrypted, never visible). Public key in <code>~/.ssh/authorized_keys</code> on server. No password needed for automation.</td>
+        <td>Explain why SSH keys are used instead of passwords for automated deployment</td>
+      </tr>
+      <tr>
+        <td><strong>Zero-downtime deployment</strong></td>
+        <td><code>--no-deps --build</code> keeps old container live while new one builds. Blue-green is the production-grade pattern; canary is the most sophisticated.</td>
+        <td>Describe one zero-downtime strategy and explain what downtime it prevents</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <hr class="section-divider">
+
+  <div class="sec-header">
+    <span class="sec-pill amber">Connections</span>
+    <span class="sec-title">How Week 7 Links to the Rest of the Course</span>
+  </div>
+
+  <div class="card-grid cols2">
+    <div class="concept-card hl-amber">
+      <div class="cc-title">&#8592; Week 6 — DevOps &amp; Git</div>
+      <div class="cc-body">The CI workflow from Lab 6.2 is the <code>test</code> job that the Week 7 <code>deploy</code> job depends on. Week 7 extends it; nothing from Week 6 is replaced. The same <code>ci.yml</code> file grows from one job to two.</div>
+    </div>
+    <div class="concept-card hl-red">
+      <div class="cc-title">&#8594; Week 8 — Security</div>
+      <div class="cc-body">SSH keys and GitHub Secrets introduced here <em>are</em> security practices. The secrets management mental model from Lab 7.2 feeds directly into Lab 8.1. Lab 8 deepens what Lab 7 introduces.</div>
+    </div>
+    <div class="concept-card hl-blue">
+      <div class="cc-title">&#8594; Week 9 — Monitoring</div>
+      <div class="cc-body">GitHub Actions deployment logs are your first visibility into deployment health. Week 9 centralises application logs and adds metrics. The two layers are complementary: pipeline logs (what happened during deploy) and application logs (what the app does after deploy).</div>
+    </div>
+    <div class="concept-card hl-green">
+      <div class="cc-title">&#8594; Week 10 — Cloud Migration</div>
+      <div class="cc-body">The <code>docker-compose.yml</code> maps directly to cloud container formats (ECS task definitions, Cloud Run service YAML). The GitHub Actions workflow keeps working unchanged &mdash; only the <code>DEPLOY_HOST</code> secret changes to a cloud VM's public IP.</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+
+  <div class="sec-header">
+    <span class="sec-pill amber">Session Plan</span>
+    <span class="sec-title">4-Hour Week Schedule</span>
+  </div>
+
+  <table class="summary-table">
+    <thead><tr><th>Hour</th><th>Activity</th><th>Format</th><th>Learning Objectives</th></tr></thead>
+    <tbody>
+      <tr><td><strong>1</strong></td><td>IaC concepts &mdash; ClickOps vs IaC, declarative vs imperative, tools landscape, Docker Compose key concepts</td><td>Lecture</td><td>LO1, LO2, LO3</td></tr>
+      <tr><td><strong>2</strong></td><td>Lab 7.1 &mdash; seven-service docker-compose.yml, health checks, .env secrets, first deploy</td><td>Pairs lab</td><td>LO3</td></tr>
+      <tr><td><strong>3</strong></td><td>CI/CD pipeline &mdash; complete flow, SSH key auth, zero-downtime strategies</td><td>Lecture</td><td>LO4, LO5, LO6</td></tr>
+      <tr><td><strong>4</strong></td><td>Lab 7.2 &mdash; SSH keys, GitHub Secrets, deploy job, watch first auto-deploy</td><td>Pairs lab</td><td>LO4, LO5</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout blue">
+    <span class="callout-icon">&#127919;</span>
+    <div><strong>Learning objectives for Week 7:</strong> describe IaC and ClickOps &middot; explain declarative vs imperative &middot; use Docker Compose as an IaC tool &middot; build a complete CI/CD pipeline &middot; set up SSH key-based auth &middot; describe zero-downtime deployment.</div>
+  </div>
+
+</div><!-- /panel-summary -->
+
+</div><!-- /tab-content -->
+
+<!-- Footer nav -->
+<div style="max-width:1100px;margin:0 auto;padding:1.5rem 2rem;display:flex;justify-content:space-between;border-top:1px solid var(--border);font-size:.78rem;color:var(--muted)">
+  <a href="../week06/index.html" style="color:var(--muted);text-decoration:none;padding:.28rem .65rem;border:1px solid var(--border);border-radius:5px;transition:all .15s" onmouseover="this.style.color='var(--amber)';this.style.borderColor='var(--amber)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">&larr; Week 6</a>
+  <span>CloudEats Academy &middot; Week 7 of 10</span>
+  <a href="../week07/lab1_infrastructure_as_code.html" style="color:var(--amber);text-decoration:none;padding:.28rem .65rem;border:1px solid rgba(255,183,64,.3);border-radius:5px;background:rgba(255,183,64,.04)">Lab 7.1 &rarr;</a>
+</div>
+
+<script>
+/* ── Tab switching ── */
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* ── Pace setter ── */
+function setPace(pace) {
+  document.body.className = 'pace-' + pace;
+  document.querySelectorAll('.pace-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('[data-pace="' + pace + '"]').classList.add('active');
+}
+
+/* ── Copy code ── */
+function copyCode(btn, event) {
+  if (event) event.stopPropagation();
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+/* ── Quiz answer handler ── */
+let kc_index = 0;
+function answer(li, correct, explanation) {
+  const ul = li.closest('.kc-options');
+  const qBox = li.closest('.kc-question');
+  // find explain div
+  const explainDivs = document.querySelectorAll('.kc-explain');
+  // reset this question
+  ul.querySelectorAll('li').forEach(l => l.classList.remove('correct', 'wrong'));
+  li.classList.add(correct ? 'correct' : 'wrong');
+  // find the explain div within this question
+  const explain = qBox.querySelector('.kc-explain');
+  if (explain) {
+    explain.textContent = explanation;
+    explain.classList.add('show');
+  }
+}
+
+/* ── CI/CD pipeline simulator ── */
+let simRunning = false;
+async function runPipeline(pass) {
+  if (simRunning) return;
+  simRunning = true;
+  document.getElementById('run-pass-btn').disabled = true;
+  document.getElementById('run-fail-btn').disabled = true;
+
+  const steps = [0,1,2,3,4,5,6,7];
+  const failAt = pass ? -1 : 3;
+
+  // reset
+  steps.forEach(i => {
+    const el = document.getElementById('ci-' + i);
+    el.className = 'ci-step pending';
+    el.querySelector('.ci-icon').textContent = ['👨‍💻','🤖','📦','🚦','🔐','📥','🔨','🚀'][i];
+  });
+
+  for (let i = 0; i < steps.length; i++) {
+    const el = document.getElementById('ci-' + i);
+    el.className = 'ci-step running';
+    await sleep(500);
+
+    if (i === failAt) {
+      el.className = 'ci-step fail-state';
+      el.querySelector('.ci-icon').textContent = '❌';
+      // grey out the rest
+      for (let j = i + 1; j < steps.length; j++) {
+        document.getElementById('ci-' + j).style.opacity = '0.35';
+      }
+      break;
+    } else {
+      el.className = 'ci-step pass';
+      el.querySelector('.ci-icon').textContent = ['✅','✅','✅','✅','✅','✅','✅','✅'][i];
+    }
+
+    // restore opacity for next steps on success path
+    if (i + 1 < steps.length) {
+      document.getElementById('ci-' + (i+1)).style.opacity = '1';
+    }
+  }
+
+  await sleep(500);
+  simRunning = false;
+  document.getElementById('run-pass-btn').disabled = false;
+  document.getElementById('run-fail-btn').disabled = false;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>

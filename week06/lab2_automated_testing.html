@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 6.2 · Automated Testing &amp; GitHub Actions · CloudEats Academy</title>
+<meta name="description" content="Run Jest unit tests, catch a real bug, write the GitHub Actions CI workflow, push it to GitHub, and watch automated testing protect your main branch.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Lab 6.2 · Automated Testing &amp; GitHub Actions · CloudEats Academy">
+<meta property="og:description" content="Install Jest, run 12 unit tests, break one on purpose, fix it, then hook it all up to GitHub Actions CI — the full testing loop.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090f;--bg2:#0d1117;--bg3:#141b27;
+  --surface:#1a2235;--surface2:#1f2c42;--border:#2a3d5a;
+  --accent:#00c8ff;--green:#00e5a0;--amber:#ffb740;
+  --red:#ff5e7a;--purple:#b46ef5;
+  --text:#e8edf5;--muted:#6b7fa0;
+  --beginner:#00e5a0;--average:#00c8ff;--advanced:#b46ef5;
+  --lab-color:#00e5a0;--radius:10px;--code-bg:#0b1120;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;}
+.site-header{background:linear-gradient(135deg,#050d1c,#091628);border-bottom:1px solid var(--border);padding:0 1.5rem;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;gap:1rem;}
+.lab-badge{background:var(--lab-color);color:#000;font-size:.62rem;font-weight:700;letter-spacing:.1em;padding:.2rem .55rem;border-radius:4px;text-transform:uppercase;}
+.header-title{font-size:.88rem;font-weight:600;}
+.ghp-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.67rem;font-weight:700;padding:.18rem .55rem;background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.25);color:var(--green);border-radius:20px;}
+.pace-switcher{display:flex;gap:.3rem;background:var(--bg3);padding:.22rem;border-radius:8px;border:1px solid var(--border);}
+.pace-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.25rem .65rem;border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--muted);transition:all .18s;}
+.pace-btn.active[data-pace="beginner"]{background:rgba(0,229,160,.18);color:var(--beginner);}
+.pace-btn.active[data-pace="average"]{background:rgba(0,200,255,.18);color:var(--average);}
+.pace-btn.active[data-pace="advanced"]{background:rgba(180,110,245,.18);color:var(--advanced);}
+.lab-hero{background:linear-gradient(160deg,#060f20,#07111e);border-bottom:1px solid var(--border);padding:2rem 1.5rem 1.75rem;position:relative;overflow:hidden;}
+.lab-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:350px;height:350px;background:radial-gradient(ellipse,rgba(0,229,160,.06),transparent 70%);pointer-events:none;}
+.hero-inner{max-width:1200px;margin:0 auto;}
+.hero-crumb{font-size:.7rem;color:var(--muted);margin-bottom:.4rem;}
+.hero-crumb a{color:var(--green);text-decoration:none;}
+.lab-hero h1{font-size:clamp(1.25rem,2.5vw,1.75rem);font-weight:800;background:linear-gradient(135deg,#e8edf5 40%,var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.35rem;}
+.hero-sub{color:var(--muted);font-size:.84rem;margin-bottom:.85rem;}
+.hero-meta{display:flex;flex-wrap:wrap;gap:.55rem;}
+.meta-chip{display:flex;align-items:center;gap:.35rem;font-size:.74rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.22rem .6rem;color:var(--muted);}
+.meta-chip strong{color:var(--text);}
+.meta-chip.green{background:rgba(0,229,160,.06);border-color:rgba(0,229,160,.2);color:var(--green);}
+.pace-guide{max-width:1200px;margin:0 auto;padding:1rem 1.5rem 0;}
+.pace-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin-bottom:.5rem;}
+.pace-card{border-radius:8px;padding:.75rem;font-size:.78rem;line-height:1.5;}
+.pace-card.b{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);}
+.pace-card.a{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);}
+.pace-card.adv{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);}
+.pc-label{font-size:.65rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.3rem;}
+.b .pc-label{color:var(--beginner);}.a .pc-label{color:var(--average);}.adv .pc-label{color:var(--advanced);}
+.pc-scope{color:var(--muted);font-size:.76rem;}
+.page-body{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 200px);}
+.sidebar{position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;padding:1.25rem .85rem 2rem;border-right:1px solid var(--border);background:var(--bg2);}
+.sb-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.85rem;}
+.progress-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:.65rem;margin-bottom:1rem;}
+.prog-track{background:var(--bg2);border-radius:3px;height:5px;margin:.4rem 0;}
+.prog-fill{height:5px;border-radius:3px;background:linear-gradient(90deg,var(--green),var(--accent));transition:width .35s;width:0%;}
+.prog-text{font-size:.69rem;color:var(--muted);}
+.prog-text span{color:var(--green);font-weight:600;}
+.sb-nav{list-style:none;}
+.sb-nav li a{display:block;font-size:.73rem;padding:.32rem .6rem;border-radius:5px;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all .13s;margin-bottom:.08rem;}
+.sb-nav li a:hover{background:var(--surface);color:var(--text);}
+.sb-nav li a.active{background:rgba(0,229,160,.08);color:var(--green);border-color:rgba(0,229,160,.18);}
+.sb-section{font-size:.61rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(107,127,160,.45);padding:.6rem .6rem .18rem;list-style:none;}
+.lab-content{padding:1.75rem 1.75rem 4rem;min-width:0;}
+.part-head{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;border-radius:8px;margin-bottom:1.1rem;}
+.ph-green{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.22);border-left:4px solid var(--green);}
+.ph-blue{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.22);border-left:4px solid var(--accent);}
+.ph-amber{background:rgba(255,183,64,.04);border:1px solid rgba(255,183,64,.22);border-left:4px solid var(--amber);}
+.ph-purple{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.22);border-left:4px solid var(--purple);}
+.ph-red{background:rgba(255,94,122,.04);border:1px solid rgba(255,94,122,.22);border-left:4px solid var(--red);}
+.part-pill{font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.16rem .5rem;border-radius:4px;white-space:nowrap;}
+.pp-green{background:rgba(0,229,160,.15);color:var(--green);}
+.pp-blue{background:rgba(0,200,255,.15);color:var(--accent);}
+.pp-amber{background:rgba(255,183,64,.15);color:var(--amber);}
+.pp-purple{background:rgba(180,110,245,.15);color:var(--purple);}
+.pp-red{background:rgba(255,94,122,.15);color:var(--red);}
+.part-title{font-size:.98rem;font-weight:700;}
+.part-time{font-size:.7rem;color:var(--muted);margin-left:auto;white-space:nowrap;}
+.step{background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:.6rem;overflow:hidden;}
+.step-hd{display:flex;align-items:center;gap:.7rem;padding:.7rem .95rem;cursor:pointer;user-select:none;transition:background .13s;}
+.step-hd:hover{background:var(--surface2);}
+.step-num{width:27px;height:27px;border-radius:50%;border:2px solid rgba(0,229,160,.3);background:rgba(0,229,160,.07);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:var(--green);flex-shrink:0;}
+.step-num.done{background:var(--green);border-color:var(--green);color:#000;}
+.step-label{font-size:.84rem;font-weight:600;flex:1;}
+.step-arrow{font-size:.75rem;color:var(--muted);transition:transform .18s;flex-shrink:0;}
+.step.open .step-arrow{transform:rotate(90deg);}
+.step-body{display:none;padding:.85rem .95rem 1rem;border-top:1px solid var(--border);}
+.step.open .step-body{display:block;}
+.step:not(.open) .step-hd::after{content:'click to expand';font-size:.6rem;color:var(--muted);opacity:.45;margin-left:auto;padding-right:.25rem;letter-spacing:.04em;pointer-events:none;}
+.step.open .step-hd::after{content:'';}
+code{font-family:'Fira Code',monospace;font-size:.83em;background:var(--code-bg);padding:.07rem .32rem;border-radius:3px;color:var(--green);}
+.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;margin:.65rem 0;overflow:hidden;}
+.code-hd{display:flex;align-items:center;justify-content:space-between;padding:.4rem .85rem;background:rgba(0,0,0,.3);border-bottom:1px solid var(--border);}
+.code-lang{font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.copy-btn{font-family:'Sora',sans-serif;font-size:.66rem;font-weight:600;padding:.16rem .5rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;transition:all .13s;}
+.copy-btn:hover{background:var(--green);color:#000;border-color:var(--green);}
+.copy-btn.copied{background:var(--green);color:#000;}
+pre{font-family:'Fira Code',monospace;font-size:.77rem;line-height:1.65;padding:.85rem;overflow-x:auto;color:#c5d5ef;}
+.ck{color:var(--accent);}.cv{color:var(--green);}.cm{color:var(--muted);font-style:italic;}.cp{color:var(--purple);}.ca{color:var(--amber);}
+.out-label{font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:.6rem 0 .28rem;}
+.exp-out{font-family:'Fira Code',monospace;font-size:.76rem;background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.15);border-radius:6px;padding:.6rem .85rem;color:#8ee8c4;line-height:1.6;margin-bottom:.5rem;white-space:pre;}
+.exp-out.fail{background:rgba(255,94,122,.04);border-color:rgba(255,94,122,.15);color:#f0a0b0;}
+.callout{border-radius:8px;padding:.7rem .95rem;margin:.65rem 0;display:flex;gap:.55rem;align-items:flex-start;font-size:.81rem;line-height:1.55;}
+.callout.blue{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);color:#a0d8f0;}
+.callout.green{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);color:#8ee8c4;}
+.callout.amber{background:rgba(255,183,64,.06);border:1px solid rgba(255,183,64,.2);color:#d9c07a;}
+.callout.purple{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);color:#c5a8f5;}
+.callout.red{background:rgba(255,94,122,.05);border:1px solid rgba(255,94,122,.2);color:#f0a0b0;}
+.pb{border-radius:7px;padding:.6rem .85rem;margin:.5rem 0;font-size:.8rem;line-height:1.55;}
+.pb.b{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.15);border-left:3px solid var(--beginner);}
+.pb.a{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.15);border-left:3px solid var(--average);}
+.pb.adv{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.15);border-left:3px solid var(--advanced);}
+.pb-label{font-size:.63rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.25rem;}
+.pb.b .pb-label{color:var(--beginner);}.pb.a .pb-label{color:var(--average);}.pb.adv .pb-label{color:var(--advanced);}
+.checkpoint{background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.22);border-radius:8px;padding:.8rem .95rem;margin:1.1rem 0;display:flex;gap:.7rem;align-items:flex-start;font-size:.81rem;color:#8ee8c4;line-height:1.5;}
+.trouble{background:rgba(255,94,122,.03);border:1px solid rgba(255,94,122,.15);border-radius:7px;margin:.6rem 0;overflow:hidden;}
+.trouble-hd{display:flex;align-items:center;gap:.5rem;padding:.55rem .8rem;font-size:.79rem;font-weight:600;color:var(--red);cursor:pointer;user-select:none;}
+.trouble-arrow{font-size:.7rem;color:var(--muted);margin-left:auto;transition:transform .18s;}
+.trouble.open .trouble-arrow{transform:rotate(90deg);}
+.trouble-body{display:none;padding:0 .8rem .7rem;font-size:.78rem;color:var(--muted);line-height:1.55;}
+.trouble.open .trouble-body{display:block;}
+.why-box{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.2);border-left:3px solid var(--accent);border-radius:6px;padding:.65rem .9rem;margin:.6rem 0;font-size:.8rem;color:#a0d8f0;}
+.why-box strong{color:var(--accent);}
+.adv-only{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.2);border-radius:8px;padding:.9rem;margin:.65rem 0;}
+.adv-only-label{font-size:.63rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--purple);margin-bottom:.45rem;}
+.test-line{display:flex;align-items:baseline;gap:.5rem;font-family:'Fira Code',monospace;font-size:.76rem;padding:.2rem 0;}
+.test-pass{color:var(--green);}
+.test-fail{color:var(--red);}
+.test-icon{width:14px;flex-shrink:0;}
+.summary-table{width:100%;border-collapse:collapse;font-size:.81rem;margin:.85rem 0;}
+.summary-table th{padding:.45rem .75rem;background:var(--bg3);color:var(--muted);font-size:.67rem;letter-spacing:.07em;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border);}
+.summary-table td{padding:.45rem .75rem;border-bottom:1px solid rgba(42,61,90,.3);vertical-align:top;}
+.summary-table tr:last-child td{border-bottom:none;}
+.summary-table tr:hover td{background:rgba(255,255,255,.02);}
+.ctrl-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;padding:.4rem 0;}
+.ctrl-bar-info{font-size:.73rem;color:var(--muted);}
+.ctrl-bar-info strong{color:var(--text);}
+.ctrl-btns{display:flex;gap:.5rem;}
+.ctrl-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.22rem .7rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all .15s;}
+.ctrl-btn:hover{color:var(--green);border-color:var(--green);}
+a{color:var(--accent);}a:hover{text-decoration:underline;}
+strong{color:var(--text);font-weight:600;}
+p{margin-bottom:.65rem;font-size:.84rem;line-height:1.68;}
+p:last-child{margin-bottom:0;}
+section{margin-bottom:2.25rem;}
+.section-divider{border:none;border-top:1px solid var(--border);margin:1.75rem 0;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+@media(max-width:860px){
+  .page-body{grid-template-columns:1fr;}
+  .sidebar{display:none;}
+  .pace-cards{grid-template-columns:1fr;}
+  .header-title{display:none;}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div style="display:flex;align-items:center;gap:.65rem">
+      <span class="lab-badge">Lab 6.2</span>
+      <span class="header-title">Automated Testing &middot; CloudEats</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:.85rem">
+      <div class="pace-switcher">
+        <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner',this)">&#127807; Beginner</button>
+        <button class="pace-btn" data-pace="average" onclick="setPace('average',this)">&#9889; Average</button>
+        <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced',this)">&#128640; Advanced</button>
+      </div>
+      <span class="ghp-badge">&#127758; GitHub Pages Ready</span>
+    </div>
+  </div>
+</header>
+
+<div class="lab-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb">
+      <a href="week06_DevOps_and_Version_Control.html">&larr; Week 6 Lecture</a> &rsaquo;
+      <a href="week06_lab1_git_version_control.html">Lab 6.1</a> &rsaquo; Lab 6.2
+    </div>
+    <h1>Automated Testing &amp; GitHub Actions CI</h1>
+    <p class="hero-sub">Install Jest, run 12 unit tests, break one on purpose, fix it, write the CI workflow, push to GitHub and watch it gate your merges automatically.</p>
+    <div class="hero-meta">
+      <div class="meta-chip">&#9200; <strong>60 min</strong></div>
+      <div class="meta-chip">&#128279; <strong>Prereq:</strong>&nbsp;Lab 6.1 complete &middot; repo on GitHub</div>
+      <div class="meta-chip">&#128300; <strong>Jest</strong>&nbsp;+ GitHub Actions</div>
+      <div class="meta-chip green">&#9989; <strong>Outcome:</strong>&nbsp;CI runs on every push</div>
+    </div>
+  </div>
+</div>
+
+<div class="pace-guide">
+  <div class="pace-cards">
+    <div class="pace-card b">
+      <div class="pc-label">&#127807; Beginner &mdash; Parts 0&ndash;4</div>
+      <div class="pc-scope">All steps open. Every command includes expected output. Inline explanations for every Jest keyword. You will run tests, see them pass, break one, fix it, then set up GitHub Actions. Allow 75 min.</div>
+    </div>
+    <div class="pace-card a">
+      <div class="pc-label">&#9889; Average &mdash; Parts 0&ndash;5</div>
+      <div class="pc-scope">Steps collapsed by default. Why-boxes explain Jest architecture and CI design decisions. You add a <strong>coverage threshold</strong> to the CI workflow in Part 5. Allow 65 min.</div>
+    </div>
+    <div class="pace-card adv">
+      <div class="pc-label">&#128640; Advanced &mdash; Parts 0&ndash;6</div>
+      <div class="pc-scope">Fast path. Challenge: add a <strong>Husky pre-commit hook</strong> in Part 6 so tests run locally before every commit, blocking bad code before it ever reaches GitHub. Allow 60 min.</div>
+    </div>
+  </div>
+</div>
+
+<div class="page-body">
+
+<aside class="sidebar">
+  <div class="progress-wrap">
+    <div class="sb-title" style="margin-bottom:.45rem">Lab Progress</div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+    <div class="prog-text">Part <span id="prog-cur">0</span> of <span id="prog-max">6</span></div>
+  </div>
+  <div class="sb-title">Contents</div>
+  <ul class="sb-nav">
+    <li class="sb-section">Context</li>
+    <li><a href="#p0">Part 0 &middot; Why Tests?</a></li>
+    <li class="sb-section">Setup</li>
+    <li><a href="#p1">Part 1 &middot; Install Jest</a></li>
+    <li><a href="#p2">Part 2 &middot; Run Tests</a></li>
+    <li class="sb-section">Understand</li>
+    <li><a href="#p3">Part 3 &middot; Break &amp; Fix</a></li>
+    <li><a href="#p4">Part 4 &middot; GitHub Actions CI</a></li>
+    <li class="sb-section">Deepen</li>
+    <li><a href="#p5">Part 5 &middot; Coverage Report</a></li>
+    <li class="sb-section">Advanced</li>
+    <li><a href="#p6">&#128640; Part 6 &middot; Husky Hook</a></li>
+  </ul>
+</aside>
+
+<main class="lab-content">
+
+<div class="callout green">
+  <span>&#127919;</span>
+  <div><strong>Goal:</strong> By the end of this lab, every push to your GitHub repo automatically runs 12 unit tests. If any test fails, the merge is blocked. You will have seen a green CI tick on a real commit.</div>
+</div>
+
+<div class="ctrl-bar">
+  <span class="ctrl-bar-info"><strong>17 steps</strong> across 6 parts</span>
+  <div class="ctrl-btns">
+    <button class="ctrl-btn" onclick="expandAll()">&#8595; Expand All</button>
+    <button class="ctrl-btn" onclick="collapseAll()">&#8593; Collapse All</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PART 0 — WHY TESTS
+     ═══════════════════════════════════════════ -->
+<section id="p0">
+  <div class="part-head ph-red">
+    <span class="part-pill pp-red">Part 0</span>
+    <span class="part-title">Why Automated Testing? A Production Disaster</span>
+    <span class="part-time">8 min</span>
+  </div>
+
+  <div class="step open" id="step-p0-1">
+    <div class="step-hd" onclick="toggleStep('step-p0-1')">
+      <span class="step-num">0.1</span>
+      <span class="step-label">The bug that got to production</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>Two hours after deploying the ratings feature from Lab 6.1, a real-world scenario plays out:</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">production incident &mdash; what happened</span></div>
+        <pre><span class="cv">Customer report:</span>
+  <span class="cm">"I gave my favourite restaurant 6 stars and the app crashed!"</span>
+
+<span class="ca">Root cause found:</span>
+  <span class="cm">validateRating() correctly rejects 6 on the backend.</span>
+  <span class="cm">But a customer sent a direct HTTP request, bypassing the form.</span>
+  <span class="cm">The edge case "rating > 5 sent as string via API" was never tested.</span>
+
+<span class="red">Business impact:</span>
+  <span class="cm">50 customers affected &nbsp;| 2 hours downtime &nbsp;| RM 2,000 lost revenue</span>
+  <span class="cm">4 hours of developer time to find, fix, and redeploy</span>
+  <span class="cm">1-star review left: "App crashes when I try to rate!"</span></pre>
+      </div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; Why didn't the developer catch this?</div>
+        When testing manually, developers test the happy path: "enter a valid rating, it works." They rarely test every edge case: what if someone sends a string? A negative number? A rating of 999? Humans forget. Automated tests never forget &mdash; you write them once and they run forever, every time, on every change.
+      </div>
+
+      <p>Here is the difference between manual and automated testing at a glance:</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin:.75rem 0">
+        <div style="background:var(--bg3);border:1px solid var(--border);border-top:3px solid var(--red);border-radius:8px;padding:.9rem">
+          <div style="font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red);margin-bottom:.55rem">&#10060; Manual Testing</div>
+          <div style="font-size:.8rem;color:var(--muted);line-height:1.6">
+            Write code &rarr; curl test one case &rarr; "Looks good!" &rarr; deploy<br><br>
+            Next sprint: change a function &rarr; forget to retest edge cases &rarr; break in production
+          </div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-top:3px solid var(--green);border-radius:8px;padding:.9rem">
+          <div style="font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green);margin-bottom:.55rem">&#10004; Automated Testing</div>
+          <div style="font-size:.8rem;color:var(--muted);line-height:1.6">
+            Write tests once &rarr; run <code>npm test</code> in 2 seconds &rarr; 12 cases checked &rarr; CI runs same 12 tests on every push automatically
+          </div>
+        </div>
+      </div>
+
+      <div class="pb a">
+        <div class="pb-label">&#9889; Average &mdash; Testing Pyramid</div>
+        Tests are organised into layers. <strong>Unit tests</strong> (bottom, most numerous): test one function in isolation, milliseconds each. <strong>Integration tests</strong> (middle): test multiple parts together, e.g. an API endpoint hitting the database. <strong>End-to-end / UI tests</strong> (top, fewest): test through a real browser, seconds each. Today focuses on unit tests &mdash; the most important layer to master first.
+      </div>
+      <div class="pb adv">
+        <div class="pb-label">&#128640; Advanced &mdash; Cost of bugs by stage</div>
+        IBM Systems Science Institute research (widely cited in software engineering) found that bugs caught in production cost roughly 6&times; more to fix than those caught in development, and 15&times; more than those caught in requirements. Automated tests act as a mechanical net at the cheapest stage. The ROI calculation: 1 hour writing tests prevents 6&ndash;15 hours of incident response, hotfix, re-QA, and deploy cycles.
+      </div>
+    </div>
+  </div>
+
+  <div class="checkpoint">&#9989; <div><strong>Part 0 complete.</strong> You understand <em>why</em> the industry runs automated tests on every push. Now build the test suite.</div></div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PART 1 — INSTALL JEST
+     ═══════════════════════════════════════════ -->
+<section id="p1">
+  <div class="part-head ph-amber">
+    <span class="part-pill pp-amber">Part 1</span>
+    <span class="part-title">Install Jest &amp; Export the Function</span>
+    <span class="part-time">10 min</span>
+  </div>
+
+  <div class="step open" id="step-p1-1">
+    <div class="step-hd" onclick="toggleStep('step-p1-1')">
+      <span class="step-num">1.1</span>
+      <span class="step-label">Install Jest as a dev dependency</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p><strong>Jest</strong> is the testing framework used by Facebook, Airbnb, and thousands of open-source projects. <code>--save-dev</code> records it under <code>devDependencies</code> in <code>package.json</code> &mdash; it is a tool for development only, not shipped to production.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># Navigate to the menu service</span>
+<span class="ca">cd ~/cloudeats-app/services/menu-service</span>
+<span class="ca">pwd</span>
+<span class="cm"># Expected: .../cloudeats-app/services/menu-service</span>
+
+<span class="cm"># Install Jest — saves to devDependencies</span>
+<span class="ca">npm install --save-dev jest</span>
+
+<span class="cm"># Confirm it installed</span>
+<span class="ca">npm list jest</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">menu-service@1.0.0
+└── jest@29.x.x</div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; What is --save-dev?</div>
+        <code>npm install express</code> adds to <code>dependencies</code> &mdash; packages needed when the app runs in production. <code>npm install --save-dev jest</code> adds to <code>devDependencies</code> &mdash; packages only needed while developing. When you deploy to a server and run <code>npm install --production</code>, Jest is skipped, keeping the production container lean.
+      </div>
+      <div class="pb a">
+        <div class="pb-label">&#9889; Average &mdash; Jest vs Mocha: why Jest wins for small teams</div>
+        Jest is "batteries included": zero-config test runner, built-in <code>expect</code> assertions, built-in mocking, and coverage reporting in one package. Mocha requires separate packages (Chai for assertions, Sinon for mocks, Istanbul for coverage). For a team starting with testing, Jest's single install is far less friction. Mocha's composability matters at scale when you need specific assertion libraries or non-standard reporters.
+      </div>
+
+      <div class="trouble" onclick="toggleTrouble(this)">
+        <div class="trouble-hd">&#9888; npm WARN / npm ERR during install <span class="trouble-arrow">&#9654;</span></div>
+        <div class="trouble-body">A <strong>WARN</strong> about peer dependencies is usually harmless &mdash; continue. An <strong>ERR</strong> usually means a network issue. Try: <code>npm cache clean --force</code> then <code>npm install --save-dev jest</code> again. If offline, check your Wi-Fi connection.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step open" id="step-p1-2">
+    <div class="step-hd" onclick="toggleStep('step-p1-2')">
+      <span class="step-num">1.2</span>
+      <span class="step-label">Add test scripts to package.json</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>Add <code>"test"</code>, <code>"test:watch"</code>, and <code>"test:coverage"</code> scripts so you can run Jest without typing the full path.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">services/menu-service/package.json &mdash; scripts section</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre>{
+  <span class="cp">"name"</span>: <span class="cv">"menu-service"</span>,
+  <span class="cp">"version"</span>: <span class="cv">"1.0.0"</span>,
+  <span class="cp">"scripts"</span>: {
+    <span class="cp">"start"</span>: <span class="cv">"node server.js"</span>,
+    <span class="cp">"test"</span>: <span class="cv">"jest"</span>,
+    <span class="cp">"test:watch"</span>: <span class="cv">"jest --watch"</span>,
+    <span class="cp">"test:coverage"</span>: <span class="cv">"jest --coverage"</span>
+  },
+  <span class="cp">"dependencies"</span>: {
+    <span class="cp">"express"</span>: <span class="cv">"^4.18.0"</span>,
+    <span class="cp">"mysql2"</span>: <span class="cv">"^3.0.0"</span>
+  },
+  <span class="cp">"devDependencies"</span>: {
+    <span class="cp">"jest"</span>: <span class="cv">"^29.0.0"</span>
+  }
+}</pre>
+      </div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; What do these scripts do?</div>
+        <code>"test": "jest"</code> &rarr; <code>npm test</code> runs all test files once and exits.<br>
+        <code>"test:watch": "jest --watch"</code> &rarr; <code>npm run test:watch</code> re-runs tests automatically every time you save a file. Great for rapid development.<br>
+        <code>"test:coverage": "jest --coverage"</code> &rarr; <code>npm run test:coverage</code> shows which lines of code were exercised by tests.
+      </div>
+    </div>
+  </div>
+
+  <div class="step open" id="step-p1-3">
+    <div class="step-hd" onclick="toggleStep('step-p1-3')">
+      <span class="step-num">1.3</span>
+      <span class="step-label">Export validateRating so tests can import it</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>Jest imports your function to test it. But <code>server.js</code> currently does not export anything. Add a conditional export at the bottom of the file &mdash; it only activates during tests, leaving production behaviour unchanged.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">services/menu-service/server.js &mdash; add at the very bottom</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm">// ===== EXPORT FOR TESTING (add at bottom of file) =====</span>
+<span class="cm">// Only exports when Jest sets NODE_ENV=test</span>
+<span class="cm">// Production server is unaffected</span>
+<span class="ck">if</span> (process.env.<span class="cp">NODE_ENV</span> === <span class="cv">'test'</span>) {
+  module.exports = { validateRating };
+}</pre>
+      </div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; Why the if (NODE_ENV === 'test') check?</div>
+        In production, <code>NODE_ENV</code> is set to <code>'production'</code>. This <code>if</code> block only runs when <code>NODE_ENV</code> is <code>'test'</code> &mdash; which Jest sets automatically. So the export is invisible to the live server. If you exported unconditionally, Node would also try to run <code>app.listen()</code> during tests, causing port-conflict errors.
+      </div>
+      <div class="pb a">
+        <div class="pb-label">&#9889; Average &mdash; The better pattern: separate utilities file</div>
+        In professional codebases, pure logic like <code>validateRating</code> lives in its own file (e.g. <code>utils/validators.js</code>) that exports cleanly without any server startup side-effects. <code>server.js</code> imports from it. Tests import from <code>utils/validators.js</code> directly. The conditional export trick works for a lab but is a smell in production code.
+      </div>
+
+      <div class="trouble" onclick="toggleTrouble(this)">
+        <div class="trouble-hd">&#9888; "Cannot find function validateRating in server.js" <span class="trouble-arrow">&#9654;</span></div>
+        <div class="trouble-body">You need to have the <code>validateRating</code> function from Lab 6.1 already in <code>server.js</code>. Search the file: <code>grep -n "function validateRating" server.js</code>. If it is missing, add it now &mdash; the complete function is in the Lab 6.1 guide under Part 2.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="checkpoint">&#9989; <div><strong>Part 1 complete.</strong> Jest is installed, scripts are configured, and <code>validateRating</code> is exportable for testing.</div></div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PART 2 — RUN TESTS
+     ═══════════════════════════════════════════ -->
+<section id="p2">
+  <div class="part-head ph-green">
+    <span class="part-pill pp-green">Part 2</span>
+    <span class="part-title">Create the Test File &amp; Run It</span>
+    <span class="part-time">12 min</span>
+  </div>
+
+  <div class="step open" id="step-p2-1">
+    <div class="step-hd" onclick="toggleStep('step-p2-1')">
+      <span class="step-num">2.1</span>
+      <span class="step-label">Create the test folder and validation.test.js</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>Jest discovers test files by looking for files ending in <code>.test.js</code> or <code>.spec.js</code>, or files inside a <code>__tests__</code> folder. We use both conventions here.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">cd ~/cloudeats-app/services/menu-service</span>
+
+<span class="cm"># Create the test directory</span>
+<span class="ca">mkdir -p __tests__/unit</span>
+
+<span class="cm"># Confirm the folder exists</span>
+<span class="ca">ls __tests__/unit</span>
+<span class="cm"># Expected: (empty for now)</span></pre>
+      </div>
+
+      <p>Now create the test file. This contains 12 tests organised into four groups: valid ratings, invalid ratings, edge cases, and boundary values.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">__tests__/unit/validation.test.js &mdash; create this file</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm">/**
+ * Unit Tests for Rating Validation
+ * Tests the validateRating() function from menu-service/server.js
+ *
+ * AAA Pattern used in each test:
+ *   Arrange — set up the input
+ *   Act     — call the function
+ *   Assert  — check the result with expect()
+ */</span>
+
+<span class="cm">// Import the function we want to test</span>
+<span class="ck">const</span> { <span class="cp">validateRating</span> } = <span class="ck">require</span>(<span class="cv">'../../server'</span>);
+
+<span class="cm">// describe() groups related tests under a heading</span>
+<span class="cp">describe</span>(<span class="cv">'validateRating Function'</span>, () => {
+
+  <span class="cm">// ── Group 1: Valid ratings should pass ─────────────────────</span>
+  <span class="cp">test</span>(<span class="cv">'should accept valid rating of 1'</span>, () => {
+    <span class="ck">const</span> result = <span class="cp">validateRating</span>(<span class="ca">1</span>);
+    <span class="cp">expect</span>(result.valid).<span class="cp">toBe</span>(<span class="ck">true</span>);
+  });
+
+  <span class="cp">test</span>(<span class="cv">'should accept valid rating of 3'</span>, () => {
+    <span class="ck">const</span> result = <span class="cp">validateRating</span>(<span class="ca">3</span>);
+    <span class="cp">expect</span>(result.valid).<span class="cp">toBe</span>(<span class="ck">true</span>);
+  });
+
+  <span class="cp">test</span>(<span class="cv">'should accept valid rating of 5'</span>, () => {
+    <span class="ck">const</span> result = <span class="cp">validateRating</span>(<span class="ca">5</span>);
+    <span class="cp">expect</span>(result.valid).<span class="cp">toBe</span>(<span class="ck">true</span>);
+  });
+
+  <span class="cm">// ── Group 2: Invalid ratings should fail ───────────────────</span>
+  <span class="cp">test</span>(<span class="cv">'should reject rating above 5'</span>, () => {
+    <span class="ck">const</span> result = <span class="cp">validateRating</span>(<span class="ca">6</span>);
+    <span class="cp">expect</span>(result.valid).<span class="cp">toBe</span>(<span class="ck">false</span>);
+    <span class="cp">expect</span>(result.error).<span class="cp">toBe</span>(<span class="cv">'Rating must be between 1 and 5'</span>);
+  });
+
+  <span class="cp">test</span>(<span class="cv">'should reject rating of 0'</span>, () => {
+    <span class="ck">const</span> result = <span class="cp">validateRating</span>(<span class="ca">0</span>);
+    <span class="cp">expect</span>(result.valid).<span class="cp">toBe</span>(<span class="ck">false</span>);
+    <span class="cp">expect</span>(result.error).<span class="cp">toBe</span>(<span class="cv">'Rating must be between 1 and 5'</span>);
+  });
+
+  <span class="cp">test</span>(<span class="cv">'should reject negative rating'</span>, () => {
+    <span class="ck">const</span> result = <span class="cp">validateRating</span>(<span class="ca">-1</span>);
+    <span class="cp">expect</span>(result.valid).<span class="cp">toBe</span>(<span class="ck">false</span>);
+    <span class="cp">expect</span>(result.error).<span class="cp">toBe</span>(<span class="cv">'Rating must be between 1 and 5'</span>);
+  });
+
+  <span class="cp">test</span>(<span class="cv">'should reject decimal rating'</span>, () => {
+    <span class="ck">const</span> result = <span class="cp">validateRating</span>(<span class="ca">3.5</span>);
+    <span class="cp">expect</span>(result.valid).<span class="cp">toBe</span>(<span class="ck">false</span>);
+    <span class="cp">expect</span>(result.error).<span class="cp">toBe</span>(<span class="cv">'Rating must be a whole number'</span>);
+  });
+
+  <span class="cm">// ── Group 3: Edge cases ────────────────────────────────────</span>
+  <span class="cp">test</span>(<span class="cv">'should reject undefined rating'</span>, () => {
+    <span class="ck">const</span> result = <span class="cp">validateRating</span>(<span class="ck">undefined</span>);
+    <span class="cp">expect</span>(result.valid).<span class="cp">toBe</span>(<span class="ck">false</span>);
+    <span class="cp">expect</span>(result.error).<span class="cp">toBe</span>(<span class="cv">'Rating is required'</span>);
+  });
+
+  <span class="cp">test</span>(<span class="cv">'should reject null rating'</span>, () => {
+    <span class="ck">const</span> result = <span class="cp">validateRating</span>(<span class="ck">null</span>);
+    <span class="cp">expect</span>(result.valid).<span class="cp">toBe</span>(<span class="ck">false</span>);
+    <span class="cp">expect</span>(result.error).<span class="cp">toBe</span>(<span class="cv">'Rating is required'</span>);
+  });
+
+  <span class="cp">test</span>(<span class="cv">'should reject string rating'</span>, () => {
+    <span class="ck">const</span> result = <span class="cp">validateRating</span>(<span class="cv">'five'</span>);
+    <span class="cp">expect</span>(result.valid).<span class="cp">toBe</span>(<span class="ck">false</span>);
+    <span class="cp">expect</span>(result.error).<span class="cp">toBe</span>(<span class="cv">'Rating must be a number'</span>);
+  });
+
+  <span class="cm">// ── Group 4: Boundary values ───────────────────────────────</span>
+  <span class="cp">test</span>(<span class="cv">'should accept exact lower boundary: 1'</span>, () => {
+    <span class="cp">expect</span>(<span class="cp">validateRating</span>(<span class="ca">1</span>).valid).<span class="cp">toBe</span>(<span class="ck">true</span>);
+  });
+
+  <span class="cp">test</span>(<span class="cv">'should accept exact upper boundary: 5'</span>, () => {
+    <span class="cp">expect</span>(<span class="cp">validateRating</span>(<span class="ca">5</span>).valid).<span class="cp">toBe</span>(<span class="ck">true</span>);
+  });
+
+  <span class="cp">test</span>(<span class="cv">'should reject one above upper boundary: 6'</span>, () => {
+    <span class="cp">expect</span>(<span class="cp">validateRating</span>(<span class="ca">6</span>).valid).<span class="cp">toBe</span>(<span class="ck">false</span>);
+  });
+
+});</pre>
+      </div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; Anatomy of one test</div>
+        <code>test('description', () =&gt; { ... })</code> — the description is what you read when a test fails.<br>
+        <code>const result = validateRating(6)</code> — call the function with a specific input.<br>
+        <code>expect(result.valid).toBe(false)</code> — assert what the output should be. If <code>result.valid</code> is <code>true</code> instead, Jest prints a clear "Expected: false, Received: true" failure.
+      </div>
+      <div class="pb a">
+        <div class="pb-label">&#9889; Average &mdash; Why test boundary values?</div>
+        Boundary Value Analysis (BVA) is a testing technique: bugs cluster at edges. For a range of 1&ndash;5, test exactly 0, 1, 5, and 6 &mdash; not just 3. The most common off-by-one errors show up as "accepts 6 when it should reject" or "rejects 1 when it should accept". Our test suite covers all four boundaries explicitly.
+      </div>
+    </div>
+  </div>
+
+  <div class="step open" id="step-p2-2">
+    <div class="step-hd" onclick="toggleStep('step-p2-2')">
+      <span class="step-num">2.2</span>
+      <span class="step-label">Run the tests for the first time</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">cd ~/cloudeats-app/services/menu-service</span>
+
+<span class="cm"># NODE_ENV=test enables the module.exports block in server.js</span>
+<span class="ca">export NODE_ENV=test</span>
+
+<span class="cm"># Run all tests</span>
+<span class="ca">npm test</span></pre>
+      </div>
+      <div class="out-label">What you should see (all 12 green)</div>
+      <div class="exp-out"> PASS  __tests__/unit/validation.test.js
+  validateRating Function
+    &#10003; should accept valid rating of 1 (3ms)
+    &#10003; should accept valid rating of 3 (1ms)
+    &#10003; should accept valid rating of 5 (1ms)
+    &#10003; should reject rating above 5 (2ms)
+    &#10003; should reject rating of 0 (1ms)
+    &#10003; should reject negative rating (1ms)
+    &#10003; should reject decimal rating (1ms)
+    &#10003; should reject undefined rating (1ms)
+    &#10003; should reject null rating (1ms)
+    &#10003; should reject string rating (2ms)
+    &#10003; should accept exact lower boundary: 1 (1ms)
+    &#10003; should accept exact upper boundary: 5 (1ms)
+    &#10003; should reject one above upper boundary: 6 (1ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       12 passed, 12 total
+Time:        2.1 s</div>
+
+      <div class="callout green">
+        <span>&#127881;</span>
+        <div><strong>12/12 passing.</strong> Each tick represents a case that would have caught a production bug automatically. This suite now runs in 2 seconds instead of the 5 minutes it would take to test manually.</div>
+      </div>
+
+      <div class="trouble" onclick="toggleTrouble(this)">
+        <div class="trouble-hd">&#9888; "Cannot find module '../../server'" <span class="trouble-arrow">&#9654;</span></div>
+        <div class="trouble-body">The relative path <code>../../server</code> means "go up two folders from <code>__tests__/unit/</code> then find <code>server.js</code>". Confirm your file is at <code>services/menu-service/__tests__/unit/validation.test.js</code> exactly. If your <code>server.js</code> is named differently, update the require path to match.</div>
+      </div>
+      <div class="trouble" onclick="toggleTrouble(this)">
+        <div class="trouble-hd">&#9888; "validateRating is not a function" <span class="trouble-arrow">&#9654;</span></div>
+        <div class="trouble-body">The export block in <code>server.js</code> is not executing. Confirm: (1) you added the <code>if (process.env.NODE_ENV === 'test')</code> block at the bottom, (2) you ran <code>export NODE_ENV=test</code> in the <em>same terminal window</em> before <code>npm test</code>. The export command only applies to the current terminal session.</div>
+      </div>
+      <div class="trouble" onclick="toggleTrouble(this)">
+        <div class="trouble-hd">&#9888; "jest: command not found" <span class="trouble-arrow">&#9654;</span></div>
+        <div class="trouble-body">Jest did not install correctly. Run: <code>rm -rf node_modules package-lock.json</code> then <code>npm install</code> to reinstall everything. Check your <code>package.json</code> has <code>"jest"</code> under <code>devDependencies</code> before reinstalling.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="checkpoint">&#9989; <div><strong>Part 2 complete.</strong> 12 tests passing. You can now change any line of <code>validateRating</code> and know within 2 seconds whether you broke something.</div></div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PART 3 — BREAK & FIX
+     ═══════════════════════════════════════════ -->
+<section id="p3">
+  <div class="part-head ph-red">
+    <span class="part-pill pp-red">Part 3</span>
+    <span class="part-title">Break a Test on Purpose &mdash; Then Fix It</span>
+    <span class="part-time">10 min</span>
+  </div>
+
+  <div class="callout blue">
+    <span>&#128161;</span>
+    <div><strong>Why do this?</strong> Most students only see tests passing. Seeing a <em>failure</em> &mdash; and understanding what the output tells you &mdash; is the skill that matters when a real bug sneaks through to CI at 2am.</div>
+  </div>
+
+  <div class="step open" id="step-p3-1">
+    <div class="step-hd" onclick="toggleStep('step-p3-1')">
+      <span class="step-num">3.1</span>
+      <span class="step-label">Introduce a deliberate bug in validateRating</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>Open <code>services/menu-service/server.js</code> and find the range check inside <code>validateRating</code>. Change the upper bound from <code>5</code> to <code>10</code>.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">server.js &mdash; find and change this one line</span></div>
+        <pre><span class="cm">// BEFORE (correct):</span>
+<span class="ck">if</span> (ratingNum &lt; <span class="ca">1</span> || ratingNum &gt; <span class="ca">5</span>) {
+  <span class="ck">return</span> { valid: <span class="ck">false</span>, error: <span class="cv">'Rating must be between 1 and 5'</span> };
+}
+
+<span class="cm">// AFTER (deliberately broken — change 5 to 10):</span>
+<span class="ck">if</span> (ratingNum &lt; <span class="ca">1</span> || ratingNum &gt; <span class="red">10</span>) {  <span class="cm">// BUG: should be 5</span>
+  <span class="ck">return</span> { valid: <span class="ck">false</span>, error: <span class="cv">'Rating must be between 1 and 5'</span> };
+}</pre>
+      </div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; What did this change do?</div>
+        The function now accepts ratings from 1 to 10 instead of 1 to 5. A customer who submits a rating of 6 or 7 will no longer get an error &mdash; the value will be accepted and saved to the database. This is exactly the kind of off-by-one bug that ships to production when there are no automated tests.
+      </div>
+    </div>
+  </div>
+
+  <div class="step open" id="step-p3-2">
+    <div class="step-hd" onclick="toggleStep('step-p3-2')">
+      <span class="step-num">3.2</span>
+      <span class="step-label">Run the tests and read the failure output</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">npm test</span></pre>
+      </div>
+      <div class="out-label">What you should see (failures highlighted)</div>
+      <div class="exp-out fail"> FAIL  __tests__/unit/validation.test.js
+  validateRating Function
+    &#10003; should accept valid rating of 1 (3ms)
+    &#10003; should accept valid rating of 3 (1ms)
+    &#10003; should accept valid rating of 5 (1ms)
+    &#10007; should reject rating above 5 (4ms)
+    &#10003; should reject rating of 0 (1ms)
+    &#10003; should reject negative rating (1ms)
+    ...
+    &#10007; should reject one above upper boundary: 6 (1ms)
+
+  &#9679; validateRating Function &rsaquo; should reject rating above 5
+
+    expect(received).toBe(expected)
+
+    Expected: false
+    Received: true
+
+      18 |   test('should reject rating above 5', () => {
+      19 |     const result = validateRating(6);
+    > 20 |     expect(result.valid).toBe(false);
+         |                          ^
+      21 |   });
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 10 passed, 12 total</div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; Reading the failure message</div>
+        <strong style="color:var(--amber)">Expected: false</strong> &mdash; the test said "I expect this to be false"<br>
+        <strong style="color:var(--red)">Received: true</strong> &mdash; but the function returned true (accepted rating 6)<br>
+        The <code>&gt;</code> arrow and <code>^</code> caret point to the exact line in the test that failed. Jest also shows the test name, so you know instantly <em>which</em> case broke without reading the whole test file.
+      </div>
+      <div class="pb a">
+        <div class="pb-label">&#9889; Average &mdash; Two tests failed, not one — why?</div>
+        Both <code>"should reject rating above 5"</code> (tests <code>6</code>) and <code>"should reject one above upper boundary: 6"</code> (also tests <code>6</code>) failed. This is intentional test duplication at the boundary &mdash; the group-2 test checks the general case, while the group-4 test explicitly documents that 6 is the exact boundary violation. Both catch the same bug, which gives you two signals that something is wrong.
+      </div>
+      <div class="pb adv">
+        <div class="pb-label">&#128640; Advanced &mdash; Exit codes and CI</div>
+        When tests fail, Jest exits with code <code>1</code> (non-zero). GitHub Actions interprets any non-zero exit code as a step failure, which marks the entire workflow run as failed and blocks the PR from merging. This is the mechanical gate: your CI pipeline is just automation that checks the exit code. <code>npm test &amp;&amp; echo "deploy"</code> &mdash; <code>echo "deploy"</code> only runs if tests exit 0.
+      </div>
+    </div>
+  </div>
+
+  <div class="step open" id="step-p3-3">
+    <div class="step-hd" onclick="toggleStep('step-p3-3')">
+      <span class="step-num">3.3</span>
+      <span class="step-label">Fix the bug and verify tests go green</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>Restore the correct upper bound in <code>server.js</code> and re-run the tests to confirm everything is green again.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">server.js &mdash; restore the correct value</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm">// Fix: restore 5 as the upper bound</span>
+<span class="ck">if</span> (ratingNum &lt; <span class="ca">1</span> || ratingNum &gt; <span class="ca">5</span>) {
+  <span class="ck">return</span> { valid: <span class="ck">false</span>, error: <span class="cv">'Rating must be between 1 and 5'</span> };
+}</pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">npm test</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out"> PASS  __tests__/unit/validation.test.js
+  validateRating Function
+    &#10003; should accept valid rating of 1 (3ms)
+    &#10003; should accept valid rating of 3 (1ms)
+    &#10003; should accept valid rating of 5 (1ms)
+    &#10003; should reject rating above 5 (1ms)
+    ...
+    &#10003; should reject one above upper boundary: 6 (1ms)
+
+Tests: 12 passed, 12 total  |  Time: 2.1s</div>
+
+      <div class="callout green">
+        <span>&#10004;</span>
+        <div>You just experienced the <strong>Red &rarr; Green</strong> cycle that defines TDD (Test-Driven Development): write a failing test, write the minimum code to pass it, confirm it passes. You ran it in reverse here (broke then fixed), but the principle is identical.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="checkpoint">&#9989; <div><strong>Part 3 complete.</strong> You have seen a test failure, understood the output, and fixed the root cause. This is the day-to-day debugging cycle with automated tests.</div></div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PART 4 — GITHUB ACTIONS CI
+     ═══════════════════════════════════════════ -->
+<section id="p4">
+  <div class="part-head ph-purple">
+    <span class="part-pill pp-purple">Part 4</span>
+    <span class="part-title">GitHub Actions CI &mdash; Tests on Every Push</span>
+    <span class="part-time">15 min</span>
+  </div>
+
+  <div class="step open" id="step-p4-1">
+    <div class="step-hd" onclick="toggleStep('step-p4-1')">
+      <span class="step-num">4.1</span>
+      <span class="step-label">Create the CI workflow file</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>GitHub Actions reads YAML workflow files from the <code>.github/workflows/</code> folder in your repo. Any file there with a <code>.yml</code> extension is treated as a workflow definition.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">cd ~/cloudeats-app</span>
+
+<span class="cm"># Create the workflows directory</span>
+<span class="ca">mkdir -p .github/workflows</span>
+
+<span class="cm"># Confirm the path</span>
+<span class="ca">ls .github/workflows</span>
+<span class="cm"># Expected: (empty for now)</span></pre>
+      </div>
+
+      <p>Now create the workflow file. Every line is annotated so you understand what it does before you push it.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">.github/workflows/ci.yml &mdash; create this file</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># Workflow name — appears in the GitHub Actions tab</span>
+<span class="cp">name:</span> <span class="cv">Run Automated Tests</span>
+
+<span class="cm"># TRIGGER: when does this workflow run?</span>
+<span class="cp">on:</span>
+  <span class="cp">push:</span>
+    <span class="cp">branches:</span>
+      - <span class="cv">main</span>          <span class="cm"># every push to main</span>
+      - <span class="cv">'feature/**'</span>  <span class="cm"># every push to any feature/* branch</span>
+  <span class="cp">pull_request:</span>
+    <span class="cp">branches:</span>
+      - <span class="cv">main</span>          <span class="cm"># every PR that targets main</span>
+
+<span class="cm"># JOBS: what to run</span>
+<span class="cp">jobs:</span>
+  <span class="cp">test-menu-service:</span>
+    <span class="cp">name:</span> <span class="cv">Menu Service Tests</span>
+    <span class="cp">runs-on:</span> <span class="cv">ubuntu-latest</span>  <span class="cm"># fresh Ubuntu VM, destroyed after job</span>
+
+    <span class="cp">steps:</span>
+
+      <span class="cm"># Step 1: Download the code from GitHub</span>
+      - <span class="cp">name:</span> <span class="cv">Checkout code</span>
+        <span class="cp">uses:</span> <span class="cv">actions/checkout@v3</span>
+
+      <span class="cm"># Step 2: Install Node.js on the runner VM</span>
+      - <span class="cp">name:</span> <span class="cv">Setup Node.js 18</span>
+        <span class="cp">uses:</span> <span class="cv">actions/setup-node@v3</span>
+        <span class="cp">with:</span>
+          <span class="cp">node-version:</span> <span class="cv">'18'</span>
+          <span class="cp">cache:</span> <span class="cv">'npm'</span>          <span class="cm"># cache node_modules between runs</span>
+          <span class="cp">cache-dependency-path:</span> <span class="cv">services/menu-service/package-lock.json</span>
+
+      <span class="cm"># Step 3: Install project dependencies</span>
+      - <span class="cp">name:</span> <span class="cv">Install dependencies</span>
+        <span class="cp">working-directory:</span> <span class="cv">./services/menu-service</span>
+        <span class="cp">run:</span> <span class="cv">npm install</span>
+
+      <span class="cm"># Step 4: Run the test suite</span>
+      - <span class="cp">name:</span> <span class="cv">Run tests</span>
+        <span class="cp">working-directory:</span> <span class="cv">./services/menu-service</span>
+        <span class="cp">env:</span>
+          <span class="cp">NODE_ENV:</span> <span class="cv">test</span>    <span class="cm"># enables module.exports in server.js</span>
+        <span class="cp">run:</span> <span class="cv">npm test</span></pre>
+      </div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; What is working-directory?</div>
+        <code>working-directory: ./services/menu-service</code> tells GitHub Actions to run that step <em>from inside</em> the menu-service folder. Without it, <code>npm install</code> would look for <code>package.json</code> in the root of the repo (where it does not exist) and fail.
+      </div>
+      <div class="pb a">
+        <div class="pb-label">&#9889; Average &mdash; Why cache: 'npm'?</div>
+        Without caching, every CI run downloads all <code>node_modules</code> from the internet (~50MB for a typical Node project). With <code>cache: 'npm'</code> and <code>cache-dependency-path</code> pointing to the lockfile, GitHub stores <code>node_modules</code> after the first run and restores it on subsequent runs if the lockfile has not changed. This cuts the install step from ~30 seconds to ~3 seconds for typical projects.
+      </div>
+      <div class="pb adv">
+        <div class="pb-label">&#128640; Advanced &mdash; The on: trigger design</div>
+        Running CI on <code>feature/**</code> pushes catches failures early, before a PR is even opened. Running on <code>pull_request: branches: [main]</code> is what enables the branch protection rule: "require status checks to pass before merging". These two triggers together mean a developer cannot merge broken code even if they somehow skip the feature-branch check. The CI gate is enforced at the PR boundary where it matters most.
+      </div>
+    </div>
+  </div>
+
+  <div class="step open" id="step-p4-2">
+    <div class="step-hd" onclick="toggleStep('step-p4-2')">
+      <span class="step-num">4.2</span>
+      <span class="step-label">Commit everything and push to GitHub</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">cd ~/cloudeats-app</span>
+
+<span class="cm"># Check what will be committed</span>
+<span class="ca">git status</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">On branch main
+Untracked files:
+  services/menu-service/__tests__/
+  services/menu-service/package.json  (modified)
+  services/menu-service/server.js     (modified)
+  .github/</div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># Stage all the new files</span>
+<span class="ca">git add services/menu-service/__tests__/</span>
+<span class="ca">git add services/menu-service/package.json</span>
+<span class="ca">git add services/menu-service/server.js</span>
+<span class="ca">git add .github/workflows/ci.yml</span>
+
+<span class="cm"># One clean commit</span>
+<span class="ca">git commit -m "test: Add Jest unit tests + GitHub Actions CI
+
+- 12 unit tests for validateRating() — all passing
+- Jest installed as devDependency
+- GitHub Actions workflow runs tests on every push
+- NODE_ENV=test export pattern in server.js"</span>
+
+<span class="cm"># Push to main — this will trigger the CI workflow</span>
+<span class="ca">git push origin main</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">Enumerating objects: 11, done.
+...
+To https://github.com/YOUR-USERNAME/cloudeats-app.git
+   a3f82b1..9e51ff2  main -&gt; main</div>
+    </div>
+  </div>
+
+  <div class="step open" id="step-p4-3">
+    <div class="step-hd" onclick="toggleStep('step-p4-3')">
+      <span class="step-num">4.3</span>
+      <span class="step-label">Watch CI run live on GitHub</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>Open <code>https://github.com/YOUR-USERNAME/cloudeats-app</code> in your browser immediately after pushing.</p>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; Where to find the CI result</div>
+        1. Go to your repo on GitHub<br>
+        2. Click the <strong>Actions</strong> tab (between "Pull requests" and "Projects")<br>
+        3. You will see a row labelled <strong>"Run Automated Tests"</strong> with a <strong>yellow spinner</strong> &#9696; (running)<br>
+        4. Click the row to see each step's live output<br>
+        5. After ~30&ndash;60 seconds: yellow becomes <strong>green tick</strong> &#10004; (passed) or <strong>red X</strong> &#10006; (failed)
+      </div>
+
+      <div class="out-label">What the Actions tab shows</div>
+      <div class="exp-out">&#9989; Run Automated Tests                        main  9e51ff2  30s ago
+   &#9989; Menu Service Tests
+      &#10003; Checkout code
+      &#10003; Setup Node.js 18
+      &#10003; Install dependencies
+      &#10003; Run tests (12 passed, 0 failed)</div>
+
+      <div class="why-box">
+        <strong>What just happened?</strong> GitHub detected your push, spun up a fresh Ubuntu virtual machine in their data centre, ran every step in <code>ci.yml</code> from scratch, and stamped your commit with a green checkmark. Every future push &mdash; by you or any collaborator &mdash; will trigger this same automatic verification. You no longer have to remember to test before pushing.
+      </div>
+
+      <div class="trouble" onclick="toggleTrouble(this)">
+        <div class="trouble-hd">&#9888; "No workflow runs" in Actions tab <span class="trouble-arrow">&#9654;</span></div>
+        <div class="trouble-body">Confirm the file is at exactly <code>.github/workflows/ci.yml</code> in your repo (not <code>.github/workflow/</code> or <code>github/workflows/</code>). Check with <code>git ls-files | grep ci.yml</code>. Also confirm the push to <code>main</code> actually succeeded: <code>git log origin/main --oneline -3</code>.</div>
+      </div>
+      <div class="trouble" onclick="toggleTrouble(this)">
+        <div class="trouble-hd">&#9888; CI fails on "Install dependencies" step <span class="trouble-arrow">&#9654;</span></div>
+        <div class="trouble-body">Confirm <code>package-lock.json</code> exists in <code>services/menu-service/</code>. Run <code>npm install</code> locally in that folder, which generates the lockfile, then <code>git add services/menu-service/package-lock.json &amp;&amp; git commit -m "chore: add package-lock" &amp;&amp; git push</code>.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step open" id="step-p4-4">
+    <div class="step-hd" onclick="toggleStep('step-p4-4')">
+      <span class="step-num">4.4</span>
+      <span class="step-label">Prove CI blocks bad code — push a broken test</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>The real value of CI is that it catches bugs <em>before</em> they reach main. Push a deliberately broken commit on a feature branch and watch CI reject it.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># Create a test branch</span>
+<span class="ca">git checkout -b feature/test-ci-gate</span>
+
+<span class="cm"># Break the validation again (change 5 to 10)</span>
+<span class="ca">sed -i 's/ratingNum > 5/ratingNum > 10/' services/menu-service/server.js</span>
+<span class="cm"># macOS: sed -i '' 's/ratingNum > 5/ratingNum > 10/' ...</span>
+
+<span class="ca">git add services/menu-service/server.js</span>
+<span class="ca">git commit -m "bug: accidentally changed rating upper bound to 10"</span>
+<span class="ca">git push -u origin feature/test-ci-gate</span></pre>
+      </div>
+
+      <p>Go to GitHub &rarr; Actions tab. Watch the workflow run on <code>feature/test-ci-gate</code>. It will fail with a red X. Now open a Pull Request from <code>feature/test-ci-gate</code> into <code>main</code> &mdash; GitHub blocks the merge button with the message: <em>"Some checks were not successful."</em></p>
+
+      <div class="callout green">
+        <span>&#9989;</span>
+        <div><strong>This is the CI gate working.</strong> A PR with failing tests cannot merge into main. The broken code never reaches production. Fix the bug (restore <code>&gt; 5</code>), push again, CI goes green, merge is unblocked.</div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal &mdash; restore and push the fix</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">sed -i 's/ratingNum > 10/ratingNum > 5/' services/menu-service/server.js</span>
+<span class="cm"># macOS: sed -i '' 's/ratingNum > 10/ratingNum > 5/' ...</span>
+<span class="ca">git add services/menu-service/server.js</span>
+<span class="ca">git commit -m "fix: restore correct rating upper bound to 5"</span>
+<span class="ca">git push</span>
+<span class="cm"># CI re-runs, goes green, PR merge is now unblocked</span></pre>
+      </div>
+
+      <p>Merge the PR on GitHub, then clean up locally:</p>
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">git checkout main</span>
+<span class="ca">git pull origin main</span>
+<span class="ca">git branch -d feature/test-ci-gate</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="checkpoint">&#9989; <div><strong>Part 4 complete.</strong> GitHub Actions now runs 12 tests on every push. You have seen the gate block a broken PR and unblock it after the fix. This is professional CI in production.</div></div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     CI / CD BOUNDARY CALLOUT
+     ═══════════════════════════════════════════ -->
+<div style="margin:1.5rem 0;padding:1.1rem 1.4rem;background:rgba(0,200,255,0.05);border:1px solid rgba(0,200,255,0.25);border-left:4px solid var(--accent);border-radius:10px;display:flex;gap:1rem;align-items:flex-start;">
+  <div style="font-size:1.3rem;flex-shrink:0;line-height:1;">🏁</div>
+  <div>
+    <p style="font-weight:700;color:var(--accent);margin-bottom:0.35rem;font-size:0.88rem;">This lab ends here for all tracks — CI is complete</p>
+    <p style="font-size:0.8rem;color:var(--muted);line-height:1.6;margin-bottom:0.5rem;">
+      <strong style="color:var(--text);">What you built in Lab 6.2 (Continuous Integration):</strong>
+      a GitHub Actions workflow that runs your 12 unit tests automatically on every push and
+      blocks any pull request that has a failing test. The code never reaches <code>main</code> unless it is green.
+    </p>
+    <p style="font-size:0.8rem;color:var(--muted);line-height:1.6;margin-bottom:0.5rem;">
+      <strong style="color:var(--text);">What Lab 7.2 adds (Continuous Deployment):</strong>
+      a second job in the <em>same</em> workflow file that fires only after the test job passes —
+      SSHing into your server, pulling the latest code, and restarting services automatically.
+      Together, CI + CD form a complete pipeline where a single <code>git push</code> goes from
+      code to running production without a human touching anything.
+    </p>
+    <p style="font-size:0.78rem;color:var(--muted);line-height:1.5;">
+      Parts 5 and 6 below are <span style="color:var(--average);font-weight:700;">Average</span> and
+      <span style="color:var(--advanced);font-weight:700;">Advanced</span> extensions — test coverage
+      analysis and a pre-commit hook. They are optional for this week.
+      When you are ready for deployment, continue to
+      <a href="week07_lab2_deployment_automation.html" style="color:var(--accent);border-bottom:1px solid rgba(0,200,255,0.3);">Lab 7.2 → Deployment Automation</a>.
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PART 5 — COVERAGE REPORT
+     ═══════════════════════════════════════════ -->
+<section id="p5">
+  <div class="part-head ph-blue">
+    <span class="part-pill pp-blue">Part 5</span>
+    <span class="part-title">Test Coverage &mdash; How Much is Tested?</span>
+    <span class="part-time">10 min</span>
+  </div>
+
+  <div class="step open" id="step-p5-1">
+    <div class="step-hd" onclick="toggleStep('step-p5-1')">
+      <span class="step-num">5.1</span>
+      <span class="step-label">Run the coverage report</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p><strong>Test coverage</strong> measures what percentage of your source code was actually executed when the tests ran. A line that is never reached by any test is a potential hiding place for bugs.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">cd ~/cloudeats-app/services/menu-service</span>
+<span class="ca">export NODE_ENV=test</span>
+<span class="ca">npm run test:coverage</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out"> PASS  __tests__/unit/validation.test.js
+
+----------|---------|----------|---------|---------|-------------------
+File      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+----------|---------|----------|---------|---------|-------------------
+All files |   45.12 |    28.57 |   50.00 |   45.12 |
+ server.js|   45.12 |    28.57 |   50.00 |   45.12 | 20-45, 60-120
+----------|---------|----------|---------|---------|-------------------</div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; What do the columns mean?</div>
+        <strong style="color:var(--amber)">% Stmts</strong> — percentage of individual statements (lines of code) that ran during tests.<br>
+        <strong style="color:var(--amber)">% Branch</strong> — percentage of decision points (if/else branches) both sides of which were tested.<br>
+        <strong style="color:var(--amber)">% Funcs</strong> — percentage of functions that were called at all.<br>
+        <strong style="color:var(--amber)">Uncovered Lines</strong> — the exact line numbers that no test ever reached. Lines 20-45 and 60-120 are the Express route handlers we have not tested yet.
+      </div>
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; Why is coverage only 45%?</div>
+        We only wrote tests for <code>validateRating()</code>. The rest of <code>server.js</code> has route handlers (<code>GET /api/menu</code>, <code>POST /api/ratings</code> etc.) that our unit tests never call. That is fine for now &mdash; unit tests cover the pure logic, and integration tests would cover the routes. 45% is a starting point, not the goal.
+      </div>
+      <div class="pb a">
+        <div class="pb-label">&#9889; Average &mdash; Industry coverage targets</div>
+        70&ndash;80% is considered "good" at most companies. 80&ndash;90% is "very good". Above 90% tends to have diminishing returns &mdash; the remaining untested code is often error-handling paths that are hard to trigger automatically. Chasing 100% coverage can lead to writing tests that check implementation details rather than behaviour, making refactoring painful.
+      </div>
+      <div class="pb adv">
+        <div class="pb-label">&#128640; Average+ &mdash; Add a coverage threshold to CI</div>
+        To enforce a minimum standard, add to <code>package.json</code>:
+        <div class="code-block" style="margin-top:.5rem">
+          <div class="code-hd"><span class="code-lang">package.json &mdash; add jest config block</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre><span class="cp">"jest"</span>: {
+  <span class="cp">"coverageThreshold"</span>: {
+    <span class="cp">"global"</span>: {
+      <span class="cp">"functions"</span>: <span class="ca">80</span>,
+      <span class="cp">"lines"</span>: <span class="ca">70</span>
+    }
+  }
+}</pre>
+        </div>
+        Now <code>npm run test:coverage</code> exits with code 1 if coverage drops below the threshold, causing CI to fail. This mechanically enforces the team's coverage contract.
+      </div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal &mdash; also generates an HTML coverage report</span></div>
+        <pre><span class="cm"># After running test:coverage, open the HTML report:</span>
+<span class="ca">open coverage/lcov-report/index.html</span>   <span class="cm"># macOS</span>
+<span class="ca">xdg-open coverage/lcov-report/index.html</span>  <span class="cm"># Linux</span>
+<span class="cm"># Shows colour-coded source with covered lines in green, uncovered in red</span></pre>
+      </div>
+
+      <div class="trouble" onclick="toggleTrouble(this)">
+        <div class="trouble-hd">&#9888; Coverage report shows 0% for everything <span class="trouble-arrow">&#9654;</span></div>
+        <div class="trouble-body">The <code>NODE_ENV=test</code> variable is missing. The <code>module.exports</code> block in <code>server.js</code> is not executing, so the test file's <code>require('../../server')</code> returns an empty object and calls nothing. Run <code>export NODE_ENV=test</code> in the current terminal then retry. On Windows PowerShell use <code>$env:NODE_ENV="test"</code> instead.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step open" id="step-p5-2">
+    <div class="step-hd" onclick="toggleStep('step-p5-2')">
+      <span class="step-num">5.2</span>
+      <span class="step-label">Add one more test — write it yourself</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>Add a test for one edge case that the original suite does not cover: a rating of <code>2</code> (a valid mid-range value). This lets you practise the full loop without scaffolding.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">__tests__/unit/validation.test.js &mdash; add inside the describe block</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm">// Your new test — add after the last existing test</span>
+<span class="cp">test</span>(<span class="cv">'should accept valid rating of 2'</span>, () => {
+  <span class="ck">const</span> result = <span class="cp">validateRating</span>(<span class="ca">2</span>);
+  <span class="cp">expect</span>(result.valid).<span class="cp">toBe</span>(<span class="ck">true</span>);
+});</pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">npm test</span>
+<span class="cm"># Expected: 13 passed, 0 failed</span></pre>
+      </div>
+
+      <div class="callout green">
+        <span>&#10024;</span>
+        <div>You just wrote your first test from scratch using the AAA pattern (Arrange: input is <code>2</code>, Act: call <code>validateRating</code>, Assert: <code>valid</code> is <code>true</code>). Commit this new test with <code>git add &amp;&amp; git commit &amp;&amp; git push</code> and watch CI run 13 tests.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="checkpoint">&#9989; <div><strong>Part 5 complete.</strong> You understand coverage metrics, know what the uncovered lines mean, and have written your first test independently.</div></div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PART 6 — HUSKY PRE-COMMIT HOOK (ADVANCED)
+     ═══════════════════════════════════════════ -->
+<section id="p6">
+  <div class="part-head ph-amber">
+    <span class="part-pill pp-amber">Part 6</span>
+    <span class="part-title">&#128640; Husky Pre-Commit Hook</span>
+    <span class="part-time">10 min &middot; Advanced only</span>
+  </div>
+
+  <div class="adv-only">
+    <div class="adv-only-label">&#128640; Advanced Track &mdash; Local quality gate</div>
+    <p>CI catches bugs after you push. Husky catches them <em>before</em> you commit. A pre-commit hook runs <code>npm test</code> automatically whenever you run <code>git commit</code>. If tests fail, the commit is aborted. You never push broken code because broken code can never become a commit.</p>
+  </div>
+
+  <div class="step" id="step-p6-1">
+    <div class="step-hd" onclick="toggleStep('step-p6-1')">
+      <span class="step-num">6.1</span>
+      <span class="step-label">Install Husky and configure the pre-commit hook</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal &mdash; run from the repo root</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="ca">cd ~/cloudeats-app</span>
+
+<span class="cm"># Install Husky at the root level (not inside menu-service)</span>
+<span class="ca">npm install --save-dev husky</span>
+
+<span class="cm"># Initialise Husky — creates .husky/ directory</span>
+<span class="ca">npx husky init</span>
+
+<span class="cm"># Replace the default pre-commit hook with our test command</span>
+<span class="ca">echo 'cd services/menu-service && export NODE_ENV=test && npm test' > .husky/pre-commit</span>
+<span class="ca">chmod +x .husky/pre-commit</span>
+
+<span class="cm"># Confirm the hook file content</span>
+<span class="ca">cat .husky/pre-commit</span></pre>
+      </div>
+      <div class="out-label">What you should see</div>
+      <div class="exp-out">cd services/menu-service && export NODE_ENV=test && npm test</div>
+
+      <div class="pb adv">
+        <div class="pb-label">&#128640; Advanced &mdash; How Git hooks work</div>
+        Git hooks are scripts in <code>.git/hooks/</code> that Git runs at specific lifecycle points. <code>pre-commit</code> runs before the commit is recorded. If the script exits with non-zero, the commit is aborted. Husky makes hooks trackable in version control (unlike raw <code>.git/hooks/</code> which is not committed). Every developer who clones the repo and runs <code>npm install</code> gets the same hooks automatically via the <code>prepare</code> script Husky adds to <code>package.json</code>.
+      </div>
+    </div>
+  </div>
+
+  <div class="step" id="step-p6-2">
+    <div class="step-hd" onclick="toggleStep('step-p6-2')">
+      <span class="step-num">6.2</span>
+      <span class="step-label">Test the hook — try committing broken code</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># Break the validation again</span>
+<span class="ca">sed -i 's/ratingNum > 5/ratingNum > 10/' services/menu-service/server.js</span>
+
+<span class="cm"># Try to commit — the hook should block it</span>
+<span class="ca">git add services/menu-service/server.js</span>
+<span class="ca">git commit -m "this should not work"</span></pre>
+      </div>
+      <div class="out-label">What you should see (commit is rejected)</div>
+      <div class="exp-out fail"> FAIL  __tests__/unit/validation.test.js
+  &#10007; should reject rating above 5
+  &#10007; should reject one above upper boundary: 6
+
+Tests: 2 failed, 10 passed
+
+husky - pre-commit script failed (exit code 1)</div>
+
+      <div class="callout green">
+        <span>&#9989;</span>
+        <div><strong>The commit was blocked.</strong> The broken change is still in your working directory but was never committed. Fix the bug, then try <code>git commit</code> again &mdash; this time the tests will pass and the commit will succeed.</div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">terminal &mdash; fix and commit properly</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm"># Restore the correct value</span>
+<span class="ca">sed -i 's/ratingNum > 10/ratingNum > 5/' services/menu-service/server.js</span>
+
+<span class="cm"># Commit — hook runs tests, all pass, commit succeeds</span>
+<span class="ca">git add services/menu-service/server.js</span>
+<span class="ca">git commit -m "chore: add Husky pre-commit hook for local test gate"</span>
+
+<span class="cm"># Commit the Husky files too</span>
+<span class="ca">git add .husky/ package.json package-lock.json</span>
+<span class="ca">git commit -m "chore: configure Husky pre-commit hook"</span>
+<span class="ca">git push origin main</span></pre>
+      </div>
+
+      <div class="pb adv">
+        <div class="pb-label">&#128640; Advanced &mdash; Two-layer defence</div>
+        You now have two independent quality gates: (1) Husky pre-commit — catches failures locally before a commit is even recorded, instant feedback in under 3 seconds. (2) GitHub Actions CI — catches failures on any machine, on any branch, regardless of whether the developer has Husky. Together they create defence-in-depth: local developer discipline backed by a server-side mechanical gate. Neither alone is sufficient: Husky can be bypassed with <code>git commit --no-verify</code>; CI cannot.
+      </div>
+    </div>
+  </div>
+
+  <div class="checkpoint">&#9989; <div><strong>Part 6 complete.</strong> You have a pre-commit hook that blocks broken commits before they leave your machine, backed by GitHub Actions that blocks broken PRs before they reach main. Two-layer CI is industry standard.</div></div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     LAB SUMMARY
+     ═══════════════════════════════════════════ -->
+<section>
+  <hr class="section-divider">
+  <div class="part-head ph-green">
+    <span class="part-pill pp-green">Done</span>
+    <span class="part-title">Lab 6.2 Complete &mdash; Quick Reference</span>
+  </div>
+
+  <table class="summary-table">
+    <thead>
+      <tr><th>What you did</th><th>Command / file</th><th>Why it matters</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Install Jest</td><td><code>npm install --save-dev jest</code></td><td>Testing framework: runs tests, reports results, measures coverage</td></tr>
+      <tr><td>Configure test scripts</td><td><code>"test": "jest"</code> in package.json</td><td>Lets you run <code>npm test</code> instead of the full Jest path</td></tr>
+      <tr><td>Export for tests</td><td><code>if (NODE_ENV==='test') module.exports</code></td><td>Makes the function importable by Jest without breaking production</td></tr>
+      <tr><td>Write 12 unit tests</td><td><code>__tests__/unit/validation.test.js</code></td><td>Covers valid, invalid, edge, and boundary cases permanently</td></tr>
+      <tr><td>Run tests</td><td><code>npm test</code></td><td>2 seconds vs 5 minutes of manual curl testing</td></tr>
+      <tr><td>Read failures</td><td>Expected / Received output</td><td>Jest pinpoints the exact failing line and the value mismatch</td></tr>
+      <tr><td>CI workflow</td><td><code>.github/workflows/ci.yml</code></td><td>Automatic test run on every push; blocks PRs with failures</td></tr>
+      <tr><td>Coverage report</td><td><code>npm run test:coverage</code></td><td>Shows uncovered lines — potential hiding spots for bugs</td></tr>
+      <tr><td>Husky hook (Advanced)</td><td><code>.husky/pre-commit</code></td><td>Local gate: blocks the commit if tests fail before code leaves machine</td></tr>
+    </tbody>
+  </table>
+
+  <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.5rem">
+    <a href="week06_lab1_git_version_control.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:700;padding:.45rem 1rem;background:var(--surface2);color:var(--muted);border:1px solid var(--border);border-radius:6px;text-decoration:none">&larr; Lab 6.1</a>
+    <a href="week06_DevOps_and_Version_Control.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:700;padding:.45rem 1rem;background:var(--surface2);color:var(--muted);border:1px solid var(--border);border-radius:6px;text-decoration:none">Week 6 Lecture</a>
+    <a href="week07_CICD_and_Infrastructure_as_Code.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:700;padding:.45rem 1rem;background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.35);border-radius:6px;text-decoration:none">Week 7 &mdash; CI/CD &amp; IaC &rarr;</a>
+  </div>
+</section>
+
+</main>
+</div>
+
+<footer style="border-top:1px solid var(--border);padding:1.25rem 1.5rem;text-align:center;color:var(--muted);font-size:.76rem;max-width:1200px;margin:0 auto">
+  Cloud Computing &middot; Lab 6.2 &middot; Automated Testing &amp; GitHub Actions &nbsp;|&nbsp; CloudEats Academy &nbsp;|&nbsp;
+  <a href="week06_lab1_git_version_control.html" style="color:var(--muted);text-decoration:none">&larr; Lab 6.1</a>
+  &nbsp;|&nbsp;
+  <span class="ghp-badge">&#127758; GitHub Pages Ready</span>
+  &nbsp;|&nbsp;
+  <a href="week07_CICD_and_Infrastructure_as_Code.html" style="color:var(--muted);text-decoration:none">Week 7 &rarr;</a>
+</footer>
+
+<script>
+/* ── Pace ── */
+function setPace(pace,btn){
+  document.querySelectorAll('.pace-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(pace==='beginner') expandAll();
+  if(pace==='advanced') collapseAll();
+}
+
+/* ── Steps ── */
+function toggleStep(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.classList.toggle('open');
+  if(el.classList.contains('open')) markProgress(id);
+}
+function expandAll(){document.querySelectorAll('.step').forEach(s=>s.classList.add('open'));}
+function collapseAll(){document.querySelectorAll('.step').forEach(s=>s.classList.remove('open'));}
+
+/* ── Trouble ── */
+function toggleTrouble(el){el.classList.toggle('open');}
+
+/* ── Copy code ── */
+function copyCode(btn,event){
+  event.stopPropagation();
+  const pre=btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    btn.textContent='Copied!';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2000);
+  });
+}
+
+/* ── Progress ── */
+const totalParts=6;
+const completedParts=new Set();
+function markProgress(stepId){
+  const m=stepId.match(/step-(p\d+)-/);
+  if(m) completedParts.add(m[1]);
+  const cur=completedParts.size;
+  document.getElementById('prog-cur').textContent=cur;
+  document.getElementById('prog-fill').style.width=(cur/totalParts*100)+'%';
+}
+
+/* ── Sidebar active nav ── */
+const sections=document.querySelectorAll('section[id]');
+const navLinks=document.querySelectorAll('.sb-nav a');
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      navLinks.forEach(a=>a.classList.remove('active'));
+      const link=document.querySelector('.sb-nav a[href="#'+e.target.id+'"]');
+      if(link)link.classList.add('active');
+    }
+  });
+},{threshold:0.2,rootMargin:'-56px 0px -60% 0px'});
+sections.forEach(s=>observer.observe(s));
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded',()=>{
+  expandAll();
+  document.getElementById('prog-max').textContent=totalParts;
+});
+</script>
+</body>
+</html>

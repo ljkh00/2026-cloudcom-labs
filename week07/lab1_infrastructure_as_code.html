@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 7.1 · Infrastructure as Code · CloudEats Academy</title>
+<meta name="description" content="Deploy the complete CloudEats seven-service stack with a single docker compose up command — health checks, .env secrets, named volumes, and service dependency ordering included.">
+<meta name="author" content="CloudEats Academy">
+<meta property="og:title" content="Lab 7.1 · Infrastructure as Code · CloudEats Academy">
+<meta property="og:description" content="Turn 20+ manual docker run commands into a single docker-compose.yml that any developer can run on any machine — the IaC pattern used in every real software team.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#07090f">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090f;--bg2:#0d1117;--bg3:#141b27;
+  --surface:#1a2235;--surface2:#1f2c42;--border:#2a3d5a;
+  --accent:#00c8ff;--green:#00e5a0;--amber:#ffb740;
+  --red:#ff5e7a;--purple:#b46ef5;
+  --text:#e8edf5;--muted:#6b7fa0;
+  --beginner:#00e5a0;--average:#00c8ff;--advanced:#b46ef5;
+  --lab-color:#ffb740;--radius:10px;--code-bg:#0b1120;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;}
+.site-header{background:linear-gradient(135deg,#050d1c,#091628);border-bottom:1px solid var(--border);padding:0 1.5rem;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;gap:1rem;}
+.lab-badge{background:var(--lab-color);color:#000;font-size:.62rem;font-weight:700;letter-spacing:.1em;padding:.2rem .55rem;border-radius:4px;text-transform:uppercase;}
+.header-title{font-size:.88rem;font-weight:600;}
+.ghp-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.67rem;font-weight:700;padding:.18rem .55rem;background:rgba(255,183,64,.08);border:1px solid rgba(255,183,64,.25);color:var(--amber);border-radius:20px;}
+.pace-switcher{display:flex;gap:.3rem;background:var(--bg3);padding:.22rem;border-radius:8px;border:1px solid var(--border);}
+.pace-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.25rem .65rem;border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--muted);transition:all .18s;}
+.pace-btn.active[data-pace="beginner"]{background:rgba(0,229,160,.18);color:var(--beginner);}
+.pace-btn.active[data-pace="average"]{background:rgba(0,200,255,.18);color:var(--average);}
+.pace-btn.active[data-pace="advanced"]{background:rgba(180,110,245,.18);color:var(--advanced);}
+.lab-hero{background:linear-gradient(160deg,#060f20,#07111e);border-bottom:1px solid var(--border);padding:2rem 1.5rem 1.75rem;position:relative;overflow:hidden;}
+.lab-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:350px;height:350px;background:radial-gradient(ellipse,rgba(255,183,64,.06),transparent 70%);pointer-events:none;}
+.hero-inner{max-width:1200px;margin:0 auto;}
+.hero-crumb{font-size:.7rem;color:var(--muted);margin-bottom:.4rem;}
+.hero-crumb a{color:var(--amber);text-decoration:none;}
+.lab-hero h1{font-size:clamp(1.25rem,2.5vw,1.75rem);font-weight:800;background:linear-gradient(135deg,#e8edf5 40%,var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.35rem;}
+.hero-sub{color:var(--muted);font-size:.84rem;margin-bottom:.85rem;}
+.hero-meta{display:flex;flex-wrap:wrap;gap:.55rem;}
+.meta-chip{display:flex;align-items:center;gap:.35rem;font-size:.74rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.22rem .6rem;color:var(--muted);}
+.meta-chip strong{color:var(--text);}
+.meta-chip.amber{background:rgba(255,183,64,.06);border-color:rgba(255,183,64,.2);color:var(--amber);}
+.pace-guide{max-width:1200px;margin:0 auto;padding:1rem 1.5rem 0;}
+.pace-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin-bottom:.5rem;}
+.pace-card{border-radius:8px;padding:.75rem;font-size:.78rem;line-height:1.5;}
+.pace-card.b{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);}
+.pace-card.a{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);}
+.pace-card.adv{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);}
+.pc-label{font-size:.65rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.3rem;}
+.b .pc-label{color:var(--beginner);}.a .pc-label{color:var(--average);}.adv .pc-label{color:var(--advanced);}
+.pc-scope{color:var(--muted);font-size:.76rem;}
+.page-body{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 200px);}
+.sidebar{position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;padding:1.25rem .85rem 2rem;border-right:1px solid var(--border);background:var(--bg2);}
+.sb-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.85rem;}
+.progress-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:.65rem;margin-bottom:1rem;}
+.prog-track{background:var(--bg2);border-radius:3px;height:5px;margin:.4rem 0;}
+.prog-fill{height:5px;border-radius:3px;background:linear-gradient(90deg,var(--amber),var(--purple));transition:width .35s;width:0%;}
+.prog-text{font-size:.69rem;color:var(--muted);}
+.prog-text span{color:var(--amber);font-weight:600;}
+.sb-nav{list-style:none;}
+.sb-nav li a{display:block;font-size:.73rem;padding:.32rem .6rem;border-radius:5px;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all .13s;margin-bottom:.08rem;}
+.sb-nav li a:hover{background:var(--surface);color:var(--text);}
+.sb-nav li a.active{background:rgba(255,183,64,.08);color:var(--amber);border-color:rgba(255,183,64,.18);}
+.sb-section{font-size:.61rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(107,127,160,.45);padding:.6rem .6rem .18rem;list-style:none;}
+.lab-content{padding:1.75rem 1.75rem 4rem;min-width:0;}
+.part-head{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;border-radius:8px;margin-bottom:1.1rem;}
+.ph-amber{background:rgba(255,183,64,.04);border:1px solid rgba(255,183,64,.22);border-left:4px solid var(--amber);}
+.ph-green{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.22);border-left:4px solid var(--green);}
+.ph-blue{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.22);border-left:4px solid var(--accent);}
+.ph-purple{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.22);border-left:4px solid var(--purple);}
+.part-pill{font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.16rem .5rem;border-radius:4px;white-space:nowrap;}
+.pp-amber{background:rgba(255,183,64,.15);color:var(--amber);}
+.pp-green{background:rgba(0,229,160,.15);color:var(--green);}
+.pp-blue{background:rgba(0,200,255,.15);color:var(--accent);}
+.pp-purple{background:rgba(180,110,245,.15);color:var(--purple);}
+.part-title{font-size:.98rem;font-weight:700;}
+.part-time{font-size:.7rem;color:var(--muted);margin-left:auto;white-space:nowrap;}
+.step{background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:.6rem;overflow:hidden;}
+.step-hd{display:flex;align-items:center;gap:.7rem;padding:.7rem .95rem;cursor:pointer;user-select:none;transition:background .13s;}
+.step-hd:hover{background:var(--surface2);}
+.step-num{width:27px;height:27px;border-radius:50%;border:2px solid rgba(255,183,64,.3);background:rgba(255,183,64,.07);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:var(--amber);flex-shrink:0;}
+.step-label{font-size:.84rem;font-weight:600;flex:1;}
+.step-arrow{font-size:.75rem;color:var(--muted);transition:transform .18s;flex-shrink:0;}
+.step.open .step-arrow{transform:rotate(90deg);}
+.step-body{display:none;padding:.85rem .95rem 1rem;border-top:1px solid var(--border);}
+.step.open .step-body{display:block;}
+.step:not(.open) .step-hd::after{content:'click to expand';font-size:.6rem;color:var(--muted);opacity:.45;margin-left:auto;padding-right:.25rem;letter-spacing:.04em;pointer-events:none;}
+.step.open .step-hd::after{content:'';}
+code{font-family:'Fira Code',monospace;font-size:.83em;background:var(--code-bg);padding:.07rem .32rem;border-radius:3px;color:var(--green);}
+.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;margin:.65rem 0;overflow:hidden;}
+.code-hd{display:flex;align-items:center;justify-content:space-between;padding:.4rem .85rem;background:rgba(0,0,0,.3);border-bottom:1px solid var(--border);}
+.code-fname{font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.copy-btn{font-family:'Sora',sans-serif;font-size:.66rem;font-weight:600;padding:.16rem .5rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;transition:all .13s;}
+.copy-btn:hover{background:var(--amber);color:#000;border-color:var(--amber);}
+.copy-btn.copied{background:var(--green);color:#000;}
+pre{font-family:'Fira Code',monospace;font-size:.77rem;line-height:1.65;padding:.85rem;overflow-x:auto;color:#c5d5ef;}
+.ck{color:var(--accent);}.cv{color:var(--green);}.cm{color:var(--muted);font-style:italic;}.cp{color:var(--purple);}.ca{color:var(--amber);}
+.out-label{font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:.6rem 0 .28rem;}
+.exp-out{font-family:'Fira Code',monospace;font-size:.76rem;background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.15);border-radius:6px;padding:.6rem .85rem;color:#8ee8c4;line-height:1.6;margin-bottom:.5rem;white-space:pre;}
+.callout{border-radius:8px;padding:.7rem .95rem;margin:.65rem 0;display:flex;gap:.55rem;align-items:flex-start;font-size:.81rem;line-height:1.55;}
+.callout.blue{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);color:#a0d8f0;}
+.callout.green{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.2);color:#8ee8c4;}
+.callout.amber{background:rgba(255,183,64,.06);border:1px solid rgba(255,183,64,.2);color:#d9c07a;}
+.callout.purple{background:rgba(180,110,245,.05);border:1px solid rgba(180,110,245,.2);color:#c5a8f5;}
+.callout.red{background:rgba(255,94,122,.05);border:1px solid rgba(255,94,122,.2);color:#f0a0b0;}
+.pb{border-radius:7px;padding:.6rem .85rem;margin:.5rem 0;font-size:.8rem;line-height:1.55;}
+.pb.b{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.15);border-left:3px solid var(--beginner);}
+.pb.a{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.15);border-left:3px solid var(--average);}
+.pb.adv{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.15);border-left:3px solid var(--advanced);}
+.pb-label{font-size:.63rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:.25rem;}
+.pb.b .pb-label{color:var(--beginner);}.pb.a .pb-label{color:var(--average);}.pb.adv .pb-label{color:var(--advanced);}
+.checkpoint{background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.22);border-radius:8px;padding:.8rem .95rem;margin:1.1rem 0;display:flex;gap:.7rem;align-items:flex-start;font-size:.81rem;color:#8ee8c4;line-height:1.5;}
+.trouble{background:rgba(255,94,122,.03);border:1px solid rgba(255,94,122,.15);border-radius:7px;margin:.6rem 0;overflow:hidden;}
+.trouble-hd{display:flex;align-items:center;gap:.5rem;padding:.55rem .8rem;font-size:.79rem;font-weight:600;color:var(--red);cursor:pointer;user-select:none;}
+.trouble-arrow{font-size:.7rem;color:var(--muted);margin-left:auto;transition:transform .18s;}
+.trouble.open .trouble-arrow{transform:rotate(90deg);}
+.trouble-body{display:none;padding:0 .8rem .7rem;font-size:.78rem;color:var(--muted);line-height:1.55;}
+.trouble.open .trouble-body{display:block;}
+.why-box{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.2);border-left:3px solid var(--accent);border-radius:6px;padding:.65rem .9rem;margin:.6rem 0;font-size:.8rem;color:#a0d8f0;}
+.why-box strong{color:var(--accent);}
+.adv-only{background:rgba(180,110,245,.04);border:1px solid rgba(180,110,245,.2);border-radius:8px;padding:.9rem;margin:.65rem 0;}
+.adv-only-label{font-size:.63rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--purple);margin-bottom:.45rem;}
+.summary-table{width:100%;border-collapse:collapse;font-size:.81rem;margin:.85rem 0;}
+.summary-table th{padding:.45rem .75rem;background:var(--bg3);color:var(--muted);font-size:.67rem;letter-spacing:.07em;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border);}
+.summary-table td{padding:.45rem .75rem;border-bottom:1px solid rgba(42,61,90,.3);vertical-align:top;}
+.summary-table tr:last-child td{border-bottom:none;}
+.summary-table tr:hover td{background:rgba(255,255,255,.02);}
+.ctrl-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;padding:.4rem 0;}
+.ctrl-bar-info{font-size:.73rem;color:var(--muted);}
+.ctrl-bar-info strong{color:var(--text);}
+.ctrl-btns{display:flex;gap:.5rem;}
+.ctrl-btn{font-family:'Sora',sans-serif;font-size:.68rem;font-weight:600;padding:.22rem .7rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;transition:all .15s;}
+.ctrl-btn:hover{color:var(--amber);border-color:var(--amber);}
+p{margin-bottom:.65rem;font-size:.84rem;line-height:1.68;}
+p:last-child{margin-bottom:0;}
+strong{color:var(--text);font-weight:600;}
+a{color:var(--accent);}a:hover{text-decoration:underline;}
+section{margin-bottom:2.25rem;}
+.section-divider{border:none;border-top:1px solid var(--border);margin:1.75rem 0;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+@media(max-width:860px){
+  .page-body{grid-template-columns:1fr;}
+  .sidebar{display:none;}
+  .pace-cards{grid-template-columns:1fr;}
+  .header-title{display:none;}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div style="display:flex;align-items:center;gap:.65rem;">
+      <span class="lab-badge">Lab 7.1</span>
+      <span class="header-title">Infrastructure as Code</span>
+      <span class="ghp-badge">📘 CloudEats Academy</span>
+    </div>
+    <div class="pace-switcher">
+      <button class="pace-btn active" data-pace="beginner" onclick="setPace('beginner',this)">🌱 Beginner</button>
+      <button class="pace-btn" data-pace="average" onclick="setPace('average',this)">⚡ Average</button>
+      <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced',this)">🚀 Advanced</button>
+    </div>
+  </div>
+</header>
+
+<div class="lab-hero">
+  <div class="hero-inner">
+    <div class="hero-crumb"><a href="../week07/index.html">Week 7 Lecture</a> › Lab 7.1</div>
+    <h1>Infrastructure as Code</h1>
+    <p class="hero-sub">Turn 20+ manual <code>docker run</code> commands into a single <code>docker-compose.yml</code>. Deploy the complete CloudEats stack — seven services, three databases, one network — with one command.</p>
+    <div class="hero-meta">
+      <span class="meta-chip">⏱ <strong>60 min</strong></span>
+      <span class="meta-chip">👥 <strong>Pairs</strong></span>
+      <span class="meta-chip">💻 <strong>VirtualBox VM</strong></span>
+      <span class="meta-chip amber">📋 Prereq: Lab 6.2 complete</span>
+    </div>
+  </div>
+</div>
+
+<div class="pace-guide">
+  <div class="pace-cards">
+    <div class="pace-card b"><div class="pc-label">🌱 Beginner</div><div class="pc-scope">All steps expand. Every code block is complete and self-contained — copy, paste, run. "What you should see" boxes after every command.</div></div>
+    <div class="pace-card a"><div class="pc-label">⚡ Average</div><div class="pc-scope">Accordion default. Why-boxes explain each architectural decision. One checkpoint question per part.</div></div>
+    <div class="pace-card adv"><div class="pc-label">🚀 Advanced</div><div class="pc-scope">Steps collapsed by default. Challenge extension at the end. Trade-off questions throughout.</div></div>
+  </div>
+</div>
+
+<div class="page-body">
+  <nav class="sidebar">
+    <div class="sb-title">Lab 7.1</div>
+    <div class="progress-wrap">
+      <div class="prog-text">Progress: <span id="prog-count">0</span> / 12 steps</div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+    </div>
+    <ul class="sb-nav">
+      <li class="sb-section">Setup</li>
+      <li><a href="#part-0">Part 0 — Prerequisites</a></li>
+      <li class="sb-section">IaC</li>
+      <li><a href="#part-1">Part 1 — The Problem</a></li>
+      <li><a href="#part-2">Part 2 — docker-compose.yml</a></li>
+      <li><a href="#part-3">Part 3 — Health Checks</a></li>
+      <li><a href="#part-4">Part 4 — .env Secrets</a></li>
+      <li><a href="#part-5">Part 5 — First Deploy</a></li>
+      <li class="sb-section">Advanced</li>
+      <li><a href="#part-6">Part 6 — Resource Limits</a></li>
+    </ul>
+  </nav>
+
+  <main class="lab-content">
+
+    <div class="ctrl-bar">
+      <span class="ctrl-bar-info"><strong>12 steps</strong> across 6 parts</span>
+      <div class="ctrl-btns">
+        <button class="ctrl-btn" onclick="expandAll()">↓ Expand All</button>
+        <button class="ctrl-btn" onclick="collapseAll()">↑ Collapse All</button>
+      </div>
+    </div>
+
+    <!-- PART 0 -->
+    <section id="part-0">
+      <div class="part-head ph-amber">
+        <span class="part-pill pp-amber">Part 0</span>
+        <span class="part-title">Prerequisites Check</span>
+        <span class="part-time">5 min</span>
+      </div>
+
+      <div class="step open" id="step-p0-1">
+        <div class="step-hd" onclick="toggleStep('step-p0-1')">
+          <span class="step-num">0</span>
+          <span class="step-label">Verify Docker Compose and project structure</span>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Before starting, confirm Docker Compose is available and the project folder from previous labs is in place.</p>
+          <div class="pb b"><div class="pb-label">🌱 Beginner</div>Type each command exactly as shown. The <code>$</code> symbol means "type this in the terminal" — do not include the <code>$</code> itself.</div>
+          <div class="code-block">
+            <div class="code-hd"><span class="code-fname">Terminal — on your VM</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="cm"># Check you're in the right place</span>
+pwd
+cd ~/cloudeats-app
+ls
+
+<span class="cm"># Confirm Docker Compose is installed</span>
+docker compose version</pre>
+          </div>
+          <div class="out-label">Expected output</div>
+          <div class="exp-out">Docker Compose version v2.24.x</div>
+          <div class="trouble">
+            <div class="trouble-hd" onclick="toggleTrouble(this.closest('.trouble'))">🔴 "docker compose" not found <span class="trouble-arrow">▶</span></div>
+            <div class="trouble-body">
+              <p>Try the older syntax: <code>docker-compose version</code> (with a hyphen). If that also fails, Docker was not installed correctly. Run: <code>sudo apt-get install docker-compose-plugin</code>, then retry.</p>
+            </div>
+          </div>
+          <div class="callout green"><span>✅</span><div>You should see a version number and the cloudeats-app folder. If not, re-run Lab 3.1 setup steps first.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 1 -->
+    <section id="part-1">
+      <div class="part-head ph-amber">
+        <span class="part-pill pp-amber">Part 1</span>
+        <span class="part-title">The Deployment Problem — Why IaC?</span>
+        <span class="part-time">10 min</span>
+      </div>
+
+      <div class="step open" id="step-p1-1">
+        <div class="step-hd" onclick="toggleStep('step-p1-1')">
+          <span class="step-num">1</span>
+          <span class="step-label">See what manual deployment actually looks like</span>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Before writing the solution, understand the problem. Read through this — do <em>not</em> run these commands, they are for illustration only.</p>
+          <div class="code-block">
+            <div class="code-hd"><span class="code-fname">Manual deployment — illustration only, do not run</span></div>
+            <pre><span class="cm"># 1. Create network</span>
+docker network create cloudeats-network
+
+<span class="cm"># 2. Start MySQL — remember all 5 flags</span>
+docker run -d --name mysql-db --network cloudeats-network \
+  -e MYSQL_ROOT_PASSWORD=secret123 \
+  -e MYSQL_DATABASE=cloudeats \
+  -p 3306:3306 mysql:8.0
+
+<span class="cm"># 3. Wait for MySQL to be ready (guess how long?)</span>
+sleep 30
+
+<span class="cm"># 4. Start Redis</span>
+docker run -d --name redis-cache --network cloudeats-network \
+  -p 6379:6379 redis:alpine
+
+<span class="cm"># 5. Start MongoDB</span>
+docker run -d --name mongodb --network cloudeats-network \
+  -e MONGO_INITDB_ROOT_USERNAME=admin \
+  -e MONGO_INITDB_ROOT_PASSWORD=secret123 \
+  -p 27017:27017 mongo:6.0
+
+<span class="cm"># 6-19. Repeat for each of the 4 services...</span>
+<span class="cm"># TOTAL: 20+ commands, 10–15 minutes, high error rate</span></pre>
+          </div>
+          <div class="why-box">
+            <strong>Why does this matter?</strong> A new team member joining CloudEats needs to run all of this in the correct order with the correct values. If they forget one environment variable, a service silently connects to the wrong database. There is no record of who changed what or when. Each developer's environment is slightly different. IaC solves every one of these problems.
+          </div>
+          <div class="pb a"><div class="pb-label">⚡ Average</div><strong>The core IaC principle:</strong> if you need more than one command to reproduce your infrastructure, it should be in a file. If it's in a file, it should be in Git. If it's in Git, it can be reviewed, rolled back, and shared.</div>
+          <div class="pb adv"><div class="pb-label">🚀 Advanced</div>Notice the <code>sleep 30</code> — a hard-coded delay to wait for MySQL. This is the brittleness of imperative scripts: how do you know 30 seconds is enough? Too short = service fails to connect. Too long = wasted time. Docker Compose's <code>healthcheck</code> and <code>condition: service_healthy</code> solves this properly in Part 3.</div>
+          <div class="checkpoint">✅ <div><strong>Check:</strong> Can you list three specific problems with the manual approach above? (History, reproducibility, error-prone. If yes, continue.)</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 2 -->
+    <section id="part-2">
+      <div class="part-head ph-green">
+        <span class="part-pill pp-green">Part 2</span>
+        <span class="part-title">Create the Complete docker-compose.yml</span>
+        <span class="part-time">20 min</span>
+      </div>
+
+      <div class="step open" id="step-p2-1">
+        <div class="step-hd" onclick="toggleStep('step-p2-1')">
+          <span class="step-num">2</span>
+          <span class="step-label">Create the complete seven-service docker-compose.yml</span>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <p><strong>Person A</strong> — navigate to the project folder and create the file. This is the complete infrastructure definition for CloudEats.</p>
+          <div class="pb b"><div class="pb-label">🌱 Beginner</div>Copy the <em>entire</em> block below as one piece. Do not split it or paste it in parts. In nano: <strong>Ctrl+Shift+V</strong> to paste, <strong>Ctrl+O → Enter → Ctrl+X</strong> to save.</div>
+          <div class="code-block">
+            <div class="code-hd"><span class="code-fname">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>cd ~/cloudeats-app
+nano docker-compose.yml</pre>
+          </div>
+          <div class="code-block">
+            <div class="code-hd"><span class="code-fname">docker-compose.yml — complete file</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="cm"># CloudEats Application — Infrastructure as Code</span>
+<span class="cm"># Complete multi-service deployment with Docker Compose</span>
+
+<span class="ck">version</span>: <span class="cv">'3.8'</span>
+
+<span class="ck">services</span>:
+
+  <span class="cm"># ── DATABASES ──────────────────────────────────</span>
+
+  <span class="ck">mysql</span>:
+    <span class="ck">image</span>: <span class="cv">mysql:8.0</span>
+    <span class="ck">container_name</span>: <span class="cv">cloudeats-mysql</span>
+    <span class="ck">restart</span>: <span class="cv">unless-stopped</span>
+    <span class="ck">environment</span>:
+      <span class="ck">MYSQL_ROOT_PASSWORD</span>: <span class="cv">${MYSQL_ROOT_PASSWORD:-secret123}</span>
+      <span class="ck">MYSQL_DATABASE</span>:     <span class="cv">${MYSQL_DATABASE:-cloudeats}</span>
+      <span class="ck">MYSQL_USER</span>:         <span class="cv">${MYSQL_USER:-cloudeats_user}</span>
+      <span class="ck">MYSQL_PASSWORD</span>:     <span class="cv">${MYSQL_PASSWORD:-cloudeats_pass}</span>
+    <span class="ck">ports</span>:
+      - <span class="cv">"3306:3306"</span>
+    <span class="ck">volumes</span>:
+      - <span class="cv">mysql-data:/var/lib/mysql</span>
+    <span class="ck">networks</span>:
+      - <span class="cv">cloudeats-network</span>
+    <span class="ck">healthcheck</span>:
+      <span class="ck">test</span>: [<span class="cv">"CMD"</span>, <span class="cv">"mysqladmin"</span>, <span class="cv">"ping"</span>, <span class="cv">"-h"</span>, <span class="cv">"localhost"</span>]
+      <span class="ck">interval</span>: <span class="cv">10s</span>
+      <span class="ck">timeout</span>:  <span class="cv">5s</span>
+      <span class="ck">retries</span>:  <span class="cv">5</span>
+
+  <span class="ck">redis</span>:
+    <span class="ck">image</span>: <span class="cv">redis:7-alpine</span>
+    <span class="ck">container_name</span>: <span class="cv">cloudeats-redis</span>
+    <span class="ck">restart</span>: <span class="cv">unless-stopped</span>
+    <span class="ck">ports</span>:
+      - <span class="cv">"6379:6379"</span>
+    <span class="ck">volumes</span>:
+      - <span class="cv">redis-data:/data</span>
+    <span class="ck">networks</span>:
+      - <span class="cv">cloudeats-network</span>
+    <span class="ck">healthcheck</span>:
+      <span class="ck">test</span>: [<span class="cv">"CMD"</span>, <span class="cv">"redis-cli"</span>, <span class="cv">"ping"</span>]
+      <span class="ck">interval</span>: <span class="cv">10s</span>
+      <span class="ck">timeout</span>:  <span class="cv">3s</span>
+      <span class="ck">retries</span>:  <span class="cv">5</span>
+
+  <span class="ck">mongodb</span>:
+    <span class="ck">image</span>: <span class="cv">mongo:6.0</span>
+    <span class="ck">container_name</span>: <span class="cv">cloudeats-mongodb</span>
+    <span class="ck">restart</span>: <span class="cv">unless-stopped</span>
+    <span class="ck">environment</span>:
+      <span class="ck">MONGO_INITDB_ROOT_USERNAME</span>: <span class="cv">${MONGO_USER:-admin}</span>
+      <span class="ck">MONGO_INITDB_ROOT_PASSWORD</span>: <span class="cv">${MONGO_PASSWORD:-secret123}</span>
+    <span class="ck">ports</span>:
+      - <span class="cv">"27017:27017"</span>
+    <span class="ck">volumes</span>:
+      - <span class="cv">mongo-data:/data/db</span>
+    <span class="ck">networks</span>:
+      - <span class="cv">cloudeats-network</span>
+    <span class="ck">healthcheck</span>:
+      <span class="ck">test</span>: [<span class="cv">"CMD"</span>, <span class="cv">"mongosh"</span>, <span class="cv">"--eval"</span>, <span class="cv">"db.adminCommand('ping')"</span>]
+      <span class="ck">interval</span>: <span class="cv">10s</span>
+      <span class="ck">timeout</span>:  <span class="cv">5s</span>
+      <span class="ck">retries</span>:  <span class="cv">5</span>
+
+  <span class="cm"># ── MICROSERVICES ──────────────────────────────</span>
+
+  <span class="ck">user-service</span>:
+    <span class="ck">build</span>:
+      <span class="ck">context</span>: <span class="cv">./services/user-service</span>
+    <span class="ck">container_name</span>: <span class="cv">cloudeats-user-service</span>
+    <span class="ck">restart</span>: <span class="cv">unless-stopped</span>
+    <span class="ck">environment</span>:
+      <span class="ck">PORT</span>:        <span class="cv">3001</span>
+      <span class="ck">DB_HOST</span>:     <span class="cv">mysql</span>
+      <span class="ck">DB_USER</span>:     <span class="cv">${MYSQL_USER:-cloudeats_user}</span>
+      <span class="ck">DB_PASSWORD</span>: <span class="cv">${MYSQL_PASSWORD:-cloudeats_pass}</span>
+      <span class="ck">DB_NAME</span>:     <span class="cv">${MYSQL_DATABASE:-cloudeats}</span>
+      <span class="ck">REDIS_HOST</span>:  <span class="cv">redis</span>
+      <span class="ck">REDIS_PORT</span>:  <span class="cv">6379</span>
+      <span class="ck">NODE_ENV</span>:    <span class="cv">${NODE_ENV:-production}</span>
+    <span class="ck">ports</span>:
+      - <span class="cv">"3001:3001"</span>
+    <span class="ck">depends_on</span>:
+      <span class="ck">mysql</span>:
+        <span class="ck">condition</span>: <span class="cv">service_healthy</span>
+      <span class="ck">redis</span>:
+        <span class="ck">condition</span>: <span class="cv">service_healthy</span>
+    <span class="ck">networks</span>:
+      - <span class="cv">cloudeats-network</span>
+
+  <span class="ck">menu-service</span>:
+    <span class="ck">build</span>:
+      <span class="ck">context</span>: <span class="cv">./services/menu-service</span>
+    <span class="ck">container_name</span>: <span class="cv">cloudeats-menu-service</span>
+    <span class="ck">restart</span>: <span class="cv">unless-stopped</span>
+    <span class="ck">environment</span>:
+      <span class="ck">PORT</span>:        <span class="cv">3002</span>
+      <span class="ck">DB_HOST</span>:     <span class="cv">mysql</span>
+      <span class="ck">DB_USER</span>:     <span class="cv">${MYSQL_USER:-cloudeats_user}</span>
+      <span class="ck">DB_PASSWORD</span>: <span class="cv">${MYSQL_PASSWORD:-cloudeats_pass}</span>
+      <span class="ck">DB_NAME</span>:     <span class="cv">${MYSQL_DATABASE:-cloudeats}</span>
+      <span class="ck">NODE_ENV</span>:    <span class="cv">${NODE_ENV:-production}</span>
+    <span class="ck">ports</span>:
+      - <span class="cv">"3002:3002"</span>
+    <span class="ck">depends_on</span>:
+      <span class="ck">mysql</span>:
+        <span class="ck">condition</span>: <span class="cv">service_healthy</span>
+    <span class="ck">networks</span>:
+      - <span class="cv">cloudeats-network</span>
+
+  <span class="ck">order-service</span>:
+    <span class="ck">build</span>:
+      <span class="ck">context</span>: <span class="cv">./services/order-service</span>
+    <span class="ck">container_name</span>: <span class="cv">cloudeats-order-service</span>
+    <span class="ck">restart</span>: <span class="cv">unless-stopped</span>
+    <span class="ck">environment</span>:
+      <span class="ck">PORT</span>:           <span class="cv">3003</span>
+      <span class="ck">REDIS_HOST</span>:     <span class="cv">redis</span>
+      <span class="ck">REDIS_PORT</span>:     <span class="cv">6379</span>
+      <span class="ck">MONGO_HOST</span>:     <span class="cv">mongodb</span>
+      <span class="ck">MONGO_PORT</span>:     <span class="cv">27017</span>
+      <span class="ck">MONGO_USER</span>:     <span class="cv">${MONGO_USER:-admin}</span>
+      <span class="ck">MONGO_PASSWORD</span>: <span class="cv">${MONGO_PASSWORD:-secret123}</span>
+      <span class="ck">MONGO_DB</span>:       <span class="cv">${MONGO_DB:-orders}</span>
+      <span class="ck">NODE_ENV</span>:       <span class="cv">${NODE_ENV:-production}</span>
+    <span class="ck">ports</span>:
+      - <span class="cv">"3003:3003"</span>
+    <span class="ck">depends_on</span>:
+      <span class="ck">redis</span>:
+        <span class="ck">condition</span>: <span class="cv">service_healthy</span>
+      <span class="ck">mongodb</span>:
+        <span class="ck">condition</span>: <span class="cv">service_healthy</span>
+    <span class="ck">networks</span>:
+      - <span class="cv">cloudeats-network</span>
+
+  <span class="ck">api-gateway</span>:
+    <span class="ck">build</span>:
+      <span class="ck">context</span>: <span class="cv">./services/api-gateway</span>
+    <span class="ck">container_name</span>: <span class="cv">cloudeats-api-gateway</span>
+    <span class="ck">restart</span>: <span class="cv">unless-stopped</span>
+    <span class="ck">environment</span>:
+      <span class="ck">PORT</span>:              <span class="cv">8000</span>
+      <span class="ck">USER_SERVICE_URL</span>:  <span class="cv">http://user-service:3001</span>
+      <span class="ck">MENU_SERVICE_URL</span>:  <span class="cv">http://menu-service:3002</span>
+      <span class="ck">ORDER_SERVICE_URL</span>: <span class="cv">http://order-service:3003</span>
+      <span class="ck">NODE_ENV</span>:          <span class="cv">${NODE_ENV:-production}</span>
+    <span class="ck">ports</span>:
+      - <span class="cv">"8000:8000"</span>
+    <span class="ck">depends_on</span>:
+      - <span class="cv">user-service</span>
+      - <span class="cv">menu-service</span>
+      - <span class="cv">order-service</span>
+    <span class="ck">networks</span>:
+      - <span class="cv">cloudeats-network</span>
+
+<span class="cm"># ── NETWORKS ─────────────────────────────────</span>
+<span class="ck">networks</span>:
+  <span class="ck">cloudeats-network</span>:
+    <span class="ck">driver</span>: <span class="cv">bridge</span>
+    <span class="ck">name</span>:   <span class="cv">cloudeats-network</span>
+
+<span class="cm"># ── VOLUMES (Data Persistence) ───────────────</span>
+<span class="ck">volumes</span>:
+  <span class="ck">mysql-data</span>:
+    <span class="ck">name</span>: <span class="cv">cloudeats-mysql-data</span>
+  <span class="ck">redis-data</span>:
+    <span class="ck">name</span>: <span class="cv">cloudeats-redis-data</span>
+  <span class="ck">mongo-data</span>:
+    <span class="ck">name</span>: <span class="cv">cloudeats-mongo-data</span></pre>
+          </div>
+          <div class="callout amber"><span>⚠️</span><div>YAML is indentation-sensitive. Use spaces — never tabs. Each level of nesting is 2 spaces. If you get a parse error, check that lines are aligned correctly.</div></div>
+          <div class="why-box">
+            <strong>Why <code>${VARIABLE:-default}</code> syntax?</strong> The <code>:-default</code> part means "use the .env value if it exists, otherwise fall back to the default". This lets the file work even without a .env file — useful for a quick local spin-up. In production, always use the .env (or a cloud secret manager) instead of the default.
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p2-2">
+        <div class="step-hd" onclick="toggleStep('step-p2-2')">
+          <span class="step-num">3</span>
+          <span class="step-label">Validate the YAML syntax before running</span>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <p><strong>Person B</strong> — validate the file. This catches YAML errors before you try to start seven containers.</p>
+          <div class="code-block">
+            <div class="code-hd"><span class="code-fname">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>docker compose config --quiet</pre>
+          </div>
+          <div class="out-label">Expected output</div>
+          <div class="exp-out">
+(no output = valid YAML ✅)
+          </div>
+          <div class="trouble">
+            <div class="trouble-hd" onclick="toggleTrouble(this.closest('.trouble'))">🔴 yaml: line N: could not find expected ':' <span class="trouble-arrow">▶</span></div>
+            <div class="trouble-body">
+              <p>A YAML syntax error at line N. Open the file with <code>nano docker-compose.yml</code> and go to that line number. Common causes: a tab character instead of spaces, a missing colon after a key, or inconsistent indentation. Check that all nested items are indented 2 more spaces than their parent.</p>
+            </div>
+          </div>
+          <div class="pb a"><div class="pb-label">⚡ Average</div><code>docker compose config</code> without <code>--quiet</code> prints the fully-resolved file, substituting all <code>${VAR}</code> references. Compare it against your .env values to verify substitution is working correctly before deploying.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 3 -->
+    <section id="part-3">
+      <div class="part-head ph-blue">
+        <span class="part-pill pp-blue">Part 3</span>
+        <span class="part-title">Understanding Health Checks and Startup Order</span>
+        <span class="part-time">10 min</span>
+      </div>
+
+      <div class="step open" id="step-p3-1">
+        <div class="step-hd" onclick="toggleStep('step-p3-1')">
+          <span class="step-num">4</span>
+          <span class="step-label">Understand the three database health check commands</span>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Each database uses a different tool to check readiness. These are already in the docker-compose.yml from Step 2 — this step explains why each one is different.</p>
+          <table class="summary-table">
+            <thead><tr><th>Database</th><th>Health check command</th><th>What it tests</th></tr></thead>
+            <tbody>
+              <tr><td><strong>MySQL</strong></td><td><code>mysqladmin ping -h localhost</code></td><td>MySQL daemon is accepting connections</td></tr>
+              <tr><td><strong>Redis</strong></td><td><code>redis-cli ping</code></td><td>Redis responds with <code>PONG</code></td></tr>
+              <tr><td><strong>MongoDB</strong></td><td><code>mongosh --eval "db.adminCommand('ping')"</code></td><td>MongoDB admin ping returns <code>{ ok: 1 }</code></td></tr>
+            </tbody>
+          </table>
+          <div class="trouble">
+            <div class="trouble-hd" onclick="toggleTrouble(this.closest('.trouble'))">🔴 Health check fails: "mysqladmin not found" <span class="trouble-arrow">▶</span></div>
+            <div class="trouble-body">
+              <p>The MySQL 8.0 official image includes <code>mysqladmin</code> — it should be available. If you see this error, the image may not have fully pulled. Try <code>docker compose pull mysql</code> and then <code>docker compose up -d</code> again. If using a custom MySQL image, switch to the official <code>mysql:8.0</code> tag.</p>
+            </div>
+          </div>
+          <div class="trouble">
+            <div class="trouble-hd" onclick="toggleTrouble(this.closest('.trouble'))">🔴 Services never reach "healthy" — circular dependency <span class="trouble-arrow">▶</span></div>
+            <div class="trouble-body">
+              <p>Circular dependency: if Service A depends on Service B and B depends on A, Docker Compose will hang indefinitely. The rule: databases never depend on services. Services depend on databases. The API gateway depends on services, not databases. If you see containers stuck in "starting" for more than 2 minutes, run <code>docker compose ps</code> and look for two containers each waiting for the other.</p>
+            </div>
+          </div>
+          <div class="why-box">
+            <strong>Why <code>condition: service_healthy</code>?</strong> <code>depends_on</code> without a condition only waits for the container to <em>start</em> — not for the database to be <em>ready for connections</em>. MySQL takes 15–30 seconds to initialise after starting. Without the health condition, user-service tries to connect immediately, gets "connection refused", and crashes. With the health condition, it waits patiently until MySQL confirms it is ready.
+          </div>
+          <div class="pb adv"><div class="pb-label">🚀 Advanced</div>The health check <code>interval: 10s</code> and <code>retries: 5</code> mean Docker will try every 10 seconds for up to 50 seconds before marking the container as unhealthy. For a slow machine, increase <code>retries</code> to 10. For production where fast startup matters, use <code>start_period: 30s</code> (available in Compose v3.4+) to give the container grace time before health checks start counting failures.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 4 -->
+    <section id="part-4">
+      <div class="part-head ph-amber">
+        <span class="part-pill pp-amber">Part 4</span>
+        <span class="part-title">Manage Secrets with a .env File</span>
+        <span class="part-time">10 min</span>
+      </div>
+
+      <div class="step open" id="step-p4-1">
+        <div class="step-hd" onclick="toggleStep('step-p4-1')">
+          <span class="step-num">5</span>
+          <span class="step-label">Create the .env file with real passwords</span>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <p><strong>Person B</strong> — create the .env file. This file provides the actual passwords that docker-compose.yml reads. It must never be committed to Git.</p>
+          <div class="code-block">
+            <div class="code-hd"><span class="code-fname">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>cd ~/cloudeats-app
+nano .env</pre>
+          </div>
+          <div class="code-block">
+            <div class="code-hd"><span class="code-fname">.env — secrets file (never commit this)</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="cm"># CloudEats — local environment configuration</span>
+<span class="cm"># This file is listed in .gitignore — never commit to Git</span>
+
+<span class="cm"># Environment mode</span>
+NODE_ENV=<span class="cv">development</span>
+
+<span class="cm"># MySQL</span>
+MYSQL_ROOT_PASSWORD=<span class="cv">RootPass123!</span>
+MYSQL_DATABASE=<span class="cv">cloudeats</span>
+MYSQL_USER=<span class="cv">cloudeats_user</span>
+MYSQL_PASSWORD=<span class="cv">CloudEatsPass456!</span>
+
+<span class="cm"># MongoDB</span>
+MONGO_USER=<span class="cv">admin</span>
+MONGO_PASSWORD=<span class="cv">MongoPass789!</span>
+MONGO_DB=<span class="cv">orders</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p4-2">
+        <div class="step-hd" onclick="toggleStep('step-p4-2')">
+          <span class="step-num">6</span>
+          <span class="step-label">Add .env to .gitignore — keep secrets out of Git</span>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <p><strong>Person A</strong> — add the .env file to .gitignore. This ensures git will never track it, even by accident.</p>
+          <div class="code-block">
+            <div class="code-hd"><span class="code-fname">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="cm"># Add .env to .gitignore</span>
+echo ".env" >> .gitignore
+echo ".env.*" >> .gitignore
+
+<span class="cm"># Verify it's listed</span>
+cat .gitignore
+
+<span class="cm"># Verify git is NOT tracking .env</span>
+git status</pre>
+          </div>
+          <div class="out-label">Expected output — .env should NOT appear in git status</div>
+          <div class="exp-out">On branch main
+nothing to commit, working tree clean
+(or: .gitignore appears as modified — that's fine)</div>
+          <div class="trouble">
+            <div class="trouble-hd" onclick="toggleTrouble(this.closest('.trouble'))">🔴 .env appears in "git status" as untracked <span class="trouble-arrow">▶</span></div>
+            <div class="trouble-body">
+              <p>The .gitignore entry hasn't taken effect yet or was added after .env was already staged. Run: <code>git rm --cached .env</code> to remove it from Git's index (the file itself stays on disk), then <code>git status</code> again — it should disappear.</p>
+            </div>
+          </div>
+          <div class="callout red"><span>🔒</span><div><strong>Security rule:</strong> Never commit passwords, API keys, or private keys to Git — even in a private repository. Repositories get leaked, made public accidentally, or shared. The .env pattern is the minimum standard. In production, use a cloud secret manager (Week 8).</div></div>
+          <div class="checkpoint">✅ <div><strong>Check (Part 4):</strong> .env file exists, is not tracked by git, and docker-compose.yml references variables using <code>${VAR}</code> syntax. If all three are true, continue.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 5 -->
+    <section id="part-5">
+      <div class="part-head ph-green">
+        <span class="part-pill pp-green">Part 5</span>
+        <span class="part-title">First Deployment — One Command, Seven Services</span>
+        <span class="part-time">15 min</span>
+      </div>
+
+      <div class="step open" id="step-p5-1">
+        <div class="step-hd" onclick="toggleStep('step-p5-1')">
+          <span class="step-num">7</span>
+          <span class="step-label">Stop any running containers and deploy the stack</span>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <p><strong>Person A</strong> — clear any containers from previous labs, then deploy everything with a single command.</p>
+          <div class="pb b"><div class="pb-label">🌱 Beginner</div>The first deployment downloads images and builds your service images — it takes 3–5 minutes the first time. After that, subsequent deployments only take 30–60 seconds because images are cached locally.</div>
+          <div class="code-block">
+            <div class="code-hd"><span class="code-fname">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>cd ~/cloudeats-app
+
+<span class="cm"># Stop any containers from previous labs</span>
+docker stop $(docker ps -aq) 2>/dev/null; docker rm $(docker ps -aq) 2>/dev/null
+
+<span class="cm"># THE ONE COMMAND — deploy entire CloudEats stack</span>
+docker compose up -d
+
+<span class="cm"># -d = detached (run in background)</span></pre>
+          </div>
+          <div class="out-label">Expected output — Docker creates everything in order</div>
+          <div class="exp-out">
+[+] Running 10/10
+ ✔ Network cloudeats-network       Created
+ ✔ Volume cloudeats-mysql-data     Created
+ ✔ Volume cloudeats-redis-data     Created
+ ✔ Volume cloudeats-mongo-data     Created
+ ✔ Container cloudeats-mysql       Started
+ ✔ Container cloudeats-redis       Started
+ ✔ Container cloudeats-mongodb     Started
+ ✔ Container cloudeats-user-service    Started
+ ✔ Container cloudeats-menu-service    Started
+ ✔ Container cloudeats-order-service   Started
+ ✔ Container cloudeats-api-gateway     Started</div>
+          <div class="trouble">
+            <div class="trouble-hd" onclick="toggleTrouble(this.closest('.trouble'))">🔴 Port already allocated: bind for 0.0.0.0:3306 failed <span class="trouble-arrow">▶</span></div>
+            <div class="trouble-body">
+              <p>Something else is using port 3306. Find it: <code>sudo lsof -i :3306</code>. If it's a system MySQL: <code>sudo systemctl stop mysql</code>. Or change the host port in docker-compose.yml to 3307: <code>- "3307:3306"</code>.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p5-2">
+        <div class="step-hd" onclick="toggleStep('step-p5-2')">
+          <span class="step-num">8</span>
+          <span class="step-label">Verify all seven services are healthy</span>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <p><strong>Person B</strong> — check that all containers are running and the three databases have passed their health checks.</p>
+          <div class="code-block">
+            <div class="code-hd"><span class="code-fname">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="cm"># View status of all containers</span>
+docker compose ps
+
+<span class="cm"># Test the API Gateway endpoint</span>
+curl http://localhost:8000/api/menu/health</pre>
+          </div>
+          <div class="out-label">Expected: all containers "Up", databases show "(healthy)"</div>
+          <div class="exp-out">
+NAME                        STATUS
+cloudeats-mysql             Up (healthy)
+cloudeats-redis             Up (healthy)
+cloudeats-mongodb           Up (healthy)
+cloudeats-user-service      Up
+cloudeats-menu-service      Up
+cloudeats-order-service     Up
+cloudeats-api-gateway       Up</div>
+          <div class="trouble">
+            <div class="trouble-hd" onclick="toggleTrouble(this.closest('.trouble'))">🔴 Database shows "(health: starting)" for more than 2 minutes <span class="trouble-arrow">▶</span></div>
+            <div class="trouble-body">
+              <p>The health check is running but hasn't passed yet. Check logs: <code>docker compose logs mysql</code>. If you see "initializing database" the container is still setting up — wait another 30 seconds. If you see an error, the health check command may be wrong. For MySQL ensure the image is <code>mysql:8.0</code>, not a custom image without <code>mysqladmin</code>.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" id="step-p5-3">
+        <div class="step-hd" onclick="toggleStep('step-p5-3')">
+          <span class="step-num">9</span>
+          <span class="step-label">Prove data persistence — the volume survives container deletion</span>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <p>This demonstration is important: volumes persist data even after containers are deleted and recreated. This is the difference between <code>docker compose down</code> (safe) and <code>docker compose down -v</code> (deletes data).</p>
+          <div class="code-block">
+            <div class="code-hd"><span class="code-fname">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="cm"># Write something to Redis</span>
+docker compose exec redis redis-cli SET test_key "IaC_works"
+docker compose exec redis redis-cli GET test_key
+
+<span class="cm"># Stop and REMOVE the Redis container (not the volume)</span>
+docker compose stop redis
+docker compose rm -f redis
+
+<span class="cm"># Restart Redis — it recreates from the image</span>
+docker compose up -d redis
+
+<span class="cm"># Check the data survived</span>
+docker compose exec redis redis-cli GET test_key</pre>
+          </div>
+          <div class="out-label">Expected — data survived container deletion</div>
+          <div class="exp-out">"IaC_works"</div>
+          <div class="callout green"><span>✅</span><div><strong>Why this matters:</strong> A container is disposable — it holds application code and configuration. A volume holds data. Treat containers as cattle, not pets: you can destroy and recreate them freely without losing your database.</div></div>
+          <div class="checkpoint">✅ <div><strong>Lab 7.1 complete:</strong> Seven services running and healthy. API Gateway responding. Data persists across container restarts. Commit the docker-compose.yml to Git — this file is now your infrastructure definition.</div></div>
+          <div class="code-block">
+            <div class="code-hd"><span class="code-fname">Terminal — commit the IaC file</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>cd ~/cloudeats-app
+git add docker-compose.yml .gitignore
+git commit -m "infra: Add complete docker-compose.yml IaC definition
+
+Seven services, three volumes, one network.
+Health checks on all databases with service_healthy conditions.
+Secrets via .env (gitignored).
+
+Closes Lab 7.1"
+git push origin main</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 6: ADVANCED -->
+    <section id="part-6">
+      <div class="part-head ph-purple">
+        <span class="part-pill pp-purple">Part 6</span>
+        <span class="part-title">🚀 Advanced Challenge — Add Resource Limits</span>
+        <span class="part-time">Optional</span>
+      </div>
+
+      <div class="step" id="step-p6-1">
+        <div class="step-hd" onclick="toggleStep('step-p6-1')">
+          <span class="step-num" style="border-color:rgba(180,110,245,.4);background:rgba(180,110,245,.08);color:var(--purple);">★</span>
+          <span class="step-label">Add CPU and memory limits to prevent runaway services</span>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <div class="adv-only">
+            <div class="adv-only-label">🚀 Advanced only</div>
+            <p>In production, a single service going into a CPU loop can starve other containers. Docker Compose supports resource limits via the <code>deploy</code> key.</p>
+            <div class="code-block">
+              <div class="code-hd"><span class="code-fname">docker-compose.yml — add to each service block</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+              <pre><span class="ck">user-service</span>:
+  <span class="ck">build</span>:
+    <span class="ck">context</span>: <span class="cv">./services/user-service</span>
+  <span class="ck">deploy</span>:
+    <span class="ck">resources</span>:
+      <span class="ck">limits</span>:
+        <span class="ck">cpus</span>:   <span class="cv">'0.5'</span>      <span class="cm"># max 50% of one CPU core</span>
+        <span class="ck">memory</span>: <span class="cv">256M</span>      <span class="cm"># max 256 MB RAM</span>
+      <span class="ck">reservations</span>:
+        <span class="ck">cpus</span>:   <span class="cv">'0.1'</span>      <span class="cm"># guaranteed minimum</span>
+        <span class="ck">memory</span>: <span class="cv">64M</span></pre>
+            </div>
+            <p>Add this to each microservice. After redeploying, verify with <code>docker stats</code>.</p>
+            <p><strong>Trade-off question:</strong> What happens if a service legitimately needs more than its memory limit during a traffic spike? What is the trade-off between setting limits too tight vs too loose?</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div style="border-top:1px solid var(--border);padding-top:1.5rem;margin-top:2rem;display:flex;justify-content:space-between;font-size:.8rem;">
+      <a href="../week07/index.html" style="color:var(--muted);text-decoration:none;padding:.3rem .7rem;border:1px solid var(--border);border-radius:5px;">← Week 7 Lecture</a>
+      <a href="../week07/lab2_deployment_automation.html" style="color:var(--amber);text-decoration:none;padding:.3rem .7rem;border:1px solid rgba(255,183,64,.3);border-radius:5px;background:rgba(255,183,64,.04);">Lab 7.2 — Deployment Automation →</a>
+    </div>
+
+  </main>
+</div>
+
+<script>
+function toggleStep(id) {
+  document.getElementById(id).classList.toggle('open');
+  updateProgress();
+}
+function toggleTrouble(el) {
+  el.classList.toggle('open');
+}
+function copyCode(btn, event) {
+  if (event) event.stopPropagation();
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+function expandAll() {
+  document.querySelectorAll('.step').forEach(s => s.classList.add('open'));
+  updateProgress();
+}
+function collapseAll() {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('open'));
+  updateProgress();
+}
+function setPace(pace, btn) {
+  document.body.className = 'pace-' + pace;
+  document.querySelectorAll('.pace-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (pace === 'beginner') expandAll();
+  if (pace === 'advanced') collapseAll();
+}
+function updateProgress() {
+  const total = document.querySelectorAll('.step').length;
+  const open  = document.querySelectorAll('.step.open').length;
+  document.getElementById('prog-count').textContent = open;
+  document.getElementById('prog-fill').style.width = (open / total * 100) + '%';
+}
+document.addEventListener('DOMContentLoaded', () => { expandAll(); });
+</script>
+</body>
+</html>
