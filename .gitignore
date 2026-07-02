@@ -1,0 +1,23 @@
+# ── OS ──────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+ 
+# ── Editor ──────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+ 
+# ── Claude project instructions ─────────────
+# Excluded: contains course-authoring prompts not intended for public view.
+# Re-evaluate before switching repo to public.
+.claude/
+ 
+# ── Assets (future) ─────────────────────────
+# Uncomment if you add a CSS build step later
+# node_modules/
+# dist/
