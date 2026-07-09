@@ -231,7 +231,7 @@
 <!-- ── HERO ── -->
 <div class="lab-hero">
   <div class="hero-inner">
-    <div class="hero-crumb"><a href="../week04/index.html">← Week 4 Lecture</a> › Lab 4.1</div>
+    <div class="hero-crumb"><a href="week04_Cloud_Native_Applications.html">← Week 4 Lecture</a> › Lab 4.1</div>
     <h1>🗃️ SQL Queries in the Shell</h1>
     <p style="color:var(--muted);font-size:0.86rem;margin:0.25rem 0 0">Ask questions directly to a live database — no application code, just SQL.</p>
     <div class="hero-meta">
@@ -344,9 +344,9 @@
 docker compose ps</pre>
           </div>
           <div class="out-label">Expected output — look for <code>db</code> with status <strong>Up</strong></div>
-          <div class="expected-out">NAME                    STATUS    PORTS
-cloudeats-app-backend-1  Up        0.0.0.0:3000->3000/tcp
-cloudeats-app-db-1       Up        3306/tcp</pre></div>
+          <div class="expected-out">NAME                STATUS    PORTS
+cloudeats-backend   Up        0.0.0.0:3000->3000/tcp
+cloudeats-db        Up        3306/tcp</pre></div>
 
           <div class="trouble" onclick="toggleTrouble(this, event)">
             <div class="trouble-header"><span>🔴</span> db container is not running<div class="trouble-toggle">▶</div></div>
@@ -365,7 +365,7 @@ cloudeats-app-db-1       Up        3306/tcp</pre></div>
           <p>We use <code>docker exec</code> to run the MySQL client <em>inside</em> the running container.</p>
           <div class="code-block">
             <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-            <pre>docker exec -it cloudeats-app-db-1 mysql -u cloudeats_user -pcloudeats_password cloudeats_db</pre>
+            <pre>docker exec -it cloudeats-db mysql -u cloudeats_user -pcloudeats_password cloudeats_db</pre>
           </div>
 
           <div class="what-happened">
@@ -395,7 +395,7 @@ mysql></pre></div>
 
           <div class="trouble" onclick="toggleTrouble(this, event)">
             <div class="trouble-header"><span>🔴</span> "No such container" error<div class="trouble-toggle">▶</div></div>
-            <div class="trouble-body">Your container might have a slightly different name. Run <code>docker compose ps</code> and copy the exact name of the <code>db</code> container from the output, then replace <code>cloudeats-app-db-1</code> in the command above.</div>
+            <div class="trouble-body">Your container might have a slightly different name. Run <code>docker compose ps</code> and copy the exact name of the <code>db</code> container from the output, then replace <code>cloudeats-db</code> in the command above.</div>
           </div>
         </div>
       </div>
@@ -420,6 +420,65 @@ mysql></pre></div>
       <div class="step open" onclick="toggleStep(this, event)">
         <div class="step-header">
           <div class="step-num">3</div>
+          <div class="step-title">Create and seed the users and orders tables</div>
+          <span class="step-toggle">▶</span>
+        </div>
+        <div class="step-body">
+          <p><code>init.sql</code> only created <code>menu_items</code> back in Week 3. For this lab we also need a <code>users</code> table and an <code>orders</code> table with some sample rows, so the JOIN queries later in this lab return real results. Paste this at the <code>mysql&gt;</code> prompt:</p>
+
+          <div class="callout blue">
+            <span>💡</span>
+            <div>This subject focuses on <strong>cloud</strong>, not database design — so table creation and SQL syntax aren't deep-dived here. Copy the statements below to move forward, but take initiative to read up on <code>CREATE TABLE</code>, <code>FOREIGN KEY</code>, and <code>INSERT</code> on your own if they're unfamiliar.</div>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">SQL · Create users and orders tables</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="ck">CREATE TABLE IF NOT EXISTS</span> <span class="ct">users</span> (
+  <span class="cc">id</span> <span class="cv">INT</span> <span class="ck">AUTO_INCREMENT PRIMARY KEY</span>,
+  <span class="cc">full_name</span> <span class="cv">VARCHAR</span>(100) <span class="ck">NOT NULL</span>
+);
+
+<span class="ck">CREATE TABLE IF NOT EXISTS</span> <span class="ct">orders</span> (
+  <span class="cc">id</span> <span class="cv">INT</span> <span class="ck">AUTO_INCREMENT PRIMARY KEY</span>,
+  <span class="cc">user_id</span> <span class="cv">INT</span> <span class="ck">NOT NULL</span>,
+  <span class="cc">total_amount</span> <span class="cv">DECIMAL</span>(6,2) <span class="ck">NOT NULL</span>,
+  <span class="cc">status</span> <span class="cv">VARCHAR</span>(20) <span class="ck">NOT NULL</span>,
+  <span class="ck">FOREIGN KEY</span> (<span class="cc">user_id</span>) <span class="ck">REFERENCES</span> <span class="ct">users</span>(<span class="cc">id</span>)
+);</pre>
+          </div>
+
+          <p style="margin-top:0.85rem">Now insert the sample rows used throughout this lab:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">SQL · Seed sample data</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre><span class="ck">INSERT INTO</span> <span class="ct">users</span> (<span class="cc">full_name</span>) <span class="ck">VALUES</span>
+  (<span class="cs">'Ali Hassan'</span>), (<span class="cs">'Siti Aminah'</span>), (<span class="cs">'Rajan Kumar'</span>);
+
+<span class="ck">INSERT INTO</span> <span class="ct">orders</span> (<span class="cc">user_id</span>, <span class="cc">total_amount</span>, <span class="cc">status</span>) <span class="ck">VALUES</span>
+  (1, 26.00, <span class="cs">'delivered'</span>),
+  (1, 14.00, <span class="cs">'pending'</span>),
+  (2, 12.00, <span class="cs">'confirmed'</span>);</pre>
+          </div>
+
+          <div class="what-happened">
+            <div class="wh-label">🔍 What does this do?</div>
+            <code>users.id</code> auto-increments, so Ali Hassan becomes <code>id = 1</code>, Siti Aminah <code>id = 2</code>, Rajan Kumar <code>id = 3</code> — in insertion order. The <code>FOREIGN KEY</code> on <code>orders.user_id</code> means MySQL will refuse to insert an order pointing to a <code>user_id</code> that doesn't exist in <code>users</code>. This is the same <code>user_id</code> column you'll JOIN against in Part 4.
+          </div>
+
+          <div class="callout amber">
+            <span>⚠️</span>
+            <div>Rajan Kumar (<code>id = 3</code>) deliberately has <strong>no orders</strong>. You'll use this in Part 4's LEFT JOIN discussion — an INNER JOIN will never show him, but a LEFT JOIN will.</div>
+          </div>
+
+          <div class="trouble" onclick="toggleTrouble(this, event)">
+            <div class="trouble-header"><span>🔴</span> "Table 'orders' already exists" or duplicate rows<div class="trouble-toggle">▶</div></div>
+            <div class="trouble-body">If you run the INSERT statements twice, you'll get duplicate rows (auto_increment keeps counting up). Run <code>DELETE FROM orders; DELETE FROM users;</code> first if you need to start over, or just check with <code>SELECT * FROM users;</code> before inserting again.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open" onclick="toggleStep(this, event)">
+        <div class="step-header">
+          <div class="step-num">4</div>
           <div class="step-title">List tables, then inspect a table's structure</div>
           <span class="step-toggle">▶</span>
         </div>
@@ -472,7 +531,7 @@ mysql></pre></div>
         <div class="checkpoint-icon">✅</div>
         <div class="checkpoint-text">
           <strong>Part 2 Checkpoint</strong>
-          You can see three tables. <code>menu_items</code> has columns: id, name, category, price, available. Move to Part 3.
+          You created and seeded <code>users</code> and <code>orders</code>, and confirmed all three tables exist. <code>menu_items</code> has columns: id, name, category, price, available. Move to Part 3.
         </div>
       </div>
     </section>
@@ -490,10 +549,10 @@ mysql></pre></div>
         <div><strong>The idea:</strong> SELECT is how you read from a database. Every time you open the CloudEats menu in the browser, a SELECT runs in the background. You are now doing manually what the app does automatically.</div>
       </div>
 
-      <!-- Step 4 — WHERE -->
+      <!-- Step 5 — WHERE -->
       <div class="step open" onclick="toggleStep(this, event)" id="p3s1-step">
         <div class="step-header">
-          <div class="step-num">4</div>
+          <div class="step-num">5</div>
           <div class="step-title">Filter rows with WHERE</div>
           <span class="step-toggle">▶</span>
         </div>
@@ -537,10 +596,10 @@ mysql></pre></div>
         </div>
       </div>
 
-      <!-- Step 5 — ORDER BY + LIMIT -->
+      <!-- Step 6 — ORDER BY + LIMIT -->
       <div class="step open" onclick="toggleStep(this, event)" id="p3s2">
         <div class="step-header">
-          <div class="step-num">5</div>
+          <div class="step-num">6</div>
           <div class="step-title">Sort and limit with ORDER BY and LIMIT</div>
           <span class="step-toggle">▶</span>
         </div>
@@ -570,10 +629,10 @@ mysql></pre></div>
         </div>
       </div>
 
-      <!-- Step 6 — LIKE -->
+      <!-- Step 7 — LIKE -->
       <div class="step open" onclick="toggleStep(this, event)" id="p3s3">
         <div class="step-header">
-          <div class="step-num">6</div>
+          <div class="step-num">7</div>
           <div class="step-title">Search text with LIKE and the % wildcard</div>
           <span class="step-toggle">▶</span>
         </div>
@@ -627,7 +686,7 @@ mysql></pre></div>
 
       <div class="step open" onclick="toggleStep(this, event)">
         <div class="step-header">
-          <div class="step-num">7</div>
+          <div class="step-num">8</div>
           <div class="step-title">JOIN orders with users to see customer names</div>
           <span class="step-toggle">▶</span>
         </div>
@@ -723,7 +782,7 @@ mysql></pre></div>
 
       <div class="step open" onclick="toggleStep(this, event)">
         <div class="step-header">
-          <div class="step-num">8</div>
+          <div class="step-num">9</div>
           <div class="step-title">Add Laksa Sarawak to the menu</div>
           <span class="step-toggle">▶</span>
         </div>
@@ -860,11 +919,11 @@ mysql></pre></div>
 
 <footer style="border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;color:var(--muted);font-size:0.78rem;max-width:1100px;margin:0 auto">
   Cloud Computing · Lab 4.1 · SQL Queries in the Shell &nbsp;|&nbsp; CloudEats Academy &nbsp;|&nbsp;
-  <a href="../week04/index.html" style="color:var(--muted);text-decoration:none">← Week 4 Lecture</a>
+  <a href="week04_Cloud_Native_Applications.html" style="color:var(--muted);text-decoration:none">← Week 4 Lecture</a>
   &nbsp;|&nbsp;
   <span class="ghp-badge">🐙 GitHub Pages Ready</span>
   &nbsp;|&nbsp;
-  <a href="../week04/lab2_nosql_orders.html" style="color:var(--muted);text-decoration:none">Lab 4.2 →</a>
+  <a href="week04_lab2_nosql_orders.html" style="color:var(--muted);text-decoration:none">Lab 4.2 →</a>
 </footer>
 
 <script>
