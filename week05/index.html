@@ -382,10 +382,10 @@ app.post(<span class="cv">'/api/orders'</span>, ...);
           ↓            ↓            ↓
    ┌───────────┐ ┌───────────┐ ┌───────────┐
    │  <span class="cv">User</span>     │ │  <span class="cv">Menu</span>     │ │  <span class="cv">Order</span>    │   ← Lab 5.1 · Required
-   │ Service  │ │ Service  │ │ Service  │
-   │  :3001   │ │  :3002   │ │  :3003   │
-   └─────┬────┘ └─────┬────┘ └──┬────┬──┘
-         ↓             ↓         ↓    ↓
+   │ Service   │ │ Service   │ │ Service   │
+   │  :3001    │ │  :3002    │ │  :3003    │
+   └─────┬─────┘ └─────┬─────┘ └──┬────┬───┘
+         ↓             ↓          ↓    ↓
       <span class="ck">MySQL</span>         <span class="ck">MySQL</span>    <span class="cp">MongoDB</span> <span class="cp">Redis</span>
      (users)       (menu)   (orders)(cart)
 
@@ -450,7 +450,7 @@ app.post(<span class="cv">'/api/orders'</span>, ...);
   <div class="compare-grid">
     <div class="compare-side monolith">
       <div class="cs-label amber">🔄 Synchronous (REST / HTTP)</div>
-      <div class="cs-item"><div class="cs-dot dot-blue"></div>Service A calls Service B and <em>waits</em> for the response before continuing</div>
+      <div class="cs-item"><div class="cs-dot dot-blue"></div>Service A calls Service B and waits for the response before continuing</div>
       <div class="cs-item"><div class="cs-dot dot-blue"></div>Simple — works like a function call across the network</div>
       <div class="cs-item"><div class="cs-dot dot-blue"></div>If Service B is down, Service A's request fails immediately</div>
       <div class="cs-item"><div class="cs-dot dot-blue"></div>Used in CloudEats: Order Service calls User Service to verify a user exists</div>
