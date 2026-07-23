@@ -224,7 +224,7 @@ section{margin-bottom:2.25rem;}
 <!-- ── HERO ── -->
 <div class="lab-hero">
   <div class="hero-inner">
-    <div class="hero-crumb"><a href="../week06/index.html">&larr; Week 6 Lecture</a> &rsaquo; Lab 6.1</div>
+    <div class="hero-crumb"><a href="week06_DevOps_and_Version_Control.html">&larr; Week 6 Lecture</a> &rsaquo; Lab 6.1</div>
     <h1>Git Version Control &mdash; Feature Branch Workflow</h1>
     <p class="hero-sub">Push the CloudEats repo to GitHub, build a ratings feature on a branch, merge it back to main via a Pull Request, and survive your first merge conflict.</p>
     <div class="hero-meta">
@@ -955,7 +955,7 @@ Branch 'feature/add-laksa-to-menu' set up to track remote branch from 'origin'.<
       <span class="step-arrow">&#9654;</span>
     </div>
     <div class="step-body">
-      <p>You will create two branches that both edit the same line in <code>services/menu-service/server.js</code>. When you try to merge, Git cannot auto-decide which version to keep.</p>
+      <p>You will create two branches that both edit the same line in <code>services/menu-service/src/server.js</code>. When you try to merge, Git cannot auto-decide which version to keep.</p>
 
       <div class="code-block">
         <div class="code-hd"><span class="code-lang">terminal &mdash; create branch A and commit a change</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
@@ -966,19 +966,19 @@ Branch 'feature/add-laksa-to-menu' set up to track remote branch from 'origin'.<
 
 <span class="cm"># Edit the first line of server.js that sets the port</span>
 <span class="cm"># On macOS/Linux: sed replaces in-place</span>
-<span class="ca">sed -i 's/const PORT = .*/const PORT = 3002;/' services/menu-service/server.js</span>
+<span class="ca">sed -i 's/const PORT = .*/const PORT = 3002;/' services/menu-service/src/server.js</span>
 
 <span class="cm"># On macOS you may need: sed -i '' 's/const PORT = .*/const PORT = 3002;/' ...</span>
 
 <span class="cm"># Verify the change</span>
-<span class="ca">grep "const PORT" services/menu-service/server.js</span></pre>
+<span class="ca">grep "const PORT" services/menu-service/src/server.js</span></pre>
       </div>
       <div class="out-label">What you should see</div>
       <div class="exp-out">const PORT = 3002;</div>
 
       <div class="code-block">
         <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-        <pre><span class="ca">git add services/menu-service/server.js</span>
+        <pre><span class="ca">git add services/menu-service/src/server.js</span>
 <span class="ca">git commit -m "chore(menu): Set port to 3002 for menu service"</span>
 
 <span class="cm"># Now go back to main and create a SECOND branch</span>
@@ -986,10 +986,10 @@ Branch 'feature/add-laksa-to-menu' set up to track remote branch from 'origin'.<
 <span class="ca">git checkout -b conflict/branch-b</span>
 
 <span class="cm"># Branch B — different person sets port to 3003</span>
-<span class="ca">sed -i 's/const PORT = .*/const PORT = 3003;/' services/menu-service/server.js</span>
+<span class="ca">sed -i 's/const PORT = .*/const PORT = 3003;/' services/menu-service/src/server.js</span>
 <span class="cm"># macOS: sed -i '' 's/const PORT = .*/const PORT = 3003;/' ...</span>
 
-<span class="ca">git add services/menu-service/server.js</span>
+<span class="ca">git add services/menu-service/src/server.js</span>
 <span class="ca">git commit -m "chore(menu): Set port to 3003 for testing environment"</span></pre>
       </div>
 
@@ -1019,8 +1019,8 @@ Branch 'feature/add-laksa-to-menu' set up to track remote branch from 'origin'.<
 <span class="ca">git merge conflict/branch-a</span></pre>
       </div>
       <div class="out-label">What you should see</div>
-      <div class="exp-out">Auto-merging services/menu-service/server.js
-CONFLICT (content): Merge conflict in services/menu-service/server.js
+      <div class="exp-out">Auto-merging services/menu-service/src/server.js
+CONFLICT (content): Merge conflict in services/menu-service/src/server.js
 Automatic merge failed; fix conflicts and then commit the result.</div>
 
       <div class="callout green">
@@ -1040,7 +1040,7 @@ You have unmerged paths.
 
 Unmerged paths:
   (use "git add &lt;file&gt;..." to mark resolution)
-    both modified:   services/menu-service/server.js</div>
+    both modified:   services/menu-service/src/server.js</div>
 
       <div class="pb b">
         <div class="pb-label">&#127807; Beginner &mdash; "both modified" means conflict</div>
@@ -1061,7 +1061,7 @@ Unmerged paths:
       <span class="step-arrow">&#9654;</span>
     </div>
     <div class="step-body">
-      <p>Open <code>services/menu-service/server.js</code> in your editor. Find the conflict markers. They look like this:</p>
+      <p>Open <code>services/menu-service/src/server.js</code> in your editor. Find the conflict markers. They look like this:</p>
 
       <div class="code-block">
         <div class="code-hd"><span class="code-lang">what you will see inside server.js</span></div>
@@ -1082,7 +1082,7 @@ Unmerged paths:
       <p>For this exercise, port <strong>3002</strong> is correct for the menu service. Edit the file so it reads exactly:</p>
 
       <div class="code-block">
-        <div class="code-hd"><span class="code-lang">services/menu-service/server.js &mdash; after resolving</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <div class="code-hd"><span class="code-lang">services/menu-service/src/server.js &mdash; after resolving</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
         <pre><span class="ca">const PORT = 3002;</span>
 <span class="cm">// All three conflict marker lines deleted — file is clean</span></pre>
       </div>
@@ -1112,11 +1112,11 @@ Unmerged paths:
       <div class="code-block">
         <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
         <pre><span class="cm"># Confirm the file no longer has conflict markers</span>
-<span class="ca">grep -n "&lt;&lt;&lt;\|===\|&gt;&gt;&gt;" services/menu-service/server.js</span>
+<span class="ca">grep -n "&lt;&lt;&lt;\|===\|&gt;&gt;&gt;" services/menu-service/src/server.js</span>
 <span class="cm"># Expected: no output (empty = no markers found)</span>
 
 <span class="cm"># Stage the resolved file</span>
-<span class="ca">git add services/menu-service/server.js</span>
+<span class="ca">git add services/menu-service/src/server.js</span>
 
 <span class="cm"># Check status — "all conflicts fixed"</span>
 <span class="ca">git status</span></pre>
@@ -1317,8 +1317,8 @@ All conflicts fixed but you are still merging.
   </table>
 
   <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.5rem">
-    <a href="../week06/index.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:700;padding:.45rem 1rem;background:var(--surface2);color:var(--muted);border:1px solid var(--border);border-radius:6px;text-decoration:none">&larr; Week 6 Lecture</a>
-    <a href="../week06/lab2_automated_testing.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:700;padding:.45rem 1rem;background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.35);border-radius:6px;text-decoration:none">Lab 6.2 &mdash; Automated Testing &rarr;</a>
+    <a href="week06_DevOps_and_Version_Control.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:700;padding:.45rem 1rem;background:var(--surface2);color:var(--muted);border:1px solid var(--border);border-radius:6px;text-decoration:none">&larr; Week 6 Lecture</a>
+    <a href="week06_lab2_automated_testing.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:700;padding:.45rem 1rem;background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.35);border-radius:6px;text-decoration:none">Lab 6.2 &mdash; Automated Testing &rarr;</a>
   </div>
 </section>
 
@@ -1328,11 +1328,11 @@ All conflicts fixed but you are still merging.
 <!-- FOOTER -->
 <footer style="border-top:1px solid var(--border);padding:1.25rem 1.5rem;text-align:center;color:var(--muted);font-size:.76rem;max-width:1200px;margin:0 auto">
   Cloud Computing &middot; Lab 6.1 &middot; Git Version Control &nbsp;|&nbsp; CloudEats Academy &nbsp;|&nbsp;
-  <a href="../week06/index.html" style="color:var(--muted);text-decoration:none">&larr; Week 6 Lecture</a>
+  <a href="week06_DevOps_and_Version_Control.html" style="color:var(--muted);text-decoration:none">&larr; Week 6 Lecture</a>
   &nbsp;|&nbsp;
   <span class="ghp-badge">&#127758; GitHub Pages Ready</span>
   &nbsp;|&nbsp;
-  <a href="../week06/lab2_automated_testing.html" style="color:var(--muted);text-decoration:none">Lab 6.2 &rarr;</a>
+  <a href="week06_lab2_automated_testing.html" style="color:var(--muted);text-decoration:none">Lab 6.2 &rarr;</a>
 </footer>
 
 <script>

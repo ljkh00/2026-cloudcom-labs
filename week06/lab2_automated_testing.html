@@ -393,7 +393,7 @@ section{margin-bottom:2.25rem;}
   <span class="cp">"name"</span>: <span class="cv">"menu-service"</span>,
   <span class="cp">"version"</span>: <span class="cv">"1.0.0"</span>,
   <span class="cp">"scripts"</span>: {
-    <span class="cp">"start"</span>: <span class="cv">"node server.js"</span>,
+    <span class="cp">"start"</span>: <span class="cv">"node src/server.js"</span>,
     <span class="cp">"test"</span>: <span class="cv">"jest"</span>,
     <span class="cp">"test:watch"</span>: <span class="cv">"jest --watch"</span>,
     <span class="cp">"test:coverage"</span>: <span class="cv">"jest --coverage"</span>
@@ -427,7 +427,7 @@ section{margin-bottom:2.25rem;}
       <p>Jest imports your function to test it. But <code>server.js</code> currently does not export anything. Add a conditional export at the bottom of the file &mdash; it only activates during tests, leaving production behaviour unchanged.</p>
 
       <div class="code-block">
-        <div class="code-hd"><span class="code-lang">services/menu-service/server.js &mdash; add at the very bottom</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <div class="code-hd"><span class="code-lang">services/menu-service/src/server.js &mdash; add at the very bottom</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
         <pre><span class="cm">// ===== EXPORT FOR TESTING (add at bottom of file) =====</span>
 <span class="cm">// Only exports when Jest sets NODE_ENV=test</span>
 <span class="cm">// Production server is unaffected</span>
@@ -492,7 +492,7 @@ section{margin-bottom:2.25rem;}
         <div class="code-hd"><span class="code-lang">__tests__/unit/validation.test.js &mdash; create this file</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
         <pre><span class="cm">/**
  * Unit Tests for Rating Validation
- * Tests the validateRating() function from menu-service/server.js
+ * Tests the validateRating() function from menu-service/src/server.js
  *
  * AAA Pattern used in each test:
  *   Arrange — set up the input
@@ -501,7 +501,7 @@ section{margin-bottom:2.25rem;}
  */</span>
 
 <span class="cm">// Import the function we want to test</span>
-<span class="ck">const</span> { <span class="cp">validateRating</span> } = <span class="ck">require</span>(<span class="cv">'../../server'</span>);
+<span class="ck">const</span> { <span class="cp">validateRating</span> } = <span class="ck">require</span>(<span class="cv">'../../src/server'</span>);
 
 <span class="cm">// describe() groups related tests under a heading</span>
 <span class="cp">describe</span>(<span class="cv">'validateRating Function'</span>, () => {
@@ -640,8 +640,8 @@ Time:        2.1 s</div>
       </div>
 
       <div class="trouble" onclick="toggleTrouble(this)">
-        <div class="trouble-hd">&#9888; "Cannot find module '../../server'" <span class="trouble-arrow">&#9654;</span></div>
-        <div class="trouble-body">The relative path <code>../../server</code> means "go up two folders from <code>__tests__/unit/</code> then find <code>server.js</code>". Confirm your file is at <code>services/menu-service/__tests__/unit/validation.test.js</code> exactly. If your <code>server.js</code> is named differently, update the require path to match.</div>
+        <div class="trouble-hd">&#9888; "Cannot find module '../../src/server'" <span class="trouble-arrow">&#9654;</span></div>
+        <div class="trouble-body">The relative path <code>../../src/server</code> means "go up two folders from <code>__tests__/unit/</code>, then into <code>src/</code> to find <code>server.js</code>". Confirm your file is at <code>services/menu-service/__tests__/unit/validation.test.js</code> exactly, and that <code>server.js</code> is at <code>services/menu-service/src/server.js</code>. If your <code>server.js</code> is named differently, update the require path to match.</div>
       </div>
       <div class="trouble" onclick="toggleTrouble(this)">
         <div class="trouble-hd">&#9888; "validateRating is not a function" <span class="trouble-arrow">&#9654;</span></div>
@@ -679,7 +679,7 @@ Time:        2.1 s</div>
       <span class="step-arrow">&#9654;</span>
     </div>
     <div class="step-body">
-      <p>Open <code>services/menu-service/server.js</code> and find the range check inside <code>validateRating</code>. Change the upper bound from <code>5</code> to <code>10</code>.</p>
+      <p>Open <code>services/menu-service/src/server.js</code> and find the range check inside <code>validateRating</code>. Change the upper bound from <code>5</code> to <code>10</code>.</p>
 
       <div class="code-block">
         <div class="code-hd"><span class="code-lang">server.js &mdash; find and change this one line</span></div>
@@ -917,7 +917,7 @@ Tests: 12 passed, 12 total  |  Time: 2.1s</div>
 Untracked files:
   services/menu-service/__tests__/
   services/menu-service/package.json  (modified)
-  services/menu-service/server.js     (modified)
+  services/menu-service/src/server.js     (modified)
   .github/</div>
 
       <div class="code-block">
@@ -925,7 +925,7 @@ Untracked files:
         <pre><span class="cm"># Stage all the new files</span>
 <span class="ca">git add services/menu-service/__tests__/</span>
 <span class="ca">git add services/menu-service/package.json</span>
-<span class="ca">git add services/menu-service/server.js</span>
+<span class="ca">git add services/menu-service/src/server.js</span>
 <span class="ca">git add .github/workflows/ci.yml</span>
 
 <span class="cm"># One clean commit</span>
@@ -1003,10 +1003,10 @@ To https://github.com/YOUR-USERNAME/cloudeats-app.git
 <span class="ca">git checkout -b feature/test-ci-gate</span>
 
 <span class="cm"># Break the validation again (change 5 to 10)</span>
-<span class="ca">sed -i 's/ratingNum > 5/ratingNum > 10/' services/menu-service/server.js</span>
+<span class="ca">sed -i 's/ratingNum > 5/ratingNum > 10/' services/menu-service/src/server.js</span>
 <span class="cm"># macOS: sed -i '' 's/ratingNum > 5/ratingNum > 10/' ...</span>
 
-<span class="ca">git add services/menu-service/server.js</span>
+<span class="ca">git add services/menu-service/src/server.js</span>
 <span class="ca">git commit -m "bug: accidentally changed rating upper bound to 10"</span>
 <span class="ca">git push -u origin feature/test-ci-gate</span></pre>
       </div>
@@ -1020,9 +1020,9 @@ To https://github.com/YOUR-USERNAME/cloudeats-app.git
 
       <div class="code-block">
         <div class="code-hd"><span class="code-lang">terminal &mdash; restore and push the fix</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-        <pre><span class="ca">sed -i 's/ratingNum > 10/ratingNum > 5/' services/menu-service/server.js</span>
+        <pre><span class="ca">sed -i 's/ratingNum > 10/ratingNum > 5/' services/menu-service/src/server.js</span>
 <span class="cm"># macOS: sed -i '' 's/ratingNum > 10/ratingNum > 5/' ...</span>
-<span class="ca">git add services/menu-service/server.js</span>
+<span class="ca">git add services/menu-service/src/server.js</span>
 <span class="ca">git commit -m "fix: restore correct rating upper bound to 5"</span>
 <span class="ca">git push</span>
 <span class="cm"># CI re-runs, goes green, PR merge is now unblocked</span></pre>
@@ -1102,7 +1102,7 @@ To https://github.com/YOUR-USERNAME/cloudeats-app.git
 File      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
 ----------|---------|----------|---------|---------|-------------------
 All files |   45.12 |    28.57 |   50.00 |   45.12 |
- server.js|   45.12 |    28.57 |   50.00 |   45.12 | 20-45, 60-120
+ src/server.js|   45.12 |    28.57 |   50.00 |   45.12 | 20-45, 60-120
 ----------|---------|----------|---------|---------|-------------------</div>
 
       <div class="pb b">
@@ -1147,7 +1147,7 @@ All files |   45.12 |    28.57 |   50.00 |   45.12 |
 
       <div class="trouble" onclick="toggleTrouble(this)">
         <div class="trouble-hd">&#9888; Coverage report shows 0% for everything <span class="trouble-arrow">&#9654;</span></div>
-        <div class="trouble-body">The <code>NODE_ENV=test</code> variable is missing. The <code>module.exports</code> block in <code>server.js</code> is not executing, so the test file's <code>require('../../server')</code> returns an empty object and calls nothing. Run <code>export NODE_ENV=test</code> in the current terminal then retry. On Windows PowerShell use <code>$env:NODE_ENV="test"</code> instead.</div>
+        <div class="trouble-body">The <code>NODE_ENV=test</code> variable is missing. The <code>module.exports</code> block in <code>server.js</code> is not executing, so the test file's <code>require('../../src/server')</code> returns an empty object and calls nothing. Run <code>export NODE_ENV=test</code> in the current terminal then retry. On Windows PowerShell use <code>$env:NODE_ENV="test"</code> instead.</div>
       </div>
     </div>
   </div>
@@ -1247,10 +1247,10 @@ All files |   45.12 |    28.57 |   50.00 |   45.12 |
       <div class="code-block">
         <div class="code-hd"><span class="code-lang">terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
         <pre><span class="cm"># Break the validation again</span>
-<span class="ca">sed -i 's/ratingNum > 5/ratingNum > 10/' services/menu-service/server.js</span>
+<span class="ca">sed -i 's/ratingNum > 5/ratingNum > 10/' services/menu-service/src/server.js</span>
 
 <span class="cm"># Try to commit — the hook should block it</span>
-<span class="ca">git add services/menu-service/server.js</span>
+<span class="ca">git add services/menu-service/src/server.js</span>
 <span class="ca">git commit -m "this should not work"</span></pre>
       </div>
       <div class="out-label">What you should see (commit is rejected)</div>
@@ -1270,10 +1270,10 @@ husky - pre-commit script failed (exit code 1)</div>
       <div class="code-block">
         <div class="code-hd"><span class="code-lang">terminal &mdash; fix and commit properly</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
         <pre><span class="cm"># Restore the correct value</span>
-<span class="ca">sed -i 's/ratingNum > 10/ratingNum > 5/' services/menu-service/server.js</span>
+<span class="ca">sed -i 's/ratingNum > 10/ratingNum > 5/' services/menu-service/src/server.js</span>
 
 <span class="cm"># Commit — hook runs tests, all pass, commit succeeds</span>
-<span class="ca">git add services/menu-service/server.js</span>
+<span class="ca">git add services/menu-service/src/server.js</span>
 <span class="ca">git commit -m "chore: add Husky pre-commit hook for local test gate"</span>
 
 <span class="cm"># Commit the Husky files too</span>

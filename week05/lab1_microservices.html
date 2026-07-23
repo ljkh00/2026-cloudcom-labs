@@ -223,7 +223,7 @@
         <button class="pace-btn" data-pace="average" onclick="setPace('average',this)">🔵 Average</button>
         <button class="pace-btn" data-pace="advanced" onclick="setPace('advanced',this)">🟣 Advanced</button>
       </div>
-      <span class="ghp-badge">🐙 GitHub Pages Ready</span>
+      <span class="ghp-badge">🐙 Private Backup Ready</span>
     </div>
   </div>
 </header>
@@ -239,7 +239,7 @@
       <div class="meta-chip">🔧 <strong>Required</strong>&nbsp;All tracks</div>
       <div class="meta-chip">✂️ <strong>Refactoring</strong>&nbsp;Split-screen technique</div>
       <div class="meta-chip">🐳 <strong>Docker Compose</strong>&nbsp;Multi-service</div>
-      <div class="meta-chip gh">🐙 <strong>Publish to GitHub Pages</strong>&nbsp;after this lab</div>
+      <div class="meta-chip gh">🐙 <strong>Save to GitHub</strong>&nbsp;after this lab</div>
     </div>
   </div>
 </div>
@@ -288,7 +288,7 @@
     <li class="sb-section">Advanced</li>
     <li><a href="#p8">⚡ Part 8 · Scale &amp; Cross-call</a></li>
     <li class="sb-section">Publish</li>
-    <li><a href="#ghp">🐙 GitHub Pages Deploy</a></li>
+    <li><a href="#ghp">🐙 Save to GitHub</a></li>
   </ul>
 </aside>
 
@@ -702,7 +702,7 @@ node src/server.js</pre>
     </div>
     <div class="callout green" style="margin-top:.75rem">
       <span>🟢</span>
-      <div><strong>Beginner track — one more part to go.</strong> Continue to <a href="#p4">Part 4</a> to extract the Menu Service. You will use exactly the same pattern as Part 3 — same steps, different routes. Part 5 onwards is Average and Advanced only.</div>
+      <div><strong>Beginner track — well done, you're finished!</strong> Skip ahead to <a href="#p6">Part 6 (Docker Compose)</a> and run just the User Service container. Parts 4 and 5 are for Average and Advanced students.</div>
     </div>
   </section>
 
@@ -803,33 +803,6 @@ app.listen(PORT, () =>
       <div><strong>Part 4 done:</strong> Menu Service scaffolded with all menu routes migrated from the monolith.</div>
     </div>
   </section>
-
-  <!-- ═══════════════════════════ BEGINNER STOP HERE ═══════════════════════════ -->
-  <div style="margin:1.75rem 0;padding:1.25rem 1.4rem;background:rgba(0,229,160,0.06);border:2px solid rgba(0,229,160,0.35);border-radius:10px;">
-    <div style="display:flex;align-items:center;gap:.65rem;margin-bottom:.65rem;">
-      <span style="font-size:1.4rem;line-height:1;">🌱</span>
-      <p style="font-weight:700;color:var(--beginner);font-size:.92rem;letter-spacing:.01em;">Beginner track — you are done for this lab</p>
-    </div>
-    <p style="font-size:.81rem;color:var(--muted);line-height:1.65;margin-bottom:.55rem;">
-      <strong style="color:var(--text);">What you built in Parts 0–4:</strong> you backed up the monolith,
-      annotated where each route belongs, set up the folder structure, and extracted
-      <strong style="color:var(--text);">two independent services</strong> — User Service (port 3001)
-      and Menu Service (port 3002) — each with its own <code>package.json</code>, database
-      connection, and routes. That is the core idea of microservices decomposition.
-    </p>
-    <p style="font-size:.81rem;color:var(--muted);line-height:1.65;margin-bottom:.55rem;">
-      Parts 5 onwards extract the Order Service and wire all three services together with
-      Docker Compose. These parts are for <span style="color:var(--average);font-weight:700;">⚡ Average</span>
-      and <span style="color:var(--advanced);font-weight:700;">🚀 Advanced</span> tracks.
-      You will cover the same material in the lecture debrief.
-    </p>
-    <p style="font-size:.79rem;color:var(--muted);line-height:1.6;">
-      <strong style="color:var(--text);">Your next step:</strong> confirm both services start without errors —
-      <code>cd services/user-service &amp;&amp; node index.js</code>, then the same for
-      <code>menu-service</code>. When both show a listening port in the terminal, you are finished.
-      Well done. 🎉
-    </p>
-  </div>
 
   <!-- ═══════════════════════════ PART 5 ═══════════════════════════ -->
   <section id="p5">
@@ -990,7 +963,8 @@ app.listen(PORT, () =>
       - JWT_SECRET=your_jwt_secret
       - PORT=3001
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
 
   <span class="cv">menu-service</span>:
@@ -1004,7 +978,8 @@ app.listen(PORT, () =>
       - MYSQL_DATABASE=cloudeats
       - PORT=3002
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
 
   <span class="cv">order-service</span>:
@@ -1017,17 +992,75 @@ app.listen(PORT, () =>
       - JWT_SECRET=your_jwt_secret
       - PORT=3003
     depends_on:
-      - mongo
-      - redis
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped</pre>
         </div>
         <div class="pb b">
           <div class="pb-label">🟢 Beginner — What does "depends_on" do?</div>
-          <code>depends_on: - db</code> tells Docker Compose: "start the <code>db</code> container before starting <code>user-service</code>". Without this, your service might start before the database is ready and crash on the first connection attempt.
+          <code>depends_on: db: condition: service_healthy</code> tells Docker Compose: "don't even start <code>user-service</code> until the <code>db</code> container has passed its healthcheck." This is stronger than the plain list form (<code>depends_on: - db</code>), which only waits for the container to <em>start</em> — not for MySQL/Mongo/Redis inside it to actually be ready to accept connections.
         </div>
         <div class="pb a">
           <div class="pb-label">🔵 Average — Docker service DNS names</div>
           Notice <code>MYSQL_HOST=db</code> — this matches the service name in docker-compose.yml. Docker creates an internal DNS entry for each service name. So <code>user-service</code> can reach MySQL at the hostname <code>db</code>, MongoDB at <code>mongo</code>, and Redis at <code>redis</code> — Docker resolves these names automatically inside the shared network.
+        </div>
+        <div class="pb adv">
+          <div class="pb-label">🟣 Advanced — Why "started" is not "ready"</div>
+          A database container reports as <code>Up</code> the instant its process launches — but MySQL/Mongo/Redis can take several more seconds to finish initializing before they'll accept connections. The plain <code>depends_on: - db</code> form races against that gap: your app container starts immediately, tries to connect, and fails. <code>condition: service_healthy</code> closes that gap by waiting for a real readiness signal.
+        </div>
+      </div>
+    </div>
+
+    <div class="step open" id="step-p6-1b">
+      <div class="step-hd" onclick="toggleStep('step-p6-1b')">
+        <div class="step-num">12b</div>
+        <div class="step-label">Add healthchecks to db, mongo, and redis</div>
+        <span class="step-arrow">▶</span>
+      </div>
+      <div class="step-body">
+        <div class="callout amber">
+          <span>⚠️</span>
+          <div><code>condition: service_healthy</code> only works if the database service actually <em>has</em> a <code>healthcheck:</code> block. Add these to your existing <code>db</code>, <code>mongo</code>, and <code>redis</code> service definitions — find them further up in the same file, don't create new blocks.</div>
+        </div>
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">docker-compose.yml — append to existing db: service</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre>  <span class="cv">db</span>:
+    <span class="cm"># ...keep your existing image, environment, ports, volumes unchanged...</span>
+    healthcheck:
+      test: [<span class="cv">"CMD"</span>, <span class="cv">"mysqladmin"</span>, <span class="cv">"ping"</span>, <span class="cv">"-h"</span>, <span class="cv">"localhost"</span>, <span class="cv">"-u"</span>, <span class="cv">"root"</span>, <span class="cv">"-ppassword"</span>]
+      interval: 5s
+      timeout: 5s
+      retries: 10</pre>
+        </div>
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">docker-compose.yml — append to existing mongo: service</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre>  <span class="cv">mongo</span>:
+    <span class="cm"># ...keep your existing image, ports, volumes unchanged...</span>
+    healthcheck:
+      test: [<span class="cv">"CMD"</span>, <span class="cv">"mongosh"</span>, <span class="cv">"--eval"</span>, <span class="cv">"db.adminCommand('ping')"</span>]
+      interval: 5s
+      timeout: 5s
+      retries: 10</pre>
+        </div>
+        <div class="code-block">
+          <div class="code-hd"><span class="code-lang">docker-compose.yml — append to existing redis: service</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+          <pre>  <span class="cv">redis</span>:
+    <span class="cm"># ...keep your existing image, ports unchanged...</span>
+    healthcheck:
+      test: [<span class="cv">"CMD"</span>, <span class="cv">"redis-cli"</span>, <span class="cv">"ping"</span>]
+      interval: 5s
+      timeout: 3s
+      retries: 5</pre>
+        </div>
+        <div class="pb b">
+          <div class="pb-label">🟢 Beginner — Where exactly do I paste this?</div>
+          Each <code>healthcheck:</code> block goes <strong>inside</strong> the matching service — same indentation level as <code>ports:</code> or <code>environment:</code> in that service. Don't create a new top-level <code>healthcheck:</code> section. If you're unsure, compare against the checkpoint file at the bottom of this lab.
+        </div>
+        <div class="trouble" onclick="toggleTrouble(this, event)">
+          <div class="trouble-hd"><span>🔴</span>&nbsp;order-service keeps restarting — "ConnectionTimeoutError"<span class="trouble-arrow">▶</span></div>
+          <div class="trouble-body">This is the exact symptom of missing/incorrect healthchecks or <code>depends_on</code> conditions. Run <code>docker compose logs order-service</code> — if you see repeated Redis or Mongo connection timeouts immediately after "Running on http://localhost:3003", double-check: (1) <code>redis</code> and <code>mongo</code> both have <code>healthcheck:</code> blocks, (2) <code>order-service</code>'s <code>depends_on</code> uses the <code>condition: service_healthy</code> map form, not a plain list. A single misplaced dash or wrong indentation will silently fall back to "just wait for container start."</div>
         </div>
       </div>
     </div>
@@ -1080,6 +1113,38 @@ CMD [<span class="cv">"node"</span>, <span class="cv">"src/server.js"</span>]</p
     <div class="checkpoint">
       <span>✅</span>
       <div><strong>Part 6 done:</strong> docker-compose.yml updated with all 3 services. Dockerfiles created. Ready to deploy.</div>
+    </div>
+
+    <div class="callout blue" style="margin-top:1rem;">
+      <span>📥</span>
+      <div>
+        <strong>Not sure your docker-compose.yml is correct?</strong> Download the verified version below and compare it against yours before moving on — Lab 5.2 builds directly on this file, so it's worth confirming now rather than debugging two labs from now.
+        <div style="margin-top:.6rem;display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;">
+          <a href="lab5.1_docker-compose.yml" download
+             style="display:inline-flex;align-items:center;gap:.4rem;background:#1a73e8;color:#fff;padding:.5rem .9rem;border-radius:6px;font-size:.8rem;font-weight:600;text-decoration:none;">
+            ⬇ Download lab5.1_docker-compose.yml
+          </a>
+          <span style="font-size:.76rem;color:var(--muted);">Checkpoint file · verified working · required for Lab 5.2</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pb b">
+      <div class="pb-label">🟢 Beginner — How to use this file</div>
+      Download it, then compare it side by side with your own <code>docker-compose.yml</code> line by line. Don't just copy-paste over your version — find <em>where</em> yours differs. That's where your learning gap is.
+    </div>
+    <div class="pb a">
+      <div class="pb-label">🔵 Average — Diff it instead of eyeballing it</div>
+      Save the download next to your own file and run:
+      <div class="code-block" style="margin-top:.5rem;">
+        <div class="code-hd"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre>diff docker-compose.yml lab5.1_docker-compose.yml</pre>
+      </div>
+      No output means they match. Any output shows exactly which lines differ.
+    </div>
+    <div class="pb adv">
+      <div class="pb-label">🟣 Advanced — Use only if stuck</div>
+      If your <code>order-service</code> is healthy and all containers pass their healthchecks, you don't need this file — you already have a working checkpoint. Keep it only as a fallback if something breaks later in Lab 5.2.
     </div>
   </section>
 
@@ -1278,28 +1343,28 @@ cloudeats-menu-service-2  Up   (no host port — internal only)</div>
   <section id="ghp">
     <hr style="border:none;border-top:1px solid var(--border);margin:1.5rem 0">
     <div class="ghp-section">
-      <div class="ghp-section-title">🐙 Publish Your Lab Notes to GitHub Pages</div>
-      <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem">This is your experiment toward <strong>online teaching as a side hustle</strong>. Push this HTML file and your lecture notes to GitHub — anyone with the link can access your lab guide, forever free, no server needed. Here is the full workflow:</p>
+      <div class="ghp-section-title">🐙 Save Your Lab Notes to GitHub (Private Copy)</div>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem">Push your completed lab files and screenshots to a <strong>private GitHub repository</strong>. This gives you a personal, version-controlled backup of your coursework — accessible from any machine, safe from a lost laptop or a wiped lab PC. It is not for public hosting; keep the repo private so your work stays visible only to you (and your instructor, if requested). Here is the workflow:</p>
 
       <ol class="ghp-steps">
         <li>
           <div>
-            <strong style="color:var(--text)">Create a free GitHub account</strong> at <a href="https://github.com" target="_blank">github.com</a> if you don't have one. Use a professional username — this becomes part of your teaching URL.
+            <strong style="color:var(--text)">Create a free GitHub account</strong> at <a href="https://github.com" target="_blank">github.com</a> if you don't have one.
           </div>
         </li>
         <li>
           <div>
-            <strong style="color:var(--text)">Create a new public repository</strong> — suggested name: <code>cloud-computing-labs</code> or <code>cloudeats-academy</code>. Tick "Add README". This is your course hosting repo.
+            <strong style="color:var(--text)">Create a new <u>private</u> repository</strong> — suggested name: <code>cloud-computing-portfolio</code> or <code>my-cloudeats-labs</code>. When creating it, set <em>Visibility → Private</em>. Tick "Add README". This keeps your lab notes and screenshots out of public view.
           </div>
         </li>
         <li>
           <div>
-            <strong style="color:var(--text)">Push your HTML files</strong> into the repo root. Your file naming already matches: <code>week01_foundation.html</code>, <code>week02_Core_Cloud_Services.html</code> … <code>week05_Microservices_Architecture.html</code>, <code>week05_lab1_microservices.html</code>.
+            <strong style="color:var(--text)">Push your lab files</strong> into the repo — your HTML notes, screenshots, and any code you wrote for the lab.
             <div class="code-block" style="margin:.5rem 0 0">
               <div class="code-hd"><span class="code-lang">bash</span></div>
               <pre>git init
-git add *.html
-git commit -m "Add Week 1-5 lecture notes and labs"
+git add .
+git commit -m "Lab 5.1 - Microservices split notes and screenshots"
 git branch -M main
 git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
 git push -u origin main</pre>
@@ -1308,36 +1373,26 @@ git push -u origin main</pre>
         </li>
         <li>
           <div>
-            <strong style="color:var(--text)">Enable GitHub Pages:</strong> In your repo → Settings → Pages → Source: <em>Deploy from branch</em> → Branch: <em>main</em> → Folder: <em>/ (root)</em> → Save. GitHub will publish your site within 2 minutes.
+            <strong style="color:var(--text)">Keep it updated as you go:</strong> After each lab, run <code>git add . && git commit -m "Lab X.X notes" && git push</code>. Over 10 weeks this becomes a complete, dated portfolio of every lab you completed — useful for revision and for showing your work if ever asked.
           </div>
         </li>
         <li>
           <div>
-            <strong style="color:var(--text)">Your course URL:</strong> <code>https://YOUR_USERNAME.github.io/YOUR_REPO/week05_Microservices_Architecture.html</code> — share this with students. The week nav bar (W1–W5 links) works automatically because all files are in the same folder.
-          </div>
-        </li>
-        <li>
-          <div>
-            <strong style="color:var(--text)">Add a course homepage:</strong> Create <code>index.html</code> as a landing page listing all weeks, lab links, and your contact/enrolment info. Students can bookmark this as their single entry point.
-          </div>
-        </li>
-        <li>
-          <div>
-            <strong style="color:var(--text)">Future updates are instant:</strong> Any time you add a new week or fix a typo, run <code>git add . && git commit -m "Update" && git push</code>. GitHub Pages redeploys automatically within 60 seconds. Zero server costs, zero maintenance.
+            <strong style="color:var(--text)">Sharing selectively:</strong> If you ever want to show a specific piece of work (e.g. in a job application), you can make that one repository public later, or add a specific person as a collaborator on the private repo instead of making it public.
           </div>
         </li>
       </ol>
 
       <div class="callout purple" style="margin-top:1rem">
         <span>💡</span>
-        <div><strong>Scaling your reach:</strong> Once on GitHub Pages, you can share the link on LinkedIn, Reddit (r/learnprogramming, r/node), Twitter/X, and local tech communities. The dark-themed professional design builds credibility. Add a donation link (Ko-fi, Buy Me a Coffee) to monetise. Many instructors build full paid courses starting exactly this way.</div>
+        <div><strong>Why private by default:</strong> A private repo means only you control who sees your code and notes. Submitting coursework or reusing snippets later is entirely your choice, not something exposed by default. If you're curious about publishing a project publicly one day (e.g. a personal portfolio site), that's a separate decision to make deliberately, not a side effect of saving your lab work.</div>
       </div>
 
       <div class="img-ph" style="margin-top:.85rem">
         <div class="img-ph-icon">📸</div>
         <div>
-          <div class="img-ph-label">Your Screenshot — GitHub Pages deployment live</div>
-          <div class="img-ph-desc">GitHub repository Settings → Pages showing the live URL. Or the published page open in a browser with the GitHub Pages URL (<code>*.github.io/...</code>) visible in the address bar. Replace with your screenshot when published.</div>
+          <div class="img-ph-label">Your Screenshot — private repository with lab files pushed</div>
+          <div class="img-ph-desc">GitHub repository page showing the "Private" label next to the repo name, with your lab HTML/screenshots visible in the file list. Replace with your screenshot.</div>
         </div>
       </div>
     </div>
@@ -1358,7 +1413,7 @@ git push -u origin main</pre>
 <footer style="border-top:1px solid var(--border);padding:1.25rem 1.5rem;text-align:center;color:var(--muted);font-size:.76rem;max-width:1200px;margin:0 auto">
   Cloud Computing · Lab 5.1 · Microservices Split &nbsp;|&nbsp; CloudEats Academy &nbsp;|&nbsp;
   <a href="week05_Microservices_Architecture.html" style="color:var(--muted);text-decoration:none">← Lecture Notes</a>
-  &nbsp;|&nbsp;<span class="ghp-badge">🐙 GitHub Pages Ready</span>&nbsp;|&nbsp;
+  &nbsp;|&nbsp;<span class="ghp-badge">🐙 Private Backup Ready</span>&nbsp;|&nbsp;
   <a href="week05_lab2_api_gateway.html" style="color:var(--muted);text-decoration:none">Lab 5.2 →</a>
 </footer>
 
@@ -1423,5 +1478,6 @@ window.addEventListener('scroll',()=>{
 updateProgress();
 /* Default pace — expand all steps on first load */
 document.addEventListener('DOMContentLoaded', ()=>{ expandAll(); });
+</script>
 </body>
 </html>
