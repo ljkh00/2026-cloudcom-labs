@@ -172,7 +172,7 @@ section{margin-bottom:2.25rem;}
 
 <div class="lab-hero">
   <div class="hero-inner">
-    <div class="hero-crumb"><a href="../week07/index.html">Week 7 Lecture</a> › Lab 7.1</div>
+    <div class="hero-crumb"><a href="week07_CICD_and_Infrastructure_as_Code.html">Week 7 Lecture</a> › Lab 7.1</div>
     <h1>Infrastructure as Code</h1>
     <p class="hero-sub">Turn 20+ manual <code>docker run</code> commands into a single <code>docker-compose.yml</code>. Deploy the complete CloudEats stack — seven services, three databases, one network — with one command.</p>
     <div class="hero-meta">
@@ -261,6 +261,33 @@ docker compose version</pre>
           <div class="callout green"><span>✅</span><div>You should see a version number and the cloudeats-app folder. If not, re-run Lab 3.1 setup steps first.</div></div>
         </div>
       </div>
+
+      <div class="step open" id="step-p0-2">
+        <div class="step-hd" onclick="toggleStep('step-p0-2')">
+          <span class="step-num">0b</span>
+          <span class="step-label">Remove the old backend service from Week 5</span>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <p>Back in Week 5 you commented out your original <code>backend</code> service block rather than deleting it, as a safety net. That safety net is no longer needed — the new <code>docker-compose.yml</code> you're about to write in Part 2 replaces it completely. Clear it out now, before you have seven new containers to keep track of.</p>
+          <div class="code-block">
+            <div class="code-hd"><span class="code-fname">Terminal — check for a leftover backend container</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>docker ps -a --filter "name=backend"</pre>
+          </div>
+          <div class="out-label">If a container shows up</div>
+          <div class="exp-out">CONTAINER ID   IMAGE   ...   NAMES
+a1b2c3d4e5f6   ...     ...   cloudeats-app-backend-1</div>
+          <div class="code-block">
+            <div class="code-hd"><span class="code-fname">Terminal — stop and remove it</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+            <pre>docker stop cloudeats-app-backend-1
+docker rm cloudeats-app-backend-1</pre>
+          </div>
+          <div class="why-box"><strong>Why this matters:</strong> commenting out a service block in <code>docker-compose.yml</code> stops Compose from managing it — it does <em>not</em> stop the container that's already running. A leftover <code>backend</code> container can hold port <code>3000</code> or sit on the <code>cloudeats-network</code> with a name Compose doesn't recognise, which shows up later as confusing "port already in use" or networking errors that have nothing to do with today's lab.</div>
+          <div class="pb b"><div class="pb-label">🌱 Beginner</div>If <code>docker ps -a --filter "name=backend"</code> shows nothing, you already cleaned this up — skip ahead to Part 1.</div>
+          <p>Now open your existing <code>docker-compose.yml</code> and delete the commented-out <code>backend</code> block entirely — you're about to write the replacement file from scratch in Part 2, so there's nothing left to preserve.</p>
+          <div class="checkpoint">✅ <div><strong>Check:</strong> <code>docker ps -a --filter "name=backend"</code> returns no results, and no commented <code>backend</code> block remains in <code>docker-compose.yml</code>.</div></div>
+        </div>
+      </div>
     </section>
 
     <!-- PART 1 -->
@@ -332,6 +359,7 @@ docker run -d --name mongodb --network cloudeats-network \
         </div>
         <div class="step-body">
           <p><strong>Person A</strong> — navigate to the project folder and create the file. This is the complete infrastructure definition for CloudEats.</p>
+          <div class="callout blue"><span>ℹ️</span><div>The database service names below (<code>db</code>, <code>mongo</code>) match what you used back in Week 5 — your service code already looks for hosts named <code>db</code> and <code>mongo</code>, so nothing in your <code>services/</code> folder needs to change today.</div></div>
           <div class="pb b"><div class="pb-label">🌱 Beginner</div>Copy the <em>entire</em> block below as one piece. Do not split it or paste it in parts. In nano: <strong>Ctrl+Shift+V</strong> to paste, <strong>Ctrl+O → Enter → Ctrl+X</strong> to save.</div>
           <div class="code-block">
             <div class="code-hd"><span class="code-fname">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
@@ -349,7 +377,7 @@ nano docker-compose.yml</pre>
 
   <span class="cm"># ── DATABASES ──────────────────────────────────</span>
 
-  <span class="ck">mysql</span>:
+  <span class="ck">db</span>:
     <span class="ck">image</span>: <span class="cv">mysql:8.0</span>
     <span class="ck">container_name</span>: <span class="cv">cloudeats-mysql</span>
     <span class="ck">restart</span>: <span class="cv">unless-stopped</span>
@@ -386,7 +414,7 @@ nano docker-compose.yml</pre>
       <span class="ck">timeout</span>:  <span class="cv">3s</span>
       <span class="ck">retries</span>:  <span class="cv">5</span>
 
-  <span class="ck">mongodb</span>:
+  <span class="ck">mongo</span>:
     <span class="ck">image</span>: <span class="cv">mongo:6.0</span>
     <span class="ck">container_name</span>: <span class="cv">cloudeats-mongodb</span>
     <span class="ck">restart</span>: <span class="cv">unless-stopped</span>
@@ -413,18 +441,18 @@ nano docker-compose.yml</pre>
     <span class="ck">container_name</span>: <span class="cv">cloudeats-user-service</span>
     <span class="ck">restart</span>: <span class="cv">unless-stopped</span>
     <span class="ck">environment</span>:
-      <span class="ck">PORT</span>:        <span class="cv">3001</span>
-      <span class="ck">DB_HOST</span>:     <span class="cv">mysql</span>
-      <span class="ck">DB_USER</span>:     <span class="cv">${MYSQL_USER:-cloudeats_user}</span>
-      <span class="ck">DB_PASSWORD</span>: <span class="cv">${MYSQL_PASSWORD:-cloudeats_pass}</span>
-      <span class="ck">DB_NAME</span>:     <span class="cv">${MYSQL_DATABASE:-cloudeats}</span>
-      <span class="ck">REDIS_HOST</span>:  <span class="cv">redis</span>
-      <span class="ck">REDIS_PORT</span>:  <span class="cv">6379</span>
-      <span class="ck">NODE_ENV</span>:    <span class="cv">${NODE_ENV:-production}</span>
+      <span class="ck">PORT</span>:           <span class="cv">3001</span>
+      <span class="ck">MYSQL_HOST</span>:     <span class="cv">db</span>
+      <span class="ck">MYSQL_USER</span>:     <span class="cv">${MYSQL_USER:-cloudeats_user}</span>
+      <span class="ck">MYSQL_PASSWORD</span>: <span class="cv">${MYSQL_PASSWORD:-cloudeats_pass}</span>
+      <span class="ck">MYSQL_DATABASE</span>: <span class="cv">${MYSQL_DATABASE:-cloudeats}</span>
+      <span class="ck">REDIS_HOST</span>:     <span class="cv">redis</span>
+      <span class="ck">REDIS_PORT</span>:     <span class="cv">6379</span>
+      <span class="ck">NODE_ENV</span>:       <span class="cv">${NODE_ENV:-production}</span>
     <span class="ck">ports</span>:
       - <span class="cv">"3001:3001"</span>
     <span class="ck">depends_on</span>:
-      <span class="ck">mysql</span>:
+      <span class="ck">db</span>:
         <span class="ck">condition</span>: <span class="cv">service_healthy</span>
       <span class="ck">redis</span>:
         <span class="ck">condition</span>: <span class="cv">service_healthy</span>
@@ -437,16 +465,16 @@ nano docker-compose.yml</pre>
     <span class="ck">container_name</span>: <span class="cv">cloudeats-menu-service</span>
     <span class="ck">restart</span>: <span class="cv">unless-stopped</span>
     <span class="ck">environment</span>:
-      <span class="ck">PORT</span>:        <span class="cv">3002</span>
-      <span class="ck">DB_HOST</span>:     <span class="cv">mysql</span>
-      <span class="ck">DB_USER</span>:     <span class="cv">${MYSQL_USER:-cloudeats_user}</span>
-      <span class="ck">DB_PASSWORD</span>: <span class="cv">${MYSQL_PASSWORD:-cloudeats_pass}</span>
-      <span class="ck">DB_NAME</span>:     <span class="cv">${MYSQL_DATABASE:-cloudeats}</span>
-      <span class="ck">NODE_ENV</span>:    <span class="cv">${NODE_ENV:-production}</span>
+      <span class="ck">PORT</span>:           <span class="cv">3002</span>
+      <span class="ck">MYSQL_HOST</span>:     <span class="cv">db</span>
+      <span class="ck">MYSQL_USER</span>:     <span class="cv">${MYSQL_USER:-cloudeats_user}</span>
+      <span class="ck">MYSQL_PASSWORD</span>: <span class="cv">${MYSQL_PASSWORD:-cloudeats_pass}</span>
+      <span class="ck">MYSQL_DATABASE</span>: <span class="cv">${MYSQL_DATABASE:-cloudeats}</span>
+      <span class="ck">NODE_ENV</span>:       <span class="cv">${NODE_ENV:-production}</span>
     <span class="ck">ports</span>:
       - <span class="cv">"3002:3002"</span>
     <span class="ck">depends_on</span>:
-      <span class="ck">mysql</span>:
+      <span class="ck">db</span>:
         <span class="ck">condition</span>: <span class="cv">service_healthy</span>
     <span class="ck">networks</span>:
       - <span class="cv">cloudeats-network</span>
@@ -460,7 +488,7 @@ nano docker-compose.yml</pre>
       <span class="ck">PORT</span>:           <span class="cv">3003</span>
       <span class="ck">REDIS_HOST</span>:     <span class="cv">redis</span>
       <span class="ck">REDIS_PORT</span>:     <span class="cv">6379</span>
-      <span class="ck">MONGO_HOST</span>:     <span class="cv">mongodb</span>
+      <span class="ck">MONGO_HOST</span>:     <span class="cv">mongo</span>
       <span class="ck">MONGO_PORT</span>:     <span class="cv">27017</span>
       <span class="ck">MONGO_USER</span>:     <span class="cv">${MONGO_USER:-admin}</span>
       <span class="ck">MONGO_PASSWORD</span>: <span class="cv">${MONGO_PASSWORD:-secret123}</span>
@@ -471,7 +499,7 @@ nano docker-compose.yml</pre>
     <span class="ck">depends_on</span>:
       <span class="ck">redis</span>:
         <span class="ck">condition</span>: <span class="cv">service_healthy</span>
-      <span class="ck">mongodb</span>:
+      <span class="ck">mongo</span>:
         <span class="ck">condition</span>: <span class="cv">service_healthy</span>
     <span class="ck">networks</span>:
       - <span class="cv">cloudeats-network</span>
@@ -840,8 +868,8 @@ git push origin main</pre>
     </section>
 
     <div style="border-top:1px solid var(--border);padding-top:1.5rem;margin-top:2rem;display:flex;justify-content:space-between;font-size:.8rem;">
-      <a href="../week07/index.html" style="color:var(--muted);text-decoration:none;padding:.3rem .7rem;border:1px solid var(--border);border-radius:5px;">← Week 7 Lecture</a>
-      <a href="../week07/lab2_deployment_automation.html" style="color:var(--amber);text-decoration:none;padding:.3rem .7rem;border:1px solid rgba(255,183,64,.3);border-radius:5px;background:rgba(255,183,64,.04);">Lab 7.2 — Deployment Automation →</a>
+      <a href="week07_CICD_and_Infrastructure_as_Code.html" style="color:var(--muted);text-decoration:none;padding:.3rem .7rem;border:1px solid var(--border);border-radius:5px;">← Week 7 Lecture</a>
+      <a href="week07_lab2_deployment_automation.html" style="color:var(--amber);text-decoration:none;padding:.3rem .7rem;border:1px solid rgba(255,183,64,.3);border-radius:5px;background:rgba(255,183,64,.04);">Lab 7.2 — Deployment Automation →</a>
     </div>
 
   </main>
