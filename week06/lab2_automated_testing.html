@@ -420,6 +420,48 @@ section{margin-bottom:2.25rem;}
   <div class="step open" id="step-p1-3">
     <div class="step-hd" onclick="toggleStep('step-p1-3')">
       <span class="step-num">1.3</span>
+      <span class="step-label">Add the validateRating function to server.js</span>
+      <span class="step-arrow">&#9654;</span>
+    </div>
+    <div class="step-body">
+      <p>This lab tests a <code>validateRating</code> function &mdash; but it hasn't existed in your code until now. Open <code>services/menu-service/src/server.js</code> and add this function above the <code>app.listen(...)</code> line at the bottom of the file. It checks that a rating is present, is a number, is a whole number, and falls between 1 and 5.</p>
+
+      <div class="code-block">
+        <div class="code-hd"><span class="code-lang">services/menu-service/src/server.js &mdash; add above app.listen()</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm">// ===== RATING VALIDATION (add above app.listen) =====</span>
+<span class="ck">function</span> <span class="cp">validateRating</span>(rating) {
+  <span class="ck">if</span> (rating === <span class="ck">undefined</span> || rating === <span class="ck">null</span>) {
+    <span class="ck">return</span> { valid: <span class="ck">false</span>, error: <span class="cv">'Rating is required'</span> };
+  }
+  <span class="ck">if</span> (<span class="ck">typeof</span> rating !== <span class="cv">'number'</span>) {
+    <span class="ck">return</span> { valid: <span class="ck">false</span>, error: <span class="cv">'Rating must be a number'</span> };
+  }
+  <span class="ck">if</span> (!Number.isInteger(rating)) {
+    <span class="ck">return</span> { valid: <span class="ck">false</span>, error: <span class="cv">'Rating must be a whole number'</span> };
+  }
+  <span class="ck">if</span> (rating &lt; <span class="ca">1</span> || rating &gt; <span class="ca">5</span>) {
+    <span class="ck">return</span> { valid: <span class="ck">false</span>, error: <span class="cv">'Rating must be between 1 and 5'</span> };
+  }
+  <span class="ck">return</span> { valid: <span class="ck">true</span> };
+}</pre>
+      </div>
+
+      <div class="pb b">
+        <div class="pb-label">&#127807; Beginner &mdash; Reading the checks top to bottom</div>
+        Each <code>if</code> block handles one failure reason and returns immediately &mdash; this is called an "early return" or "guard clause" pattern. By the time execution reaches the last line, every bad case has already been ruled out, so <code>{ valid: true }</code> is safe to return. The order matters: checking <code>typeof</code> before the range comparison stops a string like <code>'five'</code> from ever reaching <code>rating &lt; 1</code>.
+      </div>
+      <div class="pb a">
+        <div class="pb-label">&#9889; Average &mdash; Why Number.isInteger instead of rating % 1 === 0?</div>
+        Both work for numbers, but <code>Number.isInteger()</code> is the standard library function built exactly for this check and reads clearly to any developer reviewing the code. It also safely returns <code>false</code> for non-numeric input rather than producing <code>NaN</code> comparisons, though by this point in the function <code>typeof</code> has already filtered those out.
+      </div>
+
+      <div class="checkpoint">&#9989; <div><strong>validateRating exists in server.js.</strong> Confirm with <code>grep -n "function validateRating" src/server.js</code> before moving on.</div></div>
+    </div>
+  </div>
+
+  <div class="step open" id="step-p1-4">
+    <div class="step-hd" onclick="toggleStep('step-p1-4')">
+      <span class="step-num">1.4</span>
       <span class="step-label">Export validateRating so tests can import it</span>
       <span class="step-arrow">&#9654;</span>
     </div>
@@ -447,7 +489,7 @@ section{margin-bottom:2.25rem;}
 
       <div class="trouble" onclick="toggleTrouble(this)">
         <div class="trouble-hd">&#9888; "Cannot find function validateRating in server.js" <span class="trouble-arrow">&#9654;</span></div>
-        <div class="trouble-body">You need to have the <code>validateRating</code> function from Lab 6.1 already in <code>server.js</code>. Search the file: <code>grep -n "function validateRating" server.js</code>. If it is missing, add it now &mdash; the complete function is in the Lab 6.1 guide under Part 2.</div>
+        <div class="trouble-body">You need to have the <code>validateRating</code> function already in <code>server.js</code> from Step 1.3 above. Search the file: <code>grep -n "function validateRating" server.js</code>. If it is missing, go back to Step 1.3 and add it.</div>
       </div>
     </div>
   </div>
