@@ -466,11 +466,20 @@ section{margin-bottom:2.25rem;}
       <span class="step-arrow">&#9654;</span>
     </div>
     <div class="step-body">
-      <p>Jest imports your function to test it. But <code>server.js</code> currently does not export anything. Add a conditional export at the bottom of the file &mdash; it only activates during tests, leaving production behaviour unchanged.</p>
+      <p>Jest imports your function to test it. But <code>server.js</code> currently does not export anything &mdash; and it also starts a live server unconditionally the moment the file is loaded. Both need a guard. Replace your existing <code>app.listen(...)</code> line at the bottom of the file with the block below, which only starts the server outside of tests, and add the conditional export beneath it.</p>
 
       <div class="code-block">
-        <div class="code-hd"><span class="code-lang">services/menu-service/src/server.js &mdash; add at the very bottom</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
-        <pre><span class="cm">// ===== EXPORT FOR TESTING (add at bottom of file) =====</span>
+        <div class="code-hd"><span class="code-lang">services/menu-service/src/server.js &mdash; replace app.listen(...) at the bottom of the file</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
+        <pre><span class="cm">// ===== START SERVER (skip during tests) =====</span>
+<span class="cm">// Jest sets NODE_ENV=test automatically — only start listening otherwise</span>
+<span class="ck">const</span> PORT = process.env.<span class="cp">PORT</span> || <span class="ca">3002</span>;
+<span class="ck">if</span> (process.env.<span class="cp">NODE_ENV</span> !== <span class="cv">'test'</span>) {
+  app.listen(PORT, () =&gt;
+    console.log(<span class="cv">`[menu-service] Running on http://localhost:${PORT}`</span>)
+  );
+}
+
+<span class="cm">// ===== EXPORT FOR TESTING (add at bottom of file) =====</span>
 <span class="cm">// Only exports when Jest sets NODE_ENV=test</span>
 <span class="cm">// Production server is unaffected</span>
 <span class="ck">if</span> (process.env.<span class="cp">NODE_ENV</span> === <span class="cv">'test'</span>) {
@@ -479,12 +488,12 @@ section{margin-bottom:2.25rem;}
       </div>
 
       <div class="pb b">
-        <div class="pb-label">&#127807; Beginner &mdash; Why the if (NODE_ENV === 'test') check?</div>
-        In production, <code>NODE_ENV</code> is set to <code>'production'</code>. This <code>if</code> block only runs when <code>NODE_ENV</code> is <code>'test'</code> &mdash; which Jest sets automatically. So the export is invisible to the live server. If you exported unconditionally, Node would also try to run <code>app.listen()</code> during tests, causing port-conflict errors.
+        <div class="pb-label">&#127807; Beginner &mdash; Why guard app.listen() too, not just the export?</div>
+        <code>app.listen()</code> opens a real network port and keeps Node running to accept connections. If it stays unconditional, importing <code>server.js</code> during a test also boots a live server. Locally you can just press <kbd>Ctrl+C</kbd> to stop it, so nothing seems wrong. But in Part 4 you will push this file so it runs inside <strong>GitHub Actions</strong> &mdash; a remote machine with nobody watching. There, the open server keeps Jest's process alive forever, and the "Run tests" step hangs indefinitely instead of finishing.
       </div>
       <div class="pb a">
         <div class="pb-label">&#9889; Average &mdash; The better pattern: separate utilities file</div>
-        In professional codebases, pure logic like <code>validateRating</code> lives in its own file (e.g. <code>utils/validators.js</code>) that exports cleanly without any server startup side-effects. <code>server.js</code> imports from it. Tests import from <code>utils/validators.js</code> directly. The conditional export trick works for a lab but is a smell in production code.
+        In professional codebases, pure logic like <code>validateRating</code> lives in its own file (e.g. <code>utils/validators.js</code>) that exports cleanly without any server startup side-effects. <code>server.js</code> imports from it. Tests import from <code>utils/validators.js</code> directly. The conditional guard here works for a lab but is a smell in production code.
       </div>
 
       <div class="trouble" onclick="toggleTrouble(this)">
@@ -1019,6 +1028,10 @@ To https://github.com/YOUR-USERNAME/cloudeats-app.git
         <strong>What just happened?</strong> GitHub detected your push, spun up a fresh Ubuntu virtual machine in their data centre, ran every step in <code>ci.yml</code> from scratch, and stamped your commit with a green checkmark. Every future push &mdash; by you or any collaborator &mdash; will trigger this same automatic verification. You no longer have to remember to test before pushing.
       </div>
 
+      <div class="trouble" onclick="toggleTrouble(this)">
+        <div class="trouble-hd">&#9888; "Run tests" step is stuck / spinning for many minutes <span class="trouble-arrow">&#9654;</span></div>
+        <div class="trouble-body">This almost always means <code>app.listen()</code> in <code>server.js</code> is not guarded, so it starts a live server during the Jest run. That keeps the CI process alive and the step never finishes &mdash; unlike your terminal at home, nobody on GitHub's server can press <kbd>Ctrl+C</kbd>. Go back to <strong>Step 1.4</strong> and confirm <code>app.listen(...)</code> is wrapped in <code>if (process.env.NODE_ENV !== 'test') { ... }</code>. Fix it, commit, and push again &mdash; the stuck run can be cancelled from the Actions tab (top-right "Cancel workflow" button) instead of waiting it out.</div>
+      </div>
       <div class="trouble" onclick="toggleTrouble(this)">
         <div class="trouble-hd">&#9888; "No workflow runs" in Actions tab <span class="trouble-arrow">&#9654;</span></div>
         <div class="trouble-body">Confirm the file is at exactly <code>.github/workflows/ci.yml</code> in your repo (not <code>.github/workflow/</code> or <code>github/workflows/</code>). Check with <code>git ls-files | grep ci.yml</code>. Also confirm the push to <code>main</code> actually succeeded: <code>git log origin/main --oneline -3</code>.</div>

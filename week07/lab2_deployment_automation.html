@@ -340,7 +340,7 @@ cloudeats-api-gateway       Up              0.0.0.0:8000->8000/tcp</div>
       <div class="code-hd"><span class="code-fname">Terminal</span><button class="copy-btn" onclick="copyCode(this,event)">Copy</button></div>
       <pre>cd ~/cloudeats-app
 cat .github/workflows/ci.yml
-<span class="cm"># You should see a workflow with: on: push, jobs: test</span></pre>
+<span class="cm"># You should see a workflow with: on: push, jobs: test-menu-service</span></pre>
     </div>
     <div class="pb b">
       <div class="pb-label">&#127807; Beginner — cannot find the file?</div>
@@ -361,13 +361,13 @@ cat .github/workflows/ci.yml
     <p style="font-weight:700;color:var(--green);margin-bottom:0.35rem;font-size:0.88rem;">Lab 7.2 continues directly from Lab 6.2 — same workflow file, new job</p>
     <p style="font-size:0.8rem;color:var(--muted);line-height:1.6;margin-bottom:0.5rem;">
       <strong style="color:var(--text);">Lab 6.2 built CI (Continuous Integration):</strong>
-      a <code>test</code> job in <code>.github/workflows/ci.yml</code> that runs your Jest unit tests
+      a <code>test-menu-service</code> job in <code>.github/workflows/ci.yml</code> that runs your Jest unit tests
       on every push and blocks failing pull requests from merging.
     </p>
     <p style="font-size:0.8rem;color:var(--muted);line-height:1.6;margin-bottom:0.5rem;">
       <strong style="color:var(--text);">This lab adds CD (Continuous Deployment):</strong>
       a second <code>deploy</code> job in the <em>same</em> <code>ci.yml</code> file.
-      The deploy job has <code>needs: test</code> — it only starts if the test job passes.
+      The deploy job has <code>needs: test-menu-service</code> — it only starts if the test job passes.
       When it runs, it SSHs into your server, pulls the latest code, and restarts the
       CloudEats stack automatically. You do not touch the server manually again.
     </p>
@@ -680,10 +680,11 @@ b3BlbnNzaC1rZXktdjEAAAABbm9uZQAAAARub25lAAAAGAAAABBzc2gtZWQyNTUxOQAA
       <pre>cd ~/cloudeats-app
 cat .github/workflows/ci.yml</pre>
     </div>
-    <p style="margin-top:.6rem">You should see a <code>test</code> job. You will add a <code>deploy</code> job after it. The <code>deploy</code> job will have <code>needs: test</code> — meaning it only runs if the test job passes.</p>
+    <p style="margin-top:.6rem">You should see a <code>test-menu-service</code> job (its display name is "Menu Service Tests", but its job id — the key <code>needs:</code> must reference — is <code>test-menu-service</code>). You will add a <code>deploy</code> job after it. The <code>deploy</code> job will have <code>needs: test-menu-service</code> — meaning it only runs if the test job passes.</p>
     <div class="pb a">
-      <div class="pb-label">&#9889; Average — why needs: test matters</div>
-      <p>Without <code>needs: test</code>, the deploy job would run in parallel with the test job — which means broken code could deploy before tests even finish. The <code>needs</code> key enforces sequential execution AND short-circuits the pipeline: if tests fail, deployment never starts.</p>
+      <div class="pb-label">&#9889; Average — why needs: test-menu-service matters</div>
+      <p>Without <code>needs: test-menu-service</code>, the deploy job would run in parallel with the test job — which means broken code could deploy before tests even finish. The <code>needs</code> key enforces sequential execution AND short-circuits the pipeline: if tests fail, deployment never starts.</p>
+      <p style="margin-top:.4rem"><code>needs:</code> must reference the job's <strong>id</strong> (the YAML key, e.g. <code>test-menu-service:</code>) — not its <code>name:</code> field (the human-readable label shown in the GitHub UI, e.g. "Menu Service Tests"). Using the display name here is a common mistake and causes GitHub Actions to reject the workflow with <em>"depends on unknown job"</em>.</p>
     </div>
   </div>
 </div>
@@ -706,7 +707,7 @@ cat .github/workflows/ci.yml</pre>
       <pre>  <span class="ck">deploy</span>:
     <span class="ck">name</span>: <span class="cv">Deploy to VM</span>
     <span class="ck">runs-on</span>: <span class="cv">ubuntu-latest</span>
-    <span class="ck">needs</span>: <span class="cv">test</span>                  <span class="cm"># only run if test job passes</span>
+    <span class="ck">needs</span>: <span class="cv">test-menu-service</span>     <span class="cm"># only run if test job passes</span>
     <span class="ck">if</span>: <span class="cv">github.ref == 'refs/heads/main'</span>  <span class="cm"># only deploy from main branch</span>
 
     <span class="ck">steps</span>:
@@ -746,6 +747,10 @@ cat .github/workflows/ci.yml</pre>
     <div class="adv-only">
       <div class="adv-only-label">&#128640; Advanced — why curl -f exits 1 on failure</div>
       <p style="font-size:.8rem;color:var(--muted)">The <code>-f</code> (fail) flag tells curl to exit with a non-zero status code if the HTTP response is an error (4xx or 5xx). In a shell script, <code>exit 1</code> signals failure to the parent process — in this case, GitHub Actions. This transforms a silent bad deployment into a visible pipeline failure. Without <code>-f</code>, curl succeeds even if the app returns a 500 error, and the pipeline would show green when the app is broken.</p>
+    </div>
+    <div class="trouble">
+      <div class="trouble-hd" onclick="toggleTrouble(this.closest('.trouble'))">&#9888; GitHub Actions error: "Job 'deploy' depends on unknown job 'test'" <span class="trouble-arrow">&#9654;</span></div>
+      <div class="trouble-body">This means the value after <code>needs:</code> does not match any job id in the file. Open <code>ci.yml</code> and check the exact key under <code>jobs:</code> from Lab 6.2 — it is <code>test-menu-service</code>, not <code>test</code> (that is only its <code>name:</code> label shown in the GitHub UI). Make sure your <code>deploy</code> job says <code>needs: test-menu-service</code> exactly, with matching spelling and no extra spaces, then commit and push again.</div>
     </div>
   </div>
 </div>
